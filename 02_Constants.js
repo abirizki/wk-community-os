@@ -7,11 +7,8 @@
  * Description : Global Constants
  * Author      : WK Framework
  * -----------------------------------------------------------------------------
- * Seluruh konstanta global framework.
- *
- * CATATAN:
- * Jangan menggunakan string literal pada module lain.
- * Selalu gunakan CONST.xxx
+ * Single Source of Truth
+ * Seluruh konstanta framework disimpan di file ini.
  * =============================================================================
  */
 
@@ -26,7 +23,7 @@ CONST.FRAMEWORK = Object.freeze({
 
   NAME: "WK Framework",
 
-  APP_NAME: "Warga Kebonjati",
+  APP_NAME: "WK SIMPEL",
 
   VERSION: "2.2.0",
 
@@ -164,8 +161,14 @@ CONST.ROLE = Object.freeze({
 
 });
 
+/*
+ * Alias untuk kompatibilitas kode lama
+ */
+
+CONST.ROLES = CONST.ROLE;
+
 /* =============================================================================
- * ACTION / PERMISSION
+ * ACTION
  * =============================================================================
  */
 
@@ -227,45 +230,6 @@ CONST.QUERY_OPERATOR = Object.freeze({
   IS_NULL: "IS_NULL",
 
   IS_NOT_NULL: "IS_NOT_NULL"
-
-});
-
-/* =============================================================================
- * DATABASE TABLE
- * =============================================================================
- */
-
-CONST.TABLE = Object.freeze({
-
-  USER: "USER",
-
-  ROLE: "ROLE",
-
-  PERMISSION: "PERMISSION",
-
-  USER_ROLE: "USER_ROLE",
-
-  ROLE_PERMISSION: "ROLE_PERMISSION",
-
-  KK: "KK",
-
-  WARGA: "WARGA",
-
-  PROPERTI: "PROPERTI",
-
-  PBB: "PBB",
-
-  SURAT: "SURAT",
-
-  DOKUMEN: "DOKUMEN",
-
-  PENDUDUK_SEMENTARA: "PENDUDUK_SEMENTARA",
-
-  FASILITAS: "FASILITAS",
-
-  LOG: "LOG",
-
-  CONFIG: "CONFIG"
 
 });
 
@@ -361,6 +325,293 @@ CONST.EVENT = Object.freeze({
 });
 
 /* =============================================================================
+ * DATABASE SHEETS
+ * =============================================================================
+ */
+CONST.SHEETS = Object.freeze({
+
+  SYSTEM: "SYSTEM",
+
+  USERS: "USERS",
+
+  SESSIONS: "SESSIONS",
+
+  KK: "KK",
+
+  WARGA: "WARGA",
+
+  PBB: "PBB",
+
+  LAYANAN: "LAYANAN",
+
+  PERSYARATAN: "PERSYARATAN",
+
+  PENGAJUAN: "PENGAJUAN",
+
+  DOKUMEN: "DOKUMEN",
+
+  SURAT: "SURAT",
+
+  AUDIT: "AUDIT",
+
+  SETTING: "SETTING",
+
+  LOG: "LOG"
+
+});
+
+/* =============================================================================
+ * DOCUMENT PREFIX
+ * =============================================================================
+ */
+
+CONST.PREFIX = Object.freeze({
+
+  USER: "USR",
+
+  KK: "KK",
+
+  WARGA: "WGA",
+
+  PENGAJUAN: "PNG",
+
+  SURAT: "SRT",
+
+  AUDIT: "ADT",
+
+  SESSION: "SES"
+
+});
+
+/* =============================================================================
+ * MASTER DATA
+ * =============================================================================
+ */
+
+CONST.MASTER = Object.freeze({
+
+  AGAMA: Object.freeze([
+
+    "Islam",
+
+    "Kristen",
+
+    "Katolik",
+
+    "Hindu",
+
+    "Budha",
+
+    "Khonghucu"
+
+  ]),
+
+  PENDIDIKAN: Object.freeze([
+
+    "Tidak Sekolah",
+
+    "SD",
+
+    "SMP",
+
+    "SMA",
+
+    "D1",
+
+    "D2",
+
+    "D3",
+
+    "S1",
+
+    "S2",
+
+    "S3"
+
+  ]),
+
+  PEKERJAAN: Object.freeze([
+
+    "Belum Bekerja",
+
+    "Pelajar",
+
+    "Mahasiswa",
+
+    "PNS",
+
+    "TNI",
+
+    "POLRI",
+
+    "Pegawai Swasta",
+
+    "Wiraswasta",
+
+    "Petani",
+
+    "Buruh",
+
+    "Pensiunan",
+
+    "Lainnya"
+
+  ]),
+
+  STATUS_PERKAWINAN: Object.freeze([
+
+    "Belum Kawin",
+
+    "Kawin",
+
+    "Cerai Hidup",
+
+    "Cerai Mati"
+
+  ]),
+
+  STATUS_KELUARGA: Object.freeze([
+
+    "Kepala Keluarga",
+
+    "Suami",
+
+    "Istri",
+
+    "Anak",
+
+    "Orang Tua",
+
+    "Famili Lain"
+
+  ]),
+
+  JENIS_KELAMIN: Object.freeze([
+
+    "Laki-laki",
+
+    "Perempuan"
+
+  ])
+
+});
+
+/* =============================================================================
+ * USER STATUS
+ * =============================================================================
+ */
+
+CONST.USER_STATUS = Object.freeze({
+
+  ACTIVE: "ACTIVE",
+
+  INACTIVE: "INACTIVE",
+
+  LOCKED: "LOCKED",
+
+  PENDING: "PENDING"
+
+});
+
+/* =============================================================================
+ * KK STATUS
+ * =============================================================================
+ */
+
+CONST.KK_STATUS = Object.freeze({
+
+  ACTIVE: "ACTIVE",
+
+  PINDAH: "PINDAH",
+
+  NONAKTIF: "NONAKTIF"
+
+});
+
+/* =============================================================================
+ * WARGA STATUS
+ * =============================================================================
+ */
+
+CONST.WARGA_STATUS = Object.freeze({
+
+  ACTIVE: "ACTIVE",
+
+  MENINGGAL: "MENINGGAL",
+
+  PINDAH: "PINDAH",
+
+  NONAKTIF: "NONAKTIF"
+
+});
+
+/* =============================================================================
+ * PBB STATUS
+ * =============================================================================
+ */
+
+CONST.PBB_STATUS = Object.freeze({
+
+  LUNAS: "LUNAS",
+
+  BELUM_LUNAS: "BELUM_LUNAS"
+
+});
+
+/* =============================================================================
+ * PENGAJUAN STATUS
+ * =============================================================================
+ */
+
+CONST.PENGAJUAN_STATUS = Object.freeze({
+
+  DRAFT: "DRAFT",
+
+  PENDING_RT: "PENDING_RT",
+
+  DISETUJUI_RT: "DISETUJUI_RT",
+
+  PERBAIKAN_RT: "PERBAIKAN_RT",
+
+  PENDING_RW: "PENDING_RW",
+
+  DISETUJUI_RW: "DISETUJUI_RW",
+
+  PERBAIKAN_RW: "PERBAIKAN_RW",
+
+  SELESAI: "SELESAI",
+
+  DITOLAK: "DITOLAK"
+
+});
+
+/* =============================================================================
+ * PROPERTY TYPE
+ * =============================================================================
+ */
+CONST.PROPERTY = Object.freeze({
+
+  RUMAH: "RUMAH",
+
+  KONTRAKAN: "KONTRAKAN",
+
+  KOS: "KOS",
+
+  RUKO: "RUKO",
+
+  KIOS: "KIOS",
+
+  TANAH: "TANAH",
+
+  GEDUNG: "GEDUNG",
+
+  FASILITAS_UMUM: "FASILITAS_UMUM",
+
+  LAINNYA: "LAINNYA"
+
+});
+
+/* =============================================================================
  * DOCUMENT TYPE
  * =============================================================================
  */
@@ -388,29 +639,92 @@ CONST.DOCUMENT = Object.freeze({
 });
 
 /* =============================================================================
- * PROPERTY TYPE
+ * DEFAULT MESSAGE
  * =============================================================================
  */
 
-CONST.PROPERTY = Object.freeze({
+CONST.MESSAGE = Object.freeze({
 
-  RUMAH: "RUMAH",
+  SUCCESS: "Berhasil.",
 
-  KONTRAKAN: "KONTRAKAN",
+  ERROR: "Terjadi kesalahan.",
 
-  KOS: "KOS",
+  CREATED: "Data berhasil dibuat.",
 
-  RUKO: "RUKO",
+  UPDATED: "Data berhasil diperbarui.",
 
-  KIOS: "KIOS",
+  DELETED: "Data berhasil dihapus.",
 
-  TANAH: "TANAH",
+  SAVED: "Data berhasil disimpan.",
 
-  GEDUNG: "GEDUNG",
+  NOT_FOUND: "Data tidak ditemukan.",
 
-  FASILITAS_UMUM: "FASILITAS_UMUM",
+  VALIDATION: "Validasi gagal.",
 
-  LAINNYA: "LAINNYA"
+  LOGIN_FAILED: "Username atau password salah.",
+
+  ACCESS_DENIED: "Akses ditolak.",
+
+  SESSION_EXPIRED: "Session telah berakhir."
 
 });
 
+/* =============================================================================
+ * ERROR CODE
+ * =============================================================================
+ */
+
+CONST.ERROR = Object.freeze({
+
+  UNKNOWN: "SYS000",
+
+  SYSTEM: "SYS500",
+
+  VALIDATION: "VAL001",
+
+  NOT_FOUND: "SYS404",
+
+  DUPLICATE: "SYS409",
+
+  UNAUTHORIZED: "AUTH001",
+
+  FORBIDDEN: "AUTH002",
+
+  LOGIN_FAILED: "AUTH003",
+
+  SESSION_EXPIRED: "AUTH004"
+
+});
+
+/* =============================================================================
+ * COMPATIBILITY
+ *
+ * Layer sementara selama migrasi APP -> CONFIG / CONST.
+ * Jangan menambah properti baru di sini.
+ * Setelah seluruh project selesai dimigrasikan,
+ * blok ini dapat dihapus.
+ * =============================================================================
+ */
+
+CONST.APP = Object.freeze({
+
+  NAME: CONFIG.APP_NAME,
+
+  VERSION: CONFIG.VERSION,
+
+  DATE_FORMAT: CONFIG.DATE_FORMAT,
+
+  DATETIME_FORMAT: CONFIG.DATETIME_FORMAT,
+
+  SPREADSHEET_ID: CONFIG.SPREADSHEET_ID,
+
+  SPREADSHEET_NAME: CONFIG.SPREADSHEET_NAME,
+
+  SESSION_TIMEOUT: CONFIG.SESSION_TIMEOUT
+
+});
+
+/* =============================================================================
+ * END OF FILE
+ * =============================================================================
+ */
