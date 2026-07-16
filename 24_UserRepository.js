@@ -13,7 +13,7 @@ var UserRepository={};
 UserRepository.all=function(){
 
 return Query
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 .orderBy("Nama")
 .get();
 
@@ -22,7 +22,7 @@ return Query
 UserRepository.count=function(){
 
 return Query
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 .count();
 
 };
@@ -30,7 +30,7 @@ return Query
 UserRepository.find=function(id){
 
 return Query
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 .where("ID",id)
 .first();
 
@@ -39,7 +39,7 @@ return Query
 UserRepository.findByUsername=function(username){
 
 return Query
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 .where("Username",username)
 .first();
 
@@ -48,7 +48,7 @@ return Query
 UserRepository.findByRole=function(role){
 
 return Query
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 .where("Role",role)
 .orderBy("Nama")
 .get();
@@ -58,7 +58,7 @@ return Query
 UserRepository.findActive=function(){
 
 return Query
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 .where("Status","ACTIVE")
 .orderBy("Nama")
 .get();
@@ -68,7 +68,7 @@ return Query
 UserRepository.exists=function(username){
 
 return Query
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 .where("Username",username)
 .exists();
 
@@ -78,7 +78,7 @@ UserRepository.save=function(user){
 
 return Database.save(
 
-APP.SHEETS.USERS,
+CONST.SHEETS.USERS,
 
 "ID",
 
@@ -92,7 +92,7 @@ UserRepository.update=function(user){
 
 return Database.update(
 
-APP.SHEETS.USERS,
+CONST.SHEETS.USERS,
 
 "ID",
 
@@ -108,7 +108,7 @@ UserRepository.remove=function(id){
 
 return Database.remove(
 
-APP.SHEETS.USERS,
+CONST.SHEETS.USERS,
 
 "ID",
 
@@ -118,95 +118,11 @@ id
 
 };
 
-UserRepository.changePassword=function(id,password){
-
-return Database.update(
-
-APP.SHEETS.USERS,
-
-"ID",
-
-id,
-
-{
-
-Password:password,
-
-Updated_At:Helper.now(),
-
-Updated_By:Helper.username()
-
-}
-
-);
-
-};
-
-UserRepository.activate=function(id){
-
-return Database.update(
-
-APP.SHEETS.USERS,
-
-"ID",
-
-id,
-
-{
-
-Status:"ACTIVE",
-
-Updated_At:Helper.now(),
-
-Updated_By:Helper.username()
-
-}
-
-);
-
-};
-
-UserRepository.deactivate=function(id){
-
-return Database.update(
-
-APP.SHEETS.USERS,
-
-"ID",
-
-id,
-
-{
-
-Status:"INACTIVE",
-
-Updated_At:Helper.now(),
-
-Updated_By:Helper.username()
-
-}
-
-);
-
-};
-
-UserRepository.resetPassword=function(id,password){
-
-return UserRepository.changePassword(
-
-id,
-
-password
-
-);
-
-};
-
 UserRepository.search=function(keyword){
 
 return Query
 
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 
 .whereLike("Nama",keyword)
 
@@ -220,7 +136,7 @@ UserRepository.roles=function(){
 
 return Query
 
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 
 .select([
 
@@ -238,4 +154,18 @@ return Query
 
 .get();
 
+};
+
+/**
+ * Health Check UserRepository.
+ *
+ * @returns {Object}
+ */
+UserRepository.health = function () {
+  return {
+    success: true,
+    table: CONST.SHEETS.USERS,
+    total: UserRepository.count(),
+    status: CONST.STATUS.READY
+  };
 };

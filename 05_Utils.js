@@ -13,32 +13,12 @@ Utils.uuid=function(){
 return Utilities.getUuid();
 };
 
-Utils.now=function(){
-return new Date();
-};
-
-Utils.timestamp=function(){
-return Utilities.formatDate(
-new Date(),
-CONFIG.TIMEZONE,
-CONFIG.DATETIME_FORMAT
-);
-};
-
-Utils.today=function(){
-return Utilities.formatDate(
-new Date(),
-CONFIG.TIMEZONE,
-APP.DATE_FORMAT
-);
-};
-
 Utils.date=function(value,format){
 if(!value)return "";
 return Utilities.formatDate(
 new Date(value),
 CONFIG.TIMEZONE,
-format||APP.DATE_FORMAT
+format||CONFIG.DATE_FORMAT
 );
 };
 
@@ -127,11 +107,11 @@ return prefix+"-"+year+"-"+month+"-"+number;
 };
 
 Utils.generatePengajuanNumber=function(lastNumber){
-return Utils.generateNumber(APP.PREFIX.PENGAJUAN,lastNumber);
+return Utils.generateNumber(CONST.PREFIX.PENGAJUAN,lastNumber);
 };
 
 Utils.generateSuratNumber=function(lastNumber){
-return Utils.generateNumber(APP.PREFIX.SURAT,lastNumber);
+return Utils.generateNumber(CONST.PREFIX.SURAT,lastNumber);
 };
 
 Utils.generateUsername=function(nik){
@@ -194,14 +174,19 @@ return i>-1?filename.substring(i+1).toLowerCase():"";
 };
 
 Utils.isAllowedFile=function(filename){
-return APP.ALLOWED_FILE_TYPES.indexOf(
+return CONFIG.ALLOWED_FILE_TYPES.indexOf(
 Utils.fileExtension(filename)
 )>-1;
 };
 
-Utils.qrVerifyUrl=function(id){
-if(!APP.QRCODE.VERIFY_URL)return id;
-return APP.QRCODE.VERIFY_URL+id;
+Utils.qrVerifyUrl = function (id) {
+
+  if (!CONFIG.QR_VERIFY_URL) {
+    return id;
+  }
+
+  return CONFIG.QR_VERIFY_URL + id;
+
 };
 
 Utils.sleep = function(ms){

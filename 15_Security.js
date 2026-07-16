@@ -509,7 +509,7 @@ Security.audit = function(action, message) {
 
   Logger.info(
 
-    "SECURITY",
+    CONST.MODULE.SECURITY,
 
     action,
 
@@ -607,7 +607,7 @@ Security.info = function() {
 
     sessionValid: Security.validateSession(),
 
-    timestamp: Helper.now()
+    timestamp: Utils.timestamp()
 
   };
 
@@ -622,15 +622,14 @@ Security.health = function() {
 
     success: true,
 
-    status: "READY",
+    status: CONST.STATUS.READY,
 
-    service: "Security Manager",
+    service: "Security Manager", // Human-readable, ok to leave
 
     version: "2.2.0",
 
-    timestamp: Helper.now()
+    timestamp: Utils.timestamp()
 
   };
 
 };
-

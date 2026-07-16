@@ -120,29 +120,11 @@ Installer.createSheet = function (sheetName) {
  */
 Installer.createHeader = function (tableName) {
 
-  if (
-    typeof MasterData === "undefined" ||
-    !MasterData.TABLES
-  ) {
-
-    throw new Error(
-      "MasterData.TABLES tidak ditemukan."
-    );
-
-  }
-
-  var definition = MasterData.TABLES[tableName];
-
-  if (!definition) {
-
-    return false;
-
-  }
-
-  var headers = definition.columns || [];
-
-  if (!headers.length) {
-
+  // This function is now deprecated as table creation is handled by Database.createAllTables().
+  // It is kept for potential future use in validation or repair logic.
+  // The dependency on MasterData.TABLES is removed.
+  var headers = Database.headers(tableName);
+  if (!headers || !headers.length) {
     return false;
 
   }
@@ -187,7 +169,7 @@ Installer.createHeader = function (tableName) {
  */
 Installer.createHeaders = function () {
 
-  Object.keys(MasterData.TABLES).forEach(function (tableName) {
+  Object.keys(CONST.SHEETS).forEach(function (tableName) {
 
     Installer.createHeader(tableName);
 
@@ -241,7 +223,7 @@ Installer.isInstalled = function () {
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  return Object.keys(MasterData.TABLES).every(function (tableName) {
+  return Object.keys(CONST.SHEETS).every(function (tableName) {
 
     return ss.getSheetByName(tableName) !== null;
 
@@ -292,7 +274,7 @@ Installer.validate = function () {
 
   };
 
-  Object.keys(MasterData.TABLES).forEach(function (tableName) {
+  Object.keys(CONST.SHEETS).forEach(function (tableName) {
 
     report.checked++;
 
@@ -307,8 +289,8 @@ Installer.validate = function () {
       return;
 
     }
-
-    var expected = MasterData.TABLES[tableName].columns || [];
+    // Validation logic now uses Database.headers as the source of truth.
+    var expected = Database.headers(tableName) || [];
 
     var actual = sheet
       .getRange(1, 1, 1, expected.length)
@@ -410,13 +392,13 @@ Installer.info = function () {
 
     valid: validation.success,
 
-    totalTables: Object.keys(MasterData.TABLES).length,
+    totalTables: Object.keys(CONST.SHEETS).length,
 
     installedTables: Installer.getInstalledTables(),
 
     validation: validation,
 
-    timestamp: Helper.now()
+    timestamp: Utils.timestamp()
 
   };
 
@@ -445,9 +427,9 @@ Installer.health = function () {
 
     checkedTables: validation.checked,
 
-    totalTables: Object.keys(MasterData.TABLES).length,
+    totalTables: Object.keys(CONST.SHEETS).length,
 
-    timestamp: Helper.now()
+    timestamp: Utils.timestamp()
 
   };
 

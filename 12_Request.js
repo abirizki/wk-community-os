@@ -274,7 +274,7 @@ session:Session.info(),
 
 user:Session.profile(),
 
-timestamp:Helper.now()
+timestamp:Utils.timestamp()
 
 };
 

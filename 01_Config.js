@@ -166,11 +166,13 @@ var CONFIG = Object.freeze({
 
   QR_ENABLED: true,
 
-  QR_WIDTH: 250,
+QR_WIDTH: 250,
 
-  QR_HEIGHT: 250,
+QR_HEIGHT: 250,
 
-  QR_MARGIN: 2,
+QR_MARGIN: 2,
+
+QR_VERIFY_URL: "",
 
   /* ==========================================================================
    * SURAT

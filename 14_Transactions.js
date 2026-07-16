@@ -26,19 +26,19 @@ Transaction._history = [];
  * @returns {Object}
  */
 Transaction.begin = function (name) {
-afterCommit:[]
+
   if (Transaction.isActive()) {
     throw new Error("Transaction already running.");
   }
 
   var trx = {
-    id: Helper.uuid(),
-    name: name || "TRANSACTION",
-    status: "RUNNING",
+    id: Utils.uuid(),
+    name: name || CONST.MODULE.TRANSACTION,
+    status: CONST.TRANSACTION_STATUS.RUNNING,
 
-    user: Session.username(),
+    user: Session.username(), // Already correct, no change needed.
 
-    startedAt: Helper.now(),
+    startedAt: Utils.timestamp(),
     startedMillis: Date.now(),
 
     finishedAt: null,
@@ -57,7 +57,7 @@ afterCommit:[]
   if (typeof EVENT !== "undefined") {
 
     Event.dispatch(
-      EVENT.TRANSACTION_BEGIN,
+      CONST.EVENT.TRANSACTION_BEGIN,
       trx
     );
 
@@ -124,7 +124,7 @@ Transaction.status = function () {
 
   return Transaction.isActive()
     ? Transaction._active.status
-    : "IDLE";
+    : CONST.TRANSACTION_STATUS.IDLE;
 
 };
 
@@ -189,15 +189,15 @@ return false;
 
 var step={
 
-id:Helper.uuid(),
+id:Utils.uuid(),
 
 name:name,
 
-module:module||"CORE",
+module:module||CONST.MODULE.CORE,
 
-status:"RUNNING",
+status:CONST.TRANSACTION_STATUS.RUNNING,
 
-startedAt:Helper.now(),
+startedAt:Utils.timestamp(),
 
 startedMillis:Date.now(),
 
@@ -241,9 +241,9 @@ return false;
 
 var step=steps[steps.length-1];
 
-step.status="SUCCESS";
+step.status=CONST.STATUS.SUCCESS;
 
-step.finishedAt=Helper.now();
+step.finishedAt=Utils.timestamp();
 
 step.finishedMillis=Date.now();
 
@@ -283,9 +283,9 @@ return false;
 
 var step=steps[steps.length-1];
 
-step.status="FAILED";
+step.status=CONST.STATUS.FAILED;
 
-step.finishedAt=Helper.now();
+step.finishedAt=Utils.timestamp();
 
 step.finishedMillis=Date.now();
 
@@ -430,7 +430,7 @@ trx.status=status;
 
 trx.reason=reason||"";
 
-trx.finishedAt=Helper.now();
+trx.finishedAt=Utils.timestamp();
 
 trx.finishedMillis=Date.now();
 
@@ -476,7 +476,7 @@ var trx=
 
 Transaction.finish(
 
-"COMMITTED"
+CONST.TRANSACTION_STATUS.COMMITTED
 
 );
 
@@ -488,7 +488,7 @@ typeof EVENT!=="undefined"
 
 Event.dispatch(
 
-EVENT.TRANSACTION_COMMIT,
+CONST.EVENT.TRANSACTION_COMMIT,
 
 trx
 
@@ -498,7 +498,7 @@ trx
 
 Logger.info(
 
-"TRANSACTION",
+CONST.MODULE.TRANSACTION,
 
 "COMMIT",
 
@@ -548,7 +548,7 @@ stack[i]();
 
 Logger.error(
 
-"TRANSACTION",
+CONST.MODULE.TRANSACTION,
 
 "UNDO",
 
@@ -564,7 +564,7 @@ var trx=
 
 Transaction.finish(
 
-"ROLLED_BACK",
+CONST.TRANSACTION_STATUS.ROLLED_BACK,
 
 reason
 
@@ -578,7 +578,7 @@ typeof EVENT!=="undefined"
 
 Event.dispatch(
 
-EVENT.TRANSACTION_ROLLBACK,
+CONST.EVENT.TRANSACTION_ROLLBACK,
 
 trx
 
@@ -588,7 +588,7 @@ trx
 
 Logger.warning(
 
-"TRANSACTION",
+CONST.MODULE.TRANSACTION,
 
 "ROLLBACK",
 
@@ -685,7 +685,7 @@ callback();
 
 Logger.error(
 
-"TRANSACTION",
+CONST.MODULE.TRANSACTION,
 
 "AFTER_COMMIT",
 
@@ -758,9 +758,9 @@ status:
 
 Transaction.isActive()
 
-?"RUNNING"
+        ?CONST.TRANSACTION_STATUS.RUNNING
 
-:"IDLE",
+        :CONST.TRANSACTION_STATUS.IDLE,
 
 activeId:
 
@@ -770,9 +770,7 @@ history:
 
 Transaction._history.length,
 
-timestamp:
-
-Helper.now()
+    timestamp:Utils.timestamp()
 
 };
 

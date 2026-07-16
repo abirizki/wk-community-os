@@ -66,86 +66,47 @@ Framework.boot = function () {
     "Bootstrapping framework"
   );
 
-  var result = {
-
-    success: true,
-
-    status: CONST.STATUS.READY,
-
+  var report = {
+    success: false, // Default to fail
+    status: CONST.STATUS.ERROR,
     framework: Framework.META.NAME,
-
     version: Framework.META.VERSION,
-
-    timestamp: Helper.now(),
-
-    modules: {}
-
+    timestamp: Utils.timestamp(),
+    modules: {},
+    error: "Boot sequence not completed."
   };
 
-  try {
+  var bootSequence = [
+    'CONFIG', 'CONST', 'Utils', 'Logger', 'MasterData', 'Database', 'Query',
+    'Cache', 'Session', 'Security', 'Permission', 'Installer',
+    'AuthRepository', 'SessionRepository', 'UserRepository', 'WargaRepository', 'DashboardRepository',
+    'AuthService', 'UserService', 'WargaService', 'DashboardService'
+  ];
 
-    result.modules.config =
-      (typeof CONFIG !== "undefined");
+  for (var i = 0; i < bootSequence.length; i++) {
+    var moduleName = bootSequence[i];
+    var moduleExists = (typeof this[moduleName] !== 'undefined' || typeof globalThis[moduleName] !== 'undefined');
+    report.modules[moduleName] = moduleExists;
 
-    result.modules.constants =
-      (typeof CONST !== "undefined");
-
-    result.modules.masterData =
-      (typeof MasterData !== "undefined");
-
-    result.modules.database =
-      (typeof Database !== "undefined");
-
-    result.modules.cache =
-      (typeof Cache !== "undefined");
-
-    result.modules.session =
-      (typeof Session !== "undefined");
-
-    result.modules.security =
-      (typeof Security !== "undefined");
-
-    result.modules.permission =
-      (typeof Permission !== "undefined");
-
-    result.modules.installer =
-      (typeof Installer !== "undefined");
-
-    Object.keys(result.modules).forEach(function (key) {
-
-      if (!result.modules[key]) {
-
-        result.success = false;
-
-        result.status = CONST.STATUS.ERROR;
-
-      }
-
-    });
-
-  } catch (err) {
-
-    result.success = false;
-
-    result.status = CONST.STATUS.ERROR;
-
-    result.error = err.message;
-
-    Logger.error(
-      "FRAMEWORK",
-      "BOOT",
-      err.message
-    );
-
+    if (!moduleExists) {
+      report.error = "Module '" + moduleName + "' failed to load.";
+      Logger.error("FRAMEWORK", "BOOT", report.error);
+      return report;
+    }
   }
+
+  // If all modules loaded successfully
+  report.success = true;
+  report.status = CONST.STATUS.READY;
+  report.error = null;
 
   Logger.info(
     "FRAMEWORK",
     "BOOT",
-    result.status
+    report.status
   );
 
-  return result;
+  return report;
 
 };
 
@@ -277,7 +238,7 @@ Framework.info = function () {
 
     installed: Installer.isInstalled(),
 
-    timestamp: Helper.now()
+    timestamp: Utils.timestamp()
 
   };
 
@@ -297,7 +258,7 @@ Framework.health = function () {
 
     framework: CONST.STATUS.READY,
 
-    timestamp: Helper.now(),
+    timestamp: Utils.timestamp(),
 
     modules: {}
 
@@ -305,17 +266,27 @@ Framework.health = function () {
 
   var modules = {
 
-    installer: Installer,
-
-    database: Database,
-
-    cache: Cache,
-
-    session: Session,
-
-    security: Security,
-
-    permission: Permission
+    // Core
+    Installer: Installer,
+    Database: Database,
+    Cache: Cache,
+    Session: Session,
+    Security: Security,
+    Permission: Permission,
+    Transaction: Transaction,
+    Event: Event,
+    MasterData: MasterData,
+    // Repositories
+    AuthRepository: AuthRepository,
+    SessionRepository: SessionRepository,
+    UserRepository: UserRepository,
+    WargaRepository: WargaRepository,
+    DashboardRepository: DashboardRepository,
+    // Services
+    AuthService: AuthService,
+    UserService: UserService,
+    WargaService: WargaService,
+    DashboardService: DashboardService
 
   };
 
@@ -347,4 +318,3 @@ Framework.health = function () {
   return report;
 
 };
-

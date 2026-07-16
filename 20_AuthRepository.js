@@ -14,7 +14,7 @@ AuthRepository.findUser=function(username){
 
 return Query
 
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 
 .where("Username",username)
 
@@ -28,7 +28,7 @@ AuthRepository.findById=function(id){
 
 return Query
 
-.table(APP.SHEETS.USERS)
+.table(CONST.SHEETS.USERS)
 
 .where("ID",id)
 
@@ -40,7 +40,7 @@ AuthRepository.findSession=function(token){
 
 return Query
 
-.table(APP.SHEETS.SESSIONS)
+.table(CONST.SHEETS.SESSIONS)
 
 .where("Token",token)
 
@@ -52,7 +52,7 @@ AuthRepository.saveSession=function(session){
 
 return Database.save(
 
-APP.SHEETS.SESSIONS,
+CONST.SHEETS.SESSIONS,
 
 "Token",
 
@@ -66,7 +66,7 @@ AuthRepository.removeSession=function(token){
 
 return Database.remove(
 
-APP.SHEETS.SESSIONS,
+CONST.SHEETS.SESSIONS,
 
 "Token",
 
@@ -80,7 +80,7 @@ AuthRepository.existsSession=function(token){
 
 return Query
 
-.table(APP.SHEETS.SESSIONS)
+.table(CONST.SHEETS.SESSIONS)
 
 .where("Token",token)
 
@@ -92,27 +92,24 @@ AuthRepository.userSessions=function(userId){
 
 return Query
 
-.table(APP.SHEETS.SESSIONS)
+.table(CONST.SHEETS.SESSIONS)
 
 .where("User_ID",userId)
 
 .orderBy("Login_At","DESC")
 
 .get();
-
 };
 
-AuthRepository.currentSession=function(){
-
-var token=Session.token();
-
-if(!token){
-
-return null;
-
-}
-
-return AuthRepository.findSession(token);
-
+/**
+ * Health Check AuthRepository.
+ *
+ * @returns {Object}
+ */
+AuthRepository.health = function () {
+  return {
+    success: true,
+    table: CONST.SHEETS.USERS,
+    status: CONST.STATUS.READY
+  };
 };
-

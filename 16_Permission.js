@@ -17,111 +17,111 @@ var Permission={};
  */
 Permission._roles={
 
-SUPER_ADMIN:["*"],
+SUPER_ADMIN:[CONST.PERMISSION.ALL],
 
 ADMIN:[
 
-"dashboard.view",
+CONST.PERMISSION.DASHBOARD_VIEW,
 
-"user.manage",
+CONST.PERMISSION.USER_MANAGE,
 
-"master.manage",
+CONST.PERMISSION.MASTER_MANAGE,
 
-"kk.manage",
+CONST.PERMISSION.KK_MANAGE,
 
-"warga.manage",
+CONST.PERMISSION.WARGA_MANAGE,
 
-"pbb.manage",
+CONST.PERMISSION.PBB_MANAGE,
 
-"surat.manage"
+CONST.PERMISSION.SURAT_MANAGE
 
 ],
 
 KELURAHAN:[
 
-"dashboard.view",
+CONST.PERMISSION.DASHBOARD_VIEW,
 
-"kk.read",
+CONST.PERMISSION.KK_READ,
 
-"warga.read",
+CONST.PERMISSION.WARGA_READ,
 
-"pbb.read",
+CONST.PERMISSION.PBB_READ,
 
-"pbb.update",
+CONST.PERMISSION.PBB_UPDATE,
 
-"surat.read",
+CONST.PERMISSION.SURAT_READ,
 
-"surat.verify",
+CONST.PERMISSION.SURAT_VERIFY,
 
-"surat.approve",
+CONST.PERMISSION.SURAT_APPROVE,
 
-"laporan.view"
+CONST.PERMISSION.LAPORAN_VIEW
 
 ],
 
 RW:[
 
-"dashboard.view",
+CONST.PERMISSION.DASHBOARD_VIEW,
 
-"kk.read",
+CONST.PERMISSION.KK_READ,
 
-"warga.read",
+CONST.PERMISSION.WARGA_READ,
 
-"surat.create",
+CONST.PERMISSION.SURAT_CREATE,
 
-"surat.read",
+CONST.PERMISSION.SURAT_READ,
 
-"surat.verify.rw",
+CONST.PERMISSION.SURAT_VERIFY_RW,
 
-"surat.download"
+CONST.PERMISSION.SURAT_DOWNLOAD
 
 ],
 
 RT:[
 
-"dashboard.view",
+CONST.PERMISSION.DASHBOARD_VIEW,
 
-"kk.read",
+CONST.PERMISSION.KK_READ,
 
-"kk.create",
+CONST.PERMISSION.KK_CREATE,
 
-"kk.update",
+CONST.PERMISSION.KK_UPDATE,
 
-"warga.read",
+CONST.PERMISSION.WARGA_READ,
 
-"warga.create",
+CONST.PERMISSION.WARGA_CREATE,
 
-"warga.update",
+CONST.PERMISSION.WARGA_UPDATE,
 
-"surat.create",
+CONST.PERMISSION.SURAT_CREATE,
 
-"surat.read",
+CONST.PERMISSION.SURAT_READ,
 
-"surat.verify.rt"
+CONST.PERMISSION.SURAT_VERIFY_RT
 
 ],
 
 WARGA:[
 
-"dashboard.view",
+CONST.PERMISSION.DASHBOARD_VIEW,
 
-"profil.read",
+CONST.PERMISSION.PROFIL_READ,
 
-"profil.update",
+CONST.PERMISSION.PROFIL_UPDATE,
 
-"surat.create",
+CONST.PERMISSION.SURAT_CREATE,
 
-"surat.read",
+CONST.PERMISSION.SURAT_READ,
 
-"surat.download"
+CONST.PERMISSION.SURAT_DOWNLOAD
 
 ],
 
 GUEST:[
 
-"home.view",
+CONST.PERMISSION.HOME_VIEW,
 
-"informasi.view"
+CONST.PERMISSION.INFORMASI_VIEW
 
 ]
 
@@ -139,7 +139,7 @@ role=String(
 
 role||
 
-"GUEST"
+CONST.ROLE.GUEST
 
 ).toUpperCase();
 
@@ -187,7 +187,7 @@ role ||
 
 Session.role() ||
 
-"GUEST"
+CONST.ROLE.GUEST
 
 ).toUpperCase();
 
@@ -212,7 +212,7 @@ Permission.permissions(role);
 
 if(
 
-permissions.indexOf("*")>-1
+permissions.indexOf(CONST.PERMISSION.ALL)>-1
 
 ){
 
@@ -357,7 +357,7 @@ Permission.isGuest=function(){
 
 return Permission.hasRole(
 
-"GUEST"
+CONST.ROLE.GUEST
 
 );
 
@@ -393,7 +393,7 @@ Permission.authorize = function(permission, role) {
 
   Logger.warning(
 
-    "PERMISSION",
+    CONST.MODULE.PERMISSION,
 
     "DENIED",
 
@@ -555,7 +555,7 @@ Permission.reset = function() {
 
   Logger.warning(
 
-    "PERMISSION",
+    CONST.MODULE.PERMISSION,
 
     "RESET",
 
@@ -590,9 +590,7 @@ Permission.info = function() {
 
       Permission.currentRole(),
 
-    timestamp:
-
-      Helper.now()
+    timestamp: Utils.timestamp()
 
   };
 
@@ -619,9 +617,7 @@ Permission.health = function() {
 
       Permission.roles().length,
 
-    timestamp:
-
-      Helper.now()
+    timestamp: Utils.timestamp()
 
   };
 

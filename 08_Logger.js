@@ -68,7 +68,7 @@ AppLogger.error = function (error) {
  */
 AppLogger.debug = function (message) {
 
-  if (!WK.Config.get("ENABLE_DEBUG")) {
+  if (!CONFIG.ENABLE_DEBUG_LOG) {
     return;
   }
 

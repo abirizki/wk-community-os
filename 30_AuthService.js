@@ -579,3 +579,13 @@ AuthService.boot=function(){
 
 };
 
+AuthService.currentSession = function () {
+
+    var token = Session.token();
+
+    if (!token) {
+        return null;
+    }
+
+    return AuthRepository.findSession(token);
+};

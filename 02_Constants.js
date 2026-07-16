@@ -1,3 +1,4 @@
+
 /**
  * =============================================================================
  * WK FRAMEWORK
@@ -20,6 +21,8 @@ var CONST = CONST || {};
  */
 
 CONST.FRAMEWORK = Object.freeze({
+
+  SYSTEM_USER: "SYSTEM",
 
   NAME: "WK Framework",
 
@@ -147,6 +150,8 @@ CONST.ROLE = Object.freeze({
 
   ADMIN: "ADMIN",
 
+  KELURAHAN: "KELURAHAN",
+
   RW: "RW",
 
   RT: "RT",
@@ -240,13 +245,25 @@ CONST.QUERY_OPERATOR = Object.freeze({
 
 CONST.CACHE = Object.freeze({
 
+  PREFIX: "WK_",
+
+  USERS: "USERS",
+  KK: "KK",
+  WARGA: "WARGA",
+  PBB: "PBB",
+  LAYANAN: "LAYANAN",
+  PERSYARATAN: "PERSYARATAN",
+  DASHBOARD: "DASHBOARD_",
+
   CONFIG: "CONFIG",
 
   MASTER: "MASTER",
 
   USER: "USER",
 
-  SESSION: "SESSION",
+  SESSION: "SESSION_",
+
+  NOTIFICATION: "NOTIF_",
 
   ROLE: "ROLE",
 
@@ -356,7 +373,11 @@ CONST.SHEETS = Object.freeze({
 
   SETTING: "SETTING",
 
-  LOG: "LOG"
+  LOG: "LOG",
+
+  NOTIFICATION: "notification",
+
+  MASTER_TEMPLATE: "master_template"
 
 });
 
@@ -697,31 +718,74 @@ CONST.ERROR = Object.freeze({
 });
 
 /* =============================================================================
- * COMPATIBILITY
- *
- * Layer sementara selama migrasi APP -> CONFIG / CONST.
- * Jangan menambah properti baru di sini.
- * Setelah seluruh project selesai dimigrasikan,
- * blok ini dapat dihapus.
+ * MODULE NAME
  * =============================================================================
  */
 
-CONST.APP = Object.freeze({
+CONST.MODULE = Object.freeze({
 
-  NAME: CONFIG.APP_NAME,
+  CORE: "CORE",
+  FRAMEWORK: "FRAMEWORK",
+  INSTALLER: "INSTALLER",
+  DATABASE: "DATABASE",
+  CACHE: "CACHE",
+  SESSION: "SESSION",
+  SECURITY: "SECURITY",
+  PERMISSION: "PERMISSION",
+  EVENT: "EVENT",
+  TRANSACTION: "TRANSACTION",
+  LOGGER: "LOGGER"
 
-  VERSION: CONFIG.VERSION,
+});
 
-  DATE_FORMAT: CONFIG.DATE_FORMAT,
+/* =============================================================================
+ * TRANSACTION STATUS
+ * =============================================================================
+ */
 
-  DATETIME_FORMAT: CONFIG.DATETIME_FORMAT,
+CONST.TRANSACTION_STATUS = Object.freeze({
 
-  SPREADSHEET_ID: CONFIG.SPREADSHEET_ID,
+  IDLE: "IDLE",
+  RUNNING: "RUNNING",
+  COMMITTED: "COMMITTED",
+  ROLLED_BACK: "ROLLED_BACK"
 
-  SPREADSHEET_NAME: CONFIG.SPREADSHEET_NAME,
+});
 
-  SESSION_TIMEOUT: CONFIG.SESSION_TIMEOUT
+/* =============================================================================
+ * PERMISSION
+ * =============================================================================
+ */
 
+CONST.PERMISSION = Object.freeze({
+  ALL: "*",
+  DASHBOARD_VIEW: "dashboard.view",
+  USER_MANAGE: "user.manage",
+  MASTER_MANAGE: "master.manage",
+  KK_MANAGE: "kk.manage",
+  WARGA_MANAGE: "warga.manage",
+  PBB_MANAGE: "pbb.manage",
+  SURAT_MANAGE: "surat.manage",
+  KK_READ: "kk.read",
+  WARGA_READ: "warga.read",
+  PBB_READ: "pbb.read",
+  PBB_UPDATE: "pbb.update",
+  SURAT_READ: "surat.read",
+  SURAT_VERIFY: "surat.verify",
+  SURAT_APPROVE: "surat.approve",
+  LAPORAN_VIEW: "laporan.view",
+  SURAT_CREATE: "surat.create",
+  SURAT_VERIFY_RW: "surat.verify.rw",
+  SURAT_DOWNLOAD: "surat.download",
+  KK_CREATE: "kk.create",
+  KK_UPDATE: "kk.update",
+  WARGA_CREATE: "warga.create",
+  WARGA_UPDATE: "warga.update",
+  SURAT_VERIFY_RT: "surat.verify.rt",
+  PROFIL_READ: "profil.read",
+  PROFIL_UPDATE: "profil.update",
+  HOME_VIEW: "home.view",
+  INFORMASI_VIEW: "informasi.view"
 });
 
 /* =============================================================================

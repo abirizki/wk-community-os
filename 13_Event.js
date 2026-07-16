@@ -14,20 +14,6 @@ Event._listeners={};
 
 Event._history=[];
 
-Event.on=function(eventName,callback){
-
-if(!Event._listeners[eventName]){
-
-Event._listeners[eventName]=[];
-
-}
-
-Event._listeners[eventName].push(callback);
-
-return Event;
-
-};
-
 Event.once=function(eventName,callback){
 
 var wrapper=function(payload){
@@ -109,48 +95,6 @@ return Event;
 
 };
 
-Event.dispatch=function(eventName,payload){
-
-payload=payload||{};
-
-Event._history.push({
-
-event:eventName,
-
-timestamp:Helper.now(),
-
-payload:payload
-
-});
-
-var listeners=Event.listeners(eventName);
-
-listeners.forEach(function(listener){
-
-try{
-
-listener(payload);
-
-}catch(ex){
-
-Logger.error(
-
-"EVENT",
-
-eventName,
-
-ex
-
-);
-
-}
-
-});
-
-return true;
-
-};
-
 Event.emit=function(eventName,payload){
 
 return Event.dispatch(
@@ -217,71 +161,6 @@ history:Event._history.length
 };
 
 /* =============================================================================
- * PRIORITY EVENT
- * =============================================================================
- */
-
-Event.onPriority=function(eventName,callback,priority){
-
-priority=priority||100;
-
-if(!Event._listeners[eventName]){
-
-Event._listeners[eventName]=[];
-
-}
-
-Event._listeners[eventName].push({
-
-priority:priority,
-
-callback:callback
-
-});
-
-Event._listeners[eventName].sort(function(a,b){
-
-return a.priority-b.priority;
-
-});
-
-return Event;
-
-};
-
-Event.dispatchPriority=function(eventName,payload){
-
-payload=payload||{};
-
-var listeners=Event._listeners[eventName]||[];
-
-listeners.forEach(function(item){
-
-try{
-
-item.callback(payload);
-
-}catch(ex){
-
-Logger.error(
-
-"EVENT",
-
-eventName,
-
-ex
-
-);
-
-}
-
-});
-
-return true;
-
-};
-
-/* =============================================================================
  * FINAL IMPLEMENTATION
  * =============================================================================
  */
@@ -322,7 +201,7 @@ Event._history.push({
 
 event:eventName,
 
-timestamp:Helper.now(),
+timestamp:Utils.timestamp(),
 
 payload:payload
 
@@ -340,7 +219,7 @@ item.callback(payload);
 
 Logger.error(
 
-"EVENT",
+CONST.MODULE.EVENT,
 
 eventName,
 
@@ -406,7 +285,7 @@ Event._listeners
 
 history:Event._history.length,
 
-timestamp:Helper.now()
+timestamp:Utils.timestamp()
 
 };
 

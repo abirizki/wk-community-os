@@ -12,7 +12,7 @@ var Session={};
 
 Session.key=function(){
 
-return APP.NAME+"_SESSION";
+return CONFIG.APP_NAME+"_SESSION";
 
 };
 
@@ -34,7 +34,7 @@ Session.key(),
 
 token,
 
-APP.SESSION_TIMEOUT
+CONFIG.SESSION_TIMEOUT
 
 );
 
@@ -64,11 +64,11 @@ session.Token
 
 Cache.put(
 
-"SESSION_"+session.Token,
+CONST.CACHE.SESSION+session.Token,
 
 session,
 
-APP.SESSION_TIMEOUT
+CONFIG.SESSION_TIMEOUT
 
 );
 
@@ -158,7 +158,7 @@ return null;
 
 return Cache.remember(
 
-"USER_"+session.User_ID,
+CONST.CACHE.USER+"_"+session.User_ID,
 
 300,
 
@@ -256,11 +256,11 @@ return false;
 
 Cache.put(
 
-"SESSION_"+session.Token,
+CONST.CACHE.SESSION+session.Token,
 
 session,
 
-APP.SESSION_TIMEOUT
+CONFIG.SESSION_TIMEOUT
 
 );
 
@@ -290,7 +290,7 @@ Session.isAdmin=function(){
 
 return Session.hasRole(
 
-APP.ROLES.ADMIN
+CONST.ROLE.ADMIN
 
 );
 
@@ -300,7 +300,7 @@ Session.isKelurahan=function(){
 
 return Session.hasRole(
 
-APP.ROLES.KELURAHAN
+CONST.ROLE.KELURAHAN
 
 );
 
@@ -310,7 +310,7 @@ Session.isRW=function(){
 
 return Session.hasRole(
 
-APP.ROLES.RW
+CONST.ROLE.RW
 
 );
 
@@ -320,7 +320,7 @@ Session.isRT=function(){
 
 return Session.hasRole(
 
-APP.ROLES.RT
+CONST.ROLE.RT
 
 );
 
@@ -330,7 +330,7 @@ Session.isWarga=function(){
 
 return Session.hasRole(
 
-APP.ROLES.WARGA
+CONST.ROLE.WARGA
 
 );
 
@@ -392,7 +392,7 @@ username:Session.username(),
 
 role:Session.role(),
 
-timestamp:Helper.now()
+timestamp:Utils.timestamp()
 
 };
 
@@ -412,7 +412,7 @@ role:Session.role(),
 
 status:"READY",
 
-timestamp:Helper.now()
+timestamp:Utils.timestamp()
 
 };
 

@@ -11,7 +11,7 @@ var SessionRepository = {};
 
 SessionRepository.table=function(){
 
-    return WK.Config.tables.sessions;
+    return CONST.SHEETS.SESSIONS;
 
 };
 
@@ -51,120 +51,19 @@ SessionRepository.exists=function(token){
 
 };
 
-SessionRepository.create=function(user){
-
-    var token=
-
-        Security.generateToken();
-
-    var data={
-
-        ID:Security.uuid(),
-
-        User_ID:user.ID,
-
-        Username:user.Username,
-
-        Role:user.Role,
-
-        Wilayah_ID:user.Wilayah_ID,
-
-        Token:token,
-
-        Login_At:new Date(),
-
-        Expired_At:new Date(
-
-            new Date().getTime()+
-
-            (1000*60*60*24)
-
-        ),
-
-        Status:"ACTIVE"
-
-    };
-
+SessionRepository.create=function(sessionObject){
     Database
 
         .table(SessionRepository.table())
 
-        .insert(data);
+        .insert(sessionObject);
 
-    return data;
-
-};
-
-SessionRepository.validate=function(token){
-
-    var session=
-
-        SessionRepository.find(token);
-
-    if(!session){
-
-        return false;
-
-    }
-
-    if(session.Status!=="ACTIVE"){
-
-        return false;
-
-    }
-
-    if(
-
-        new Date(session.Expired_At)
-
-        <
-
-        new Date()
-
-    ){
-
-        return false;
-
-    }
-
-    return true;
+    return sessionObject;
 
 };
 
-SessionRepository.user=function(token){
-
-    var session=
-
-        SessionRepository.find(token);
-
-    if(!session){
-
-        return null;
-
-    }
-
-    return AuthRepository.findById(
-
-        session.User_ID
-
-    );
-
-};
-
-SessionRepository.refresh=function(token){
-
-    var session=
-
-        SessionRepository.find(token);
-
-    if(!session){
-
-        return false;
-
-    }
-
+SessionRepository.update=function(token, data){
     return Database
-
         .table(SessionRepository.table())
 
         .update(
@@ -173,23 +72,12 @@ SessionRepository.refresh=function(token){
 
             token,
 
-            {
-
-                Expired_At:new Date(
-
-                    new Date().getTime()+
-
-                    (1000*60*60*24)
-
-                )
-
-            }
+            data
 
         );
-
 };
 
-SessionRepository.destroy=function(token){
+SessionRepository.delete=function(token){
 
     return Database
 
@@ -205,7 +93,7 @@ SessionRepository.destroy=function(token){
 
 };
 
-SessionRepository.destroyByUser=function(userId){
+SessionRepository.deleteByUser=function(userId){
 
     var sessions=
 
@@ -238,57 +126,9 @@ SessionRepository.destroyByUser=function(userId){
 };
 
 SessionRepository.logout=function(token){
-
-    return Database
-
-        .table(SessionRepository.table())
-
-        .update(
-
-            "Token",
-
-            token,
-
-            {
-
-                Status:"LOGOUT",
-
-                Logout_At:new Date()
-
-            }
-
-        );
-
-};
-
-SessionRepository.extend=function(token,hours){
-
-    hours=hours||24;
-
-    return Database
-
-        .table(SessionRepository.table())
-
-        .update(
-
-            "Token",
-
-            token,
-
-            {
-
-                Expired_At:new Date(
-
-                    new Date().getTime()+
-
-                    (1000*60*60*hours)
-
-                )
-
-            }
-
-        );
-
+    // This function is now handled by AuthService calling update.
+    // This is dead code.
+    return false;
 };
 
 SessionRepository.active=function(){
@@ -303,69 +143,9 @@ SessionRepository.active=function(){
 
 };
 
-SessionRepository.expired=function(){
-
-    var now=new Date();
-
-    return Database
-
-        .table(SessionRepository.table())
-
-        .filter(function(item){
-
-            return new Date(item.Expired_At)<now;
-
-        })
-
-        .get();
-
-};
-
 SessionRepository.online=function(){
 
     return SessionRepository.active().length;
-
-};
-
-SessionRepository.cleanup=function(){
-
-    var sessions=
-
-        Database
-
-        .table(SessionRepository.table())
-
-        .get();
-
-    var now=new Date();
-
-    sessions.forEach(function(item){
-
-        if(
-
-            item.Status!=="ACTIVE" ||
-
-            new Date(item.Expired_At)<now
-
-        ){
-
-            Database
-
-                .table(SessionRepository.table())
-
-                .delete(
-
-                    "ID",
-
-                    item.ID
-
-                );
-
-        }
-
-    });
-
-    return true;
 
 };
 
@@ -404,17 +184,5 @@ SessionRepository.health=function(){
         active:SessionRepository.online()
 
     };
-
-};
-
-SessionRepository.boot=function(){
-
-    AppLogger.info(
-
-        "SessionRepository Loaded"
-
-    );
-
-    return true;
 
 };

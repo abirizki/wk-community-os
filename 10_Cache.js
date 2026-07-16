@@ -18,7 +18,7 @@ return CacheService.getScriptCache();
 
 Cache.prefix=function(key){
 
-return APP.NAME+"_"+key;
+return CONST.CACHE.PREFIX+key;
 
 };
 
@@ -184,7 +184,7 @@ Cache.users=function(){
 
 return Cache.remember(
 
-"USERS",
+CONST.CACHE.USERS,
 
 600,
 
@@ -192,7 +192,7 @@ function(){
 
 return Database.data(
 
-APP.SHEETS.USERS
+CONST.SHEETS.USERS
 
 );
 
@@ -206,7 +206,7 @@ Cache.kk=function(){
 
 return Cache.remember(
 
-"KK",
+CONST.CACHE.KK,
 
 600,
 
@@ -214,7 +214,7 @@ function(){
 
 return Database.data(
 
-APP.SHEETS.KK
+CONST.SHEETS.KK
 
 );
 
@@ -228,7 +228,7 @@ Cache.warga=function(){
 
 return Cache.remember(
 
-"WARGA",
+CONST.CACHE.WARGA,
 
 600,
 
@@ -236,7 +236,7 @@ function(){
 
 return Database.data(
 
-APP.SHEETS.WARGA
+CONST.SHEETS.WARGA
 
 );
 
@@ -250,7 +250,7 @@ Cache.pbb=function(){
 
 return Cache.remember(
 
-"PBB",
+CONST.CACHE.PBB,
 
 600,
 
@@ -258,7 +258,7 @@ function(){
 
 return Database.data(
 
-APP.SHEETS.PBB
+CONST.SHEETS.PBB
 
 );
 
@@ -272,7 +272,7 @@ Cache.layanan=function(){
 
 return Cache.remember(
 
-"LAYANAN",
+CONST.CACHE.LAYANAN,
 
 3600,
 
@@ -280,7 +280,7 @@ function(){
 
 return Database.data(
 
-APP.SHEETS.LAYANAN
+CONST.SHEETS.LAYANAN
 
 );
 
@@ -294,7 +294,7 @@ Cache.persyaratan=function(){
 
 return Cache.remember(
 
-"PERSYARATAN",
+CONST.CACHE.PERSYARATAN,
 
 3600,
 
@@ -302,7 +302,7 @@ function(){
 
 return Database.data(
 
-APP.SHEETS.PERSYARATAN
+CONST.SHEETS.PERSYARATAN
 
 );
 
@@ -316,7 +316,7 @@ Cache.dashboard=function(key,callback){
 
 return Cache.remember(
 
-"DASHBOARD_"+key,
+CONST.CACHE.DASHBOARD+key,
 
 300,
 
@@ -330,7 +330,7 @@ Cache.session=function(token,callback){
 
 return Cache.remember(
 
-"SESSION_"+token,
+CONST.CACHE.SESSION+token,
 
 1800,
 
@@ -344,7 +344,7 @@ Cache.notification=function(userId,callback){
 
 return Cache.remember(
 
-"NOTIF_"+userId,
+CONST.CACHE.NOTIFICATION+userId,
 
 300,
 
@@ -356,7 +356,7 @@ callback
 
 Cache.invalidateUser=function(){
 
-Cache.remove("USERS");
+Cache.remove(CONST.CACHE.USERS);
 
 return true;
 
@@ -364,7 +364,7 @@ return true;
 
 Cache.invalidateKK=function(){
 
-Cache.remove("KK");
+Cache.remove(CONST.CACHE.KK);
 
 return true;
 
@@ -372,7 +372,7 @@ return true;
 
 Cache.invalidateWarga=function(){
 
-Cache.remove("WARGA");
+Cache.remove(CONST.CACHE.WARGA);
 
 return true;
 
@@ -380,7 +380,7 @@ return true;
 
 Cache.invalidatePBB=function(){
 
-Cache.remove("PBB");
+Cache.remove(CONST.CACHE.PBB);
 
 return true;
 
@@ -388,9 +388,9 @@ return true;
 
 Cache.invalidateLayanan=function(){
 
-Cache.remove("LAYANAN");
+Cache.remove(CONST.CACHE.LAYANAN);
 
-Cache.remove("PERSYARATAN");
+Cache.remove(CONST.CACHE.PERSYARATAN);
 
 return true;
 
@@ -402,17 +402,17 @@ if(key){
 
 Cache.remove(
 
-"DASHBOARD_"+key
+CONST.CACHE.DASHBOARD+key
 
 );
 
 }else{
 
-Cache.remove("DASHBOARD_ADMIN");
-Cache.remove("DASHBOARD_RW");
-Cache.remove("DASHBOARD_RT");
-Cache.remove("DASHBOARD_KELURAHAN");
-Cache.remove("DASHBOARD_WARGA");
+Cache.remove(CONST.CACHE.DASHBOARD+"ADMIN");
+Cache.remove(CONST.CACHE.DASHBOARD+"RW");
+Cache.remove(CONST.CACHE.DASHBOARD+"RT");
+Cache.remove(CONST.CACHE.DASHBOARD+"KELURAHAN");
+Cache.remove(CONST.CACHE.DASHBOARD+"WARGA");
 
 }
 
@@ -426,7 +426,7 @@ if(token){
 
 Cache.remove(
 
-"SESSION_"+token
+CONST.CACHE.SESSION+token
 
 );
 
@@ -442,7 +442,7 @@ if(userId){
 
 Cache.remove(
 
-"NOTIF_"+userId
+CONST.CACHE.NOTIFICATION+userId
 
 );
 
@@ -474,17 +474,17 @@ Cache.stats=function(){
 
 return{
 
-users:Cache.has("USERS"),
+users:Cache.has(CONST.CACHE.USERS),
 
-kk:Cache.has("KK"),
+kk:Cache.has(CONST.CACHE.KK),
 
-warga:Cache.has("WARGA"),
+warga:Cache.has(CONST.CACHE.WARGA),
 
-pbb:Cache.has("PBB"),
+pbb:Cache.has(CONST.CACHE.PBB),
 
-layanan:Cache.has("LAYANAN"),
+layanan:Cache.has(CONST.CACHE.LAYANAN),
 
-persyaratan:Cache.has("PERSYARATAN")
+persyaratan:Cache.has(CONST.CACHE.PERSYARATAN)
 
 };
 
@@ -498,7 +498,7 @@ success:true,
 
 cache:"ScriptCache",
 
-timestamp:Helper.now(),
+timestamp:Utils.timestamp(),
 
 status:"READY"
 

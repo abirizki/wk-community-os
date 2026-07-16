@@ -12,9 +12,9 @@ var Database={};
 
 Database.spreadsheet=function(){
 
-if(APP.SPREADSHEET_ID){
+if(CONFIG.SPREADSHEET_ID){
 
-return SpreadsheetApp.openById(APP.SPREADSHEET_ID);
+return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
 
 }
 
@@ -526,9 +526,9 @@ return true;
 
 Database.allSheets=function(){
 
-return Object.keys(APP.SHEETS).map(function(k){
+return Object.keys(CONST.SHEETS).map(function(k){
 
-return APP.SHEETS[k];
+return CONST.SHEETS[k];
 
 });
 
@@ -542,7 +542,7 @@ Database.createAllTables=function(){
 
 Database.create(
 
-APP.SHEETS.USERS,
+CONST.SHEETS.USERS,
 
 [
 
@@ -588,7 +588,7 @@ APP.SHEETS.USERS,
 
 Database.create(
 
-APP.SHEETS.SESSIONS,
+CONST.SHEETS.SESSIONS,
 
 [
 
@@ -620,7 +620,7 @@ APP.SHEETS.SESSIONS,
 
 Database.create(
 
-APP.SHEETS.KK,
+CONST.SHEETS.KK,
 
 [
 
@@ -660,7 +660,7 @@ APP.SHEETS.KK,
 
 Database.create(
 
-APP.SHEETS.WARGA,
+CONST.SHEETS.WARGA,
 
 [
 
@@ -720,7 +720,7 @@ APP.SHEETS.WARGA,
 
 Database.create(
 
-APP.SHEETS.PBB,
+CONST.SHEETS.PBB,
 
 [
 
@@ -762,7 +762,7 @@ APP.SHEETS.PBB,
 
 Database.create(
 
-APP.SHEETS.LAYANAN,
+CONST.SHEETS.LAYANAN,
 
 [
 
@@ -808,7 +808,7 @@ APP.SHEETS.LAYANAN,
 
 Database.create(
 
-APP.SHEETS.PERSYARATAN,
+CONST.SHEETS.PERSYARATAN,
 
 [
 
@@ -848,7 +848,7 @@ APP.SHEETS.PERSYARATAN,
 
 Database.create(
 
-APP.SHEETS.PENGAJUAN,
+CONST.SHEETS.PENGAJUAN,
 
 [
 
@@ -918,7 +918,7 @@ APP.SHEETS.PENGAJUAN,
 
 Database.create(
 
-APP.SHEETS.DOKUMEN,
+CONST.SHEETS.DOKUMEN,
 
 [
 
@@ -954,7 +954,7 @@ APP.SHEETS.DOKUMEN,
 
 Database.create(
 
-APP.SHEETS.SURAT,
+CONST.SHEETS.SURAT,
 
 [
 
@@ -992,7 +992,7 @@ APP.SHEETS.SURAT,
 
 Database.create(
 
-APP.SHEETS.AUDIT,
+CONST.SHEETS.AUDIT,
 
 [
 
@@ -1074,7 +1074,7 @@ Database.create(
 
 Database.create(
 
-APP.SHEETS.SETTING,
+CONST.SHEETS.SETTING,
 
 [
 
@@ -1104,7 +1104,7 @@ for(var i=0;i<layanan.length;i++){
 
 if(!Database.existsBy(
 
-APP.SHEETS.LAYANAN,
+CONST.SHEETS.LAYANAN,
 
 "Kode",
 
@@ -1114,7 +1114,7 @@ layanan[i].kode
 
 Database.insert(
 
-APP.SHEETS.LAYANAN,
+CONST.SHEETS.LAYANAN,
 
 {
 
@@ -1142,7 +1142,7 @@ Urutan:i+1,
 
 Aktif:layanan[i].aktif,
 
-Created_At:Helper.now(),
+Created_At:Utils.timestamp(),
 
 Created_By:"SYSTEM",
 
@@ -1180,7 +1180,7 @@ return Database.initialize();
 
 Database.version=function(){
 
-return APP.VERSION;
+return CONFIG.VERSION;
 
 };
 
@@ -1190,7 +1190,7 @@ return{
 
 success:true,
 
-version:APP.VERSION,
+version:CONFIG.VERSION,
 
 spreadsheet:Database.spreadsheet().getName(),
 
@@ -1198,7 +1198,7 @@ tables:Database.allSheets(),
 
 total_tables:Database.allSheets().length,
 
-timestamp:Helper.now()
+timestamp:Utils.timestamp()
 
 };
 

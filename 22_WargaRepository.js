@@ -11,7 +11,7 @@ var WargaRepository = {};
 
 WargaRepository.table=function(){
 
-    return WK.Config.tables.warga;
+    return CONST.SHEETS.WARGA;
 
 };
 
@@ -195,19 +195,14 @@ WargaRepository.existsKK=function(noKK){
 
 WargaRepository.create=function(data){
 
-    data=Security.beforeInsert(data);
-
     return Database
 
         .table(WargaRepository.table())
 
         .insert(data);
-
 };
 
 WargaRepository.update=function(id,data){
-
-    data=Security.beforeUpdate(data);
 
     return Database
 
@@ -222,7 +217,6 @@ WargaRepository.update=function(id,data){
             data
 
         );
-
 };
 
 WargaRepository.delete=function(id){
@@ -267,9 +261,9 @@ WargaRepository.active=function(){
 
         .where(
 
-            "Status",
+            "Status_Warga",
 
-            "Aktif"
+            CONST.WARGA_STATUS.ACTIVE
 
         )
 
@@ -287,9 +281,9 @@ WargaRepository.inactive=function(){
 
         .where(
 
-            "Status",
+            "Status_Warga",
 
-            "Tidak Aktif"
+            CONST.WARGA_STATUS.NONAKTIF
 
         )
 
@@ -519,7 +513,7 @@ WargaRepository.kepalaKeluarga=function(){
 
             "Status_Dalam_Keluarga",
 
-            "Kepala Keluarga"
+            CONST.MASTER.STATUS_KELUARGA[0]
 
         )
 
@@ -664,17 +658,5 @@ WargaRepository.export=function(){
         .orderBy("Nama")
 
         .get();
-
-};
-
-WargaRepository.boot=function(){
-
-    AppLogger.info(
-
-        "WargaRepository Loaded"
-
-    );
-
-    return true;
 
 };

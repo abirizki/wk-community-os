@@ -11,19 +11,19 @@ var DashboardRepository={};
 
 DashboardRepository.wargaTable=function(){
 
-    return WK.Config.tables.warga;
+    return CONST.SHEETS.WARGA;
 
 };
 
 DashboardRepository.suratTable=function(){
 
-    return WK.Config.tables.surat;
+    return CONST.SHEETS.SURAT;
 
 };
 
 DashboardRepository.userTable=function(){
 
-    return WK.Config.tables.users;
+    return CONST.SHEETS.USERS;
 
 };
 
@@ -127,7 +127,7 @@ DashboardRepository.totalSuratPending=function(){
 
         .table(DashboardRepository.suratTable())
 
-        .where("Status","Pending")
+        .where("Status",CONST.STATUS.PENDING)
 
         .count();
 
@@ -139,7 +139,7 @@ DashboardRepository.totalSuratProses=function(){
 
         .table(DashboardRepository.suratTable())
 
-        .where("Status","Diproses")
+        .where("Status",CONST.STATUS.PROCESS)
 
         .count();
 
@@ -151,7 +151,7 @@ DashboardRepository.totalSuratSelesai=function(){
 
         .table(DashboardRepository.suratTable())
 
-        .where("Status","Selesai")
+        .where("Status",CONST.PENGAJUAN_STATUS.SELESAI)
 
         .count();
 
@@ -353,11 +353,7 @@ DashboardRepository.summary=function(){
 
         suratSelesai:
 
-            DashboardRepository.totalSuratSelesai(),
-
-        onlineUser:
-
-            DashboardRepository.onlineUser()
+            DashboardRepository.totalSuratSelesai()
 
     };
 
@@ -403,25 +399,8 @@ DashboardRepository.health=function(){
 
         surat:
 
-            DashboardRepository.totalSurat(),
-
-        online:
-
-            DashboardRepository.onlineUser()
+            DashboardRepository.totalSurat()
 
     };
 
 };
-
-DashboardRepository.boot=function(){
-
-    AppLogger.info(
-
-        "DashboardRepository Loaded"
-
-    );
-
-    return true;
-
-};
-
