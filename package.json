@@ -1,24 +1,14 @@
 {
-  "name": "wk_prod",
+  "name": "wk-community-os-backend",
   "version": "1.0.0",
-  "description": "**Version:** 1.0.0\r **Author:** Gemini Code Assist\r **Generated:** 2026-08-07",
-  "main": "AccessMonitor.js",
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "mysql2": "^3.24.3"
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mysql2": "^3.0.0"
   }
 }
