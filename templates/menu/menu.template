@@ -1,0 +1,10 @@
+/**
+ * Menu template for {{MODULE_NAME}}
+ * Author: {{AUTHOR}}
+ * Version: {{VERSION}}
+ */
+{
+  "name": "{{MODULE_NAME}}",
+  "label": "{{MODULE_NAME}}",
+  "description": "{{DESCRIPTION}}"
+}

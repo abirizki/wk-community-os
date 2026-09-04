@@ -1,0 +1,26 @@
+packages/
+└── Core/
+    ├── README.md
+    ├── module.json
+    ├── docs/
+    │   ├── dependency-diagram.txt
+    │   ├── dependency-matrix.md
+    │   └── folder-tree.txt
+    ├── src/
+    │   ├── Authentication/
+    │   ├── Authorization/
+    │   ├── Audit/
+    │   ├── Configuration/
+    │   ├── Dashboard/
+    │   ├── Logger/
+    │   ├── Notification/
+    │   ├── Permission/
+    │   ├── Report/
+    │   ├── Role/
+    │   ├── RuleEngine/
+    │   ├── Session/
+    │   ├── Settings/
+    │   ├── Storage/
+    │   ├── System/
+    │   └── Workflow/
+    └── tests/

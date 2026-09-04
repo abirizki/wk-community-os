@@ -1,0 +1,31 @@
+{
+  "id": "notification",
+  "name": "Notification",
+  "version": "1.0.0",
+  "description": "Unified communication center for WK Community OS.",
+  "entryPoint": "src/NotificationService.js",
+  "enabled": true,
+  "dependencies": ["core", "system", "workflow", "eventbus", "citizen", "household"],
+  "components": [
+    "NotificationEntity",
+    "NotificationRepository",
+    "NotificationService",
+    "NotificationController",
+    "NotificationChannel",
+    "NotificationTemplate",
+    "NotificationPreference",
+    "NotificationQueue",
+    "NotificationScheduler",
+    "BroadcastService",
+    "InboxService",
+    "PushService",
+    "WhatsAppService",
+    "SMSService",
+    "EmailService",
+    "NotificationStatistics",
+    "NotificationDashboard",
+    "NotificationMigration",
+    "NotificationSeeder",
+    "NotificationTest"
+  ]
+}

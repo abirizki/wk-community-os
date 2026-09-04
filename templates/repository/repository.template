@@ -1,0 +1,11 @@
+/**
+ * Repository template for {{MODULE_NAME}}
+ * Author: {{AUTHOR}}
+ * Version: {{VERSION}}
+ */
+class {{CLASS_NAME}}Repository {
+  constructor() {
+    this.module = '{{MODULE_NAME}}';
+    this.namespace = '{{NAMESPACE}}';
+  }
+}

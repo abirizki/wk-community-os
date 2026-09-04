@@ -1,0 +1,11 @@
+/**
+ * Dashboard template for {{MODULE_NAME}}
+ * Author: {{AUTHOR}}
+ * Version: {{VERSION}}
+ */
+class {{CLASS_NAME}}Dashboard {
+  constructor() {
+    this.module = '{{MODULE_NAME}}';
+    this.namespace = '{{NAMESPACE}}';
+  }
+}

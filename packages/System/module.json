@@ -1,0 +1,23 @@
+{
+  "id": "system",
+  "name": "System",
+  "version": "1.0.0",
+  "description": "Identity and access foundation for WK packages.",
+  "entryPoint": "src/Authentication/SystemAuthenticationService.js",
+  "enabled": true,
+  "dependencies": [],
+  "components": [
+    "User",
+    "Authentication",
+    "Authorization",
+    "Role",
+    "Permission",
+    "Session",
+    "Profile",
+    "Organization",
+    "RT",
+    "RW",
+    "Kelurahan",
+    "Operator"
+  ]
+}

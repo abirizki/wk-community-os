@@ -1,0 +1,11 @@
+/**
+ * Service template for {{MODULE_NAME}}
+ * Author: {{AUTHOR}}
+ * Version: {{VERSION}}
+ */
+class {{CLASS_NAME}}Service {
+  constructor() {
+    this.module = '{{MODULE_NAME}}';
+    this.namespace = '{{NAMESPACE}}';
+  }
+}

@@ -1,0 +1,8 @@
+/**
+ * Test template for {{MODULE_NAME}}
+ * Author: {{AUTHOR}}
+ * Version: {{VERSION}}
+ */
+function test{{CLASS_NAME}}() {
+  return true;
+}

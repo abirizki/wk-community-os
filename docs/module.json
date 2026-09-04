@@ -1,0 +1,39 @@
+{
+  "id": "pbb",
+  "name": "PBB",
+  "version": "1.0.0",
+  "description": "Manages Land and Building Tax (PBB) administration, including tax objects, taxpayers, SPPT, and payment tracking.",
+  "entryPoint": "src/PBBService.js",
+  "enabled": true,
+  "dependencies": [
+    "core",
+    "system",
+    "citizen",
+    "household",
+    "workflow",
+    "eventbus",
+    "notification",
+    "analytics",
+    "dashboard"
+  ],
+  "components": [
+    "TaxObjectEntity",
+    "TaxpayerEntity",
+    "SPPTEntity",
+    "PaymentHistoryEntity",
+    "TaxObjectRepository",
+    "TaxpayerRepository",
+    "SPPTRepository",
+    "PaymentHistoryRepository",
+    "PBBService",
+    "PBBController",
+    "PBBValidator",
+    "PBBPermission",
+    "PBBRule",
+    "PBBDashboard",
+    "PBBStatistics",
+    "PBBMigration",
+    "PBBSeeder",
+    "PBBTest"
+  ]
+}

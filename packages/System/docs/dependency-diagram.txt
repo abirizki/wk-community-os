@@ -1,0 +1,19 @@
+Framework
+  ↓
+System Package
+  ├── User
+  ├── Authentication
+  ├── Authorization
+  ├── Role
+  ├── Permission
+  ├── Session
+  ├── Profile
+  ├── Organization
+  ├── RT
+  ├── RW
+  ├── Kelurahan
+  └── Operator
+
+Business Package
+  ↓
+Application

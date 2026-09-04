@@ -1,0 +1,11 @@
+/**
+ * Permission template for {{MODULE_NAME}}
+ * Author: {{AUTHOR}}
+ * Version: {{VERSION}}
+ */
+class {{CLASS_NAME}}Permission {
+  constructor() {
+    this.module = '{{MODULE_NAME}}';
+    this.description = '{{DESCRIPTION}}';
+  }
+}

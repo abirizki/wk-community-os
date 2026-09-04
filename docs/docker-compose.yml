@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  # This service provides a development and deployment shell with `clasp` pre-installed.
+  # It mounts the local source code into the container.
+  dev-shell:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile
+    container_name: wk_os_dev_shell
+    volumes:
+      # Mount the entire project directory
+      - ..:/usr/src/app
+      # Mount the local clasp config for authentication
+      - ~/.clasprc.json:/root/.clasprc.json
+    # Keep the container running to allow `docker exec`
+    tty: true
+    stdin_open: true

@@ -1,0 +1,24 @@
+# {{MODULE_NAME}}
+
+## Purpose
+{{DESCRIPTION}}
+
+## Features
+- Feature 1
+- Feature 2
+
+## Dependencies
+- {{PACKAGE_NAME}}
+
+## Permission
+- Read
+- Write
+
+## Menu
+- {{MODULE_NAME}}
+
+## API
+- Endpoint placeholder
+
+## Testing
+- Unit tests

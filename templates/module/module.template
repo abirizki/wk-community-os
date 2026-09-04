@@ -1,0 +1,14 @@
+/**
+ * Module template for {{MODULE_NAME}}
+ * Package: {{PACKAGE_NAME}}
+ * Version: {{VERSION}}
+ * Author: {{AUTHOR}}
+ * Description: {{DESCRIPTION}}
+ */
+class {{CLASS_NAME}}Module {
+  constructor() {
+    this.name = '{{MODULE_NAME}}';
+    this.package = '{{PACKAGE_NAME}}';
+    this.version = '{{VERSION}}';
+  }
+}

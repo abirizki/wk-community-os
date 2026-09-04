@@ -1,0 +1,10 @@
+{
+  "name": "{{MODULE_NAME}}",
+  "version": "{{VERSION}}",
+  "author": "{{AUTHOR}}",
+  "description": "{{DESCRIPTION}}",
+  "enabled": true,
+  "dependencies": [],
+  "permission": [],
+  "menu": []
+}

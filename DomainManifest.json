@@ -1,0 +1,15 @@
+{
+  "domain": "CommunityGovernance",
+  "packages": [
+    { "name": "Meeting", "description": "Manages the lifecycle of official meetings, including agendas and minutes." },
+    { "name": "Decision", "description": "Formally records and tracks decisions made during meetings." },
+    { "name": "Regulation", "description": "Manages the drafting and publication of local regulations." },
+    { "name": "Policy", "description": "Manages internal government policies and SOPs." },
+    { "name": "Performance", "description": "Tracks key performance indicators (KPIs) for government services." },
+    { "name": "InternalAudit", "description": "Manages internal audits and tracks findings." },
+    { "name": "PublicInformation", "description": "Handles requests for public information (PPID)." },
+    { "name": "DocumentArchive", "description": "A secure, centralized archive for all official documents." },
+    { "name": "Election", "description": "Manages community-level elections (e.g., for RT/RW)." },
+    { "name": "CommunitySurvey", "description": "Facilitates the creation and analysis of community surveys." }
+  ]
+}

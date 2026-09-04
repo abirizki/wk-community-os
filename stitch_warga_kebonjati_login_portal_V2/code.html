@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html lang="id"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-primary-fixed":"#00174b","background":"#f8fafc","on-surface-variant":"#475569","inverse-on-surface":"#ecf1ff","surface-variant":"#f1f5f9","on-primary-fixed-variant":"#003ea8","on-background":"#0f172a","on-secondary-fixed":"#0b1c30","on-secondary":"#ffffff","inverse-primary":"#b4c5ff","inverse-surface":"#1e293b","surface-container-lowest":"#ffffff","surface-container-highest":"#e2e8f0","on-primary":"#ffffff","tertiary-fixed":"#dcfce7","outline":"#94a3b8","on-tertiary-fixed-variant":"#14532d","primary-container":"#1e3a8a","tertiary":"#059669","on-surface":"#0f172a","primary-fixed":"#dbeafe","on-primary-container":"#ffffff","surface-dim":"#e2e8f0","surface-bright":"#ffffff","surface-tint":"#1e3a8a","on-tertiary-fixed":"#052e16","secondary-container":"#e2e8f0","on-tertiary":"#ffffff","outline-variant":"#e2e8f0","surface-container-high":"#f1f5f9","surface":"#ffffff","error":"#dc2626","primary":"#1e3a8a","tertiary-fixed-dim":"#86efac","secondary":"#475569","on-secondary-container":"#1e293b","error-container":"#fee2e2","on-tertiary-container":"#064e3b","secondary-fixed-dim":"#cbd5e1","tertiary-container":"#10b981","surface-container-low":"#f8fafc","on-error-container":"#7f1d1d","on-secondary-fixed-variant":"#334155","primary-fixed-dim":"#bfdbfe","surface-container":"#ffffff","secondary-fixed":"#e2e8f0","on-error":"#ffffff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","2xl":"1rem","3xl":"1.25rem","full":"9999px"},"spacing":{"xs":"4px","base":"8px","sm":"12px","lg":"28px","margin-mobile":"16px","md":"20px","margin-desktop":"24px","gutter":"20px","xl":"36px","max-width":"420px"},"fontFamily":{"headline-md":["'Plus Jakarta Sans'","Inter","sans-serif"],"label-sm":["'Plus Jakarta Sans'","Inter","sans-serif"],"display-lg":["'Plus Jakarta Sans'","Inter","sans-serif"],"body-md":["'Plus Jakarta Sans'","Inter","sans-serif"],"body-lg":["'Plus Jakarta Sans'","Inter","sans-serif"],"label-md":["'Plus Jakarta Sans'","Inter","sans-serif"],"headline-lg":["'Plus Jakarta Sans'","Inter","sans-serif"],"headline-lg-mobile":["'Plus Jakarta Sans'","Inter","sans-serif"]}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/></head><body class="bg-slate-100/70 font-body-md text-on-background min-h-screen flex justify-center items-start antialiased selection:bg-blue-100 selection:text-primary">
+<!-- Mobile Frame Container (390px - 420px viewport) -->
+<div class="w-full max-w-[420px] min-h-screen bg-slate-50 flex flex-col shadow-2xl border-x border-slate-200/80 relative pb-8 bg-ambient">
+<!-- Mobile Status Bar (Clean iOS style) -->
+<div class="w-full pt-3 pb-2 px-6 flex justify-between items-center text-[13px] font-semibold text-slate-800 tracking-tight select-none">
+<span class="">09:41</span>
+<div class="flex items-center gap-1.5 text-slate-700">
+<span class="material-symbols-outlined text-[16px]">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-[16px]">wifi</span>
+<span class="material-symbols-outlined text-[20px] -mr-1">battery_full</span>
+</div>
+</div>
+<!-- Header Section: Clean Civic Trust -->
+<header class="px-5 pt-3 pb-4 flex items-center justify-between border-b border-slate-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-30 anim-header">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 bg-primary text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-900/15 ring-1 ring-blue-950/10">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-[17px] tracking-tight text-slate-900 leading-tight">Portal Warga</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-800 border border-blue-200/60">RESMI</span>
+</div>
+<span class="text-[11px] font-medium text-slate-500">Republik Indonesia</span>
+</div>
+</div>
+<a class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200/80 transition-colors border border-slate-200" href="#">
+<span class="material-symbols-outlined text-[16px] text-slate-500">help_outline</span>
+<span class="">Bantuan</span>
+</a>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 px-5 pt-6 pb-4 flex flex-col justify-between">
+<div class="w-full">
+<!-- Civic Trust Hero Banner & Salutation -->
+<div class="mb-6 anim-hero"><!-- Nordic Minimalist Status / Trust Micro-Badge -->
+<h1 class="text-[22px] font-bold tracking-tight text-slate-900 leading-snug">
+  Portal Layanan Kependudukan Terpadu
+</h1>
+<h2 class="text-base font-semibold text-blue-900/90 mt-0.5 mb-2">
+  Masuk ke Akun Warga
+</h2>
+<p class="text-xs leading-relaxed text-slate-600 bg-slate-100/70 p-2.5 rounded-xl border border-slate-200/70 font-medium">Portal Warga merupakan platform pelayanan dokumen publik dalam bentuk digital yang dirancang untuk memfasilitasi integrasi administrasi kependudukan secara cepat, transparan, dan terenkripsi demi kemudahan akses seluruh warga.</p></div>
+<!-- Main Login Form Card -->
+<div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 anim-card">
+<form class="flex flex-col gap-4" id="login-form" onsubmit="event.preventDefault();">
+<!-- NIK Input Field -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<label class="text-[13px] font-semibold text-slate-700" for="nik">
+                Nomor Induk Kependudukan (NIK)
+              </label>
+<span class="text-[11px] font-medium text-slate-400" id="nik-counter">0/16 Digit</span>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-slate-400 text-[20px] pointer-events-none">badge</span>
+<input autocomplete="username" class="w-full h-12 bg-slate-50/70 border border-slate-300 rounded-xl pl-11 pr-24 text-slate-900 text-[15px] font-medium tracking-wide focus:outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-700/15 focus:bg-white transition-all placeholder:text-slate-400" id="nik" inputmode="numeric" maxlength="16" pattern="[0-9]{16}" placeholder="3201xxxxxxxxxxxx" required="" type="text"/>
+<!-- Automatic verification badge -->
+<div class="absolute right-2.5 flex items-center">
+<span class="hidden items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200" id="nik-valid-badge">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Sesuai
+                </span>
+<span class="text-[11px] font-medium text-slate-400 pr-1.5" id="nik-hint">16 Angka</span>
+</div>
+</div>
+</div>
+<!-- Password Input Field -->
+<div class="flex flex-col gap-1.5 mt-1"><div class="flex justify-between items-center">
+<label class="text-[13px] font-semibold text-slate-700" for="password">Kata Sandi</label>
+<a class="text-[12px] font-semibold text-blue-700 hover:text-blue-900 transition-colors" href="#">Lupa kata sandi?</a>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-slate-400 text-[20px] pointer-events-none">lock</span>
+<input autocomplete="current-password" class="w-full h-12 bg-slate-50/70 border border-slate-300 rounded-xl pl-11 pr-11 text-slate-900 text-[15px] font-medium focus:outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-700/15 focus:bg-white transition-all placeholder:text-slate-400" id="password" placeholder="Masukkan kata sandi akun" required="" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-3 text-slate-400 hover:text-slate-600 focus:outline-none p-1 transition-colors duration-200" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined text-[20px]" id="password-icon">visibility_off</span>
+</button>
+</div>
+<!-- Dynamic Institutional Password Strength Indicator -->
+<div class="bg-slate-50/80 border border-slate-200/80 rounded-xl p-2.5 mt-1 flex flex-col gap-1.5" id="password-strength-box"><div class="flex justify-between items-center text-[11px]"><span class="font-medium text-slate-600 flex items-center gap-1"><span class="material-symbols-outlined text-[13px] text-blue-700">security</span>Kekuatan Kata Sandi:</span><span class="font-semibold text-amber-700 transition-colors duration-300" id="strength-label">Cukup Aman</span></div><div class="grid grid-cols-4 gap-1.5 w-full"><div class="h-1.5 rounded-full bg-emerald-600 transition-all duration-500" id="meter-1"></div><div class="h-1.5 rounded-full bg-emerald-600 transition-all duration-500" id="meter-2"></div><div class="h-1.5 rounded-full bg-emerald-600 transition-all duration-500" id="meter-3"></div><div class="h-1.5 rounded-full bg-slate-200 transition-all duration-500" id="meter-4"></div></div><div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-200/60 text-[10px] text-slate-500 font-medium"><span class="inline-flex items-center gap-0.5 text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60 transition-all duration-200" id="crit-len"><span class="material-symbols-outlined text-[12px] text-emerald-700" id="crit-len-icon">check_circle</span> Min. 8 Karakter</span><span class="inline-flex items-center gap-0.5 text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60 transition-all duration-200" id="crit-case"><span class="material-symbols-outlined text-[12px] text-emerald-700" id="crit-case-icon">check_circle</span> Huruf Besar &amp; Kecil</span><span class="inline-flex items-center gap-0.5 text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 transition-all duration-200" id="crit-sym"><span class="material-symbols-outlined text-[12px] text-slate-400" id="crit-sym-icon">info</span> Angka &amp; Simbol Acak</span></div></div></div>
+<!-- Remember Session Checkbox -->
+<div class="flex items-center justify-between pt-1">
+<label class="flex items-center gap-2.5 cursor-pointer select-none">
+<input class="w-4 h-4 rounded border-slate-300 text-blue-700 focus:ring-blue-600/30 transition-colors" id="remember" type="checkbox"/>
+<span class="text-xs font-medium text-slate-600">Ingat sesi perangkat ini</span>
+</label>
+<span class="inline-flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 font-medium">
+<span class="material-symbols-outlined text-[13px] text-amber-700">shield</span>
+              Aman
+            </span>
+</div>
+<!-- Primary CTA Button -->
+<button class="w-full h-12 bg-blue-900 hover:bg-blue-800 active:bg-blue-950 text-white rounded-xl text-[14px] font-semibold tracking-wide shadow-md shadow-blue-950/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-2 btn-shimmer active:scale-[0.98]" id="login-submit" type="submit">
+<span class="">Masuk ke Portal Layanan</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</form>
+<!-- Secondary Action: Register New Account -->
+<div class="mt-4 pt-4 border-t border-slate-100 flex flex-col items-center text-center gap-2">
+<p class="text-xs text-slate-600">
+            Belum memiliki akun warga digital?
+          </p>
+<a class="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/80 text-blue-900 text-xs font-semibold tracking-wide flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[16px]">how_to_reg</span>
+<span class="">Daftar Akun Warga Baru</span>
+</a>
+</div>
+</div>
+<!-- Disclaimer & Data Security Section (Civic Trust Nordic Box) -->
+<div class="mt-5 bg-blue-50/60 border border-blue-200/70 rounded-xl overflow-hidden shadow-sm transition-all anim-disclaimer">
+<details class="group">
+<summary class="flex items-center justify-between p-3.5 cursor-pointer select-none list-none text-left transition-colors hover:bg-blue-100/40">
+<div class="flex items-center gap-2.5">
+<div class="w-6 h-6 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[15px]">policy</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[12px] font-bold text-blue-950 leading-tight">
+            Deklarasi &amp; Kebijakan Perlindungan Data Pribadi
+          </span>
+<span class="text-[10px] font-semibold text-blue-800 tracking-wide">
+            UU No. 27/2022 (UU PDP)
+          </span>
+</div>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-blue-800 transition-transform duration-200 group-open:rotate-180">expand_more</span>
+</div>
+</summary>
+<div class="px-3.5 pb-3.5 pt-1 border-t border-blue-200/60 flex flex-col gap-2.5">
+<p class="text-[11px] leading-relaxed text-slate-600 font-normal">
+        Seluruh data kependudukan dan NIK diproses sesuai amanat <strong>Undang-Undang Perlindungan Data Pribadi (UU PDP No. 27/2022)</strong>. Data disimpan dengan enkripsi <strong>AES-256</strong> dan hanya digunakan secara khusus untuk keperluan verifikasi identitas resmi, sinkronisasi data kependudukan wilayah, serta pencegahan pemalsuan dokumen adminduk.
+      </p>
+<div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/80">
+<span class="material-symbols-outlined text-[12px] text-emerald-700">lock</span>
+          Enkripsi End-to-End
+        </span>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-900 bg-blue-100/70 px-2 py-0.5 rounded-md border border-blue-200/80">
+<span class="material-symbols-outlined text-[12px] text-blue-800">verified</span>
+          Kepatuhan ISO/IEC 27001
+        </span>
+<span class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200/80">
+<span class="material-symbols-outlined text-[12px] text-slate-500">gavel</span>
+          Audit Resmi Kemendagri
+        </span>
+</div>
+</div>
+</details>
+</div>
+</div>
+<!-- Mobile Footer: Support & Assistance -->
+<footer class="mt-6 pt-4 border-t border-slate-200/80 flex flex-col items-center text-center gap-2 anim-footer">
+<div class="flex items-center gap-4 text-xs font-medium text-slate-500">
+<a class="hover:text-blue-800 transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[15px]">headset_mic</span>
+          Pusat Bantuan Kependudukan
+        </a>
+<span class="text-slate-300">•</span>
+<a class="hover:text-blue-800 transition-colors" href="#">Panduan NIK</a>
+</div>
+<p class="text-[10px] text-slate-400">
+        Dikelola secara resmi untuk pelayanan warga terintegrasi © 2025
+      </p>
+</footer>
+</main>
+</div>
+<script>
+  function togglePassword() {
+    const input = document.getElementById('password');
+    const icon = document.getElementById('password-icon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.textContent = 'visibility';
+    } else {
+      input.type = 'password';
+      icon.textContent = 'visibility_off';
+    }
+  }
+
+  // Real-time 16 Digit NIK Verification & Counter
+  const nikInput = document.getElementById('nik');
+  const nikCounter = document.getElementById('nik-counter');
+  const nikValidBadge = document.getElementById('nik-valid-badge');
+  const nikHint = document.getElementById('nik-hint');
+
+  if (nikInput) {
+    nikInput.addEventListener('input', function(e) {
+      // Allow only numbers
+      this.value = this.value.replace(/[^0-9]/g, '');
+      const len = this.value.length;
+      nikCounter.textContent = `${len}/16 Digit`;
+
+      if (len === 16) {
+        nikValidBadge.classList.remove('hidden');
+        nikValidBadge.classList.add('inline-flex');
+        nikHint.classList.add('hidden');
+        nikInput.classList.add('border-emerald-500', 'focus:border-emerald-600', 'focus:ring-emerald-500/20');
+        nikInput.classList.remove('border-slate-300');
+      } else {
+        nikValidBadge.classList.add('hidden');
+        nikValidBadge.classList.remove('inline-flex');
+        nikHint.classList.remove('hidden');
+        nikInput.classList.remove('border-emerald-500', 'focus:border-emerald-600', 'focus:ring-emerald-500/20');
+        nikInput.classList.add('border-slate-300');
+      }
+    });
+  }
+</script>
+</body></html>

@@ -1,0 +1,6 @@
+{
+    "env": {
+        "ANTHROPIC_BASE_URL": "https://geraikita.com",
+        "ANTHROPIC_AUTH_TOKEN": "gk-33d0a619221a8f6e3ee59fd0fc09784a1c4d173c14233678"
+    }
+}

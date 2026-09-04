@@ -1,0 +1,23 @@
+Framework
+  ↓
+Core Platform
+  ├── Authentication
+  ├── Authorization
+  ├── Permission
+  ├── Role
+  ├── Session
+  ├── Configuration
+  ├── Settings
+  ├── Storage
+  ├── Logger
+  ├── Audit
+  ├── Workflow
+  ├── Notification
+  ├── Dashboard
+  ├── RuleEngine
+  ├── Report
+  └── System
+
+Business Package
+  ↓
+Application

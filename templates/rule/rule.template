@@ -1,0 +1,11 @@
+/**
+ * Rule template for {{MODULE_NAME}}
+ * Author: {{AUTHOR}}
+ * Version: {{VERSION}}
+ */
+class {{CLASS_NAME}}Rule {
+  constructor() {
+    this.module = '{{MODULE_NAME}}';
+    this.description = '{{DESCRIPTION}}';
+  }
+}

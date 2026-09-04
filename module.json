@@ -1,0 +1,37 @@
+{
+  "id": "aspiration",
+  "name": "Aspiration Management",
+  "domain": "CitizenServices",
+  "version": "1.0.0",
+  "description": "Manages citizen aspirations, suggestions, and ideas.",
+  "author": "Gemini Code Assist",
+  "license": "PROPRIETARY",
+  "enabled": true,
+  "entryPoint": "src/AspirationService.js",
+  "dependencies": [
+    "core",
+    "system",
+    "kernel",
+    "citizen",
+    "family",
+    "workflow",
+    "eventbus",
+    "analytics",
+    "dashboard",
+    "notification",
+    "masterdata"
+  ],
+  "components": [
+    "AspirationEntity",
+    "AspirationRepository",
+    "AspirationValidator",
+    "AspirationPermission",
+    "AspirationRule",
+    "AspirationService",
+    "AspirationMigration",
+    "AspirationSeeder",
+    "AspirationStatistics",
+    "AspirationDashboard",
+    "AspirationTest"
+  ]
+}

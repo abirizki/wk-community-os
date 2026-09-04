@@ -1,0 +1,27 @@
+{
+  "id": "core",
+  "name": "Core Platform",
+  "version": "1.0.0",
+  "description": "Shared enterprise foundation for WK business packages.",
+  "entryPoint": "src/System/PlatformContext.js",
+  "enabled": true,
+  "dependencies": [],
+  "components": [
+    "Authentication",
+    "Authorization",
+    "Permission",
+    "Role",
+    "Session",
+    "Configuration",
+    "Settings",
+    "Storage",
+    "Logger",
+    "Audit",
+    "Workflow",
+    "Notification",
+    "Dashboard",
+    "RuleEngine",
+    "Report",
+    "System"
+  ]
+}
