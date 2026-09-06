@@ -1,10 +1,41 @@
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ==========================================
+// CORS CONFIGURATION (HEADLESS API)
+// ==========================================
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+  : ['https://bumiwarga.simetrikami.com'];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS policy violation: ${origin} not allowed`));
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
+
+// Root health check endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'WK Community OS - Headless API Server',
+    environment: process.env.NODE_ENV || 'development',
+  });
+});
 
 // ==========================================
 // API ROUTES CONFIGURATION
@@ -12,6 +43,7 @@ app.use(express.json());
 if (process.env.NODE_ENV !== 'production') {
   console.log('[WK Community OS] Running in DEVELOPMENT mode. Using Mock API routes.');
   
+
   app.post('/api/auth/login', (req, res) => {
     res.json({ user: { nik: req.body.nik } });
   });
@@ -24,6 +56,7 @@ if (process.env.NODE_ENV !== 'production') {
     res.json([
       { year: 2026, nop: '320101234567890123', amount: 150000, status: 'PAID' },
       { year: 2027, nop: '320101234567890123', amount: 150000, status: 'UNPAID' }
+      { year: 2027, nop: '320101234567890123', amount: 150000, status: 'UNPAID' },
     ]);
   });
 
@@ -31,6 +64,7 @@ if (process.env.NODE_ENV !== 'production') {
     res.json([
       { date: '12 Okt 2026', name: 'Budi (Balita)', service: 'Imunisasi Polio', status: 'Normal' },
       { date: '12 Sep 2026', name: 'Budi (Balita)', service: 'Timbang Berat Badan', status: 'Stunting Warning' }
+      { date: '12 Sep 2026', name: 'Budi (Balita)', service: 'Timbang Berat Badan', status: 'Stunting Warning' },
     ]);
   });
 
@@ -39,6 +73,7 @@ if (process.env.NODE_ENV !== 'production') {
       { date: '10 Okt 2026', title: 'Lampu jalan mati', category: 'Infrastruktur', status: 'Menunggu' },
       { date: '08 Okt 2026', title: 'Ronda malam tidak aktif', category: 'Keamanan', status: 'Diproses' },
       { date: '01 Okt 2026', title: 'Pembuatan KK lambat', category: 'Layanan', status: 'Selesai' }
+      { date: '01 Okt 2026', title: 'Pembuatan KK lambat', category: 'Layanan', status: 'Selesai' },
     ]);
   });
 } else {
@@ -50,6 +85,9 @@ if (process.env.NODE_ENV !== 'production') {
     // Mount the real production API routes
     // app.use('/api', require('./routes/api')); 
   } catch(e) {
+    // Mount production API routes when connected
+    // app.use('/api', require('./routes/api'));
+  } catch (e) {
     console.error('Failed to load production API routes:', e.message);
   }
 }
@@ -68,5 +106,6 @@ app.use((req, res) => {
 // Start Server
 app.listen(PORT, () => {
   console.log(`[WK Community OS] Backend server is running on http://localhost:${PORT}`);
+  console.log(`[WK Community OS] Headless API server is running on port ${PORT}`);
 });
 

@@ -1,16 +1,25 @@
-/**
+﻿/**
  * api.js
  * Centralized API utility for WK Community OS.
- * Automatically prefixes requests with /api/ and handles global errors.
+ * Supports absolute base URL from Vite environment variable.
  */
 
-const API_BASE = '/api';
+const rawBaseURL = import.meta.env.VITE_API_BASE_URL || '';
+const normalizedBase = rawBaseURL ? rawBaseURL.replace(/\/+$/, '') : '';
+const API_BASE = normalizedBase
+  ? (normalizedBase.endsWith('/api') ? normalizedBase : `${normalizedBase}/api`)
+  : '/api';
 
 export const api = {
   async request(endpoint, options = {}) {
-    const url = `${API_BASE}${endpoint}`;
-    
-    // Default headers
+    const cleanEndpoint = endpoint.startsWith('/api/')
+      ? endpoint.replace(/^\/api/, '')
+      : endpoint.startsWith('/')
+      ? endpoint
+      : `/${endpoint}`;
+
+    const url = `${API_BASE}${cleanEndpoint}`;
+
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -26,24 +35,21 @@ export const api = {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        // Construct standard error object
         throw {
           status: response.status,
           message: data.message || data.error || 'Terjadi kesalahan pada server.',
-          data: data
+          data: data,
         };
       }
 
       return data;
     } catch (error) {
-      // Re-throw if it's already a formatted error object
       if (error.status) throw error;
-      
-      // Handle network errors
+
       throw {
         status: 0,
         message: 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.',
-        originalError: error
+        originalError: error,
       };
     }
   },
@@ -58,6 +64,5 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     });
-  }
+  },
 };
-
