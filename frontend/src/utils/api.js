@@ -1,13 +1,15 @@
-﻿/**
+/**
  * api.js
  * Centralized API utility for WK Community OS.
- * Supports absolute base URL from Vite environment variable.
+ * Defaults to relative path '/api' for Monolith deployment,
+ * with fallback support for VITE_API_BASE_URL if specified.
  */
 
-const rawBaseURL = import.meta.env.VITE_API_BASE_URL || '';
-const normalizedBase = rawBaseURL ? rawBaseURL.replace(/\/+$/, '') : '';
-const API_BASE = normalizedBase
-  ? (normalizedBase.endsWith('/api') ? normalizedBase : `${normalizedBase}/api`)
+const rawBaseURL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE = rawBaseURL
+  ? (rawBaseURL.replace(/\/+$/, '').endsWith('/api')
+      ? rawBaseURL.replace(/\/+$/, '')
+      : `${rawBaseURL.replace(/\/+$/, '')}/api`)
   : '/api';
 
 export const api = {
