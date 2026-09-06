@@ -1,3 +1,9 @@
+/**
+ * server.js
+ * WK Community OS - Unified Monolith Server (Express.js)
+ * Serves backend API routes and static React frontend with SPA fallback.
+ */
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
