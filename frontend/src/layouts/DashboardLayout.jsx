@@ -25,6 +25,7 @@ export default function DashboardLayout() {
 
   const navItems = [
     { name: 'Beranda', path: '/dashboard', icon: <Home size={20} /> },
+    { name: 'Data Warga', path: '/dashboard/warga', icon: <User size={20} /> },
     { name: 'Layanan PBB', path: '/dashboard/pbb', icon: <FileText size={20} /> },
     { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={20} /> },
     { name: 'Pengaduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={20} /> },
@@ -66,7 +67,7 @@ export default function DashboardLayout() {
               <p className="text-label-md font-semibold text-on-surface truncate">
                 {user?.nik || 'Warga'}
               </p>
-              <p className="text-[11px] text-on-surface-variant truncate">Terverifikasi</p>
+              <NavLink to={`/dashboard/warga/${user?.nik}`} className="text-[11px] text-primary hover:underline truncate">Lihat Profil</NavLink>
             </div>
           </div>
           <button
@@ -119,7 +120,7 @@ export default function DashboardLayout() {
                     <span className="text-label-md font-semibold text-on-surface truncate">
                       {user?.nik || 'Warga'}
                     </span>
-                    <span className="text-[11px] text-on-surface-variant">Menu Navigasi</span>
+                    <NavLink to={`/dashboard/warga/${user?.nik}`} onClick={() => setMobileMenuOpen(false)} className="text-[11px] text-primary hover:underline mt-0.5">Lihat Profil</NavLink>
                   </div>
                   <button
                     onClick={() => setMobileMenuOpen(false)}

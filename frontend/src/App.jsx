@@ -7,6 +7,8 @@ import DashboardHome from './pages/DashboardHome';
 import PBBPage from './pages/PBBPage';
 import PosyanduPage from './pages/PosyanduPage';
 import ComplaintPage from './pages/ComplaintPage';
+import WargaList from './pages/WargaList';
+import WargaDetail from './pages/WargaDetail';
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
             }
           >
             <Route index element={<DashboardHome />} />
+            <Route path="warga" element={<WargaList />} />
+            <Route path="warga/:nik" element={<WargaDetail />} />
             <Route path="pbb" element={<PBBPage />} />
             <Route path="posyandu" element={<PosyanduPage />} />
             <Route path="pengaduan" element={<ComplaintPage />} />
