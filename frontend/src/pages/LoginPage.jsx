@@ -89,7 +89,7 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="w-full lg:max-w-md flex flex-col"
+        className="w-full max-w-md mx-auto flex flex-col"
       >
         {/* Header */}
         <header className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant">
