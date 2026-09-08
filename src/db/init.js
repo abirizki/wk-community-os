@@ -63,6 +63,21 @@ CREATE TABLE IF NOT EXISTS kartu_keluarga (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `;
 
+const CREATE_PENGADUAN_TABLE = `
+CREATE TABLE IF NOT EXISTS pengaduan (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nik_pelapor VARCHAR(32) NOT NULL,
+  judul VARCHAR(255) NOT NULL,
+  deskripsi TEXT NOT NULL,
+  kategori VARCHAR(50) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+  lampiran_url VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_nik_pelapor (nik_pelapor)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+`;
+
 async function initDatabase() {
   console.log('\n======================================================');
   console.log('  WK COMMUNITY OS — DATABASE SCHEMA INITIALIZATION');
@@ -84,6 +99,10 @@ async function initDatabase() {
     console.log('[INIT] Creating table: warga ...');
     await connection.query(CREATE_WARGA_TABLE);
     console.log('[INIT] ✓ Table "warga" ready.');
+
+    console.log('[INIT] Creating table: pengaduan ...');
+    await connection.query(CREATE_PENGADUAN_TABLE);
+    console.log('[INIT] ✓ Table "pengaduan" ready.');
 
     console.log('\n======================================================');
     console.log('  DATABASE SCHEMA INITIALIZATION COMPLETED');
