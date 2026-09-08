@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import DataTable from '../components/ui/DataTable';
-import { Loader2, MessageSquare, AlertCircle, Clock, Wrench, CheckCircle } from 'lucide-react';
+import { Loader2, MessageSquare, AlertCircle, Clock, Wrench, CheckCircle, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function ComplaintPage() {
@@ -9,38 +9,60 @@ export default function ComplaintPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Form State
+  const [showForm, setShowForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    judul: '',
+    deskripsi: '',
+    kategori: 'Infrastruktur',
+    lampiran_url: ''
+  });
+
+  const fetchComplaints = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await api.get('/pengaduan/me');
+      setData(response.data || []);
+    } catch (err) {
+      setError(err.message || 'Gagal mengambil data aduan masyarakat.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-    
-    const fetchComplaints = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await api.get('/complaints');
-        if (isMounted) {
-          setData(response.data || response || []);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err.message || 'Gagal mengambil data aduan masyarakat.');
-          // Dummy fallback data if backend is offline
-          // setData([
-          //   { date: '10 Okt 2026', title: 'Lampu jalan mati', category: 'Infrastruktur', status: 'Menunggu' },
-          //   { date: '08 Okt 2026', title: 'Ronda malam tidak aktif', category: 'Keamanan', status: 'Diproses' },
-          //   { date: '01 Okt 2026', title: 'Pembuatan KK lambat', category: 'Layanan', status: 'Selesai' }
-          // ]);
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
     fetchComplaints();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await api.post('/pengaduan', formData);
+      
+      // Reset form and refetch
+      setFormData({
+        judul: '',
+        deskripsi: '',
+        kategori: 'Infrastruktur',
+        lampiran_url: ''
+      });
+      setShowForm(false);
+      fetchComplaints();
+    } catch (err) {
+      setError(err.message || 'Gagal mengirim pengaduan.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const complaintColumns = [
     { label: 'Tanggal Aduan', className: '' },
@@ -79,7 +101,7 @@ export default function ComplaintPage() {
       default:
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-label-sm font-semibold bg-surface-variant text-on-surface-variant border border-outline-variant">
-            {status}
+            {status || 'PENDING'}
           </span>
         );
     }
@@ -87,9 +109,11 @@ export default function ComplaintPage() {
 
   const renderComplaintRow = (row) => (
     <>
-      <td className="px-5 py-4 font-medium text-label-md">{row.date || row.createdAt}</td>
-      <td className="px-5 py-4 font-medium text-on-surface">{row.title}</td>
-      <td className="px-5 py-4 text-on-surface-variant text-label-sm">{row.category}</td>
+      <td className="px-5 py-4 font-medium text-label-md">
+        {row.created_at ? new Date(row.created_at).toLocaleDateString('id-ID') : '-'}
+      </td>
+      <td className="px-5 py-4 font-medium text-on-surface">{row.judul}</td>
+      <td className="px-5 py-4 text-on-surface-variant text-label-sm">{row.kategori}</td>
       <td className="px-5 py-4 text-center">
         {getStatusBadge(row.status)}
       </td>
@@ -98,17 +122,25 @@ export default function ComplaintPage() {
 
   return (
     <div className="max-w-max-width mx-auto space-y-6">
-      <header className="mb-8">
-        <h1 className="text-headline-lg-mobile lg:text-headline-lg font-bold text-on-surface flex items-center gap-2">
-          <MessageSquare className="text-primary" size={32} />
-          Layanan Pengaduan
-        </h1>
-        <p className="text-body-md text-on-surface-variant mt-1">
-          Lacak status penyelesaian aduan warga dan masalah lingkungan.
-        </p>
+      <header className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-headline-lg-mobile lg:text-headline-lg font-bold text-on-surface flex items-center gap-2">
+            <MessageSquare className="text-primary" size={32} />
+            Layanan Pengaduan
+          </h1>
+          <p className="text-body-md text-on-surface-variant mt-1">
+            Lacak status penyelesaian aduan warga dan masalah lingkungan.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-semibold shadow-sm hover:bg-primary/90 transition-colors"
+        >
+          {showForm ? 'Batal' : <><Plus size={20} /> Buat Aduan Baru</>}
+        </button>
       </header>
 
-      {error && data.length === 0 && (
+      {error && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -116,9 +148,77 @@ export default function ComplaintPage() {
         >
           <AlertCircle size={20} className="text-error mt-0.5 flex-shrink-0" />
           <div>
-            <h3 className="font-semibold text-label-md">Gangguan Koneksi</h3>
+            <h3 className="font-semibold text-label-md">Informasi</h3>
             <p className="text-label-sm mt-1">{error}</p>
           </div>
+        </motion.div>
+      )}
+
+      {showForm && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant shadow-sm mb-8"
+        >
+          <h2 className="text-headline-sm font-bold text-on-surface mb-4">Form Pengaduan Baru</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-label-sm font-semibold text-on-surface mb-1">Judul Pengaduan</label>
+              <input
+                type="text"
+                name="judul"
+                value={formData.judul}
+                onChange={handleInputChange}
+                required
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Contoh: Jalan rusak di RT 01"
+              />
+            </div>
+            <div>
+              <label className="block text-label-sm font-semibold text-on-surface mb-1">Kategori</label>
+              <select
+                name="kategori"
+                value={formData.kategori}
+                onChange={handleInputChange}
+                required
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white"
+              >
+                <option value="Infrastruktur">Infrastruktur</option>
+                <option value="Keamanan">Keamanan</option>
+                <option value="Layanan">Layanan Kependudukan</option>
+                <option value="Lingkungan">Lingkungan Bersih</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-label-sm font-semibold text-on-surface mb-1">Deskripsi Lengkap</label>
+              <textarea
+                name="deskripsi"
+                value={formData.deskripsi}
+                onChange={handleInputChange}
+                required
+                disabled={isSubmitting}
+                rows="4"
+                className="w-full px-3 py-2 border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Jelaskan detail aduan Anda secara rinci (min. 10 karakter)..."
+              ></textarea>
+            </div>
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex items-center gap-2 px-6 py-2 bg-primary text-on-primary rounded-lg font-semibold shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <><Loader2 size={18} className="animate-spin" /> Mengirim...</>
+                ) : (
+                  'Kirim Pengaduan'
+                )}
+              </button>
+            </div>
+          </form>
         </motion.div>
       )}
 
@@ -156,4 +256,3 @@ export default function ComplaintPage() {
     </div>
   );
 }
-

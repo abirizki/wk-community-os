@@ -12,7 +12,6 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       // The API returns HttpOnly cookies or session info, we don't store tokens in localStorage.
-      const response = await api.post('/auth/login', { nik, password });
       const response = await api.post('/auth/login', { username: nik, password });
       
       if (response.user) {
