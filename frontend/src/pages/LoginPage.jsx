@@ -136,7 +136,7 @@ export default function LoginPage() {
             </div>
             <div>
               <p className="text-lg font-bold tracking-tight leading-none">Bumi Warga</p>
-              <p className="text-xs text-white/55 mt-0.5">by Jabar Pinta Digital</p>
+              <p className="text-xs text-white/55 mt-0.5">by Jabar Pintar Digital</p>
             </div>
           </motion.div>
 
@@ -207,7 +207,7 @@ export default function LoginPage() {
 
             {/* Footer */}
             <p className="text-[10px] text-white/30 mt-5 border-t border-white/10 pt-4">
-              © 2025 <strong className="text-white/45">Jabar Pinta Digital</strong> · Hak cipta dilindungi undang-undang.
+              © 2025 <strong className="text-white/45">Jabar Pintar Digital</strong> · Hak cipta dilindungi undang-undang.
               Bumi Warga adalah platform digital pelayanan publik resmi yang beroperasi di bawah
               kewenangan pemerintah daerah Jawa Barat.
             </p>
@@ -237,7 +237,7 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="font-bold text-base text-on-surface leading-none">Bumi Warga</p>
-                <p className="text-[11px] text-on-surface-variant mt-0.5">by Jabar Pinta Digital</p>
+                <p className="text-[11px] text-on-surface-variant mt-0.5">by Jabar Pintar Digital</p>
               </div>
             </motion.div>
 
@@ -426,7 +426,7 @@ export default function LoginPage() {
           className="lg:hidden text-center pb-5 px-6"
         >
           <p className="text-[10px] text-on-surface-variant">
-            © 2025 <strong>Jabar Pinta Digital</strong> · Hak cipta dilindungi.
+            © 2025 <strong>Jabar Pintar Digital</strong> · Hak cipta dilindungi.
           </p>
         </motion.footer>
       </div>

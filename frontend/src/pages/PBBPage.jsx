@@ -31,13 +31,7 @@ export default function PBBPage() {
     const key = `${nop}-${tahun}`;
     setProcessingNop(key);
     try {
-      await api.post('/pbb/pay', { nop, tahun }, { method: 'PUT' }); // Assuming the API is actually PUT or handles post wrapper
-      // Actually we should use api.request with method PUT, or api.post works since the backend is PUT and api wrapper only has post/get
-      // Wait, api.js doesn't have put. Let me use api.request.
-      await api.request('/pbb/pay', {
-        method: 'PUT',
-        body: JSON.stringify({ nop, tahun })
-      });
+      await api.put('/pbb/pay', { nop, tahun });
       // Refresh data
       await fetchPBB();
     } catch (err) {
