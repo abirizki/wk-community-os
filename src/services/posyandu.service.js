@@ -70,3 +70,4 @@ class PosyanduService {
 }
 
 module.exports = new PosyanduService();
+

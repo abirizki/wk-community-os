@@ -47,3 +47,4 @@ class PosyanduRepository {
 }
 
 module.exports = new PosyanduRepository();
+

@@ -30,6 +30,7 @@ export const api = {
     const config = {
       ...options,
       headers,
+      credentials: 'include',
     };
 
     try {
