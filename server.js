@@ -106,19 +106,8 @@ app.use('/api/pengaduan', require('./src/routes/pengaduan.routes'));
 app.use('/api/pbb', require('./src/routes/pbb.routes'));
 app.use('/api/posyandu', require('./src/routes/posyandu.routes'));
 
-if (process.env.NODE_ENV !== 'production') {
-  console.log('[WK Community OS] Running in DEVELOPMENT mode. Using Mock API routes.');
-
-  app.get('/api/complaints', (req, res) => {
-    res.json([
-      { date: '10 Okt 2026', title: 'Lampu jalan mati', category: 'Infrastruktur', status: 'Menunggu' },
-      { date: '08 Okt 2026', title: 'Ronda malam tidak aktif', category: 'Keamanan', status: 'Diproses' },
-      { date: '01 Okt 2026', title: 'Pembuatan KK lambat', category: 'Layanan', status: 'Selesai' },
-    ]);
-  });
-} else {
-  console.log('[WK Community OS] Running in PRODUCTION mode. Connecting to MySQL routes.');
-}
+// Pure MySQL REST Routes (No hardcoded mock data)
+console.log(`[Bumi Warga] API routes mounted cleanly. Connected to MySQL database.`);
 
 // ==========================================
 // HEALTH CHECK ENDPOINT
