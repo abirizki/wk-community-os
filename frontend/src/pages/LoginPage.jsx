@@ -84,12 +84,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background font-sans py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="w-full max-w-md mx-auto flex flex-col"
+        className="w-full max-w-md mx-auto flex flex-col bg-surface-container-lowest rounded-xl shadow-card border border-outline-variant p-6"
       >
         {/* Header */}
         <header className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant">
@@ -152,7 +152,7 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.1 }}
-          className="bg-surface-container-lowest rounded-lg p-5 shadow-card border border-outline-variant"
+          className="rounded-lg p-0"
         >
           <motion.form 
             className="flex flex-col gap-4" 
