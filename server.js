@@ -17,6 +17,9 @@ const { checkDatabase } = require('./src/db/check');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust 1 level of proxy (Hostinger reverse proxy)
+app.set('trust proxy', 1);
+
 // ==========================================
 // SECURITY CONFIGURATION (HELMET)
 // ==========================================
@@ -60,21 +63,12 @@ app.use(globalLimiter);
 app.use(
   cors({
     origin: function (origin, callback) {
-      const allowedOrigin = process.env.FRONTEND_ORIGIN;
-      if (process.env.NODE_ENV === 'production') {
-        // In production, reject undefined origins (e.g. curl) and strictly allow FRONTEND_ORIGIN
-        if (origin === allowedOrigin) {
-          return callback(null, true);
-        }
-        return callback(new Error(`CORS policy violation: ${origin} not allowed in production`));
-      } else {
-        // Development mode: allow localhost and undefined
-        const devOrigins = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5174'];
-        if (!origin || devOrigins.includes(origin) || (allowedOrigin && origin === allowedOrigin)) {
-          return callback(null, true);
-        }
-        return callback(new Error(`CORS policy violation: ${origin} not allowed`));
+      // Allow same-origin requests (undefined/null origin) or matching FRONTEND_ORIGIN.
+      // In a monolith, the React frontend is served from the same domain so origin is often absent.
+      if (!origin || origin === process.env.FRONTEND_ORIGIN || process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
       }
+      return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
   })
