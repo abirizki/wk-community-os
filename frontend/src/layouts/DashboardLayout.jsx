@@ -38,6 +38,15 @@ export default function DashboardLayout() {
         <div className="p-5 border-b border-outline-variant">
           <h1 className="text-body-lg font-bold text-on-surface">Portal Warga</h1>
           <p className="text-label-sm text-on-surface-variant">WK Community OS</p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
+              BW
+            </div>
+            <div>
+              <h1 className="text-body-lg font-bold text-on-surface leading-none">Bumi Warga</h1>
+              <p className="text-[11px] text-on-surface-variant mt-0.5">Jabar Pintar Digital</p>
+            </div>
+          </div>
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {navItems.map((item) => (
@@ -86,8 +95,11 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center">
               <span className="text-label-md font-bold">WK</span>
+            <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center">
+              <span className="text-label-md font-bold">BW</span>
             </div>
             <h1 className="text-body-md font-bold text-on-surface">Portal Warga</h1>
+            <h1 className="text-body-md font-bold text-on-surface">Bumi Warga</h1>
           </div>
           <button
             onClick={() => setMobileMenuOpen(true)}
