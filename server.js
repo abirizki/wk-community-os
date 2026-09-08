@@ -60,6 +60,7 @@ app.use(
 // Mount real API routes
 app.use('/api/auth', require('./src/routes/auth.routes'));
 app.use('/api/warga', require('./src/routes/warga.routes'));
+app.use('/api/kk', require('./src/routes/kk.routes'));
 
 if (process.env.NODE_ENV !== 'production') {
   console.log('[WK Community OS] Running in DEVELOPMENT mode. Using Mock API routes.');

@@ -43,3 +43,4 @@ router.get('/:nik', async (req, res) => {
 });
 
 module.exports = router;
+

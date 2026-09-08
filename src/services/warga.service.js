@@ -40,3 +40,4 @@ class WargaService {
 }
 
 module.exports = new WargaService();
+

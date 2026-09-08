@@ -50,6 +50,19 @@ CREATE TABLE IF NOT EXISTS warga (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `;
 
+const CREATE_KK_TABLE = `
+CREATE TABLE IF NOT EXISTS kartu_keluarga (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  no_kk VARCHAR(32) NOT NULL UNIQUE,
+  kepala_keluarga VARCHAR(150),
+  alamat TEXT,
+  rt VARCHAR(10),
+  rw VARCHAR(10),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+`;
+
 async function initDatabase() {
   console.log('\n======================================================');
   console.log('  WK COMMUNITY OS — DATABASE SCHEMA INITIALIZATION');
@@ -63,6 +76,10 @@ async function initDatabase() {
     console.log('[INIT] Creating table: users ...');
     await connection.query(CREATE_USERS_TABLE);
     console.log('[INIT] ✓ Table "users" ready.');
+
+    console.log('[INIT] Creating table: kartu_keluarga ...');
+    await connection.query(CREATE_KK_TABLE);
+    console.log('[INIT] ✓ Table "kartu_keluarga" ready.');
 
     console.log('[INIT] Creating table: warga ...');
     await connection.query(CREATE_WARGA_TABLE);
