@@ -16,3 +16,9 @@ storage/cache/*
 # Dependencies
 node_modules/
 frontend/node_modules/
+
+# Environment secrets
+.env
+
+# Deployment artifacts
+deploy.zip

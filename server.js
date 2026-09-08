@@ -4,9 +4,12 @@
  * Serves backend API routes and static React frontend with SPA fallback.
  */
 
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const { checkDatabase } = require('./src/db/check');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -80,6 +83,20 @@ if (process.env.NODE_ENV !== 'production') {
     console.error('Failed to load production API routes:', e.message);
   }
 }
+
+// ==========================================
+// HEALTH CHECK ENDPOINT
+// ==========================================
+app.get('/health', async (req, res) => {
+  const dbStatus = await checkDatabase();
+  res.json({
+    status: 'ok',
+    service: 'WK Community OS',
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime(),
+    database: dbStatus,
+  });
+});
 
 // ==========================================
 // STATIC FRONTEND SERVING (MONOLITH)
