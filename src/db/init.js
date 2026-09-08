@@ -94,6 +94,22 @@ CREATE TABLE IF NOT EXISTS pbb (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `;
 
+const CREATE_POSYANDU_TABLE = `
+CREATE TABLE IF NOT EXISTS posyandu (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nik_warga VARCHAR(32) NOT NULL,
+  nama_anak VARCHAR(150) NOT NULL,
+  umur_bulan INT NOT NULL,
+  berat_badan_kg DECIMAL(5,2) NOT NULL,
+  tinggi_badan_cm DECIMAL(5,2) NOT NULL,
+  tanggal_pemeriksaan DATE NOT NULL,
+  catatan_kesehatan TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_nik_warga (nik_warga)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+`;
+
 async function initDatabase() {
   console.log('\n======================================================');
   console.log('  WK COMMUNITY OS — DATABASE SCHEMA INITIALIZATION');
@@ -123,6 +139,10 @@ async function initDatabase() {
     console.log('[INIT] Creating table: pbb ...');
     await connection.query(CREATE_PBB_TABLE);
     console.log('[INIT] ✓ Table "pbb" ready.');
+
+    console.log('[INIT] Creating table: posyandu ...');
+    await connection.query(CREATE_POSYANDU_TABLE);
+    console.log('[INIT] ✓ Table "posyandu" ready.');
 
     console.log('\n======================================================');
     console.log('  DATABASE SCHEMA INITIALIZATION COMPLETED');

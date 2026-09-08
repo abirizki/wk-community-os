@@ -63,16 +63,10 @@ app.use('/api/warga', require('./src/routes/warga.routes'));
 app.use('/api/kk', require('./src/routes/kk.routes'));
 app.use('/api/pengaduan', require('./src/routes/pengaduan.routes'));
 app.use('/api/pbb', require('./src/routes/pbb.routes'));
+app.use('/api/posyandu', require('./src/routes/posyandu.routes'));
 
 if (process.env.NODE_ENV !== 'production') {
   console.log('[WK Community OS] Running in DEVELOPMENT mode. Using Mock API routes.');
-
-  app.get('/api/posyandu', (req, res) => {
-    res.json([
-      { date: '12 Okt 2026', name: 'Budi (Balita)', service: 'Imunisasi Polio', status: 'Normal' },
-      { date: '12 Sep 2026', name: 'Budi (Balita)', service: 'Timbang Berat Badan', status: 'Stunting Warning' },
-    ]);
-  });
 
   app.get('/api/complaints', (req, res) => {
     res.json([
