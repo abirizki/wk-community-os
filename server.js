@@ -9,6 +9,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const session = require('express-session');
 const { checkDatabase } = require('./src/db/check');
 
 const app = express();
@@ -38,18 +39,29 @@ app.use(
 app.use(express.json());
 
 // ==========================================
+// SESSION CONFIGURATION
+// ==========================================
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'wk-community-os-super-secret-key-2026',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  })
+);
+
+// ==========================================
 // API ROUTES CONFIGURATION
 // ==========================================
+// Mount real API routes
+app.use('/api/auth', require('./src/routes/auth.routes'));
+
 if (process.env.NODE_ENV !== 'production') {
   console.log('[WK Community OS] Running in DEVELOPMENT mode. Using Mock API routes.');
-
-  app.post('/api/auth/login', (req, res) => {
-    res.json({ user: { nik: req.body.nik } });
-  });
-
-  app.post('/api/auth/logout', (req, res) => {
-    res.json({ success: true });
-  });
 
   app.get('/api/pbb', (req, res) => {
     res.json([
