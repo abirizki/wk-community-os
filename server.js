@@ -62,16 +62,10 @@ app.use('/api/auth', require('./src/routes/auth.routes'));
 app.use('/api/warga', require('./src/routes/warga.routes'));
 app.use('/api/kk', require('./src/routes/kk.routes'));
 app.use('/api/pengaduan', require('./src/routes/pengaduan.routes'));
+app.use('/api/pbb', require('./src/routes/pbb.routes'));
 
 if (process.env.NODE_ENV !== 'production') {
   console.log('[WK Community OS] Running in DEVELOPMENT mode. Using Mock API routes.');
-
-  app.get('/api/pbb', (req, res) => {
-    res.json([
-      { year: 2026, nop: '320101234567890123', amount: 150000, status: 'PAID' },
-      { year: 2027, nop: '320101234567890123', amount: 150000, status: 'UNPAID' },
-    ]);
-  });
 
   app.get('/api/posyandu', (req, res) => {
     res.json([

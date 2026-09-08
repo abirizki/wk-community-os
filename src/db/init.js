@@ -78,6 +78,22 @@ CREATE TABLE IF NOT EXISTS pengaduan (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `;
 
+const CREATE_PBB_TABLE = `
+CREATE TABLE IF NOT EXISTS pbb (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nop VARCHAR(30) NOT NULL,
+  nik_warga VARCHAR(32) NOT NULL,
+  tahun INT NOT NULL,
+  nominal DECIMAL(15,2) NOT NULL,
+  status_pembayaran VARCHAR(20) NOT NULL DEFAULT 'UNPAID',
+  tanggal_jatuh_tempo DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_nop_tahun (nop, tahun),
+  INDEX idx_nik_warga (nik_warga)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+`;
+
 async function initDatabase() {
   console.log('\n======================================================');
   console.log('  WK COMMUNITY OS — DATABASE SCHEMA INITIALIZATION');
@@ -103,6 +119,10 @@ async function initDatabase() {
     console.log('[INIT] Creating table: pengaduan ...');
     await connection.query(CREATE_PENGADUAN_TABLE);
     console.log('[INIT] ✓ Table "pengaduan" ready.');
+
+    console.log('[INIT] Creating table: pbb ...');
+    await connection.query(CREATE_PBB_TABLE);
+    console.log('[INIT] ✓ Table "pbb" ready.');
 
     console.log('\n======================================================');
     console.log('  DATABASE SCHEMA INITIALIZATION COMPLETED');

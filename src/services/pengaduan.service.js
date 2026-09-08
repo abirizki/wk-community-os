@@ -72,3 +72,4 @@ class PengaduanService {
 }
 
 module.exports = new PengaduanService();
+

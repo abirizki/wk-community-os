@@ -49,3 +49,4 @@ class PengaduanRepository {
 }
 
 module.exports = new PengaduanRepository();
+
