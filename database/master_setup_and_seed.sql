@@ -1,16 +1,34 @@
 -- =======================================================================
 -- BUMI WARGA - MASTER DATABASE SETUP (DDL) + SEED DATA (DML)
+-- BUMI WARGA - CLEAN PRODUCTION DATABASE RE-INITIALIZATION & SEED
 -- Owner / Author: Jabar Pintar Digital
 -- Database Target: MySQL 8.x (Hostinger: u466444476_bumiwarga)
+-- Target Database: MySQL 8.x (Hostinger: u466444476_bumiwarga)
 -- =======================================================================
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO';
+
+-- -----------------------------------------------------------------------
+-- DROP OLD TABLES IF EXIST (Mencegah konflik skema parsial terdahulu)
+-- -----------------------------------------------------------------------
+DROP TABLE IF EXISTS `audit_logs`;
+DROP TABLE IF EXISTS `notifikasi`;
+DROP TABLE IF EXISTS `dokumen_request`;
+DROP TABLE IF EXISTS `posyandu`;
+DROP TABLE IF EXISTS `pbb`;
+DROP TABLE IF EXISTS `pengaduan`;
+DROP TABLE IF EXISTS `warga`;
+DROP TABLE IF EXISTS `kartu_keluarga`;
+DROP TABLE IF EXISTS `users`;
 
 -- -----------------------------------------------------------------------
 -- 1. TABEL: users (Autentikasi & Akun Sistem)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `users` (
+CREATE TABLE `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `username` VARCHAR(16) NOT NULL UNIQUE COMMENT 'NIK 16 digit warga atau username admin',
   `password_hash` VARCHAR(255) NOT NULL,
@@ -28,6 +46,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- 2. TABEL: kartu_keluarga (Data Induk KK)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `kartu_keluarga` (
+CREATE TABLE `kartu_keluarga` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `no_kk` VARCHAR(16) NOT NULL UNIQUE,
   `kepala_keluarga` VARCHAR(150) NOT NULL,
@@ -47,6 +66,7 @@ CREATE TABLE IF NOT EXISTS `kartu_keluarga` (
 -- 3. TABEL: warga (Data Kependudukan Lengkap)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `warga` (
+CREATE TABLE `warga` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NULL,
   `nik` VARCHAR(16) NOT NULL UNIQUE,
@@ -84,6 +104,7 @@ CREATE TABLE IF NOT EXISTS `warga` (
 -- 4. TABEL: pengaduan (Aspirasi & Laporan Warga)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pengaduan` (
+CREATE TABLE `pengaduan` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nik_pelapor` VARCHAR(16) NOT NULL,
   `judul` VARCHAR(255) NOT NULL,
@@ -104,6 +125,7 @@ CREATE TABLE IF NOT EXISTS `pengaduan` (
 -- 5. TABEL: pbb (Pajak Bumi dan Bangunan)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pbb` (
+CREATE TABLE `pbb` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nop` VARCHAR(30) NOT NULL COMMENT 'Nomor Objek Pajak',
   `nik_warga` VARCHAR(16) NOT NULL,
@@ -127,6 +149,7 @@ CREATE TABLE IF NOT EXISTS `pbb` (
 -- 6. TABEL: posyandu (Rekam Kesehatan Balita & Ibu)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `posyandu` (
+CREATE TABLE `posyandu` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nik_warga` VARCHAR(16) NOT NULL COMMENT 'NIK orang tua / wali',
   `nama_anak` VARCHAR(150) NOT NULL,
@@ -153,6 +176,7 @@ CREATE TABLE IF NOT EXISTS `posyandu` (
 -- 7. TABEL: dokumen_request (Pengajuan Dokumen Kelurahan)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `dokumen_request` (
+CREATE TABLE `dokumen_request` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nik_pemohon` VARCHAR(16) NOT NULL,
   `jenis_dokumen` ENUM('Surat Keterangan Domisili', 'Surat Pengantar KTP', 'Surat Keterangan Tidak Mampu', 'Surat Keterangan Usaha', 'Surat Keterangan Lahir', 'Surat Keterangan Meninggal', 'Lainnya') NOT NULL,
@@ -173,6 +197,7 @@ CREATE TABLE IF NOT EXISTS `dokumen_request` (
 -- 8. TABEL: notifikasi (Sistem Pemberitahuan Warga)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `notifikasi` (
+CREATE TABLE `notifikasi` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nik_target` VARCHAR(16) NOT NULL,
   `judul` VARCHAR(255) NOT NULL,
@@ -190,6 +215,7 @@ CREATE TABLE IF NOT EXISTS `notifikasi` (
 -- 9. TABEL: audit_logs (Enterprise Audit Trail & Compliance)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `audit_logs` (
+CREATE TABLE `audit_logs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NULL,
   `username` VARCHAR(50) NULL,
@@ -266,3 +292,6 @@ INSERT INTO `notifikasi` (`id`, `nik_target`, `judul`, `pesan`, `tipe`, `is_read
 ON DUPLICATE KEY UPDATE `judul` = VALUES(`judul`), `pesan` = VALUES(`pesan`);
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
+SET SQL_MODE = @OLD_SQL_MODE;
