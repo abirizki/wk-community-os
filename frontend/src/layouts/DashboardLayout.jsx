@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +12,6 @@ import {
   LogOut,
   Menu,
   X,
-  User
   User,
   Bell
 } from 'lucide-react';
@@ -95,8 +93,6 @@ export default function DashboardLayout() {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-surface-container-lowest border-r border-outline-variant shadow-sm z-20">
         <div className="p-5 border-b border-outline-variant">
-          <h1 className="text-body-lg font-bold text-on-surface">Portal Warga</h1>
-          <p className="text-label-sm text-on-surface-variant">WK Community OS</p>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
               BW
@@ -135,10 +131,8 @@ export default function DashboardLayout() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-label-md font-semibold text-on-surface truncate">
-                {user?.nik || 'Warga'}
                 {user?.nama || user?.nik || 'Warga'}
               </p>
-              <NavLink to={`/dashboard/warga/${user?.nik}`} className="text-[11px] text-primary hover:underline truncate">Lihat Profil</NavLink>
               <NavLink to={`/dashboard/warga/${user?.nik}`} className="text-[11px] text-primary hover:underline truncate block">
                 Lihat Profil
               </NavLink>
@@ -154,30 +148,16 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
-      {/* Mobile Header & Overlay */}
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="lg:hidden flex items-center justify-between p-4 bg-surface-container-lowest border-b border-outline-variant shadow-sm z-20">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center">
-              <span className="text-label-md font-bold">WK</span>
-            <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center">
-              <span className="text-label-md font-bold">BW</span>
         {/* Top Header with Notification Bell */}
         <header className="flex items-center justify-between px-4 lg:px-8 py-3.5 bg-surface-container-lowest border-b border-outline-variant shadow-sm z-20">
           <div className="flex items-center gap-3 lg:hidden">
             <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
               BW
             </div>
-            <h1 className="text-body-md font-bold text-on-surface">Portal Warga</h1>
             <h1 className="text-body-md font-bold text-on-surface">Bumi Warga</h1>
           </div>
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="p-2 -mr-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-md"
-          >
-            <Menu size={24} />
-          </button>
 
           <div className="hidden lg:block">
             <p className="text-xs text-on-surface-variant">
@@ -309,10 +289,8 @@ export default function DashboardLayout() {
                 <div className="p-4 border-b border-outline-variant flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="text-label-md font-semibold text-on-surface truncate">
-                      {user?.nik || 'Warga'}
                       {user?.nama || user?.nik || 'Warga'}
                     </span>
-                    <NavLink to={`/dashboard/warga/${user?.nik}`} onClick={() => setMobileMenuOpen(false)} className="text-[11px] text-primary hover:underline mt-0.5">Lihat Profil</NavLink>
                     <NavLink
                       to={`/dashboard/warga/${user?.nik}`}
                       onClick={() => setMobileMenuOpen(false)}
@@ -362,7 +340,6 @@ export default function DashboardLayout() {
           )}
         </AnimatePresence>
 
-        {/* Main Content Area */}
         {/* Main Content Outlet */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
           <Outlet />
@@ -371,4 +348,3 @@ export default function DashboardLayout() {
     </div>
   );
 }
-
