@@ -10,6 +10,8 @@ import ComplaintPage from './pages/ComplaintPage';
 import DokumenPage from './pages/DokumenPage';
 import WargaList from './pages/WargaList';
 import WargaDetail from './pages/WargaDetail';
+import KartuKeluargaPage from './pages/KartuKeluargaPage';
+import UserManagementPage from './pages/UserManagementPage';
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
             }
           >
             <Route index element={<DashboardHome />} />
+            <Route path="kk" element={<KartuKeluargaPage />} />
+            <Route path="users" element={<UserManagementPage />} />
             <Route path="warga" element={<WargaList />} />
             <Route path="warga/:nik" element={<WargaDetail />} />
             <Route path="dokumen" element={<DokumenPage />} />

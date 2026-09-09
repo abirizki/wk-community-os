@@ -13,11 +13,15 @@ import {
   Menu,
   X,
   User,
-  Bell
+  Users,
+  ShieldCheck,
+  Bell,
+  Sparkles,
+  UserCheck
 } from 'lucide-react';
 
 export default function DashboardLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, selectProfile } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -26,19 +30,34 @@ export default function DashboardLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
+  // Family Switcher Modal State
+  const [familyModalOpen, setFamilyModalOpen] = useState(false);
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
+  const normalizedRole = user?.role === 'admin' ? 'admin_kelurahan' : user?.role;
+  const canManageUsers = ['superadmin', 'admin_kelurahan', 'admin_rw', 'ketua_rw', 'ketua_rt'].includes(normalizedRole);
+
   const navItems = [
     { name: 'Beranda', path: '/dashboard', icon: <Home size={20} /> },
+    { name: 'Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={20} /> },
     { name: 'Data Warga', path: '/dashboard/warga', icon: <User size={20} /> },
     { name: 'Pengajuan Dokumen', path: '/dashboard/dokumen', icon: <FileCheck size={20} /> },
     { name: 'Layanan PBB', path: '/dashboard/pbb', icon: <FileText size={20} /> },
     { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={20} /> },
     { name: 'Pengaduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={20} /> },
   ];
+
+  if (canManageUsers) {
+    navItems.push({
+      name: 'Kelola Pengguna',
+      path: '/dashboard/users',
+      icon: <ShieldCheck size={20} />
+    });
+  }
 
   const fetchNotifications = async () => {
     try {
@@ -88,6 +107,18 @@ export default function DashboardLayout() {
     }
   };
 
+  const handleSelectMember = async (nik) => {
+    try {
+      await selectProfile(nik);
+      setFamilyModalOpen(false);
+    } catch (e) {
+      alert('Gagal memilih anggota keluarga: ' + e.message);
+    }
+  };
+
+  const displayName = user?.active_nama || user?.nama || (user?.nik ? `Warga ${user.nik.slice(0, 6)}...` : 'Warga');
+  const activeHubungan = user?.active_hubungan || (user?.role !== 'warga' ? user?.role : 'Anggota');
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
@@ -104,7 +135,7 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -124,25 +155,37 @@ export default function DashboardLayout() {
           ))}
         </nav>
 
+        {/* User Card & Family Profile Switcher */}
         <div className="p-4 border-t border-outline-variant">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
               <User size={20} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-label-md font-semibold text-on-surface truncate">
-                {user?.nama || user?.nik || 'Warga'}
+              <p className="text-xs font-bold text-on-surface truncate">
+                {displayName}
               </p>
-              <NavLink to={`/dashboard/warga/${user?.nik}`} className="text-[11px] text-primary hover:underline truncate block">
-                Lihat Profil
-              </NavLink>
+              <p className="text-[10px] text-on-surface-variant truncate">
+                {activeHubungan} · {user?.rw ? `RW ${user.rw}` : 'Kebonjati'}
+              </p>
             </div>
           </div>
+
+          {user?.family_members && user.family_members.length > 1 && (
+            <button
+              onClick={() => setFamilyModalOpen(true)}
+              className="w-full mb-2 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-blue-50 text-primary hover:bg-blue-100 transition-colors border border-blue-200"
+            >
+              <Sparkles size={13} />
+              <span>Ganti Persona Anggota</span>
+            </button>
+          )}
+
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-label-md font-medium text-error hover:bg-error-container transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium text-error hover:bg-error-container transition-colors"
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             Keluar
           </button>
         </div>
@@ -150,8 +193,8 @@ export default function DashboardLayout() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header with Notification Bell */}
-        <header className="flex items-center justify-between px-4 lg:px-8 py-3.5 bg-surface-container-lowest border-b border-outline-variant shadow-sm z-20">
+        {/* Top Header */}
+        <header className="flex items-center justify-between px-4 lg:px-8 py-3 bg-surface-container-lowest border-b border-outline-variant shadow-sm z-20">
           <div className="flex items-center gap-3 lg:hidden">
             <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
               BW
@@ -159,14 +202,30 @@ export default function DashboardLayout() {
             <h1 className="text-body-md font-bold text-on-surface">Bumi Warga</h1>
           </div>
 
-          <div className="hidden lg:block">
-            <p className="text-xs text-on-surface-variant">
+          <div className="hidden lg:flex items-center gap-3">
+            <p className="text-xs text-on-surface-variant font-medium">
               Kelurahan Kebonjati · Kec. Andir · Kota Bandung
             </p>
+            {user?.active_nama && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-primary border border-blue-200">
+                <UserCheck size={12} /> {user.active_nama} ({user.active_hubungan || 'Warga'})
+              </span>
+            )}
           </div>
 
-          {/* Right Actions: Notification Bell & Mobile Toggle */}
+          {/* Right Actions: Family Switcher, Notification Bell & Mobile Toggle */}
           <div className="flex items-center gap-2 relative">
+            {/* Quick Family Switcher Pill for Mobile / Desktop */}
+            {user?.family_members && user.family_members.length > 1 && (
+              <button
+                onClick={() => setFamilyModalOpen(true)}
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                <Users size={14} />
+                <span>Keluarga ({user.family_members.length})</span>
+              </button>
+            )}
+
             {/* Bell Icon & Dropdown */}
             <div className="relative">
               <button
@@ -182,7 +241,7 @@ export default function DashboardLayout() {
                 )}
               </button>
 
-              {/* Notification Dropdown Panel */}
+              {/* Notification Dropdown */}
               <AnimatePresence>
                 {notifDropdownOpen && (
                   <>
@@ -288,16 +347,12 @@ export default function DashboardLayout() {
               >
                 <div className="p-4 border-b border-outline-variant flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-label-md font-semibold text-on-surface truncate">
-                      {user?.nama || user?.nik || 'Warga'}
+                    <span className="text-xs font-bold text-on-surface truncate">
+                      {displayName}
                     </span>
-                    <NavLink
-                      to={`/dashboard/warga/${user?.nik}`}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-[11px] text-primary hover:underline mt-0.5"
-                    >
-                      Lihat Profil
-                    </NavLink>
+                    <span className="text-[11px] text-on-surface-variant mt-0.5">
+                      {activeHubungan} · {user?.rw ? `RW ${user.rw}` : 'Kebonjati'}
+                    </span>
                   </div>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
@@ -306,6 +361,7 @@ export default function DashboardLayout() {
                     <X size={20} />
                   </button>
                 </div>
+
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                   {navItems.map((item) => (
                     <NavLink
@@ -314,7 +370,7 @@ export default function DashboardLayout() {
                       end={item.path === '/dashboard'}
                       onClick={() => setMobileMenuOpen(false)}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-3 rounded-md text-label-md transition-colors ${
+                        `flex items-center gap-3 px-3 py-3 rounded-md text-xs transition-colors ${
                           isActive
                             ? 'bg-primary-container text-on-primary-container font-semibold'
                             : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
@@ -326,12 +382,21 @@ export default function DashboardLayout() {
                     </NavLink>
                   ))}
                 </nav>
-                <div className="p-4 border-t border-outline-variant">
+
+                <div className="p-4 border-t border-outline-variant space-y-2">
+                  {user?.family_members && user.family_members.length > 1 && (
+                    <button
+                      onClick={() => { setMobileMenuOpen(false); setFamilyModalOpen(true); }}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold bg-blue-50 text-primary border border-blue-200"
+                    >
+                      <Sparkles size={14} /> Ganti Persona Anggota
+                    </button>
+                  )}
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-label-md font-medium text-error hover:bg-error-container transition-colors border border-error/20"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium text-error hover:bg-error-container transition-colors border border-error/20"
                   >
-                    <LogOut size={18} />
+                    <LogOut size={16} />
                     Keluar Akun
                   </button>
                 </div>
@@ -345,6 +410,89 @@ export default function DashboardLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Family Member Profile Switcher Modal */}
+      <AnimatePresence>
+        {familyModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-elevated w-full max-w-md overflow-hidden"
+            >
+              <div className="p-5 border-b border-outline-variant flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                    <Users size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-on-surface">Pilih Persona Anggota Keluarga</h3>
+                    <p className="text-[11px] text-on-surface-variant">
+                      Surat & pelayanan akan diproses atas nama yang Anda pilih.
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setFamilyModalOpen(false)}
+                  className="p-1 rounded-md text-on-surface-variant hover:bg-surface-container"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-2.5 max-h-80 overflow-y-auto">
+                {user?.family_members && user.family_members.map((member) => {
+                  const isSelected = user?.active_nik === member.nik;
+                  return (
+                    <div
+                      key={member.nik}
+                      onClick={() => handleSelectMember(member.nik)}
+                      className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5 shadow-sm' 
+                          : 'border-outline-variant hover:border-primary/40 hover:bg-surface-container/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs ${
+                          isSelected ? 'bg-primary text-on-primary' : 'bg-surface-variant text-primary'
+                        }`}>
+                          {member.nama.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-on-surface">{member.nama}</p>
+                          <p className="text-[11px] text-on-surface-variant">
+                            {member.status_hubungan_keluarga} · NIK: {member.nik}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isSelected ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary text-on-primary flex items-center gap-1">
+                          <UserCheck size={12} /> Aktif
+                        </span>
+                      ) : (
+                        <span className="text-xs font-semibold text-primary">Pilih</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="p-4 bg-slate-50 border-t border-outline-variant text-center">
+                <NavLink
+                  to="/dashboard/kk"
+                  onClick={() => setFamilyModalOpen(false)}
+                  className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Buka Dokumen Lengkap Kartu Keluarga Digital &rarr;
+                </NavLink>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
