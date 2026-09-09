@@ -105,6 +105,8 @@ app.use('/api/kk', require('./src/routes/kk.routes'));
 app.use('/api/pengaduan', require('./src/routes/pengaduan.routes'));
 app.use('/api/pbb', require('./src/routes/pbb.routes'));
 app.use('/api/posyandu', require('./src/routes/posyandu.routes'));
+app.use('/api/dokumen', require('./src/routes/dokumen.routes'));
+app.use('/api/notifikasi', require('./src/routes/notifikasi.routes'));
 
 // Pure MySQL REST Routes (No hardcoded mock data)
 console.log(`[Bumi Warga] API routes mounted cleanly. Connected to MySQL database.`);

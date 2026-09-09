@@ -1,13 +1,10 @@
 -- =======================================================================
--- BUMI WARGA - MASTER DATABASE SETUP (DDL) + SEED DATA (DML)
 -- BUMI WARGA - CLEAN PRODUCTION DATABASE RE-INITIALIZATION & SEED
 -- Owner / Author: Jabar Pintar Digital
--- Database Target: MySQL 8.x (Hostinger: u466444476_bumiwarga)
 -- Target Database: MySQL 8.x (Hostinger: u466444476_bumiwarga)
 -- =======================================================================
 
 SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO';
 
@@ -27,7 +24,6 @@ DROP TABLE IF EXISTS `users`;
 -- -----------------------------------------------------------------------
 -- 1. TABEL: users (Autentikasi & Akun Sistem)
 -- -----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `users` (
 CREATE TABLE `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `username` VARCHAR(16) NOT NULL UNIQUE COMMENT 'NIK 16 digit warga atau username admin',
@@ -45,7 +41,6 @@ CREATE TABLE `users` (
 -- -----------------------------------------------------------------------
 -- 2. TABEL: kartu_keluarga (Data Induk KK)
 -- -----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `kartu_keluarga` (
 CREATE TABLE `kartu_keluarga` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `no_kk` VARCHAR(16) NOT NULL UNIQUE,
@@ -65,7 +60,6 @@ CREATE TABLE `kartu_keluarga` (
 -- -----------------------------------------------------------------------
 -- 3. TABEL: warga (Data Kependudukan Lengkap)
 -- -----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `warga` (
 CREATE TABLE `warga` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NULL,
@@ -103,7 +97,6 @@ CREATE TABLE `warga` (
 -- -----------------------------------------------------------------------
 -- 4. TABEL: pengaduan (Aspirasi & Laporan Warga)
 -- -----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `pengaduan` (
 CREATE TABLE `pengaduan` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nik_pelapor` VARCHAR(16) NOT NULL,
@@ -124,7 +117,6 @@ CREATE TABLE `pengaduan` (
 -- -----------------------------------------------------------------------
 -- 5. TABEL: pbb (Pajak Bumi dan Bangunan)
 -- -----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `pbb` (
 CREATE TABLE `pbb` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nop` VARCHAR(30) NOT NULL COMMENT 'Nomor Objek Pajak',
@@ -148,7 +140,6 @@ CREATE TABLE `pbb` (
 -- -----------------------------------------------------------------------
 -- 6. TABEL: posyandu (Rekam Kesehatan Balita & Ibu)
 -- -----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `posyandu` (
 CREATE TABLE `posyandu` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nik_warga` VARCHAR(16) NOT NULL COMMENT 'NIK orang tua / wali',
@@ -175,7 +166,6 @@ CREATE TABLE `posyandu` (
 -- -----------------------------------------------------------------------
 -- 7. TABEL: dokumen_request (Pengajuan Dokumen Kelurahan)
 -- -----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `dokumen_request` (
 CREATE TABLE `dokumen_request` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nik_pemohon` VARCHAR(16) NOT NULL,
@@ -196,7 +186,6 @@ CREATE TABLE `dokumen_request` (
 -- -----------------------------------------------------------------------
 -- 8. TABEL: notifikasi (Sistem Pemberitahuan Warga)
 -- -----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `notifikasi` (
 CREATE TABLE `notifikasi` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nik_target` VARCHAR(16) NOT NULL,
@@ -214,7 +203,6 @@ CREATE TABLE `notifikasi` (
 -- -----------------------------------------------------------------------
 -- 9. TABEL: audit_logs (Enterprise Audit Trail & Compliance)
 -- -----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `audit_logs` (
 CREATE TABLE `audit_logs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NULL,
@@ -290,8 +278,6 @@ INSERT INTO `notifikasi` (`id`, `nik_target`, `judul`, `pesan`, `tipe`, `is_read
   (1, '3273010203850003', 'Tagihan PBB 2026 Tersedia', 'Tagihan PBB-P2 tahun pajak 2026 untuk NOP 32.73.010.001.001-0001.0 telah terbit. Silakan lakukan pembayaran sebelum 31 Agustus 2026.', 'warning', 0, '/dashboard/pbb'),
   (2, '3273014504900004', 'Jadwal Posyandu Balita Bulan Depan', 'Pemeriksaan Posyandu Melati RW 001 akan dilaksanakan pada tanggal 12 Oktober 2026 di Balai Warga.', 'info', 0, '/dashboard/posyandu')
 ON DUPLICATE KEY UPDATE `judul` = VALUES(`judul`), `pesan` = VALUES(`pesan`);
-
-SET FOREIGN_KEY_CHECKS = 1;
 
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
 SET SQL_MODE = @OLD_SQL_MODE;
