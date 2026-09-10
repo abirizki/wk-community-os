@@ -1,9 +1,5 @@
-import { useState, useEffect } from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '../utils/api';
-import DataTable from '../components/ui/DataTable';
-import { Loader2, Baby, AlertCircle, CheckCircle, Info, Plus } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { 
   Baby, 
@@ -17,17 +13,12 @@ import {
   Filter, 
   History, 
   UserPlus, 
-  ShieldAlert, 
-  ChevronRight,
-  TrendingUp,
-  Award,
-  X
+  TrendingUp, 
+  X 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PosyanduPage() {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const isOfficer = user && ['kader_posyandu', 'ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'].includes(user.role);
 
@@ -41,10 +32,6 @@ export default function PosyanduPage() {
   const [search, setSearch] = useState('');
   const [filterRT, setFilterRT] = useState('');
 
-  // Form State
-  const [showForm, setShowForm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
   // ---------------------------------------------------------------------------
   // BALITA STATE
   // ---------------------------------------------------------------------------
@@ -71,7 +58,6 @@ export default function PosyanduPage() {
     catatan_kesehatan: ''
   });
 
-  const fetchPosyandu = async () => {
   // ---------------------------------------------------------------------------
   // LANSIA STATE
   // ---------------------------------------------------------------------------
@@ -120,11 +106,8 @@ export default function PosyanduPage() {
   // Fetch Balita Data
   const fetchBalita = async () => {
     try {
-      setIsLoading(true);
       setLoading(true);
       setError(null);
-      const response = await api.get('/posyandu/me');
-      setData(response.data || []);
       if (isOfficer) {
         const [listRes, statsRes] = await Promise.all([
           api.get(`/posyandu/balita?search=${encodeURIComponent(search)}${filterRT ? `&rt=${filterRT}` : ''}`),
@@ -137,10 +120,8 @@ export default function PosyanduPage() {
         setBalitaList(res.data || []);
       }
     } catch (err) {
-      setError(err.message || 'Gagal mengambil data rekam medis Posyandu.');
       setError(err.message || 'Gagal memuat data Posyandu Balita');
     } finally {
-      setIsLoading(false);
       setLoading(false);
     }
   };
@@ -150,17 +131,12 @@ export default function PosyanduPage() {
     try {
       setLoading(true);
       setError(null);
-      if (isOfficer) {
-        const [listRes, statsRes] = await Promise.all([
-          api.get(`/posyandu/lansia?search=${encodeURIComponent(search)}${filterRT ? `&rt=${filterRT}` : ''}`),
-          api.get(`/posyandu/lansia/stats${filterRT ? `?rt=${filterRT}` : ''}`)
-        ]);
-        setLansiaList(listRes.data || []);
-        setLansiaStats(statsRes.data || {});
-      } else {
-        const res = await api.get('/posyandu/lansia/my');
-        setLansiaList(res.data || []);
-      }
+      const [listRes, statsRes] = await Promise.all([
+        api.get(`/posyandu/lansia?search=${encodeURIComponent(search)}${filterRT ? `&rt=${filterRT}` : ''}`),
+        api.get(`/posyandu/lansia/stats${filterRT ? `?rt=${filterRT}` : ''}`)
+      ]);
+      setLansiaList(listRes.data || []);
+      setLansiaStats(statsRes.data || {});
     } catch (err) {
       setError(err.message || 'Gagal memuat data Posyandu Lansia');
     } finally {
@@ -169,8 +145,6 @@ export default function PosyanduPage() {
   };
 
   useEffect(() => {
-    fetchPosyandu();
-  }, []);
     if (activeTab === 'balita') {
       fetchBalita();
     } else {
@@ -178,10 +152,6 @@ export default function PosyanduPage() {
     }
   }, [activeTab, search, filterRT]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
   // Live IMT preview for Lansia Checkup
   const liveIMT = useMemo(() => {
     const bb = parseFloat(checkupLansiaForm.berat_badan_kg);
@@ -196,31 +166,12 @@ export default function PosyanduPage() {
     return { val, category };
   }, [checkupLansiaForm.berat_badan_kg, checkupLansiaForm.tinggi_badan_cm]);
 
-  const handleSubmit = async (e) => {
   // Submit Catat Balita
   const handleSubmitBalita = async (e) => {
     e.preventDefault();
-    
-    // Extra Frontend Validation
-    if (Number(formData.umur_bulan) < 0 || Number(formData.berat_badan_kg) < 0 || Number(formData.tinggi_badan_cm) < 0) {
-      setError('Nilai umur, berat, dan tinggi badan tidak boleh negatif.');
-      return;
-    }
-
     try {
-      setIsSubmitting(true);
       setSubmittingBalita(true);
       setError(null);
-      await api.post('/posyandu', {
-        nama_anak: formData.nama_anak,
-        umur_bulan: Number(formData.umur_bulan),
-        berat_badan_kg: Number(formData.berat_badan_kg),
-        tinggi_badan_cm: Number(formData.tinggi_badan_cm),
-        catatan_kesehatan: formData.catatan_kesehatan
-      });
-      
-      // Reset form and refetch
-      setFormData({
       await api.post('/posyandu/balita', balitaForm);
       setSuccessMsg('Pemeriksaan Balita berhasil dicatat!');
       setShowBalitaModal(false);
@@ -237,27 +188,15 @@ export default function PosyanduPage() {
         imunisasi: '',
         catatan_kesehatan: ''
       });
-      setShowForm(false);
-      fetchPosyandu();
       fetchBalita();
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
-      setError(err.message || 'Gagal mencatat pemeriksaan Posyandu.');
       setError(err.message || 'Gagal mencatat data balita');
     } finally {
-      setIsSubmitting(false);
       setSubmittingBalita(false);
     }
   };
 
-  const posyanduColumns = [
-    { label: 'Tanggal Pemeriksaan', className: '' },
-    { label: 'Nama Anak', className: '' },
-    { label: 'Umur (Bulan)', className: 'text-center' },
-    { label: 'Berat (Kg)', className: 'text-center' },
-    { label: 'Tinggi (Cm)', className: 'text-center' },
-    { label: 'Catatan', className: '' }
-  ];
   // Submit Registrasi Lansia
   const handleSubmitRegLansia = async (e) => {
     e.preventDefault();
@@ -276,20 +215,6 @@ export default function PosyanduPage() {
     }
   };
 
-  const renderPosyanduRow = (row) => (
-    <>
-      <td className="px-5 py-4 font-medium text-label-md">
-        {row.created_at ? new Date(row.created_at).toLocaleDateString('id-ID') : '-'}
-      </td>
-      <td className="px-5 py-4 font-medium text-on-surface">{row.nama_anak}</td>
-      <td className="px-5 py-4 text-center text-on-surface-variant text-label-sm">{row.umur_bulan}</td>
-      <td className="px-5 py-4 text-center text-on-surface-variant text-label-sm">{row.berat_badan_kg}</td>
-      <td className="px-5 py-4 text-center text-on-surface-variant text-label-sm">{row.tinggi_badan_cm}</td>
-      <td className="px-5 py-4 text-on-surface-variant text-label-sm max-w-[200px] truncate" title={row.catatan_kesehatan}>
-        {row.catatan_kesehatan || '-'}
-      </td>
-    </>
-  );
   // Submit Pemeriksaan Lansia
   const handleSubmitCheckupLansia = async (e) => {
     e.preventDefault();
@@ -338,15 +263,10 @@ export default function PosyanduPage() {
   };
 
   return (
-    <div className="max-w-max-width mx-auto space-y-6">
-      <header className="mb-8 flex justify-between items-start">
     <div className="max-w-max-width mx-auto space-y-6 pb-12">
       {/* HEADER */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-headline-lg-mobile lg:text-headline-lg font-bold text-on-surface flex items-center gap-2">
-            <Baby className="text-primary" size={32} />
-            Layanan Posyandu
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-semibold mb-2">
             <Activity size={14} /> Posyandu Integratif Siklus Hidup
           </div>
@@ -359,7 +279,6 @@ export default function PosyanduPage() {
             Layanan Posyandu Kebonjati
           </h1>
           <p className="text-body-md text-on-surface-variant mt-1">
-            Pantau riwayat layanan pemeriksaan dan rekam medis anak Anda.
             Surveilans kesehatan balita (KMS & Stunting) dan lansia (Skrining PTM & Kemandirian ADL).
           </p>
         </div>
@@ -423,8 +342,6 @@ export default function PosyanduPage() {
       {/* TABS SELECTOR */}
       <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-hidden p-1.5 gap-1.5">
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-semibold shadow-sm hover:bg-primary/90 transition-colors"
           onClick={() => setActiveTab('balita')}
           className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
             activeTab === 'balita'
@@ -432,11 +349,9 @@ export default function PosyanduPage() {
               : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
-          {showForm ? 'Batal' : <><Plus size={20} /> Catat Pemeriksaan</>}
           <Baby size={18} />
           <span>Posyandu Balita (KMS & Stunting)</span>
         </button>
-      </header>
         <button
           onClick={() => setActiveTab('lansia')}
           className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
@@ -450,16 +365,6 @@ export default function PosyanduPage() {
         </button>
       </div>
 
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-error-container text-on-error-container p-4 rounded-lg flex items-start gap-3 border border-error/20"
-        >
-          <AlertCircle size={20} className="text-error mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-semibold text-label-md">Pemberitahuan</h3>
-            <p className="text-label-sm mt-1">{error}</p>
       {/* ===================================================================== */}
       {/* TAB 1: BALITA VIEW                                                    */}
       {/* ===================================================================== */}
@@ -603,19 +508,9 @@ export default function PosyanduPage() {
               </table>
             </div>
           </div>
-        </motion.div>
         </div>
       )}
 
-      {showForm && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant shadow-sm mb-8"
-        >
-          <h2 className="text-headline-sm font-bold text-on-surface mb-4">Pencatatan Pemeriksaan Baru</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* ===================================================================== */}
       {/* TAB 2: LANSIA VIEW                                                    */}
       {/* ===================================================================== */}
@@ -627,17 +522,17 @@ export default function PosyanduPage() {
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
                 <p className="text-xs text-on-surface-variant font-medium">Total Lansia Binaan</p>
                 <h3 className="text-2xl font-bold text-on-surface mt-1">{lansiaStats.total_lansia || 0}</h3>
-                <p className="text-[11px] text-on-surface-variant mt-1">Usia $\ge 60$ Tahun</p>
+                <p className="text-[11px] text-on-surface-variant mt-1">Usia &ge; 60 Tahun</p>
               </div>
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
                 <p className="text-xs text-on-surface-variant font-medium">Waspada Hipertensi</p>
                 <h3 className="text-2xl font-bold text-rose-600 mt-1">{lansiaStats.total_hipertensi || 0}</h3>
-                <p className="text-[11px] text-rose-700 mt-1 font-medium">Tensi $\ge 140/90$ mmHg</p>
+                <p className="text-[11px] text-rose-700 mt-1 font-medium">Tensi &ge; 140/90 mmHg</p>
               </div>
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
                 <p className="text-xs text-on-surface-variant font-medium">Waspada Diabetes</p>
                 <h3 className="text-2xl font-bold text-amber-600 mt-1">{lansiaStats.total_diabetes || 0}</h3>
-                <p className="text-[11px] text-amber-700 mt-1 font-medium">GDS $\ge 200$ mg/dL</p>
+                <p className="text-[11px] text-amber-700 mt-1 font-medium">GDS &ge; 200 mg/dL</p>
               </div>
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
                 <p className="text-xs text-on-surface-variant font-medium">Ketergantungan ADL</p>
@@ -706,94 +601,92 @@ export default function PosyanduPage() {
                       </td>
                     </tr>
                   ) : (
-                    lansiaList.map((row) => {
-                      return (
-                        <tr key={row.id} className="hover:bg-surface-container-low/50 transition-colors">
-                          <td className="p-4">
-                            <div className="font-semibold text-on-surface">{row.nama}</div>
-                            <div className="text-xs text-on-surface-variant">
-                              {row.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-laki'}, {row.usia || '-'} thn (NIK: {row.nik})
+                    lansiaList.map((row) => (
+                      <tr key={row.id} className="hover:bg-surface-container-low/50 transition-colors">
+                        <td className="p-4">
+                          <div className="font-semibold text-on-surface">{row.nama}</div>
+                          <div className="text-xs text-on-surface-variant">
+                            {row.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-laki'}, {row.usia || '-'} thn (NIK: {row.nik})
+                          </div>
+                          {row.riwayat_penyakit && (
+                            <div className="text-[11px] text-rose-600 font-medium mt-0.5">
+                              Rwy: {row.riwayat_penyakit}
                             </div>
-                            {row.riwayat_penyakit && (
-                              <div className="text-[11px] text-rose-600 font-medium mt-0.5">
-                                Rwy: {row.riwayat_penyakit}
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-4 text-xs text-on-surface-variant">
-                            <div>RT {row.rt} / RW {row.rw}</div>
-                            <div className="truncate max-w-[120px]">{row.alamat}</div>
-                          </td>
-                          <td className="p-4 text-center">
-                            {row.tensi_sistolik ? (
-                              <>
-                                <div className="font-bold">{row.tensi_sistolik}/{row.tensi_diastolik}</div>
-                                <span
-                                  className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold mt-0.5 ${
-                                    row.is_hipertensi
-                                      ? 'bg-rose-100 text-rose-700'
-                                      : 'bg-emerald-100 text-emerald-700'
-                                  }`}
-                                >
-                                  {row.status_tensi || 'Normal'}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-on-surface-variant">Belum diperiksa</span>
-                            )}
-                          </td>
-                          <td className="p-4 text-center">
-                            {row.gula_darah_sewaktu ? (
-                              <>
-                                <div className="font-bold">{row.gula_darah_sewaktu} <span className="text-[10px] font-normal text-on-surface-variant">mg/dL</span></div>
-                                <span
-                                  className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold mt-0.5 ${
-                                    row.is_diabetes
-                                      ? 'bg-amber-100 text-amber-700'
-                                      : 'bg-emerald-100 text-emerald-700'
-                                  }`}
-                                >
-                                  {row.status_gds || 'Normal'}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-on-surface-variant">-</span>
-                            )}
-                          </td>
-                          <td className="p-4 text-center">
-                            {row.imt ? (
-                              <>
-                                <div className="font-bold">{row.imt}</div>
-                                <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold mt-0.5 bg-surface-container-high text-on-surface">
-                                  {row.status_imt}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-on-surface-variant">-</span>
-                            )}
-                          </td>
-                          <td className="p-4 text-center">
-                            <span
-                              className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                row.skor_kemandirian_adl === 'Mandiri'
-                                  ? 'bg-emerald-100 text-emerald-700'
-                                  : 'bg-amber-100 text-amber-700'
-                              }`}
-                            >
-                              {row.skor_kemandirian_adl || 'Mandiri'}
-                            </span>
-                          </td>
-                          <td className="p-4 text-center whitespace-nowrap">
-                            <button
-                              onClick={() => handleOpenHistory(row)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-high hover:bg-surface-container-highest transition-colors text-primary border border-outline-variant"
-                            >
-                              <History size={14} /> Riwayat
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
+                          )}
+                        </td>
+                        <td className="p-4 text-xs text-on-surface-variant">
+                          <div>RT {row.rt} / RW {row.rw}</div>
+                          <div className="truncate max-w-[120px]">{row.alamat}</div>
+                        </td>
+                        <td className="p-4 text-center">
+                          {row.tensi_sistolik ? (
+                            <>
+                              <div className="font-bold">{row.tensi_sistolik}/{row.tensi_diastolik}</div>
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold mt-0.5 ${
+                                  row.is_hipertensi
+                                    ? 'bg-rose-100 text-rose-700'
+                                    : 'bg-emerald-100 text-emerald-700'
+                                }`}
+                              >
+                                {row.status_tensi || 'Normal'}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-on-surface-variant">Belum diperiksa</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-center">
+                          {row.gula_darah_sewaktu ? (
+                            <>
+                              <div className="font-bold">{row.gula_darah_sewaktu} <span className="text-[10px] font-normal text-on-surface-variant">mg/dL</span></div>
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold mt-0.5 ${
+                                  row.is_diabetes
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-emerald-100 text-emerald-700'
+                                }`}
+                              >
+                                {row.status_gds || 'Normal'}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-on-surface-variant">-</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-center">
+                          {row.imt ? (
+                            <>
+                              <div className="font-bold">{row.imt}</div>
+                              <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold mt-0.5 bg-surface-container-high text-on-surface">
+                                {row.status_imt}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-on-surface-variant">-</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-center">
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              row.skor_kemandirian_adl === 'Mandiri'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-amber-100 text-amber-700'
+                            }`}
+                          >
+                            {row.skor_kemandirian_adl || 'Mandiri'}
+                          </span>
+                        </td>
+                        <td className="p-4 text-center whitespace-nowrap">
+                          <button
+                            onClick={() => handleOpenHistory(row)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-high hover:bg-surface-container-highest transition-colors text-primary border border-outline-variant"
+                          >
+                            <History size={14} /> Riwayat
+                          </button>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
@@ -865,15 +758,11 @@ export default function PosyanduPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">Umur (Bulan)</label>
+                  <label className="block font-semibold mb-1">Tanggal Lahir</label>
                   <input
-                    type="number"
-                    min="0"
-                    max="60"
-                    value={balitaForm.umur_bulan}
-                    onChange={(e) => setBalitaForm({ ...balitaForm, umur_bulan: e.target.value })}
-                    required
-                    placeholder="Contoh: 18"
+                    type="date"
+                    value={balitaForm.tanggal_lahir_anak}
+                    onChange={(e) => setBalitaForm({ ...balitaForm, tanggal_lahir_anak: e.target.value })}
                     className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                   />
                 </div>
@@ -881,15 +770,29 @@ export default function PosyanduPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
+                  <label className="block font-semibold mb-1">Usia (Bulan)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="60"
+                    value={balitaForm.umur_bulan}
+                    onChange={(e) => setBalitaForm({ ...balitaForm, umur_bulan: e.target.value })}
+                    required
+                    placeholder="Bulan"
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                  />
+                </div>
+                <div>
                   <label className="block font-semibold mb-1">BB (Kg)</label>
                   <input
                     type="number"
                     step="0.1"
                     min="1"
+                    max="40"
                     value={balitaForm.berat_badan_kg}
                     onChange={(e) => setBalitaForm({ ...balitaForm, berat_badan_kg: e.target.value })}
                     required
-                    placeholder="10.5"
+                    placeholder="0.0"
                     className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                   />
                 </div>
@@ -899,55 +802,49 @@ export default function PosyanduPage() {
                     type="number"
                     step="0.1"
                     min="30"
+                    max="130"
                     value={balitaForm.tinggi_badan_cm}
                     onChange={(e) => setBalitaForm({ ...balitaForm, tinggi_badan_cm: e.target.value })}
                     required
-                    placeholder="82.0"
+                    placeholder="0.0"
                     className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold mb-1">Li. Kepala (Cm)</label>
+                  <label className="block font-semibold mb-1">Lingkar Kepala (Cm)</label>
                   <input
                     type="number"
                     step="0.1"
                     value={balitaForm.lingkar_kepala_cm}
                     onChange={(e) => setBalitaForm({ ...balitaForm, lingkar_kepala_cm: e.target.value })}
-                    placeholder="47.0"
+                    placeholder="Opsional"
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Vaksin / Imunisasi</label>
+                  <input
+                    type="text"
+                    value={balitaForm.imunisasi}
+                    onChange={(e) => setBalitaForm({ ...balitaForm, imunisasi: e.target.value })}
+                    placeholder="Contoh: BCG, Polio 1"
                     className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-label-sm font-semibold text-on-surface mb-1">Nama Anak</label>
-                <label className="block font-semibold mb-1">Imunisasi / Vitamin yang Diberikan</label>
-                <input
-                  type="text"
-                  name="nama_anak"
-                  value={formData.nama_anak}
-                  onChange={handleInputChange}
-                  required
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Contoh: Budi Santoso"
-                  value={balitaForm.imunisasi}
-                  onChange={(e) => setBalitaForm({ ...balitaForm, imunisasi: e.target.value })}
-                  placeholder="Contoh: Polio 3, Vitamin A Merah, DPT-HB"
-                  className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-label-sm font-semibold text-on-surface mb-1">Umur (Bulan)</label>
-                <label className="block font-semibold mb-1">Catatan Tambahan & Saran Kader</label>
+                <label className="block font-semibold mb-1">Catatan Tambahan / PMT</label>
                 <textarea
                   rows="2"
                   value={balitaForm.catatan_kesehatan}
                   onChange={(e) => setBalitaForm({ ...balitaForm, catatan_kesehatan: e.target.value })}
-                  placeholder="Anak aktif, nafsu makan baik..."
+                  placeholder="Kondisi kesehatan balita..."
                   className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                ></textarea>
+                />
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant">
@@ -961,7 +858,7 @@ export default function PosyanduPage() {
                 <button
                   type="submit"
                   disabled={submittingBalita}
-                  className="px-5 py-2 bg-primary text-on-primary rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2"
+                  className="px-5 py-2 bg-primary text-on-primary rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
                 >
                   {submittingBalita ? <Loader2 size={16} className="animate-spin" /> : 'Simpan Pemeriksaan'}
                 </button>
@@ -972,7 +869,7 @@ export default function PosyanduPage() {
       )}
 
       {/* ===================================================================== */}
-      {/* MODAL 2: PENDAFTARAN LANSIA BARU                                      */}
+      {/* MODAL 2: REGISTRASI LANSIA BARU                                       */}
       {/* ===================================================================== */}
       {showRegLansiaModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
@@ -984,7 +881,7 @@ export default function PosyanduPage() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
                 <UserPlus className="text-rose-600" size={20} />
-                Pendaftaran Lansia Binaan Baru
+                Registrasi Lansia Binaan Baru
               </h2>
               <button
                 onClick={() => setShowRegLansiaModal(false)}
@@ -996,43 +893,25 @@ export default function PosyanduPage() {
 
             <form onSubmit={handleSubmitRegLansia} className="space-y-3.5 text-sm">
               <div>
-                <label className="block font-semibold mb-1">Nomor Induk Kependudukan (NIK)</label>
+                <label className="block font-semibold mb-1">Nomor Induk Kependudukan (NIK) *</label>
                 <input
-                  type="number"
-                  name="umur_bulan"
-                  value={formData.umur_bulan}
-                  onChange={handleInputChange}
                   type="text"
                   maxLength={16}
                   value={regLansiaForm.nik}
                   onChange={(e) => setRegLansiaForm({ ...regLansiaForm, nik: e.target.value })}
                   required
-                  min="0"
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="0"
                   placeholder="16 Digit NIK Lansia"
                   className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-label-sm font-semibold text-on-surface mb-1">Berat Badan (Kg)</label>
-                <label className="block font-semibold mb-1">Nama Lengkap</label>
+                <label className="block font-semibold mb-1">Nama Lengkap *</label>
                 <input
-                  type="number"
-                  step="0.1"
-                  name="berat_badan_kg"
-                  value={formData.berat_badan_kg}
-                  onChange={handleInputChange}
                   type="text"
                   value={regLansiaForm.nama}
                   onChange={(e) => setRegLansiaForm({ ...regLansiaForm, nama: e.target.value })}
                   required
-                  min="0"
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="0.0"
                   placeholder="Contoh: H. Soleh Santoso"
                   className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                 />
@@ -1040,7 +919,7 @@ export default function PosyanduPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold mb-1">Tanggal Lahir</label>
+                  <label className="block font-semibold mb-1">Tanggal Lahir *</label>
                   <input
                     type="date"
                     value={regLansiaForm.tanggal_lahir}
@@ -1086,14 +965,8 @@ export default function PosyanduPage() {
               </div>
 
               <div>
-                <label className="block text-label-sm font-semibold text-on-surface mb-1">Tinggi Badan (Cm)</label>
                 <label className="block font-semibold mb-1">Alamat Rumah</label>
                 <input
-                  type="number"
-                  step="0.1"
-                  name="tinggi_badan_cm"
-                  value={formData.tinggi_badan_cm}
-                  onChange={handleInputChange}
                   type="text"
                   value={regLansiaForm.alamat}
                   onChange={(e) => setRegLansiaForm({ ...regLansiaForm, alamat: e.target.value })}
@@ -1112,15 +985,16 @@ export default function PosyanduPage() {
                   >
                     <option value="Bersama Keluarga">Bersama Keluarga</option>
                     <option value="Sebatang Kara">Sebatang Kara</option>
+                    <option value="Panti Wreda">Panti Wreda</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">Riwayat Penyakit</label>
+                  <label className="block font-semibold mb-1">Riwayat Penyakit (Komorbid)</label>
                   <input
                     type="text"
                     value={regLansiaForm.riwayat_penyakit}
                     onChange={(e) => setRegLansiaForm({ ...regLansiaForm, riwayat_penyakit: e.target.value })}
-                    placeholder="Hipertensi / DM..."
+                    placeholder="Hipertensi, Stroke, Asam Urat..."
                     className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                   />
                 </div>
@@ -1137,7 +1011,7 @@ export default function PosyanduPage() {
                 <button
                   type="submit"
                   disabled={submittingLansia}
-                  className="px-5 py-2 bg-rose-600 text-white rounded-lg font-semibold hover:bg-rose-700 transition-colors flex items-center gap-2"
+                  className="px-5 py-2 bg-rose-600 text-white rounded-lg font-semibold hover:bg-rose-700 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
                 >
                   {submittingLansia ? <Loader2 size={16} className="animate-spin" /> : 'Daftarkan Lansia'}
                 </button>
@@ -1148,7 +1022,7 @@ export default function PosyanduPage() {
       )}
 
       {/* ===================================================================== */}
-      {/* MODAL 3: CATAT PEMERIKSAAN LANSIA (SKRINING PTM & ADL)                 */}
+      {/* MODAL 3: CATAT PEMERIKSAAN LANSIA (SKRINING PTM)                       */}
       {/* ===================================================================== */}
       {showCheckupLansiaModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
@@ -1160,7 +1034,7 @@ export default function PosyanduPage() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
                 <HeartPulse className="text-rose-600" size={20} />
-                Catat Pemeriksaan & Skrining PTM Lansia
+                Skrining PTM & Rekam Medis Lansia
               </h2>
               <button
                 onClick={() => setShowCheckupLansiaModal(false)}
@@ -1171,164 +1045,168 @@ export default function PosyanduPage() {
             </div>
 
             <form onSubmit={handleSubmitCheckupLansia} className="space-y-3.5 text-sm">
-              <div>
-                <label className="block font-semibold mb-1">Pilih Lansia Binaan</label>
-                <select
-                  value={checkupLansiaForm.posyandu_lansia_id}
-                  onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, posyandu_lansia_id: e.target.value })}
-                  required
-                  min="0"
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="0.0"
-                  className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none font-medium"
-                >
-                  <option value="">-- Pilih Lansia --</option>
-                  {lansiaList.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.nama} (NIK: {l.nik}) - RT {l.rt}/RW {l.rw}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1">Pilih Lansia Binaan *</label>
+                  <select
+                    required
+                    value={checkupLansiaForm.posyandu_lansia_id}
+                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, posyandu_lansia_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                  >
+                    <option value="">-- Pilih Lansia --</option>
+                    {lansiaList.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.nama} (RT {l.rt})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Tanggal Pemeriksaan *</label>
+                  <input
+                    type="date"
+                    required
+                    value={checkupLansiaForm.tanggal_pemeriksaan}
+                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, tanggal_pemeriksaan: e.target.value })}
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                  />
+                </div>
               </div>
 
-              {/* Biomarkers */}
-              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant space-y-3">
-                <div className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
-                  <Activity size={14} className="text-rose-600" /> Tanda Vital & Biomarker
-                </div>
+              {/* Tensi Darah */}
+              <div className="p-3 bg-rose-50/50 rounded-xl border border-rose-100">
+                <label className="block font-bold text-rose-900 mb-2">Pemeriksaan Tekanan Darah</label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold mb-1">Tensi Sistolik (mmHg)</label>
+                    <label className="block text-xs font-medium text-rose-800 mb-1">Sistolik (mmHg)</label>
                     <input
                       type="number"
+                      placeholder="120"
                       value={checkupLansiaForm.tensi_sistolik}
                       onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, tensi_sistolik: e.target.value })}
-                      required
-                      placeholder="120"
-                      className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                      className="w-full px-3 py-1.5 border border-outline-variant rounded-lg bg-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold mb-1">Tensi Diastolik (mmHg)</label>
+                    <label className="block text-xs font-medium text-rose-800 mb-1">Diastolik (mmHg)</label>
                     <input
                       type="number"
+                      placeholder="80"
                       value={checkupLansiaForm.tensi_diastolik}
                       onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, tensi_diastolik: e.target.value })}
-                      required
-                      placeholder="80"
-                      className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                      className="w-full px-3 py-1.5 border border-outline-variant rounded-lg bg-white"
                     />
                   </div>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Gula Darah (mg/dL)</label>
-                    <input
-                      type="number"
-                      value={checkupLansiaForm.gula_darah_sewaktu}
-                      onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, gula_darah_sewaktu: e.target.value })}
-                      placeholder="140"
-                      className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Kolesterol (mg/dL)</label>
-                    <input
-                      type="number"
-                      value={checkupLansiaForm.kolesterol}
-                      onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, kolesterol: e.target.value })}
-                      placeholder="190"
-                      className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Asam Urat (mg/dL)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={checkupLansiaForm.asam_urat}
-                      onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, asam_urat: e.target.value })}
-                      placeholder="6.0"
-                      className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                    />
-                  </div>
+              {/* Laboratorium Sederhana */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1 text-xs">Gula Darah (GDS)</label>
+                  <input
+                    type="number"
+                    step="1"
+                    placeholder="mg/dL"
+                    value={checkupLansiaForm.gula_darah_sewaktu}
+                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, gula_darah_sewaktu: e.target.value })}
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-xs">Kolesterol</label>
+                  <input
+                    type="number"
+                    step="1"
+                    placeholder="mg/dL"
+                    value={checkupLansiaForm.kolesterol}
+                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, kolesterol: e.target.value })}
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-xs">Asam Urat</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="mg/dL"
+                    value={checkupLansiaForm.asam_urat}
+                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, asam_urat: e.target.value })}
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm"
+                  />
                 </div>
               </div>
 
               {/* Antropometri & Live IMT */}
-              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant space-y-3">
-                <div className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center justify-between">
-                  <span>Antropometri & Kemandirian</span>
-                  {liveIMT && (
-                    <span className="text-xs font-bold text-primary">
-                      IMT: {liveIMT.val} ({liveIMT.category})
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Berat Badan (Kg)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={checkupLansiaForm.berat_badan_kg}
-                      onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, berat_badan_kg: e.target.value })}
-                      required
-                      placeholder="60"
-                      className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Tinggi Badan (Cm)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={checkupLansiaForm.tinggi_badan_cm}
-                      onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, tinggi_badan_cm: e.target.value })}
-                      required
-                      placeholder="160"
-                      className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
+              <div className="grid grid-cols-3 gap-3 items-end">
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Skor Kemandirian ADL (Barthel Index)</label>
-                  <select
-                    value={checkupLansiaForm.skor_kemandirian_adl}
-                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, skor_kemandirian_adl: e.target.value })}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                  >
-                    <option value="Mandiri">Mandiri (Bisa beraktivitas sendiri)</option>
-                    <option value="Ketergantungan Ringan">Ketergantungan Ringan</option>
-                    <option value="Ketergantungan Sedang">Ketergantungan Sedang</option>
-                    <option value="Ketergantungan Berat">Ketergantungan Berat (Total di tempat tidur)</option>
-                  </select>
+                  <label className="block font-semibold mb-1 text-xs">Berat Badan (Kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="0.0"
+                    value={checkupLansiaForm.berat_badan_kg}
+                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, berat_badan_kg: e.target.value })}
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-xs">Tinggi Badan (Cm)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="0.0"
+                    value={checkupLansiaForm.tinggi_badan_cm}
+                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, tinggi_badan_cm: e.target.value })}
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm"
+                  />
+                </div>
+                <div className="p-2 bg-surface-container-low rounded-lg border border-outline-variant text-center">
+                  <span className="text-[11px] text-on-surface-variant block">Indeks Massa Tubuh</span>
+                  <span className="font-bold text-sm text-primary">
+                    {liveIMT ? `${liveIMT.val} (${liveIMT.category})` : '-'}
+                  </span>
                 </div>
               </div>
 
+              {/* ADL Kemandirian Barthel */}
               <div>
-                <label className="block font-semibold mb-1">Keluhan Utama</label>
-                <input
-                  type="text"
-                  value={checkupLansiaForm.keluhan}
-                  onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, keluhan: e.target.value })}
-                  placeholder="Sering pusing, leher kaku, cepat letih..."
-                  className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                />
+                <label className="block font-semibold mb-1">Tingkat Kemandirian (Skor ADL Barthel) *</label>
+                <select
+                  value={checkupLansiaForm.skor_kemandirian_adl}
+                  onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, skor_kemandirian_adl: e.target.value })}
+                  className="w-full px-3 py-2 border border-outline-variant rounded-lg font-medium"
+                >
+                  <option value="Mandiri">Mandiri (Skor 20: Mampu aktivitas harian penuh)</option>
+                  <option value="Ketergantungan Ringan">Ketergantungan Ringan (Skor 12-19)</option>
+                  <option value="Ketergantungan Sedang">Ketergantungan Sedang (Skor 9-11)</option>
+                  <option value="Ketergantungan Berat">Ketergantungan Berat (Skor 5-8)</option>
+                  <option value="Ketergantungan Total">Ketergantungan Total (Skor 0-4)</option>
+                </select>
               </div>
 
-              <div>
-                <label className="block font-semibold mb-1">Tindakan Petugas / Rekomendasi Rujukan</label>
-                <input
-                  type="text"
-                  value={checkupLansiaForm.tindakan_petugas}
-                  onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, tindakan_petugas: e.target.value })}
-                  placeholder="Edukasi diet rendah garam, rujukan ke Puskesmas Andir..."
-                  className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1 text-xs">Keluhan Fisik Utama</label>
+                  <input
+                    type="text"
+                    placeholder="Pusing, nyeri sendi lutut..."
+                    value={checkupLansiaForm.keluhan}
+                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, keluhan: e.target.value })}
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-xs">Tindakan Petugas / Edukasi</label>
+                  <input
+                    type="text"
+                    placeholder="Konseling diet garam, rujuk PKM..."
+                    value={checkupLansiaForm.tindakan_petugas}
+                    onChange={(e) => setCheckupLansiaForm({ ...checkupLansiaForm, tindakan_petugas: e.target.value })}
+                    className="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant">
@@ -1342,7 +1220,7 @@ export default function PosyanduPage() {
                 <button
                   type="submit"
                   disabled={submittingLansia}
-                  className="px-5 py-2 bg-rose-600 text-white rounded-lg font-semibold hover:bg-rose-700 transition-colors flex items-center gap-2"
+                  className="px-5 py-2 bg-rose-600 text-white rounded-lg font-semibold hover:bg-rose-700 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
                 >
                   {submittingLansia ? <Loader2 size={16} className="animate-spin" /> : 'Simpan Rekam Medis'}
                 </button>
@@ -1353,23 +1231,20 @@ export default function PosyanduPage() {
       )}
 
       {/* ===================================================================== */}
-      {/* MODAL 4: RIWAYAT PEMERIKSAAN LANSIA                                   */}
+      {/* MODAL 4: RIWAYAT HISTORI PEMERIKSAAN LANSIA                           */}
       {/* ===================================================================== */}
-      {showHistoryModal && (
+      {showHistoryModal && selectedLansia && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-surface-container-lowest rounded-2xl max-w-2xl w-full p-6 border border-outline-variant shadow-xl my-8"
+            className="bg-surface-container-lowest rounded-2xl max-w-xl w-full p-6 border border-outline-variant shadow-xl my-8"
           >
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-outline-variant">
               <div>
-                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
-                  <History className="text-primary" size={20} />
-                  Riwayat Pemeriksaan: {selectedLansia?.nama}
-                </h2>
-                <p className="text-xs text-on-surface-variant mt-0.5">
-                  NIK: {selectedLansia?.nik} &bull; RT {selectedLansia?.rt}/RW {selectedLansia?.rw}
+                <h2 className="text-lg font-bold text-on-surface">Histori Rekam Medis Lansia</h2>
+                <p className="text-xs text-on-surface-variant">
+                  {selectedLansia.nama} (NIK: {selectedLansia.nik}) &bull; RT {selectedLansia.rt} / RW {selectedLansia.rw}
                 </p>
               </div>
               <button
@@ -1379,23 +1254,10 @@ export default function PosyanduPage() {
                 <X size={20} />
               </button>
             </div>
-            <div>
-              <label className="block text-label-sm font-semibold text-on-surface mb-1">Catatan Kesehatan</label>
-              <textarea
-                name="catatan_kesehatan"
-                value={formData.catatan_kesehatan}
-                onChange={handleInputChange}
-                disabled={isSubmitting}
-                rows="3"
-                className="w-full px-3 py-2 border border-outline-variant rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Catatan tambahan hasil pemeriksaan..."
-              ></textarea>
-            </div>
-            <div className="flex justify-end pt-2">
 
             {loadingHistory ? (
-              <div className="p-8 text-center text-on-surface-variant">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
+              <div className="p-8 text-center text-on-surface-variant flex items-center justify-center gap-2">
+                <Loader2 size={18} className="animate-spin text-primary" />
                 Memuat riwayat pemeriksaan...
               </div>
             ) : lansiaHistory.length === 0 ? (
@@ -1449,57 +1311,15 @@ export default function PosyanduPage() {
 
             <div className="flex justify-end pt-4 border-t border-outline-variant mt-4">
               <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex items-center gap-2 px-6 py-2 bg-primary text-on-primary rounded-lg font-semibold shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
                 type="button"
                 onClick={() => setShowHistoryModal(false)}
                 className="px-4 py-2 bg-surface-container-high rounded-lg font-semibold hover:bg-surface-container-highest transition-colors text-sm"
               >
-                {isSubmitting ? (
-                  <><Loader2 size={18} className="animate-spin" /> Menyimpan...</>
-                ) : (
-                  'Simpan Data'
-                )}
                 Tutup
               </button>
             </div>
-          </form>
-        </motion.div>
           </motion.div>
         </div>
-      )}
-
-      {isLoading ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="w-full h-48 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-card flex flex-col items-center justify-center text-on-surface-variant gap-3"
-        >
-          <Loader2 size={32} className="animate-spin text-primary" />
-          <p className="text-label-md font-medium">Memuat data rekam medis...</p>
-        </motion.div>
-      ) : data.length === 0 && !error ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="w-full py-16 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-card flex flex-col items-center justify-center text-on-surface-variant gap-3 text-center px-4"
-        >
-          <div className="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center mb-2">
-            <Baby size={32} className="text-outline" />
-          </div>
-          <h3 className="text-headline-md font-semibold text-on-surface">Belum ada catatan Posyandu</h3>
-          <p className="text-body-md">
-            Anda belum memiliki riwayat kunjungan Posyandu untuk anak Anda.
-          </p>
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <DataTable data={data} columns={posyanduColumns} renderRow={renderPosyanduRow} />
-        </motion.div>
       )}
     </div>
   );

@@ -18,6 +18,8 @@ import {
   Bell,
   Sparkles,
   UserCheck
+  UserCheck,
+  Gift
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -46,6 +48,7 @@ export default function DashboardLayout() {
     { name: 'Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={20} /> },
     { name: 'Data Warga', path: '/dashboard/warga', icon: <User size={20} /> },
     { name: 'Pengajuan Dokumen', path: '/dashboard/dokumen', icon: <FileCheck size={20} /> },
+    { name: 'Bantuan Sosial', path: '/dashboard/bansos', icon: <Gift size={20} /> },
     { name: 'Layanan PBB', path: '/dashboard/pbb', icon: <FileText size={20} /> },
     { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={20} /> },
     { name: 'Pengaduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={20} /> },

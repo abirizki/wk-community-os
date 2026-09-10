@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
-import { Loader2, Users, Search, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { 
   Users, 
@@ -32,9 +31,6 @@ export default function WargaList() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  useEffect(() => {
-    fetchWarga();
-  }, []);
   // Search & Pagination
   const [search, setSearch] = useState('');
   const [filterRT, setFilterRT] = useState('');
@@ -76,7 +72,6 @@ export default function WargaList() {
     setLoading(true);
     setError('');
     try {
-      const response = await api.get('/warga');
       const offset = (page - 1) * limit;
       const params = new URLSearchParams({
         limit: String(limit),
@@ -87,7 +82,6 @@ export default function WargaList() {
 
       const response = await api.get(`/warga?${params.toString()}`);
       if (response.success) {
-        setWargaList(response.data);
         setWargaList(response.items || []);
         setTotalCount(response.total || 0);
       } else {
@@ -100,26 +94,10 @@ export default function WargaList() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <span className="ml-3 text-on-surface-variant font-medium">Memuat data warga...</span>
-      </div>
-    );
-  }
   useEffect(() => {
     fetchWarga();
   }, [page, filterRT]);
 
-  if (error) {
-    return (
-      <div className="bg-error-container text-on-error-container p-4 rounded-lg flex items-center gap-3">
-        <AlertCircle size={24} />
-        <p className="font-medium">{error}</p>
-      </div>
-    );
-  }
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setPage(1);
@@ -242,20 +220,15 @@ export default function WargaList() {
   const totalPages = Math.ceil(totalCount / limit) || 1;
 
   return (
-    <div className="max-w-max-width mx-auto space-y-6">
-      <header className="flex items-center justify-between mb-8">
     <div className="max-w-max-width mx-auto space-y-6 pb-12">
       {/* HEADER */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-headline-lg font-bold text-on-surface flex items-center gap-3">
           <h1 className="text-2xl lg:text-3xl font-bold text-on-surface flex items-center gap-3">
             <Users className="text-primary" size={32} />
-            Data Warga
             Data Kependudukan Warga
           </h1>
           <p className="text-body-md text-on-surface-variant mt-1">
-            Daftar seluruh warga yang terdaftar di sistem.
             Basis data demografi terpadu Kelurahan Kebonjati, Kec. Andir, Kota Bandung.
           </p>
         </div>
@@ -279,94 +252,90 @@ export default function WargaList() {
           {canAssisted && (
             <button
               onClick={() => setShowAssistedModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-semibold shadow-sm hover:bg-primary/90 transition-colors text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-semibold hover:bg-primary/90 transition-colors text-sm shadow-sm"
             >
-              <UserPlus size={16} /> Pendaftaran Asistensi RT
+              <UserPlus size={16} /> Input Warga (Asistensi RT)
             </button>
           )}
         </div>
       </header>
 
-      <div className="bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm overflow-hidden">
       {/* ALERTS */}
       <AnimatePresence>
-        {successMsg && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="p-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl flex items-center gap-3 text-sm font-medium"
-          >
-            <CheckCircle size={18} className="text-emerald-600 flex-shrink-0" />
-            {successMsg}
-          </motion.div>
-        )}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="p-4 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl flex items-center gap-3 text-sm font-medium"
+            className="p-4 bg-error-container text-on-error-container rounded-xl flex items-center justify-between shadow-sm"
           >
-            <AlertCircle size={18} className="text-rose-600 flex-shrink-0" />
-            {error}
+            <div className="flex items-center gap-3">
+              <AlertCircle size={20} className="text-error" />
+              <p className="text-sm font-medium">{error}</p>
+            </div>
+            <button onClick={() => setError('')} className="text-on-error-container/70 hover:text-on-error-container">
+              <X size={18} />
+            </button>
+          </motion.div>
+        )}
+
+        {successMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="p-4 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <CheckCircle size={20} className="text-emerald-700" />
+              <p className="text-sm font-semibold">{successMsg}</p>
+            </div>
+            <button onClick={() => setSuccessMsg('')} className="text-emerald-700 hover:text-emerald-900">
+              <X size={18} />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* SEARCH & FILTER BAR */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant">
-        <form onSubmit={handleSearchSubmit} className="relative flex-1">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+      {/* FILTER & SEARCH */}
+      <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <form onSubmit={handleSearchSubmit} className="relative w-full md:w-96">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant" size={18} />
           <input
             type="text"
+            placeholder="Cari berdasarkan NIK atau Nama..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari berdasarkan Nama, NIK, atau No KK..."
-            className="w-full pl-9 pr-20 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-on-surface"
           />
-          <button
-            type="submit"
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1 bg-primary text-on-primary rounded text-xs font-semibold hover:bg-primary/90"
-          >
-            Cari
-          </button>
         </form>
 
-        {user?.role !== 'ketua_rt' && (
-          <div className="flex items-center gap-2">
-            <Filter size={16} className="text-on-surface-variant" />
-            <select
-              value={filterRT}
-              onChange={(e) => {
-                setFilterRT(e.target.value);
-                setPage(1);
-              }}
-              className="px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">Semua RT</option>
-              <option value="001">RT 001</option>
-              <option value="002">RT 002</option>
-              <option value="003">RT 003</option>
-            </select>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+            <Filter size={16} /> Filter RT:
           </div>
-        )}
+          <select
+            value={filterRT}
+            onChange={(e) => {
+              setFilterRT(e.target.value);
+              setPage(1);
+            }}
+            className="px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-on-surface font-medium"
+          >
+            <option value="">Semua RT (RW 001)</option>
+            <option value="001">RT 001</option>
+            <option value="002">RT 002</option>
+            <option value="003">RT 003</option>
+          </select>
+        </div>
       </div>
 
       {/* TABLE */}
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-surface-container-low border-b border-outline-variant">
-                <th className="p-4 text-label-sm font-semibold text-on-surface">NIK</th>
-                <th className="p-4 text-label-sm font-semibold text-on-surface">No KK</th>
-                <th className="p-4 text-label-sm font-semibold text-on-surface">Nama Lengkap</th>
-                <th className="p-4 text-label-sm font-semibold text-on-surface">L/P</th>
-                <th className="p-4 text-label-sm font-semibold text-on-surface">Alamat</th>
-          <table className="w-full text-left text-sm">
-            <thead className="bg-surface-container-low border-b border-outline-variant text-on-surface font-semibold">
-              <tr>
+              <tr className="bg-surface-container-low border-b border-outline-variant text-xs uppercase font-bold text-on-surface-variant tracking-wider">
                 <th className="p-4">Identitas Warga (NIK / KK)</th>
                 <th className="p-4">Nama Lengkap</th>
                 <th className="p-4 text-center">JK</th>
@@ -375,14 +344,12 @@ export default function WargaList() {
                 <th className="p-4">Alamat Domisili</th>
               </tr>
             </thead>
-            <tbody>
-              {wargaList.length > 0 ? (
             <tbody className="divide-y divide-outline-variant">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-on-surface-variant">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
-                    Memuat data warga...
+                    Memuat data kependudukan...
                   </td>
                 </tr>
               ) : wargaList.length === 0 ? (
@@ -393,12 +360,6 @@ export default function WargaList() {
                 </tr>
               ) : (
                 wargaList.map((warga) => (
-                  <tr key={warga.nik} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
-                    <td className="p-4 text-body-sm font-medium text-on-surface">{warga.nik}</td>
-                    <td className="p-4 text-body-sm text-on-surface-variant">{warga.no_kk}</td>
-                    <td className="p-4 text-body-sm font-semibold text-on-surface">{warga.nama}</td>
-                    <td className="p-4 text-body-sm text-on-surface-variant">{warga.jenis_kelamin}</td>
-                    <td className="p-4 text-body-sm text-on-surface-variant">{warga.alamat}, RT {warga.rt}/RW {warga.rw}</td>
                   <tr key={warga.nik} className="hover:bg-surface-container-low/50 transition-colors">
                     <td className="p-4">
                       <div className="font-mono font-medium text-on-surface">{warga.nik}</div>
@@ -432,12 +393,6 @@ export default function WargaList() {
                     </td>
                   </tr>
                 ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="p-8 text-center text-on-surface-variant">
-                    Tidak ada data warga.
-                  </td>
-                </tr>
               )}
             </tbody>
           </table>
@@ -468,122 +423,109 @@ export default function WargaList() {
         </div>
       </div>
 
-      {/* ===================================================================== */}
-      {/* MODAL ASISTENSI RT/RW                                                 */}
-      {/* ===================================================================== */}
+      {/* MODAL 1: ASISTENSI RT INPUT WARGA */}
       {showAssistedModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-surface-container-lowest rounded-2xl max-w-xl w-full p-6 border border-outline-variant shadow-xl my-8"
+            className="bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant w-full max-w-2xl p-6 my-8"
           >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
-                  <UserPlus className="text-primary" size={20} />
-                  Pendaftaran Warga Terbantu (Asistensi RT)
-                </h2>
-                <p className="text-xs text-on-surface-variant mt-0.5">
-                  Input data warga yang terkendala akses internet atau tidak memiliki smartphone.
-                </p>
+            <div className="flex items-center justify-between pb-4 border-b border-outline-variant">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
+                  <UserPlus size={22} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-on-surface">Asistensi RT: Input Data Warga</h3>
+                  <p className="text-xs text-on-surface-variant">Bantu input warga yang memiliki halangan koneksi atau gawai.</p>
+                </div>
               </div>
-              <button
-                onClick={() => setShowAssistedModal(false)}
-                className="text-on-surface-variant hover:text-on-surface"
-              >
+              <button onClick={() => setShowAssistedModal(false)} className="text-on-surface-variant hover:text-on-surface">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-3 bg-blue-50 text-blue-900 border border-blue-200 rounded-xl text-xs flex items-start gap-2 mb-4">
-              <Info size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
-              <span>
-                Akun portal digital warga akan <strong>dibuatkan secara otomatis</strong> dengan username berupa NIK dan password default <code>password123</code>.
-              </span>
-            </div>
-
-            <form onSubmit={handleSubmitAssisted} className="space-y-3.5 text-sm">
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleSubmitAssisted} className="space-y-4 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-semibold mb-1">Nomor Induk Kependudukan (NIK)</label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Nomor Induk Kependudukan (NIK) *</label>
                   <input
                     type="text"
+                    required
                     maxLength={16}
                     value={assistedForm.nik}
                     onChange={(e) => setAssistedForm({ ...assistedForm, nik: e.target.value })}
-                    required
-                    placeholder="16 digit angka"
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                    placeholder="16 digit NIK"
+                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">Nomor Kartu Keluarga (No KK)</label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Nomor Kartu Keluarga (No KK) *</label>
                   <input
                     type="text"
+                    required
                     maxLength={16}
                     value={assistedForm.no_kk}
                     onChange={(e) => setAssistedForm({ ...assistedForm, no_kk: e.target.value })}
-                    required
-                    placeholder="16 digit angka"
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                    placeholder="16 digit No KK"
+                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold mb-1">Nama Lengkap Sesuai KTP</label>
+                <label className="block text-xs font-bold text-on-surface mb-1">Nama Lengkap Sesuai KTP *</label>
                 <input
                   type="text"
+                  required
                   value={assistedForm.nama}
                   onChange={(e) => setAssistedForm({ ...assistedForm, nama: e.target.value })}
-                  required
-                  placeholder="Contoh: Budi Santoso"
-                  className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                  placeholder="Nama warga"
+                  className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block font-semibold mb-1">Jenis Kelamin</label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Jenis Kelamin *</label>
                   <select
                     value={assistedForm.jenis_kelamin}
                     onChange={(e) => setAssistedForm({ ...assistedForm, jenis_kelamin: e.target.value })}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg"
                   >
                     <option value="L">Laki-laki</option>
                     <option value="P">Perempuan</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">Tempat Lahir</label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Tempat Lahir</label>
                   <input
                     type="text"
                     value={assistedForm.tempat_lahir}
                     onChange={(e) => setAssistedForm({ ...assistedForm, tempat_lahir: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">Tanggal Lahir</label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Tanggal Lahir *</label>
                   <input
                     type="date"
+                    required
                     value={assistedForm.tanggal_lahir}
                     onChange={(e) => setAssistedForm({ ...assistedForm, tanggal_lahir: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block font-semibold mb-1">Hubungan Dalam Keluarga</label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Status Hub. Keluarga *</label>
                   <select
                     value={assistedForm.status_hubungan_keluarga}
                     onChange={(e) => setAssistedForm({ ...assistedForm, status_hubungan_keluarga: e.target.value })}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg"
                   >
                     <option value="Kepala Keluarga">Kepala Keluarga</option>
                     <option value="Suami">Suami</option>
@@ -594,107 +536,78 @@ export default function WargaList() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">Status Perkawinan</label>
-                  <select
-                    value={assistedForm.status_perkawinan}
-                    onChange={(e) => setAssistedForm({ ...assistedForm, status_perkawinan: e.target.value })}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                  >
-                    <option value="Belum Kawin">Belum Kawin</option>
-                    <option value="Kawin">Kawin</option>
-                    <option value="Cerai Hidup">Cerai Hidup</option>
-                    <option value="Cerai Mati">Cerai Mati</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold mb-1">Pekerjaan</label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Pekerjaan</label>
                   <input
                     type="text"
                     value={assistedForm.pekerjaan}
                     onChange={(e) => setAssistedForm({ ...assistedForm, pekerjaan: e.target.value })}
-                    placeholder="Wiraswasta / Karyawan..."
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                    placeholder="Contoh: Wiraswasta, Guru"
+                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">Pendidikan Terakhir</label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Pendidikan Terakhir</label>
                   <select
                     value={assistedForm.pendidikan_terakhir}
                     onChange={(e) => setAssistedForm({ ...assistedForm, pendidikan_terakhir: e.target.value })}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg"
                   >
-                    <option value="SD/Sederajat">SD/Sederajat</option>
-                    <option value="SMP/Sederajat">SMP/Sederajat</option>
+                    <option value="SD">SD/Sederajat</option>
+                    <option value="SMP">SMP/Sederajat</option>
                     <option value="SMA/SMK">SMA/SMK</option>
                     <option value="D3">Diploma (D3)</option>
                     <option value="S1">Sarjana (S1)</option>
-                    <option value="S2">Magister (S2)</option>
-                    <option value="Tidak/Belum Sekolah">Tidak/Belum Sekolah</option>
+                    <option value="S2/S3">Pascasarjana (S2/S3)</option>
                   </select>
                 </div>
               </div>
 
-              <div>
-                <label className="block font-semibold mb-1">Alamat Domisili</label>
-                <input
-                  type="text"
-                  value={assistedForm.alamat}
-                  onChange={(e) => setAssistedForm({ ...assistedForm, alamat: e.target.value })}
-                  placeholder="Jl. Kebonjati No. ..."
-                  className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-semibold mb-1">RT</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-on-surface mb-1">Alamat Domisili *</label>
                   <input
                     type="text"
-                    disabled={user?.role === 'ketua_rt'}
-                    value={assistedForm.rt}
-                    onChange={(e) => setAssistedForm({ ...assistedForm, rt: e.target.value })}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none disabled:bg-surface-container-high"
+                    required
+                    value={assistedForm.alamat}
+                    onChange={(e) => setAssistedForm({ ...assistedForm, alamat: e.target.value })}
+                    className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">RW</label>
-                  <input
-                    type="text"
-                    disabled={user?.role === 'ketua_rt' || user?.role === 'ketua_rw'}
-                    value={assistedForm.rw}
-                    onChange={(e) => setAssistedForm({ ...assistedForm, rw: e.target.value })}
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none disabled:bg-surface-container-high"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold mb-1">No. WhatsApp / HP</label>
-                  <input
-                    type="text"
-                    value={assistedForm.no_telepon}
-                    onChange={(e) => setAssistedForm({ ...assistedForm, no_telepon: e.target.value })}
-                    placeholder="08..."
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                  />
+                  <label className="block text-xs font-bold text-on-surface mb-1">RT / RW</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      maxLength={3}
+                      value={assistedForm.rt}
+                      onChange={(e) => setAssistedForm({ ...assistedForm, rt: e.target.value })}
+                      className="w-1/2 px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg text-center"
+                    />
+                    <input
+                      type="text"
+                      maxLength={3}
+                      value={assistedForm.rw}
+                      onChange={(e) => setAssistedForm({ ...assistedForm, rw: e.target.value })}
+                      className="w-1/2 px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg text-center"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant">
+              <div className="flex justify-end gap-2 pt-4 border-t border-outline-variant">
                 <button
                   type="button"
                   onClick={() => setShowAssistedModal(false)}
-                  className="px-4 py-2 border border-outline-variant rounded-lg font-semibold hover:bg-surface-container-high transition-colors"
+                  className="px-4 py-2 border border-outline-variant rounded-lg font-semibold hover:bg-surface-container-high transition-colors text-sm"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submittingAssisted}
-                  className="px-5 py-2 bg-primary text-on-primary rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2"
+                  className="px-5 py-2 bg-primary text-on-primary rounded-lg font-semibold hover:bg-primary/90 transition-colors text-sm flex items-center gap-2 shadow-sm disabled:opacity-50"
                 >
-                  {submittingAssisted ? <Loader2 size={16} className="animate-spin" /> : 'Daftarkan Warga'}
+                  {submittingAssisted ? <Loader2 size={16} className="animate-spin" /> : 'Simpan Data Warga'}
                 </button>
               </div>
             </form>
@@ -702,51 +615,48 @@ export default function WargaList() {
         </div>
       )}
 
-      {/* ===================================================================== */}
-      {/* MODAL BULK IMPORT CSV                                                 */}
-      {/* ===================================================================== */}
+      {/* MODAL 2: BULK IMPORT CSV */}
       {showBulkModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-surface-container-lowest rounded-2xl max-w-2xl w-full p-6 border border-outline-variant shadow-xl my-8"
+            className="bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant w-full max-w-2xl p-6 my-8"
           >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
-                  <FileSpreadsheet className="text-emerald-600" size={20} />
-                  Import Massal Sensus Kependudukan (CSV / Excel)
-                </h2>
-                <p className="text-xs text-on-surface-variant mt-0.5">
-                  Unggah file CSV data sensus untuk mendaftarkan ratusan warga sekaligus secara instan.
-                </p>
+            <div className="flex items-center justify-between pb-4 border-b border-outline-variant">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl">
+                  <FileSpreadsheet size={22} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-on-surface">Import Massal Sensus Warga (CSV)</h3>
+                  <p className="text-xs text-on-surface-variant">Kelurahan Kebonjati - Upload data warga kolektif secara aman.</p>
+                </div>
               </div>
-              <button
-                onClick={() => setShowBulkModal(false)}
-                className="text-on-surface-variant hover:text-on-surface"
-              >
+              <button onClick={() => setShowBulkModal(false)} className="text-on-surface-variant hover:text-on-surface">
                 <X size={20} />
               </button>
             </div>
 
             {/* Template Download Guide */}
-            <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant flex items-center justify-between mb-4">
-              <div className="text-xs">
-                <span className="font-semibold block text-on-surface">Format Template CSV Standar</span>
-                <span className="text-on-surface-variant">Gunakan template resmi untuk mencegah kegagalan kolom.</span>
+            <div className="my-4 p-3.5 bg-surface-container-low rounded-xl border border-outline-variant flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Info size={18} className="text-primary flex-shrink-0" />
+                <div className="text-xs text-on-surface">
+                  <span className="font-semibold">Perlu format file?</span> Unduh template CSV resmi untuk memastikan struktur kolom sesuai.
+                </div>
               </div>
               <button
                 onClick={handleDownloadTemplate}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary font-semibold text-xs rounded-lg hover:bg-primary/20 transition-colors flex-shrink-0"
               >
-                <Download size={14} /> Download Template
+                <Download size={14} /> Unduh Template CSV
               </button>
             </div>
 
-            {/* File Upload Drop Area */}
-            <div className="border-2 border-dashed border-outline-variant rounded-xl p-6 text-center hover:border-primary transition-colors bg-surface-container-low/30 mb-4">
-              <FileUp className="mx-auto text-on-surface-variant mb-2" size={32} />
+            {/* File Drop / Select Area */}
+            <div className="border-2 border-dashed border-outline-variant rounded-xl p-6 text-center bg-surface-container-low/50 mb-4">
+              <FileUp size={36} className="mx-auto text-outline mb-2" />
               <p className="text-sm font-semibold text-on-surface">Pilih file CSV data sensus warga</p>
               <p className="text-xs text-on-surface-variant mt-1">Mendukung file .csv (koma atau titik-koma)</p>
               <input
@@ -762,7 +672,7 @@ export default function WargaList() {
               )}
             </div>
 
-            {/* Preview First 3 Rows */}
+            {/* Preview First 5 Rows */}
             {parsedRows.length > 0 && (
               <div className="space-y-2 mb-4">
                 <div className="text-xs font-bold text-on-surface uppercase tracking-wider">
@@ -841,4 +751,3 @@ export default function WargaList() {
     </div>
   );
 }
-
