@@ -17,7 +17,6 @@ import {
   ShieldCheck,
   Bell,
   Sparkles,
-  UserCheck
   UserCheck,
   Gift
 } from 'lucide-react';
