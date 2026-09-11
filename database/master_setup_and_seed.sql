@@ -267,6 +267,7 @@ CREATE TABLE `bansos_pengajuan` (
   `alasan_pengajuan` TEXT NOT NULL,
   `nominal_bantuan` DECIMAL(12,2) NULL DEFAULT 0.00,
   `status` ENUM('PENDING_RT', 'PENDING_RW', 'PENDING_KELURAHAN', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING_RT',
+  `status` ENUM('PENDING_RT', 'PENDING_RW', 'PENDING_KELURAHAN', 'APPROVED', 'DISBURSED', 'REJECTED') NOT NULL DEFAULT 'PENDING_RT',
   `approval_step` ENUM('RT', 'RW', 'KELURAHAN', 'COMPLETED') NOT NULL DEFAULT 'RT',
   `rt` VARCHAR(5) NOT NULL,
   `rw` VARCHAR(5) NOT NULL,
@@ -274,12 +275,52 @@ CREATE TABLE `bansos_pengajuan` (
   `diverifikasi_oleh_user_id` INT NULL,
   `disahkan_oleh_user_id` INT NULL,
   `catatan_verifikasi` TEXT NULL,
+  `foto_penyerahan_url` VARCHAR(255) NULL,
+  `koordinat_lat_lng` VARCHAR(100) NULL,
+  `tanda_tangan_penerima_url` LONGTEXT NULL,
+  `diserahkan_oleh_user_id` INT NULL,
+  `tanggal_penyerahan` TIMESTAMP NULL DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_bansos_kk` (`no_kk`),
   INDEX `idx_bansos_nik` (`nik_penerima`),
   INDEX `idx_bansos_rt_rw` (`rt`, `rw`),
   INDEX `idx_bansos_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------
+-- 9c. TABEL: desil_keluarga (Data Tunggal Sosial dan Ekonomi Nasional / DTSEN)
+-- -----------------------------------------------------------------------
+CREATE TABLE `desil_keluarga` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `no_kk` VARCHAR(16) NOT NULL UNIQUE,
+  `desil_saat_ini` TINYINT NULL COMMENT '1 s/d 10 (Resmi disahkan kelurahan)',
+  `desil_usulan` TINYINT NOT NULL DEFAULT 4 COMMENT '1 s/d 10 (Kalkulasi kuesioner PMT)',
+  `daya_listrik` ENUM('450 VA', '900 VA', '1300 VA', '> 1300 VA', 'Tanpa Meteran') NOT NULL DEFAULT '900 VA',
+  `status_rumah` ENUM('Milik Sendiri', 'Sewa/Kontrak', 'Menumpang', 'Bebas Sewa') NOT NULL DEFAULT 'Milik Sendiri',
+  `sumber_air` ENUM('PDAM/Leding', 'Sumur Terlindung', 'Sumur Tidak Terlindung', 'Air Kemasan/Isi Ulang') NOT NULL DEFAULT 'PDAM/Leding',
+  `luas_lantai_kategori` ENUM('< 8 m2 (Padat)', '8 - 14 m2', '> 14 m2') NOT NULL DEFAULT '8 - 14 m2',
+  `bahan_bakar_memasak` ENUM('Gas 3kg', 'Gas > 3kg', 'Minyak/Kayu', 'Listrik') NOT NULL DEFAULT 'Gas 3kg',
+  `kepemilikan_motor` ENUM('0 unit', '1 unit', '>= 2 unit') NOT NULL DEFAULT '1 unit',
+  `kepemilikan_mobil` TINYINT(1) NOT NULL DEFAULT 0,
+  `ada_disabilitas_lansia_tunggal` TINYINT(1) NOT NULL DEFAULT 0,
+  `ada_anak_sekolah_pip` TINYINT(1) NOT NULL DEFAULT 0,
+  `id_dtks_kemensos` VARCHAR(50) NULL,
+  `bukti_kementerian_url` VARCHAR(255) NULL,
+  `nomor_referensi_bukti` VARCHAR(100) NULL,
+  `status_verifikasi` ENUM('DRAFT_USULAN', 'MENUNGGU_VERIFIKASI_KELURAHAN', 'VERIFIED_KELURAHAN', 'REJECTED') NOT NULL DEFAULT 'DRAFT_USULAN',
+  `catatan_verifikasi` TEXT NULL,
+  `diajukan_oleh_user_id` INT NULL,
+  `diajukan_oleh_role` ENUM('warga', 'ketua_rt', 'ketua_rw') NOT NULL DEFAULT 'warga',
+  `diverifikasi_oleh_user_id` INT NULL,
+  `tanggal_pengajuan` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `tanggal_verifikasi` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_desil_kk` (`no_kk`),
+  INDEX `idx_desil_status` (`status_verifikasi`),
+  INDEX `idx_desil_saat_ini` (`desil_saat_ini`),
+  CONSTRAINT `fk_desil_kk` FOREIGN KEY (`no_kk`) REFERENCES `kartu_keluarga` (`no_kk`) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------

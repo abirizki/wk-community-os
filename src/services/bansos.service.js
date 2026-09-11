@@ -201,6 +201,49 @@ class BansosService {
   }
 
   /**
+   * Rekam serah-terima bantuan sosial di lapangan (Point of Disbursement)
+   * Menyimpan foto serah terima GPS geotagged, koordinat, dan tanda tangan digital
+   */
+  async disburseBansos(id, disburseData, currentUser) {
+    const allowedRoles = ['superadmin', 'admin_kelurahan', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt'];
+    if (!allowedRoles.includes(currentUser.role)) {
+      const err = new Error('Anda tidak memiliki wewenang untuk menyalurkan bantuan sosial.');
+      err.status = 403;
+      throw err;
+    }
+
+    const bansos = await bansosRepository.findById(id);
+    if (!bansos) {
+      const err = new Error('Data usulan bantuan sosial tidak ditemukan.');
+      err.status = 404;
+      throw err;
+    }
+
+    if (bansos.status !== 'APPROVED') {
+      const err = new Error('Hanya bantuan sosial dengan status APPROVED (Disahkan Kelurahan) yang dapat diserah-terimakan.');
+      err.status = 400;
+      throw err;
+    }
+
+    const updated = await bansosRepository.disburse(id, disburseData, currentUser.id);
+
+    // Notifikasi ke warga
+    try {
+      await notifikasiRepository.create({
+        nik_target: bansos.nik_penerima,
+        judul: 'Bantuan Sosial Telah Diterima',
+        pesan: `Serah terima bantuan ${bansos.jenis_bansos} untuk keluarga Anda telah berhasil dicatat oleh petugas pada ${new Date().toLocaleString('id-ID')}. Terima kasih atas konfirmasi tanda tangan Anda.`,
+        tipe: 'success',
+        link: '/dashboard/bansos'
+      });
+    } catch (e) {
+      console.warn('Notifikasi gagal terkirim:', e.message);
+    }
+
+    return { success: true, message: 'Bantuan sosial berhasil diserahterimakan di lapangan.', data: updated };
+  }
+
+  /**
    * Ambil statistik bansos
    */
   async getBansosStats(currentUser, query = {}) {

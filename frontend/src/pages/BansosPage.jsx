@@ -18,7 +18,11 @@ import {
   Building2, 
   ShieldCheck, 
   Coins, 
-  FileText 
+  FileText,
+  Camera,
+  MapPin,
+  PenTool,
+  Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -60,11 +64,19 @@ export default function BansosPage() {
   // Modals
   const [showProposeModal, setShowProposeModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showDisburseModal, setShowDisburseModal] = useState(false);
+  const [showProofModal, setShowProofModal] = useState(false);
   const [selectedBansos, setSelectedBansos] = useState(null);
   const [verifyAction, setVerifyAction] = useState('APPROVE'); // 'APPROVE' | 'REJECT'
   const [verifyNotes, setVerifyNotes] = useState('');
   const [verifyNominal, setVerifyNominal] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
+
+  // Penyaluran Lapangan State
+  const [disbursePhoto, setDisbursePhoto] = useState('');
+  const [disburseCoords, setDisburseCoords] = useState('');
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   // Propose Form State
   const [proposeForm, setProposeForm] = useState({
@@ -164,6 +176,78 @@ export default function BansosPage() {
     }
   };
 
+  // Open Disburse Modal
+  const openDisburseModal = (item) => {
+    setSelectedBansos(item);
+    setDisbursePhoto('');
+    setDisburseCoords('');
+    setShowDisburseModal(true);
+  };
+
+  const openViewProofModal = (item) => {
+    setSelectedBansos(item);
+    setShowProofModal(true);
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Browser tidak mendukung pendeteksian lokasi GPS.');
+      return;
+    }
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setDisburseCoords(`${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`);
+        setGettingLocation(false);
+      },
+      (err) => {
+        alert('Gagal mendeteksi koordinat GPS: ' + err.message);
+        setGettingLocation(false);
+      }
+    );
+  };
+
+  const handleDisbursePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDisbursePhoto(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDisburseSubmit = async (e) => {
+    e.preventDefault();
+    if (!disbursePhoto && !disburseCoords) {
+      alert('Wajib melampirkan minimal foto penyerahan atau koordinat lokasi GPS.');
+      return;
+    }
+
+    try {
+      setSubmittingAction(true);
+      setError('');
+      const canvas = document.getElementById('signatureCanvas');
+      const sigData = canvas ? canvas.toDataURL() : null;
+
+      const res = await api.post(`/bansos/${selectedBansos.id}/disburse`, {
+        foto_penyerahan_url: disbursePhoto,
+        koordinat_lat_lng: disburseCoords,
+        tanda_tangan_penerima_url: sigData
+      });
+
+      setSuccessMsg(res.message || 'Penyerahan bantuan sosial di lapangan berhasil dicatat!');
+      setShowDisburseModal(false);
+      fetchBansos();
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } catch (err) {
+      setError(err.message || 'Gagal merekam penyaluran bantuan');
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
   // Filtered List based on tab
   const displayedList = bansosList.filter((item) => {
     if (activeTab === 'pending_my_action') {
@@ -175,6 +259,12 @@ export default function BansosPage() {
 
   const renderStatusBadge = (item) => {
     switch (item.status) {
+      case 'DISBURSED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+            <CheckCircle2 size={13} /> Tersalurkan Lapangan
+          </span>
+        );
       case 'APPROVED':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -409,6 +499,15 @@ export default function BansosPage() {
                         <div className="font-semibold text-on-surface">{item.nama_penerima}</div>
                         <div className="text-xs text-on-surface-variant font-mono">NIK: {item.nik_penerima}</div>
                         <div className="text-[11px] text-on-surface-variant font-medium">RT {item.rt} / RW {item.rw}</div>
+                        {item.desil_saat_ini ? (
+                          <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                            Desil {item.desil_saat_ini} (Resmi)
+                          </span>
+                        ) : item.desil_usulan ? (
+                          <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            Draft Desil {item.desil_usulan}
+                          </span>
+                        ) : null}
                       </td>
                       <td className="p-4">
                         <span className="inline-block px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
@@ -448,6 +547,20 @@ export default function BansosPage() {
                                 <X size={14} />
                               </button>
                             </div>
+                          ) : item.status === 'APPROVED' ? (
+                            <button
+                              onClick={() => openDisburseModal(item)}
+                              className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition-all mx-auto"
+                            >
+                              <Camera size={14} /> Salurkan
+                            </button>
+                          ) : item.status === 'DISBURSED' ? (
+                            <button
+                              onClick={() => openViewProofModal(item)}
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all mx-auto border border-slate-200"
+                            >
+                              <Eye size={13} /> Bukti Serah
+                            </button>
                           ) : (
                             <span className="text-xs text-on-surface-variant italic">-</span>
                           )}
@@ -669,6 +782,253 @@ export default function BansosPage() {
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL PENYALURAN LAPANGAN (POINT OF DISBURSEMENT) */}
+      {showDisburseModal && selectedBansos && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-surface-container-lowest max-w-xl w-full p-6 rounded-2xl border border-outline-variant shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-outline-variant">
+              <div>
+                <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
+                  <Camera className="text-primary" size={20} /> Penyaluran Bantuan Sosial Lapangan
+                </h3>
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  Rekam serah terima bantuan secara real-time dengan bukti foto, GPS, dan tanda tangan digital.
+                </p>
+              </div>
+              <button onClick={() => setShowDisburseModal(false)} className="text-on-surface-variant hover:text-on-surface">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant text-xs space-y-1">
+              <div className="font-bold text-on-surface">{selectedBansos.nama_penerima}</div>
+              <div className="text-on-surface-variant">NIK: {selectedBansos.nik_penerima} &bull; No. KK: {selectedBansos.no_kk}</div>
+              <div className="font-semibold text-primary">
+                Program: {selectedBansos.jenis_bansos} &bull; Nominal: Rp {Number(selectedBansos.nominal_bantuan || 0).toLocaleString('id-ID')}
+              </div>
+            </div>
+
+            <form onSubmit={handleDisburseSubmit} className="space-y-4 text-xs">
+              {/* Foto Penyerahan */}
+              <div>
+                <label className="block font-bold text-on-surface mb-1 flex items-center gap-1.5">
+                  <Camera size={14} className="text-primary" /> Foto Serah Terima Penerima Manfaat *
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleDisbursePhotoUpload}
+                  className="w-full text-xs rounded-lg border border-outline-variant p-2 bg-surface-container-low outline-none"
+                />
+                <p className="text-[11px] text-on-surface-variant mt-0.5">Warga memegang bantuan sembako / amplop tunai.</p>
+                {disbursePhoto && (
+                  <div className="mt-2 p-2 bg-surface-container-low rounded-lg border border-outline-variant">
+                    <img src={disbursePhoto} alt="Bukti Penyerahan" className="max-h-48 rounded mx-auto object-contain" />
+                  </div>
+                )}
+              </div>
+
+              {/* Koordinat Geotag GPS */}
+              <div>
+                <label className="block font-bold text-on-surface mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <MapPin size={14} className="text-red-500" /> Koordinat Lokasi Penyerahan (GPS)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    disabled={gettingLocation}
+                    className="text-primary font-semibold hover:underline flex items-center gap-1"
+                  >
+                    {gettingLocation ? <Loader2 size={12} className="animate-spin" /> : 'Deteksi Lokasi GPS Otomatis'}
+                  </button>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: -6.917464, 107.619123"
+                  value={disburseCoords}
+                  onChange={(e) => setDisburseCoords(e.target.value)}
+                  className="w-full px-3 py-2 border border-outline-variant rounded-lg bg-surface-container-low focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                />
+              </div>
+
+              {/* Tanda Tangan Digital Kanvas */}
+              <div>
+                <label className="block font-bold text-on-surface mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <PenTool size={14} className="text-primary" /> Tanda Tangan Penerima Manfaat (Layar Sentuh) *
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const canvas = document.getElementById('signatureCanvas');
+                      if (canvas) {
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                      }
+                    }}
+                    className="text-rose-600 hover:underline text-[11px] font-semibold"
+                  >
+                    Hapus / Ulang Tanda Tangan
+                  </button>
+                </label>
+                <div className="border border-outline-variant rounded-xl overflow-hidden bg-white">
+                  <canvas
+                    id="signatureCanvas"
+                    width={450}
+                    height={140}
+                    className="w-full touch-none cursor-crosshair"
+                    onMouseDown={(e) => {
+                      setIsDrawing(true);
+                      const canvas = e.target;
+                      const rect = canvas.getBoundingClientRect();
+                      const ctx = canvas.getContext('2d');
+                      ctx.beginPath();
+                      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+                    }}
+                    onMouseMove={(e) => {
+                      if (!isDrawing) return;
+                      const canvas = e.target;
+                      const rect = canvas.getBoundingClientRect();
+                      const ctx = canvas.getContext('2d');
+                      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                      ctx.strokeStyle = '#1e3a8a';
+                      ctx.lineWidth = 2.5;
+                      ctx.stroke();
+                    }}
+                    onMouseUp={() => setIsDrawing(false)}
+                    onTouchStart={(e) => {
+                      setIsDrawing(true);
+                      const canvas = e.target;
+                      const rect = canvas.getBoundingClientRect();
+                      const touch = e.touches[0];
+                      const ctx = canvas.getContext('2d');
+                      ctx.beginPath();
+                      ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+                    }}
+                    onTouchMove={(e) => {
+                      if (!isDrawing) return;
+                      const canvas = e.target;
+                      const rect = canvas.getBoundingClientRect();
+                      const touch = e.touches[0];
+                      const ctx = canvas.getContext('2d');
+                      ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+                      ctx.strokeStyle = '#1e3a8a';
+                      ctx.lineWidth = 2.5;
+                      ctx.stroke();
+                    }}
+                    onTouchEnd={() => setIsDrawing(false)}
+                  />
+                </div>
+                <p className="text-[11px] text-on-surface-variant mt-1">Gunakan jari atau stylus untuk tanda tangan pada kotak di atas.</p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant">
+                <button
+                  type="button"
+                  onClick={() => setShowDisburseModal(false)}
+                  className="px-4 py-2 border border-outline-variant rounded-lg font-semibold hover:bg-surface-container-high transition-colors text-xs"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingAction}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 text-xs shadow-md"
+                >
+                  {submittingAction ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                  Konfirmasi Serah Terima Bantuan
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL VIEW PROOF (BUKTI SERAH TERIMA) */}
+      {showProofModal && selectedBansos && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-surface-container-lowest max-w-lg w-full p-6 rounded-2xl border border-outline-variant shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-outline-variant">
+              <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
+                <CheckCircle2 className="text-emerald-600" size={20} /> Bukti Serah Terima Bansos
+              </h3>
+              <button onClick={() => setShowProofModal(false)} className="text-on-surface-variant hover:text-on-surface">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant space-y-1">
+                <p className="font-bold text-sm text-on-surface">{selectedBansos.nama_penerima}</p>
+                <p className="text-on-surface-variant">NIK: {selectedBansos.nik_penerima} &bull; No. KK: {selectedBansos.no_kk}</p>
+                <p className="font-semibold text-primary">{selectedBansos.jenis_bansos} &bull; Rp {Number(selectedBansos.nominal_bantuan || 0).toLocaleString('id-ID')}</p>
+                <p className="text-[11px] text-emerald-700 font-semibold">
+                  Diserahkan pada: {selectedBansos.tanggal_penyerahan ? new Date(selectedBansos.tanggal_penyerahan).toLocaleString('id-ID') : 'Tervalidasi Lapangan'}
+                </p>
+                {selectedBansos.nama_penyalur_lapangan && (
+                  <p className="text-[11px] text-on-surface-variant">Petugas Penyalur: {selectedBansos.nama_penyalur_lapangan}</p>
+                )}
+              </div>
+
+              {selectedBansos.koordinat_lat_lng && (
+                <div>
+                  <span className="font-bold text-on-surface">Koordinat Geotag GPS:</span>
+                  <p className="font-mono text-primary flex items-center gap-1 mt-0.5">
+                    <MapPin size={13} className="text-red-500" />
+                    <a
+                      href={`https://maps.google.com/?q=${selectedBansos.koordinat_lat_lng}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:underline"
+                    >
+                      {selectedBansos.koordinat_lat_lng} (Buka Google Maps)
+                    </a>
+                  </p>
+                </div>
+              )}
+
+              {selectedBansos.foto_penyerahan_url && (
+                <div>
+                  <span className="font-bold text-on-surface block mb-1">Foto Dokumentasi Serah Terima:</span>
+                  <img src={selectedBansos.foto_penyerahan_url} alt="Foto Serah Terima" className="max-h-56 rounded-lg border border-outline-variant mx-auto object-contain" />
+                </div>
+              )}
+
+              {selectedBansos.tanda_tangan_penerima_url && (
+                <div>
+                  <span className="font-bold text-on-surface block mb-1">Tanda Tangan Digital Penerima:</span>
+                  <div className="p-2 bg-white rounded-lg border border-outline-variant max-w-xs mx-auto">
+                    <img src={selectedBansos.tanda_tangan_penerima_url} alt="Tanda Tangan" className="max-h-24 mx-auto object-contain" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-outline-variant">
+              <button
+                type="button"
+                onClick={() => setShowProofModal(false)}
+                className="px-4 py-2 bg-primary text-on-primary rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
           </motion.div>
         </div>
       )}

@@ -21,6 +21,7 @@ export default function KartuKeluargaPage() {
   const { user, selectProfile } = useAuth();
   const navigate = useNavigate();
   const [kkData, setKkData] = useState(null);
+  const [desilData, setDesilData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [switchingNik, setSwitchingNik] = useState(null);
@@ -29,9 +30,15 @@ export default function KartuKeluargaPage() {
     async function fetchKK() {
       try {
         setLoading(true);
-        const res = await api.get('/kk/my/card');
-        if (res.data) {
-          setKkData(res.data);
+        const [res, desilRes] = await Promise.allSettled([
+          api.get('/kk/my/card'),
+          api.get('/desil/my-family')
+        ]);
+        if (res.status === 'fulfilled' && res.value?.data) {
+          setKkData(res.value.data);
+        }
+        if (desilRes.status === 'fulfilled' && desilRes.value?.data?.data) {
+          setDesilData(desilRes.value.data.data);
         }
       } catch (err) {
         setError(err.message || 'Gagal memuat Kartu Keluarga Digital.');
@@ -108,7 +115,18 @@ export default function KartuKeluargaPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => navigate('/dashboard/desil')}
+            className="flex items-center gap-2 px-3.5 py-2 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors shadow-sm"
+          >
+            <Sparkles size={15} /> 
+            {desilData?.desil_saat_ini 
+              ? `Status Desil ${desilData.desil_saat_ini}` 
+              : desilData?.desil_usulan 
+              ? `Draft Desil ${desilData.desil_usulan}` 
+              : 'Perbarui Desil DTSEN'}
+          </button>
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 px-3.5 py-2 bg-surface-container text-on-surface text-xs font-semibold rounded-lg border border-outline-variant hover:bg-surface-container-high transition-colors"
