@@ -95,11 +95,15 @@ CREATE TABLE `warga` (
   `email` VARCHAR(100) DEFAULT NULL,
   `status_kependudukan` ENUM('Tetap', 'Sementara', 'Pindah', 'Meninggal') NOT NULL DEFAULT 'Tetap',
   `foto_url` VARCHAR(255) DEFAULT NULL,
+  `skor_kelengkapan` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Persentase kelengkapan profil 0-100%',
+  `rincian_kelengkapan` JSON NULL COMMENT 'Cache rincian 4 pilar dan missing fields',
+  `terakhir_dihitung_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_warga_nik` (`nik`),
   INDEX `idx_warga_kk` (`no_kk`),
   INDEX `idx_warga_rt_rw` (`rt`, `rw`),
+  INDEX `idx_warga_skor` (`skor_kelengkapan`),
   CONSTRAINT `fk_warga_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_warga_kk` FOREIGN KEY (`no_kk`) REFERENCES `kartu_keluarga` (`no_kk`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -229,6 +233,7 @@ CREATE TABLE `dokumen_request` (
   `approved_by_rw` INT NULL,
   `approved_by_kelurahan` INT NULL,
   `trigger_executed` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_auto_filled_by_ai` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika permohonan surat diisi via AI auto-fill',
   `file_url` VARCHAR(255) NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

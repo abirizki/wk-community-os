@@ -7,46 +7,37 @@
 
 const express = require('express');
 const dokumenService = require('../services/dokumen.service');
-const { requireAuth, requireAdmin } = require('../middleware/auth.middleware');
 const { requireAuth, requireRole } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
+// GET /api/dokumen/prefill-data - AI Auto-Fill Data Profil Warga
+router.get('/prefill-data', requireAuth, async (req, res) => {
+  try {
+    const data = await dokumenService.getPrefillData(req.session.user);
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // POST /api/dokumen - Warga mengajukan permohonan surat baru
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const nik_pemohon = req.session.user.username;
-    const { jenis_dokumen, keperluan } = req.body;
-
-    const newDoc = await dokumenService.requestDokumen({
-      nik_pemohon,
-      jenis_dokumen,
-      keperluan
-    });
-
     const newDoc = await dokumenService.requestDokumen(req.body, req.session.user);
     res.status(201).json({
       success: true,
-      message: 'Permohonan surat berhasil diajukan',
       message: 'Permohonan surat berhasil diajukan.',
       data: newDoc
     });
   } catch (error) {
-    if (error.status) {
-      res.status(error.status).json({ success: false, message: error.message });
-    } else {
-      console.error('Error requesting dokumen:', error.message);
-      res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server' });
-    }
     res.status(error.status || 500).json({ success: false, message: error.message });
   }
 });
 
-// GET /api/dokumen/me - Warga melihat riwayat permohonan surat miliknya
 // GET /api/dokumen/me - Warga melihat riwayat permohonan surat miliknya & keluarganya
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    const nik = req.session.user.username;
     const nik = req.session.user.active_nik || req.session.user.username;
     const docs = await dokumenService.getByNik(nik);
     res.json({

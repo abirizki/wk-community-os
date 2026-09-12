@@ -10,22 +10,66 @@ const dokumenRepository = require('../repositories/dokumen.repository');
 const notifikasiRepository = require('../repositories/notifikasi.repository');
 const bansosRepository = require('../repositories/bansos.repository');
 const wargaRepository = require('../repositories/warga.repository');
+const completenessService = require('./completeness.service');
+const completenessRepository = require('../repositories/completeness.repository');
 
 class DokumenService {
   /**
+   * Ambil data profil untuk AI Auto-Fill Surat Instan (Syarat: skor kelengkapan >= 80%)
+   */
+  async getPrefillData(currentUser) {
+    const activeNik = currentUser.active_nik || currentUser.username;
+    if (!activeNik) {
+      return { eligible: false, message: 'Sesi NIK tidak ditemukan' };
+    }
+    const rawData = await completenessRepository.getCitizenRawData(activeNik);
+    if (!rawData || !rawData.warga) {
+      return { eligible: false, message: 'Data warga tidak ditemukan' };
+    }
+    const scoreResult = completenessService.calculateCitizenScore(
+      rawData.warga,
+      rawData.desil,
+      rawData.posyanduBalita,
+      rawData.posyanduLansia,
+      rawData.user
+    );
+
+    return {
+      eligible: scoreResult.auto_fill_eligible,
+      score: scoreResult.total_score,
+      tier: scoreResult.tier,
+      tier_label: scoreResult.tier_label,
+      profile: {
+        nama: rawData.warga.nama,
+        nik: rawData.warga.nik,
+        no_kk: rawData.warga.no_kk,
+        tempat_lahir: rawData.warga.tempat_lahir,
+        tanggal_lahir: rawData.warga.tanggal_lahir,
+        jenis_kelamin: rawData.warga.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
+        agama: rawData.warga.agama,
+        status_perkawinan: rawData.warga.status_perkawinan,
+        pekerjaan: rawData.warga.pekerjaan,
+        pendidikan_terakhir: rawData.warga.pendidikan_terakhir,
+        golongan_darah: rawData.warga.golongan_darah,
+        alamat: rawData.warga.alamat,
+        rt: rawData.warga.rt,
+        rw: rawData.warga.rw,
+        no_telepon: rawData.warga.no_telepon,
+        email: rawData.warga.email
+      }
+    };
+  }
+
+  /**
    * Ajukan permohonan surat baru
    * @param {Object} payload 
+   * @param {Object} currentUser
    * @returns {Promise<Object>}
    */
-  async requestDokumen(payload) {
-    const { nik_pemohon, jenis_dokumen, keperluan } = payload;
   async requestDokumen(payload, currentUser) {
     const activeNik = currentUser.active_nik || currentUser.username;
-    const { jenis_dokumen, keperluan } = payload;
+    const { jenis_dokumen, keperluan, is_auto_filled_by_ai } = payload;
 
-    if (!nik_pemohon) {
-      const err = new Error('NIK pemohon wajib disertakan dari sesi');
-      err.status = 400;
     if (!activeNik) {
       const err = new Error('Sesi autentikasi NIK pemohon tidak ditemukan');
       err.status = 401;
@@ -33,7 +77,6 @@ class DokumenService {
     }
 
     if (!jenis_dokumen || jenis_dokumen.trim() === '') {
-      const err = new Error('Jenis dokumen wajib dipilih');
       const err = new Error('Jenis dokumen/surat wajib dipilih');
       err.status = 400;
       throw err;
@@ -45,44 +88,40 @@ class DokumenService {
       throw err;
     }
 
-    const result = await dokumenRepository.create(payload);
     // Ambil data domisili pemohon
     const warga = await wargaRepository.findByNik(activeNik);
     const rt = warga ? warga.rt : (currentUser.rt || '001');
     const rw = warga ? warga.rw : (currentUser.rw || '001');
 
-    // Kirim notifikasi konfirmasi ke pemohon
     const result = await dokumenRepository.create({
       nik_pemohon: activeNik,
       jenis_dokumen: jenis_dokumen.trim(),
       keperluan: keperluan.trim(),
       rt,
-      rw
+      rw,
+      is_auto_filled_by_ai: Boolean(is_auto_filled_by_ai)
     });
 
-    // Kirim notifikasi ke pemohon
+    // Kirim notifikasi konfirmasi ke pemohon
     try {
       await notifikasiRepository.create({
-        nik_target: nik_pemohon,
         nik_target: activeNik,
         judul: 'Permohonan Surat Diajukan',
-        pesan: `Permohonan ${jenis_dokumen} Anda telah diterima sistem dan sedang dalam antrean verifikasi petugas kelurahan.`,
-        pesan: `Permohonan ${jenis_dokumen} (No: ${result.nomor_registrasi}) berhasil diajukan dan sedang menunggu verifikasi Ketua RT ${rt}.`,
+        pesan: `Permohonan ${jenis_dokumen} berhasil diajukan dan sedang menunggu verifikasi Ketua RT ${rt}.`,
         tipe: 'info',
         link: '/dashboard/dokumen'
       });
     } catch (e) {
       console.warn('Gagal memicu notifikasi pengajuan dokumen:', e.message);
-      console.warn('Notifikasi error:', e.message);
     }
 
     return {
       id: result.insertId,
+      nomor_registrasi: result.nomor_registrasi,
       ...payload,
       status: 'SUBMITTED',
       created_at: new Date()
     };
-    return result;
   }
 
   /**

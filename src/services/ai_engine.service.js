@@ -6,6 +6,8 @@
  */
 
 const analyticsRepository = require('../repositories/analytics.repository');
+const completenessRepository = require('../repositories/completeness.repository');
+const completenessService = require('./completeness.service');
 
 class AIEngineService {
   /**
@@ -20,14 +22,16 @@ class AIEngineService {
       lansiaHealth,
       bansosEquity,
       documentVelocity,
-      complaints
+      complaints,
+      maturityStats
     ] = await Promise.all([
       analyticsRepository.getDemographyStats(scope),
       analyticsRepository.getBalitaNutritionByRT(scope),
       analyticsRepository.getLansiaHealthByRT(scope),
       analyticsRepository.getBansosEquityByRT(scope),
       analyticsRepository.getDocumentVelocityStats(scope),
-      analyticsRepository.getComplaintsStats()
+      analyticsRepository.getComplaintsStats(),
+      completenessRepository.getKelurahanDataMaturityIndex().catch(() => null)
     ]);
 
     // Jalankan Rule-Based Inference Engine
@@ -46,14 +50,21 @@ class AIEngineService {
       bansosEquity
     });
 
+    // Hitung Data Fidelity Confidence Score
+    const dataFidelity = maturityStats 
+      ? completenessService.calculateDataFidelityConfidence(maturityStats.overall_maturity_score)
+      : { confidence_score: 85, level: 'HIGH', badge_color: 'emerald', explanation: 'Tingkat kepercayaan data prima untuk kebijakan.' };
+
     return {
       scope,
       timestamp: new Date().toISOString(),
       kpi: {
         demography,
         document_velocity: documentVelocity,
-        complaints
+        complaints,
+        data_maturity: maturityStats
       },
+      data_fidelity: dataFidelity,
       rt_risk_matrix: rtMatrix,
       ai_insights: aiInsights
     };

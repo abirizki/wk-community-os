@@ -14,26 +14,23 @@ class DokumenRepository {
    * Buat permohonan surat baru dengan nomor registrasi unik
    */
   async create(payload) {
-    const { nik_pemohon, jenis_dokumen, keperluan } = payload;
     const { 
       nik_pemohon, 
       jenis_dokumen, 
       keperluan, 
       nomor_registrasi,
       rt = null,
-      rw = null
+      rw = null,
+      is_auto_filled_by_ai = 0
     } = payload;
 
     const noReg = nomor_registrasi || `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const [result] = await pool.execute(
-      `INSERT INTO dokumen_request (nik_pemohon, jenis_dokumen, keperluan, status) 
-       VALUES (?, ?, ?, 'SUBMITTED')`,
-      [nik_pemohon, jenis_dokumen, keperluan]
       `INSERT INTO dokumen_request 
-       (nomor_registrasi, nik_pemohon, jenis_surat, keperluan, status, approval_step, rt, rw, trigger_executed) 
-       VALUES (?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0)`,
-      [noReg, nik_pemohon, jenis_dokumen, keperluan, rt, rw]
+       (nomor_registrasi, nik_pemohon, jenis_surat, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai) 
+       VALUES (?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?)`,
+      [noReg, nik_pemohon, jenis_dokumen, keperluan, rt, rw, is_auto_filled_by_ai ? 1 : 0]
     );
     return result;
   }

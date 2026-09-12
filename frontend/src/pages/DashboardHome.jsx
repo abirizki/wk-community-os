@@ -204,9 +204,26 @@ export default function DashboardHome() {
                     <p className="text-xs text-on-surface-variant">Inferensi deterministik dari rekam medis Posyandu, bansos, dan sensus demografi.</p>
                   </div>
                 </div>
-                <span className="text-xs font-semibold px-2.5 py-1 bg-surface-container-high rounded-full text-on-surface-variant">
-                  {insights.length} Arahan Aktif
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {summaryData?.data_fidelity && (
+                    <span 
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                        summaryData.data_fidelity.level === 'HIGH'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                          : summaryData.data_fidelity.level === 'MODERATE'
+                          ? 'bg-amber-50 text-amber-800 border-amber-300'
+                          : 'bg-rose-50 text-rose-800 border-rose-300'
+                      }`} 
+                      title={summaryData.data_fidelity.explanation}
+                    >
+                      <ShieldCheck size={14} className={summaryData.data_fidelity.level === 'HIGH' ? 'text-emerald-600' : 'text-amber-600'} />
+                      <span>Data Confidence: {summaryData.data_fidelity.confidence_score}%</span>
+                    </span>
+                  )}
+                  <span className="text-xs font-semibold px-2.5 py-1 bg-surface-container-high rounded-full text-on-surface-variant">
+                    {insights.length} Arahan Aktif
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

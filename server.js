@@ -110,6 +110,7 @@ app.use('/api/posyandu', require('./src/routes/posyandu.routes'));
 app.use('/api/dokumen', require('./src/routes/dokumen.routes'));
 app.use('/api/bansos', require('./src/routes/bansos.routes'));
 app.use('/api/desil', require('./src/routes/desil.routes'));
+app.use('/api/completeness', require('./src/routes/completeness.routes'));
 app.use('/api/notifikasi', require('./src/routes/notifikasi.routes'));
 app.use('/api/users', require('./src/routes/user.routes'));
 app.use('/api/analytics', require('./src/routes/analytics.routes'));

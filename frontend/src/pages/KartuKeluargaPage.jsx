@@ -13,7 +13,11 @@ import {
   Download,
   CheckCircle2,
   Calendar,
-  Sparkles
+  Sparkles,
+  BarChart2,
+  X,
+  ChevronRight,
+  HelpCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -22,6 +26,8 @@ export default function KartuKeluargaPage() {
   const navigate = useNavigate();
   const [kkData, setKkData] = useState(null);
   const [desilData, setDesilData] = useState(null);
+  const [completenessData, setCompletenessData] = useState(null);
+  const [showAssistantModal, setShowAssistantModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [switchingNik, setSwitchingNik] = useState(null);
@@ -30,15 +36,19 @@ export default function KartuKeluargaPage() {
     async function fetchKK() {
       try {
         setLoading(true);
-        const [res, desilRes] = await Promise.allSettled([
+        const [res, desilRes, compRes] = await Promise.allSettled([
           api.get('/kk/my/card'),
-          api.get('/desil/my-family')
+          api.get('/desil/my-family'),
+          api.get('/completeness/my-score')
         ]);
         if (res.status === 'fulfilled' && res.value?.data) {
           setKkData(res.value.data);
         }
         if (desilRes.status === 'fulfilled' && desilRes.value?.data?.data) {
           setDesilData(desilRes.value.data.data);
+        }
+        if (compRes.status === 'fulfilled' && compRes.value?.data) {
+          setCompletenessData(compRes.value.data);
         }
       } catch (err) {
         setError(err.message || 'Gagal memuat Kartu Keluarga Digital.');
@@ -135,6 +145,69 @@ export default function KartuKeluargaPage() {
           </button>
         </div>
       </div>
+
+      {/* Profil Data Maturity & AI Smart Assistant Banner */}
+      {completenessData && (
+        <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-900/10 via-indigo-900/5 to-surface-container border border-blue-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                Kematangan Profil Warga
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                completenessData.tier === 'EXCELLENT' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+              }`}>
+                {completenessData.tier_label} ({completenessData.total_score}%)
+              </span>
+              {completenessData.auto_fill_eligible && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <Sparkles size={11} /> AI Auto-Fill Aktif
+                </span>
+              )}
+            </div>
+
+            <p className="text-on-surface font-semibold text-sm">
+              {completenessData.auto_fill_eligible
+                ? 'Profil Anda telah terverifikasi prima (≥ 80%). Seluruh formulir permohonan surat akan terisi otomatis.'
+                : 'Lengkapi beberapa data tersisa untuk mengaktifkan fitur AI Auto-Fill Surat Instan otomatis.'}
+            </p>
+
+            {/* 4 Pilar Progress */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+              <div className="bg-surface-container-lowest p-2 rounded-lg border border-outline-variant text-center">
+                <span className="text-[10px] text-on-surface-variant block">Identitas</span>
+                <span className="font-bold text-on-surface text-xs">{completenessData.pillars?.pilar1_identitas?.percentage || 0}%</span>
+              </div>
+              <div className="bg-surface-container-lowest p-2 rounded-lg border border-outline-variant text-center">
+                <span className="text-[10px] text-on-surface-variant block">Kontak/Akun</span>
+                <span className="font-bold text-on-surface text-xs">{completenessData.pillars?.pilar2_kontak?.percentage || 0}%</span>
+              </div>
+              <div className="bg-surface-container-lowest p-2 rounded-lg border border-outline-variant text-center">
+                <span className="text-[10px] text-on-surface-variant block">KK & Sosial</span>
+                <span className="font-bold text-on-surface text-xs">{completenessData.pillars?.pilar3_keluarga?.percentage || 0}%</span>
+              </div>
+              <div className="bg-surface-container-lowest p-2 rounded-lg border border-outline-variant text-center">
+                <span className="text-[10px] text-on-surface-variant block">Kesehatan</span>
+                <span className="font-bold text-on-surface text-xs">{completenessData.pillars?.pilar4_kesehatan?.percentage || 0}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowAssistantModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors shadow-sm"
+            >
+              <Sparkles size={14} />
+              <span>AI Smart Assistant</span>
+            </button>
+            <span className="text-[10px] text-on-surface-variant text-right">
+              {completenessData.missing_fields?.length || 0} data belum terisi
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Persona Active Banner */}
       {user?.active_nik && (
@@ -312,6 +385,99 @@ export default function KartuKeluargaPage() {
           <p className="font-mono text-[10px]">Dicetak: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </div>
       </div>
+
+      {/* AI SMART PROFILE ASSISTANT MODAL */}
+      {showAssistantModal && completenessData && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-surface-container-lowest max-w-lg w-full p-6 rounded-2xl border border-outline-variant shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-xs"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-outline-variant">
+              <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
+                <Sparkles className="text-primary" size={20} /> AI Smart Profile Assistant
+              </h3>
+              <button onClick={() => setShowAssistantModal(false)} className="text-on-surface-variant hover:text-on-surface">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-on-surface-variant">Tingkat Kelengkapan Profil</p>
+                  <p className="text-lg font-extrabold text-on-surface">{completenessData.total_score}% &bull; {completenessData.tier_label}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  completenessData.tier === 'EXCELLENT' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {completenessData.tier === 'EXCELLENT' ? 'Siap Auto-Fill' : 'Perlu Diisi'}
+                </span>
+              </div>
+
+              {/* Quick Wins */}
+              {completenessData.quick_wins?.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-on-surface mb-2 flex items-center gap-1.5">
+                    <CheckCircle2 size={14} className="text-emerald-600" />
+                    Langkah Tercepat Menaikkan Skor (+Top Quick Wins):
+                  </h4>
+                  <div className="space-y-1.5">
+                    {completenessData.quick_wins.map((qw, qIdx) => (
+                      <div key={qIdx} className="p-2.5 bg-blue-50/80 rounded-xl border border-blue-200 flex items-center justify-between">
+                        <span className="text-slate-800 font-medium">{qw.action}</span>
+                        <span className="font-mono font-bold text-blue-700 bg-white px-2 py-0.5 rounded shadow-sm">{qw.point}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Missing Fields Checklist */}
+              <div>
+                <h4 className="font-bold text-on-surface mb-2 flex items-center gap-1.5">
+                  <AlertCircle size={14} className="text-amber-600" />
+                  Daftar Data Yang Belum Terisi ({completenessData.missing_fields?.length || 0}):
+                </h4>
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {completenessData.missing_fields?.map((mf, mIdx) => (
+                    <div key={mIdx} className="p-2 bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-between text-[11px]">
+                      <span className="text-on-surface">{mf.label}</span>
+                      <span className="text-on-surface-variant font-mono font-semibold">Bobot +{mf.weight}%</span>
+                    </div>
+                  ))}
+                  {completenessData.missing_fields?.length === 0 && (
+                    <p className="text-emerald-700 font-semibold p-2">Semua data kependudukan telah terisi 100% lengkap!</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-3 border-t border-outline-variant">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAssistantModal(false);
+                  navigate('/dashboard/desil');
+                }}
+                className="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg font-semibold hover:bg-blue-100 transition-colors flex items-center gap-1 text-[11px]"
+              >
+                <span>Isi Desil DTSEN</span>
+                <ChevronRight size={13} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAssistantModal(false)}
+                className="px-4 py-2 bg-primary text-on-primary rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

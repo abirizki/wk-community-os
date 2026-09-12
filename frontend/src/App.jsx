@@ -10,6 +10,7 @@ import ComplaintPage from './pages/ComplaintPage';
 import DokumenPage from './pages/DokumenPage';
 import BansosPage from './pages/BansosPage';
 import DesilPage from './pages/DesilPage';
+import DataMaturityPage from './pages/DataMaturityPage';
 import WargaList from './pages/WargaList';
 import WargaDetail from './pages/WargaDetail';
 import KartuKeluargaPage from './pages/KartuKeluargaPage';
@@ -40,6 +41,7 @@ function App() {
             <Route path="dokumen" element={<DokumenPage />} />
             <Route path="bansos" element={<BansosPage />} />
             <Route path="desil" element={<DesilPage />} />
+            <Route path="data-maturity" element={<DataMaturityPage />} />
             <Route path="pbb" element={<PBBPage />} />
             <Route path="posyandu" element={<PosyanduPage />} />
             <Route path="pengaduan" element={<ComplaintPage />} />

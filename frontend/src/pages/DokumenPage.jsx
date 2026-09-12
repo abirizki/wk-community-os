@@ -48,6 +48,7 @@ export default function DokumenPage() {
   // Request Modal State
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [prefillInfo, setPrefillInfo] = useState(null);
   const [formData, setFormData] = useState({
     jenis_dokumen: 'Surat Keterangan Domisili',
     keperluan: ''
@@ -70,6 +71,12 @@ export default function DokumenPage() {
       setError(null);
       const res = isOfficer ? await api.get('/dokumen') : await api.get('/dokumen/me');
       setData(res.data || []);
+      // Ambil status prefill AI kelengkapan profil warga
+      api.get('/dokumen/prefill-data')
+        .then(res => {
+          if (res.data) setPrefillInfo(res.data);
+        })
+        .catch(() => {});
     } catch (err) {
       setError(err.message || 'Gagal mengambil data permohonan surat.');
     } finally {
@@ -96,7 +103,10 @@ export default function DokumenPage() {
     try {
       setIsSubmitting(true);
       setError(null);
-      await api.post('/dokumen', formData);
+      await api.post('/dokumen', {
+        ...formData,
+        is_auto_filled_by_ai: Boolean(prefillInfo?.eligible)
+      });
       setSuccessMsg('Permohonan surat berhasil diajukan dan masuk ke antrean verifikasi RT!');
       setFormData({
         jenis_dokumen: 'Surat Keterangan Domisili',
@@ -348,7 +358,14 @@ export default function DokumenPage() {
                         <div className="text-[11px] text-on-surface-variant">RT {doc.rt || '001'} / RW {doc.rw || '001'}</div>
                       </td>
                       <td className="p-4 font-medium text-primary text-xs">
-                        {doc.jenis_dokumen || doc.jenis_surat}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>{doc.jenis_dokumen || doc.jenis_surat}</span>
+                          {doc.is_auto_filled_by_ai ? (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-50 text-blue-700 border border-blue-200" title="Diisi otomatis via AI Auto-Fill">
+                              <Sparkles size={10} className="text-blue-500" /> AI
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="p-4 text-xs text-on-surface-variant max-w-xs truncate" title={doc.keperluan}>
                         {doc.keperluan}
@@ -411,6 +428,23 @@ export default function DokumenPage() {
                 <X size={20} />
               </button>
             </div>
+
+            {/* AI Auto-Fill Alert Banner */}
+            {prefillInfo?.eligible && (
+              <div className="mb-4 p-3.5 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl border border-emerald-200 text-xs space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-emerald-900 flex items-center gap-1.5">
+                    <Sparkles size={15} className="text-emerald-600" /> AI Smart Auto-Fill Aktif (Profil {prefillInfo.score}% Lengkap)
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900">
+                    Terverifikasi
+                  </span>
+                </div>
+                <p className="text-[11px] text-emerald-800 leading-tight">
+                  Profil Anda terverifikasi lengkap. Identitas resmi ({prefillInfo.profile?.nama}, NIK: {prefillInfo.profile?.nik}, No. KK: {prefillInfo.profile?.no_kk}, RT {prefillInfo.profile?.rt}/RW {prefillInfo.profile?.rw}) akan otomatis dilampirkan ke surat resmi.
+                </p>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               <div>
