@@ -23,7 +23,8 @@ import {
   Building2,
   Landmark,
   Network,
-  MessageSquare
+  MessageSquare,
+  BookOpen
 } from 'lucide-react';
 import OfflineIndicator from '../components/OfflineIndicator';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
@@ -82,7 +83,8 @@ export default function DashboardLayout() {
     { name: 'Daya Dukung & Fasilitas', path: '/dashboard/daya-dukung', icon: <Building2 size={20} /> },
     { name: 'Layanan PBB', path: '/dashboard/pbb', icon: <FileText size={20} /> },
     { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={20} /> },
-    { name: 'Pengaduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={20} /> }
+    { name: 'Pengaduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={20} /> },
+    { name: 'Panduan & SOP', path: '/dashboard/panduan', icon: <BookOpen size={20} /> }
   );
 
   if (canManageUsers) {
