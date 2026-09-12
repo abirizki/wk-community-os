@@ -12,6 +12,9 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO';
 -- -----------------------------------------------------------------------
 -- DROP TABLES IF EXIST (Hierarki Reverse Dependency)
 -- -----------------------------------------------------------------------
+DROP TABLE IF EXISTS `partner_webhook_logs`;
+DROP TABLE IF EXISTS `partner_api_keys`;
+DROP TABLE IF EXISTS `dukcapil_verifikasi_log`;
 DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `notifikasi`;
 DROP TABLE IF EXISTS `dokumen_request`;
@@ -477,6 +480,58 @@ CREATE TABLE `audit_logs` (
   INDEX `idx_audit_action` (`action`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- -----------------------------------------------------------------------
+-- 12. TABEL: dukcapil_verifikasi_log (Audit UU PDP No. 27/2022 - Zero Data Hoarding)
+-- -----------------------------------------------------------------------
+CREATE TABLE `dukcapil_verifikasi_log` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `nik_diminta` VARCHAR(16) NOT NULL,
+  `nama_diminta` VARCHAR(150) NULL,
+  `jenis_verifikasi` ENUM('NIK_MATCHING', 'BIOMETRIC_FACE', 'STATUS_KEMATIAN') NOT NULL,
+  `is_matched` TINYINT(1) NOT NULL,
+  `similarity_score` DECIMAL(5,2) NULL COMMENT 'Persentase kemiripan wajah 0-100%',
+  `keterangan` VARCHAR(255) NULL,
+  `requestor_user_id` INT NULL,
+  `ip_address` VARCHAR(45) NULL,
+  `integrity_hash` VARCHAR(64) NOT NULL COMMENT 'SHA-256 hash log untuk anti-tampering UU PDP',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_dukcapil_nik` (`nik_diminta`),
+  INDEX `idx_dukcapil_tgl` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------
+-- 13. TABEL: partner_api_keys (Gateway Kredensial Sapawarga & Satu Data Jabar)
+-- -----------------------------------------------------------------------
+CREATE TABLE `partner_api_keys` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `partner_name` VARCHAR(100) NOT NULL UNIQUE,
+  `api_key` VARCHAR(64) NOT NULL UNIQUE,
+  `api_secret_hash` VARCHAR(255) NOT NULL,
+  `scopes` JSON NOT NULL COMMENT 'Daftar endpoint diizinkan: read:surat, read:bansos, push:satudata',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `last_used_at` TIMESTAMP NULL DEFAULT NULL,
+  `expires_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_partner_key` (`api_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------
+-- 14. TABEL: partner_webhook_logs (Audit Pengiriman Event ke Server Mitra)
+-- -----------------------------------------------------------------------
+CREATE TABLE `partner_webhook_logs` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `partner_name` VARCHAR(100) NOT NULL,
+  `event_type` ENUM('SURAT_APPROVED', 'SURAT_REJECTED', 'BANSOS_DISBURSED', 'DESIL_UPDATED') NOT NULL,
+  `target_url` VARCHAR(255) NOT NULL,
+  `payload` JSON NOT NULL,
+  `response_code` INT NULL,
+  `status` ENUM('SUCCESS', 'FAILED', 'PENDING') NOT NULL DEFAULT 'SUCCESS',
+  `retry_count` INT NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_webhook_event` (`event_type`),
+  INDEX `idx_webhook_partner` (`partner_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- =======================================================================
 -- SEED DATA (DML) - Multi-Tier RBAC & Akun Lengkap
 -- =======================================================================
@@ -634,6 +689,13 @@ INSERT INTO `wilayah_kelurahan` (`kode_kelurahan`, `kode_kecamatan`, `nama_kelur
   ('32.72.07.1004', '32.72.07', 'Sindangsari', 8, 32, 'Usep Hendra, S.Sos'),
   ('32.72.07.1005', '32.72.07', 'Situmekar', 9, 35, 'H. Tatang Mulyadi')
 ON DUPLICATE KEY UPDATE `nama_kelurahan` = VALUES(`nama_kelurahan`);
+
+-- SEED 15: partner_api_keys (Sapawarga & Satu Data Jabar Official API Keys)
+INSERT INTO `partner_api_keys` (`id`, `partner_name`, `api_key`, `api_secret_hash`, `scopes`, `is_active`) VALUES
+  (1, 'SAPAWARGA_JABAR', 'bw_live_spw_77a9c812d45e0f19b882', SHA2('bw_live_spw_77a9c812d45e0f19b882_secret_salt', 256), '["read:surat", "read:bansos", "webhook:listener"]', 1),
+  (2, 'SATU_DATA_JABAR', 'bw_live_sdj_33f81e01a9b4c67d82e1', SHA2('bw_live_sdj_33f81e01a9b4c67d82e1_secret_salt', 256), '["push:satudata", "read:demography_aggregate"]', 1),
+  (3, 'DISKOMINFO_SUKABUMI', 'bw_live_dsk_55b29f04e1c78a90123d', SHA2('bw_live_dsk_55b29f04e1c78a90123d_secret_salt', 256), '["read:command_center", "read:all_stats"]', 1)
+ON DUPLICATE KEY UPDATE `scopes` = VALUES(`scopes`);
 
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
 SET SQL_MODE = @OLD_SQL_MODE;

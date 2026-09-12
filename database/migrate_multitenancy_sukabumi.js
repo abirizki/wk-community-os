@@ -233,3 +233,4 @@ module.exports = {
   DATA_KECAMATAN,
   DATA_KELURAHAN
 };
+

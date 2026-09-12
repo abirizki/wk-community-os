@@ -59,13 +59,25 @@ const stats = [
 
 /* ─── Main Component ─── */
 export default function LoginPage() {
-  const { login, isLoading } = useAuth();
+  const { login, loginSapawarga, isLoading } = useAuth();
   const navigate = useNavigate();
   const [nik, setNik] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [shake, setShake] = useState(false);
+
+  const handleSapawargaLogin = async () => {
+    setErrorMsg('');
+    try {
+      await loginSapawarga('spw_mock_3273010203850003');
+      navigate('/dashboard');
+    } catch (err) {
+      setErrorMsg(err.message || 'Gagal masuk via SSO Sapawarga Jabar.');
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    }
+  };
 
   const nikValid = nik.length === 16;
   const hasMinLen = password.length >= 8;
@@ -388,6 +400,28 @@ export default function LoginPage() {
                 )}
               </motion.button>
             </motion.form>
+
+            {/* Sapawarga SSO Section */}
+            <motion.div variants={fadeUp} custom={0.40} initial="hidden" animate="show" className="mt-4">
+              <div className="relative my-3">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-outline-variant"></div>
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-wider font-semibold">
+                  <span className="bg-surface px-2 text-on-surface-variant/70">Atau Masuk Akun Jabar</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSapawargaLogin}
+                disabled={isLoading}
+                className="w-full h-10 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold tracking-wide shadow-sm transition-all flex items-center justify-center gap-2 hover:shadow disabled:opacity-60"
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse" />
+                <span>Masuk dengan <strong>SAPAWARGA</strong> (Jabar Digital)</span>
+              </button>
+            </motion.div>
 
             {/* Register Link */}
             <motion.div

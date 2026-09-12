@@ -21,7 +21,8 @@ import {
   Gift,
   Award,
   Building2,
-  Landmark
+  Landmark,
+  Network
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -55,6 +56,11 @@ export default function DashboardLayout() {
       name: 'Command Center Kota',
       path: '/dashboard/command-center',
       icon: <Landmark size={20} />
+    });
+    navItems.push({
+      name: 'Integrasi Pemda',
+      path: '/dashboard/integrasi',
+      icon: <Network size={20} />
     });
   }
 

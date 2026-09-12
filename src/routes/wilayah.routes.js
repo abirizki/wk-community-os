@@ -113,3 +113,4 @@ router.get('/active-tenant', requireAuth, (req, res) => {
 });
 
 module.exports = router;
+

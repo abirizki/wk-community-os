@@ -219,3 +219,4 @@ class WilayahRepository {
 }
 
 module.exports = new WilayahRepository();
+
