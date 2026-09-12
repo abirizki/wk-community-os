@@ -20,19 +20,56 @@ DROP TABLE IF EXISTS `posyandu_lansia`;
 DROP TABLE IF EXISTS `posyandu`;
 DROP TABLE IF EXISTS `pbb`;
 DROP TABLE IF EXISTS `pengaduan`;
+DROP TABLE IF EXISTS `entitas_usaha`;
+DROP TABLE IF EXISTS `fasilitas_kesehatan`;
+DROP TABLE IF EXISTS `fasilitas_pendidikan`;
 DROP TABLE IF EXISTS `warga`;
 DROP TABLE IF EXISTS `kartu_keluarga`;
 DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `wilayah_kelurahan`;
+DROP TABLE IF EXISTS `wilayah_kecamatan`;
 
 -- -----------------------------------------------------------------------
--- 1. TABEL: users (Autentikasi & Akun Sistem Bertingkat)
+-- 0a. TABEL: wilayah_kecamatan (Master 7 Kecamatan Kota Sukabumi)
+-- -----------------------------------------------------------------------
+CREATE TABLE `wilayah_kecamatan` (
+  `kode_kecamatan` VARCHAR(10) PRIMARY KEY,
+  `nama_kecamatan` VARCHAR(100) NOT NULL,
+  `kode_kota` VARCHAR(10) NOT NULL DEFAULT '32.72',
+  `nama_kota` VARCHAR(100) NOT NULL DEFAULT 'Kota Sukabumi',
+  `provinsi` VARCHAR(100) NOT NULL DEFAULT 'Jawa Barat',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------
+-- 0b. TABEL: wilayah_kelurahan (Master 33 Kelurahan Kota Sukabumi)
+-- -----------------------------------------------------------------------
+CREATE TABLE `wilayah_kelurahan` (
+  `kode_kelurahan` VARCHAR(15) PRIMARY KEY,
+  `kode_kecamatan` VARCHAR(10) NOT NULL,
+  `nama_kelurahan` VARCHAR(100) NOT NULL,
+  `jumlah_rw` INT NOT NULL DEFAULT 10,
+  `jumlah_rt` INT NOT NULL DEFAULT 40,
+  `luas_wilayah_km2` DECIMAL(5,2) NULL,
+  `koordinat_lat_lng` VARCHAR(100) NULL,
+  `nama_lurah` VARCHAR(150) NULL,
+  `kontak_kelurahan` VARCHAR(50) NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_kel_kecamatan` (`kode_kecamatan`),
+  CONSTRAINT `fk_kelurahan_kecamatan` FOREIGN KEY (`kode_kecamatan`) REFERENCES `wilayah_kecamatan` (`kode_kecamatan`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------
+-- 1. TABEL: users (Autentikasi & Akun Sistem Bertingkat Multi-Tenant)
 -- -----------------------------------------------------------------------
 CREATE TABLE `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `username` VARCHAR(50) NOT NULL UNIQUE COMMENT 'NIK warga, No KK, atau username petugas/admin',
   `password_hash` VARCHAR(255) NOT NULL,
   `nama` VARCHAR(150) NOT NULL,
-  `role` ENUM('superadmin', 'admin_kelurahan', 'admin_rw', 'ketua_rw', 'ketua_rt', 'kader_posyandu', 'warga') NOT NULL DEFAULT 'warga',
+  `role` ENUM('superadmin', 'walikota', 'camat', 'lurah', 'admin_kelurahan', 'admin_rw', 'ketua_rw', 'ketua_rt', 'kader_posyandu', 'warga') NOT NULL DEFAULT 'warga',
+  `kode_kecamatan` VARCHAR(10) NOT NULL DEFAULT '32.72.03',
+  `kode_kelurahan` VARCHAR(15) NOT NULL DEFAULT '32.72.03.1004',
   `rt` VARCHAR(5) NULL COMMENT 'Scope RT (khusus ketua_rt / warga)',
   `rw` VARCHAR(5) NULL COMMENT 'Scope RW (khusus ketua_rw, admin_rw, kader, RT)',
   `created_by_user_id` INT NULL COMMENT 'ID user pimpinan pembuat akun',
@@ -549,6 +586,54 @@ INSERT INTO `entitas_usaha` (`id`, `nama_usaha`, `nik_pemilik`, `nama_pemilik`, 
   (4, 'Warung Nasi Khas Sunda Ibu Kokom', '3273010101920004', 'Kokom Komalasari', 'Kuliner & Warung', 'Mikro', 'Jl. Kebon Jati No. 60 RT 001/001', '001', '001', 3, '< 5 Juta', 0, 'SKU/2026/09/0003', 'TERVERIFIKASI', 'Nasi timbel komplit, ayam goreng serundeng, pepes ikan mas'),
   (5, 'Bengkel Motor Servis Jaya Abadi', '3273010101890005', 'Dedi Mulyadi', 'Jasa & Servis', 'Mikro', 'Jl. Gardujati RT 002/003', '002', '003', 2, '5 - 15 Juta', 0, 'SKU/2026/06/0008', 'TERVERIFIKASI', 'Servis rutin motor injeksi, tambal ban, ganti oli dan sparepart')
 ON DUPLICATE KEY UPDATE `nama_usaha` = VALUES(`nama_usaha`), `jumlah_tenaga_kerja_lokal` = VALUES(`jumlah_tenaga_kerja_lokal`);
+
+-- SEED 13: wilayah_kecamatan (7 Kecamatan Kota Sukabumi)
+INSERT INTO `wilayah_kecamatan` (`kode_kecamatan`, `nama_kecamatan`) VALUES
+  ('32.72.01', 'Gunungpuyuh'),
+  ('32.72.02', 'Warudoyong'),
+  ('32.72.03', 'Cikole'),
+  ('32.72.04', 'Citamiang'),
+  ('32.72.05', 'Baros'),
+  ('32.72.06', 'Cibeureum'),
+  ('32.72.07', 'Lembursitu')
+ON DUPLICATE KEY UPDATE `nama_kecamatan` = VALUES(`nama_kecamatan`);
+
+-- SEED 14: wilayah_kelurahan (33 Kelurahan Kota Sukabumi)
+INSERT INTO `wilayah_kelurahan` (`kode_kelurahan`, `kode_kecamatan`, `nama_kelurahan`, `jumlah_rw`, `jumlah_rt`, `nama_lurah`) VALUES
+  ('32.72.01.1001', '32.72.01', 'Gunungpuyuh', 11, 44, 'H. Dedi Supriyadi, S.Sos'),
+  ('32.72.01.1002', '32.72.01', 'Karamat', 10, 38, 'Dra. Hj. Nunung Rohanah'),
+  ('32.72.01.1003', '32.72.01', 'Karangtengah', 9, 36, 'Asep Saepulloh, S.IP'),
+  ('32.72.01.1004', '32.72.01', 'Sriwidari', 12, 48, 'Rina Kusmayanti, M.Si'),
+  ('32.72.02.1001', '32.72.02', 'Benteng', 8, 32, 'Herman Sutisna, S.AP'),
+  ('32.72.02.1002', '32.72.02', 'Dayeuhluhur', 13, 52, 'Yudi Pratama, S.Sos'),
+  ('32.72.02.1003', '32.72.02', 'Nyomplong', 7, 28, 'H. Tatang Rustandi'),
+  ('32.72.02.1004', '32.72.02', 'Sukakarya', 10, 40, 'Bambang Irawan, S.IP'),
+  ('32.72.02.1005', '32.72.02', 'Warudoyong', 11, 42, 'Drs. Iwan Setiawan'),
+  ('32.72.03.1001', '32.72.03', 'Cikole', 12, 50, 'Mochammad Iqbal, S.STP'),
+  ('32.72.03.1002', '32.72.03', 'Cisarua', 14, 56, 'Hj. Elis Maryati, S.Pd'),
+  ('32.72.03.1003', '32.72.03', 'Gunungparang', 8, 34, 'Irvan Nurhidayat, M.Si'),
+  ('32.72.03.1004', '32.72.03', 'Kebonjati', 10, 40, 'Ahmad Sofyan, S.IP'),
+  ('32.72.03.1005', '32.72.03', 'Selabatu', 11, 45, 'Dr. Hendra Saputra'),
+  ('32.72.03.1006', '32.72.03', 'Subangjaya', 13, 52, 'Ferry Hermawan, S.Sos'),
+  ('32.72.04.1001', '32.72.04', 'Cikondang', 9, 36, 'Rudi Haryanto, S.AP'),
+  ('32.72.04.1002', '32.72.04', 'Citamiang', 10, 40, 'H. Cecep Mulyadi'),
+  ('32.72.04.1003', '32.72.04', 'Danalumpue', 8, 30, 'Agus Gunawan, S.IP'),
+  ('32.72.04.1004', '32.72.04', 'Gedongpanjang', 12, 48, 'Dedi Kurniawan, S.STP'),
+  ('32.72.04.1005', '32.72.04', 'Nanggeleng', 11, 44, 'Hj. Siti Rohmah, M.Pd'),
+  ('32.72.05.1001', '32.72.05', 'Baros', 10, 40, 'Wawan Gunawan, S.Sos'),
+  ('32.72.05.1002', '32.72.05', 'Jayaraksa', 8, 32, 'Endang Suhendar'),
+  ('32.72.05.1003', '32.72.05', 'Jayamekar', 9, 36, 'Asep Munandar, S.IP'),
+  ('32.72.05.1004', '32.72.05', 'Sudajaya Hilir', 11, 44, 'Kurniawan, S.AP'),
+  ('32.72.06.1001', '32.72.06', 'Babakan', 10, 40, 'Rahmat Hidayat, S.Sos'),
+  ('32.72.06.1002', '32.72.06', 'Cibeureumhilir', 9, 35, 'H. Anwar Sanusi'),
+  ('32.72.06.1003', '32.72.06', 'Limusnunggal', 11, 44, 'Deden Solihin, S.IP'),
+  ('32.72.06.1004', '32.72.06', 'Sindangpalay', 8, 30, 'Encep Supriatna'),
+  ('32.72.07.1001', '32.72.07', 'Cikundul', 10, 38, 'Agus Supriatna, S.AP'),
+  ('32.72.07.1002', '32.72.07', 'Cipanengah', 9, 36, 'Dra. Yati Maryati'),
+  ('32.72.07.1003', '32.72.07', 'Lembursitu', 12, 48, 'Maman Suratman, S.IP'),
+  ('32.72.07.1004', '32.72.07', 'Sindangsari', 8, 32, 'Usep Hendra, S.Sos'),
+  ('32.72.07.1005', '32.72.07', 'Situmekar', 9, 35, 'H. Tatang Mulyadi')
+ON DUPLICATE KEY UPDATE `nama_kelurahan` = VALUES(`nama_kelurahan`);
 
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
 SET SQL_MODE = @OLD_SQL_MODE;

@@ -87,13 +87,27 @@ class AIEngineService {
    */
   resolveScope(user) {
     if (!user) return {};
+    if (user.active_tenant) {
+      return {
+        kode_kecamatan: user.active_tenant.kode_kecamatan,
+        kode_kelurahan: user.active_tenant.kode_kelurahan,
+        kelurahan: user.active_tenant.nama_kelurahan,
+        kecamatan: user.active_tenant.nama_kecamatan
+      };
+    }
     if (user.role === 'ketua_rt') {
-      return { rt: user.rt || '001', rw: user.rw || '001' };
+      return { rt: user.rt || '001', rw: user.rw || '001', kode_kelurahan: user.kode_kelurahan || '32.72.03.1004' };
     }
     if (['ketua_rw', 'admin_rw'].includes(user.role)) {
-      return { rw: user.rw || '001' };
+      return { rw: user.rw || '001', kode_kelurahan: user.kode_kelurahan || '32.72.03.1004' };
     }
-    return {}; // Superadmin & Kelurahan memiliki akses makro seluruh wilayah
+    if (['admin_kelurahan', 'lurah', 'admin'].includes(user.role)) {
+      return { kode_kelurahan: user.kode_kelurahan || '32.72.03.1004' };
+    }
+    if (user.role === 'camat') {
+      return { kode_kecamatan: user.kode_kecamatan || '32.72.03' };
+    }
+    return {}; // Superadmin & Walikota memiliki akses makro seluruh 33 kelurahan
   }
 
   /**

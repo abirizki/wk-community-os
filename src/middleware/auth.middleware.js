@@ -7,6 +7,9 @@
 // Hierarki tingkat peran (makin kecil angkanya makin tinggi kuasanya)
 const ROLE_HIERARCHY = {
   superadmin: 0,
+  walikota: 0,
+  camat: 0.5,
+  lurah: 1,
   admin_kelurahan: 1,
   admin: 1, // Alias kompatibilitas
   admin_rw: 2,
@@ -30,12 +33,15 @@ function requireRole(allowedRoles = []) {
     }
 
     const userRole = req.session.user.role;
-    // Normalisasi 'admin' menjadi 'admin_kelurahan'
-    const normalizedRole = userRole === 'admin' ? 'admin_kelurahan' : userRole;
+    // Normalisasi role
+    let normalizedRole = userRole;
+    if (userRole === 'admin' || userRole === 'lurah') normalizedRole = 'admin_kelurahan';
+    if (userRole === 'walikota') normalizedRole = 'superadmin';
 
     const isAllowed = allowedRoles.some(role => {
-      if (role === 'admin' && (normalizedRole === 'admin_kelurahan' || normalizedRole === 'superadmin')) return true;
-      if (role === 'admin_kelurahan' && (normalizedRole === 'admin_kelurahan' || normalizedRole === 'superadmin')) return true;
+      if (role === 'admin' && (normalizedRole === 'admin_kelurahan' || normalizedRole === 'superadmin' || normalizedRole === 'camat')) return true;
+      if (role === 'admin_kelurahan' && (normalizedRole === 'admin_kelurahan' || normalizedRole === 'superadmin' || normalizedRole === 'camat')) return true;
+      if (role === 'superadmin' && normalizedRole === 'superadmin') return true;
       return role === normalizedRole;
     });
 

@@ -12,6 +12,7 @@ import BansosPage from './pages/BansosPage';
 import DesilPage from './pages/DesilPage';
 import DataMaturityPage from './pages/DataMaturityPage';
 import DayaDukungPage from './pages/DayaDukungPage';
+import CommandCenterPage from './pages/CommandCenterPage';
 import WargaList from './pages/WargaList';
 import WargaDetail from './pages/WargaDetail';
 import KartuKeluargaPage from './pages/KartuKeluargaPage';
@@ -35,6 +36,7 @@ function App() {
             }
           >
             <Route index element={<DashboardHome />} />
+            <Route path="command-center" element={<CommandCenterPage />} />
             <Route path="kk" element={<KartuKeluargaPage />} />
             <Route path="users" element={<UserManagementPage />} />
             <Route path="warga" element={<WargaList />} />

@@ -438,3 +438,4 @@ class FasilitasRepository {
 }
 
 module.exports = new FasilitasRepository();
+

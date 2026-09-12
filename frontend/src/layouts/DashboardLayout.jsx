@@ -20,7 +20,8 @@ import {
   UserCheck,
   Gift,
   Award,
-  Building2
+  Building2,
+  Landmark
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -43,9 +44,21 @@ export default function DashboardLayout() {
 
   const normalizedRole = user?.role === 'admin' ? 'admin_kelurahan' : user?.role;
   const canManageUsers = ['superadmin', 'admin_kelurahan', 'admin_rw', 'ketua_rw', 'ketua_rt'].includes(normalizedRole);
+  const isCityExecutive = ['superadmin', 'walikota', 'camat', 'admin_kelurahan', 'admin'].includes(normalizedRole);
 
   const navItems = [
     { name: 'Beranda', path: '/dashboard', icon: <Home size={20} /> },
+  ];
+
+  if (isCityExecutive) {
+    navItems.push({
+      name: 'Command Center Kota',
+      path: '/dashboard/command-center',
+      icon: <Landmark size={20} />
+    });
+  }
+
+  navItems.push(
     { name: 'Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={20} /> },
     { name: 'Data Warga', path: '/dashboard/warga', icon: <User size={20} /> },
     { name: 'Pengajuan Dokumen', path: '/dashboard/dokumen', icon: <FileCheck size={20} /> },
@@ -55,8 +68,8 @@ export default function DashboardLayout() {
     { name: 'Daya Dukung & Fasilitas', path: '/dashboard/daya-dukung', icon: <Building2 size={20} /> },
     { name: 'Layanan PBB', path: '/dashboard/pbb', icon: <FileText size={20} /> },
     { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={20} /> },
-    { name: 'Pengaduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={20} /> },
-  ];
+    { name: 'Pengaduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={20} /> }
+  );
 
   if (canManageUsers) {
     navItems.push({
