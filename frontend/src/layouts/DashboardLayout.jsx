@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import OfflineIndicator from '../components/OfflineIndicator';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
+import ForceChangePasswordModal from '../components/ForceChangePasswordModal';
 
 export default function DashboardLayout() {
   const { user, logout, selectProfile } = useAuth();
@@ -535,6 +536,9 @@ export default function DashboardLayout() {
 
       {/* PWA App Install Invitation Prompt */}
       <PWAInstallPrompt />
+
+      {/* Force Change Password on First Login (BSSN Security Policy) */}
+      <ForceChangePasswordModal />
     </div>
   );
 }

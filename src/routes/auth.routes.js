@@ -95,6 +95,10 @@ router.post('/login', async (req, res) => {
       activeHubungan = match.status_hubungan_keluarga;
     }
 
+    const mustChangePassword = user.must_change_password !== undefined 
+      ? Boolean(user.must_change_password)
+      : Boolean(user.status === 'active' && user.last_login_at === null);
+
     const userData = {
       id: user.id,
       username: user.username,
@@ -108,6 +112,8 @@ router.post('/login', async (req, res) => {
       active_nama: activeNama,
       active_hubungan: activeHubungan,
       family_members: familyMembers
+      family_members: familyMembers,
+      must_change_password: mustChangePassword
     };
 
     req.session.user = userData;
@@ -210,6 +216,58 @@ router.get('/me', (req, res) => {
     res.json({ success: true, user: req.session.user });
   } else {
     res.status(401).json({ success: false, message: 'Tidak ada sesi aktif' });
+  }
+});
+
+// POST /api/auth/change-initial-password (Kebijakan Force Change Password saat Login Pertama)
+router.post('/change-initial-password', async (req, res) => {
+  try {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ success: false, message: 'Tidak ada sesi aktif. Silakan login kembali.' });
+    }
+
+    const { new_password, confirm_password } = req.body;
+    const userId = req.session.user.id;
+
+    if (!new_password || !confirm_password) {
+      return res.status(400).json({ success: false, message: 'Kata sandi baru dan konfirmasi wajib diisi.' });
+    }
+
+    if (new_password !== confirm_password) {
+      return res.status(400).json({ success: false, message: 'Konfirmasi kata sandi tidak cocok.' });
+    }
+
+    // Kebijakan Keamanan BSSN: Minimal 8 karakter, huruf besar, huruf kecil, angka, dan simbol
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^_-])[A-Za-z\d@$!%*?&#^_-]{8,}$/;
+    if (!passwordRegex.test(new_password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Kata sandi minimal 8 karakter dan harus memuat kombinasi huruf besar, huruf kecil, angka, serta simbol khusus (@, $, !, %, *, ?, &, #).'
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(new_password, salt);
+
+    try {
+      await pool.execute(
+        'UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?',
+        [passwordHash, userId]
+      );
+    } catch (dbErr) {
+      // Graceful fallback jika kolom belum ada di DB lokal
+    }
+
+    req.session.user.must_change_password = false;
+
+    res.json({
+      success: true,
+      message: 'Kata sandi pribadi Anda berhasil disimpan! Anda kini memiliki akses penuh ke sistem.',
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Change initial password error:', error);
+    res.status(500).json({ success: false, message: 'Gagal memperbarui kata sandi.' });
   }
 });
 

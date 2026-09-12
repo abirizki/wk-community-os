@@ -88,15 +88,22 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const markPasswordChanged = useCallback(() => {
+    setUser(prev => prev ? { ...prev, must_change_password: false } : null);
+  }, []);
+
   return (
     <AuthContext.Provider value={{ 
       user, 
+      setUser,
       isAuthenticated, 
       isLoading, 
       login, 
       loginSapawarga,
       logout,
       selectProfile
+      selectProfile,
+      markPasswordChanged
     }}>
       {children}
     </AuthContext.Provider>
