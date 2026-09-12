@@ -25,6 +25,8 @@ import {
   Network,
   MessageSquare
 } from 'lucide-react';
+import OfflineIndicator from '../components/OfflineIndicator';
+import PWAInstallPrompt from '../components/PWAInstallPrompt';
 
 export default function DashboardLayout() {
   const { user, logout, selectProfile } = useAuth();
@@ -437,6 +439,9 @@ export default function DashboardLayout() {
           )}
         </AnimatePresence>
 
+        {/* Offline & Sync Indicator Banner */}
+        <OfflineIndicator />
+
         {/* Main Content Outlet */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
           <Outlet />
@@ -525,6 +530,9 @@ export default function DashboardLayout() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* PWA App Install Invitation Prompt */}
+      <PWAInstallPrompt />
     </div>
   );
 }

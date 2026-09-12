@@ -17,6 +17,7 @@ import {
   X 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { enqueueOfflineAction, cacheData, getCachedData } from '../utils/offlineStorage';
 
 export default function PosyanduPage() {
   const { user } = useAuth();
@@ -113,14 +114,31 @@ export default function PosyanduPage() {
           api.get(`/posyandu/balita?search=${encodeURIComponent(search)}${filterRT ? `&rt=${filterRT}` : ''}`),
           api.get(`/posyandu/balita/stats${filterRT ? `?rt=${filterRT}` : ''}`)
         ]);
-        setBalitaList(listRes.data || []);
-        setBalitaStats(statsRes.data || {});
+        const list = listRes.data || [];
+        const stats = statsRes.data || {};
+        setBalitaList(list);
+        setBalitaStats(stats);
+        cacheData('bw_posyandu_balita', { list, stats });
       } else {
         const res = await api.get('/posyandu/me');
-        setBalitaList(res.data || []);
+        const list = res.data || [];
+        setBalitaList(list);
+        cacheData('bw_posyandu_me', list);
       }
     } catch (err) {
-      setError(err.message || 'Gagal memuat data Posyandu Balita');
+      // Offline fallback: load from cached snapshot
+      const cached = await getCachedData(isOfficer ? 'bw_posyandu_balita' : 'bw_posyandu_me');
+      if (cached) {
+        if (isOfficer) {
+          setBalitaList(cached.list || []);
+          setBalitaStats(cached.stats || {});
+        } else {
+          setBalitaList(cached || []);
+        }
+        setError('Menampilkan data Posyandu tersimpan (Mode Offline)');
+      } else {
+        setError(err.message || 'Gagal memuat data Posyandu Balita');
+      }
     } finally {
       setLoading(false);
     }
@@ -135,10 +153,20 @@ export default function PosyanduPage() {
         api.get(`/posyandu/lansia?search=${encodeURIComponent(search)}${filterRT ? `&rt=${filterRT}` : ''}`),
         api.get(`/posyandu/lansia/stats${filterRT ? `?rt=${filterRT}` : ''}`)
       ]);
-      setLansiaList(listRes.data || []);
-      setLansiaStats(statsRes.data || {});
+      const list = listRes.data || [];
+      const stats = statsRes.data || {};
+      setLansiaList(list);
+      setLansiaStats(stats);
+      cacheData('bw_posyandu_lansia', { list, stats });
     } catch (err) {
-      setError(err.message || 'Gagal memuat data Posyandu Lansia');
+      const cached = await getCachedData('bw_posyandu_lansia');
+      if (cached) {
+        setLansiaList(cached.list || []);
+        setLansiaStats(cached.stats || {});
+        setError('Menampilkan data Lansia tersimpan (Mode Offline)');
+      } else {
+        setError(err.message || 'Gagal memuat data Posyandu Lansia');
+      }
     } finally {
       setLoading(false);
     }
@@ -166,12 +194,41 @@ export default function PosyanduPage() {
     return { val, category };
   }, [checkupLansiaForm.berat_badan_kg, checkupLansiaForm.tinggi_badan_cm]);
 
-  // Submit Catat Balita
+  // Submit Catat Balita (Offline Capable)
   const handleSubmitBalita = async (e) => {
     e.preventDefault();
     try {
       setSubmittingBalita(true);
       setError(null);
+
+      // If offline, save into background sync queue
+      if (!navigator.onLine) {
+        await enqueueOfflineAction({
+          type: 'POSYANDU_BALITA',
+          endpoint: '/api/posyandu/balita',
+          method: 'POST',
+          payload: balitaForm,
+          label: `Pemeriksaan Balita: ${balitaForm.nama_anak}`
+        });
+        setSuccessMsg('Tersimpan di antrean offline! Data akan otomatis disinkronkan saat terhubung kembali.');
+        setShowBalitaModal(false);
+        setBalitaForm({
+          nik_warga: '',
+          nama_anak: '',
+          tanggal_lahir_anak: '',
+          jenis_kelamin_anak: 'L',
+          umur_bulan: '',
+          berat_badan_kg: '',
+          tinggi_badan_cm: '',
+          lingkar_kepala_cm: '',
+          status_gizi: 'Auto',
+          imunisasi: '',
+          catatan_kesehatan: ''
+        });
+        setTimeout(() => setSuccessMsg(''), 5000);
+        return;
+      }
+
       await api.post('/posyandu/balita', balitaForm);
       setSuccessMsg('Pemeriksaan Balita berhasil dicatat!');
       setShowBalitaModal(false);
@@ -197,12 +254,27 @@ export default function PosyanduPage() {
     }
   };
 
-  // Submit Registrasi Lansia
+  // Submit Registrasi Lansia (Offline Capable)
   const handleSubmitRegLansia = async (e) => {
     e.preventDefault();
     try {
       setSubmittingLansia(true);
       setError(null);
+
+      if (!navigator.onLine) {
+        await enqueueOfflineAction({
+          type: 'POSYANDU_REG_LANSIA',
+          endpoint: '/api/posyandu/lansia',
+          method: 'POST',
+          payload: regLansiaForm,
+          label: `Registrasi Lansia: ${regLansiaForm.nama}`
+        });
+        setSuccessMsg(`Tersimpan di antrean offline! Pendaftaran lansia ${regLansiaForm.nama} akan disinkronkan saat online.`);
+        setShowRegLansiaModal(false);
+        setTimeout(() => setSuccessMsg(''), 5000);
+        return;
+      }
+
       await api.post('/posyandu/lansia', regLansiaForm);
       setSuccessMsg(`Lansia ${regLansiaForm.nama} berhasil didaftarkan!`);
       setShowRegLansiaModal(false);
@@ -215,12 +287,41 @@ export default function PosyanduPage() {
     }
   };
 
-  // Submit Pemeriksaan Lansia
+  // Submit Pemeriksaan Lansia (Offline Capable)
   const handleSubmitCheckupLansia = async (e) => {
     e.preventDefault();
     try {
       setSubmittingLansia(true);
       setError(null);
+
+      if (!navigator.onLine) {
+        await enqueueOfflineAction({
+          type: 'POSYANDU_CHECKUP_LANSIA',
+          endpoint: '/api/posyandu/lansia/pemeriksaan',
+          method: 'POST',
+          payload: checkupLansiaForm,
+          label: `Pemeriksaan Lansia ID: ${checkupLansiaForm.posyandu_lansia_id}`
+        });
+        setSuccessMsg('Tersimpan di antrean offline! Rekam medis lansia akan disinkronkan otomatis saat online.');
+        setShowCheckupLansiaModal(false);
+        setCheckupLansiaForm({
+          posyandu_lansia_id: '',
+          tanggal_pemeriksaan: new Date().toISOString().split('T')[0],
+          tensi_sistolik: '',
+          tensi_diastolik: '',
+          gula_darah_sewaktu: '',
+          kolesterol: '',
+          asam_urat: '',
+          berat_badan_kg: '',
+          tinggi_badan_cm: '',
+          skor_kemandirian_adl: 'Mandiri',
+          keluhan: '',
+          tindakan_petugas: ''
+        });
+        setTimeout(() => setSuccessMsg(''), 5000);
+        return;
+      }
+
       await api.post('/posyandu/lansia/pemeriksaan', checkupLansiaForm);
       setSuccessMsg('Rekam medis pemeriksaan lansia berhasil dicatat!');
       setShowCheckupLansiaModal(false);

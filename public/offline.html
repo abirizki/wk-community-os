@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Koneksi Terputus — Bumi Warga</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f8fbf9;
+      color: #1b4332;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }
+    .offline-card {
+      background: #ffffff;
+      border: 1px solid #d8f3dc;
+      border-radius: 24px;
+      padding: 40px 28px;
+      max-width: 440px;
+      box-shadow: 0 10px 30px rgba(27, 67, 50, 0.08);
+    }
+    .icon-wrapper {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px;
+      background: #e8f5e9;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-wrapper svg {
+      width: 36px;
+      height: 36px;
+      color: #2d6a4f;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #081c15;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 14px;
+      color: #52796f;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .badge-offline {
+      display: inline-block;
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 16px;
+    }
+    .retry-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #1b4332;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    .retry-btn:hover {
+      background: #2d6a4f;
+    }
+    .note {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #84a98c;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-card">
+    <div class="icon-wrapper">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+    <div class="badge-offline">Mode Luar Jaringan (Offline)</div>
+    <h1>Koneksi Internet Terputus</h1>
+    <p>
+      Anda sedang tidak terhubung ke jaringan internet. Fitur offline Bumi Warga tetap menyimpan data antrean Posyandu & formulir warga yang Anda isi di perangkat ini dan akan sinkronisasi otomatis saat online kembali.
+    </p>
+    <button class="retry-btn" onclick="window.location.reload()">
+      Muat Ulang Halaman
+    </button>
+    <p class="note">Aplikasi Bumi Warga — Progressive Web App</p>
+  </div>
+</body>
+</html>
+
