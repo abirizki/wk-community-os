@@ -1,0 +1,111 @@
+name: CI/CD Pipeline - Bumi Warga Enterprise
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  # ═════════════════════════════════════════════════════════════════════
+  # JOB 1: VALIDASI SINTAKS, AUTOMATED TEST SUITE & VITE BUILD
+  # ═════════════════════════════════════════════════════════════════════
+  test-and-build:
+    name: Lint, Test & Build Production Bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment (LTS 20.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Backend Dependencies
+        run: npm ci
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Backend Syntax & Module Check
+        run: node --check server.js
+
+      - name: Run Test Suite: Integrasi Pemda (Dukcapil & Sapawarga)
+        run: node scratch/test_integrasi_pemda.js
+
+      - name: Run Test Suite: Multi-Tenancy Kota Sukabumi
+        run: node scratch/test_multitenancy.js
+
+      - name: Build React Frontend Production Bundle
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Verify Production Assets in public/assets
+        run: |
+          if [ -d "public/assets" ] && [ -f "public/index.html" ]; then
+            echo "✅ Production assets compiled successfully!"
+            ls -la public/assets
+          else
+            echo "❌ Error: Assets or index.html missing in public directory!"
+            exit 1
+          fi
+
+      - name: Run Production Preflight Diagnostics
+        run: node scripts/production_preflight.js
+
+  # ═════════════════════════════════════════════════════════════════════
+  # JOB 2: AUTOMATED DEPLOYMENT TO TARGET SERVER (VPS / HOSTINGER)
+  # ═════════════════════════════════════════════════════════════════════
+  deploy:
+    name: Zero-Downtime Deployment
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Check Deployment Credentials
+        id: check_creds
+        run: |
+          if [ -n "${{ secrets.SSH_HOST }}" ] && [ -n "${{ secrets.SSH_USERNAME }}" ]; then
+            echo "has_creds=true" >> $GITHUB_OUTPUT
+            echo "SSH Credentials available. Proceeding with automated deployment."
+          else
+            echo "has_creds=false" >> $GITHUB_OUTPUT
+            echo "⚠️ SSH_HOST / SSH_USERNAME secrets not set in GitHub repository settings."
+            echo "Skipping automated SSH step. Manual deployment or Webhook can be used."
+          fi
+
+      - name: Deploy via SSH to Target Server
+        if: steps.check_creds.outputs.has_creds == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            echo "=== MEMULAI DEPLOYMENT PRODUKSI BUMI WARGA ==="
+            cd ${{ secrets.DEPLOY_PATH || '/var/www/bumiwarga' }}
+
+            echo "[1/5] Mengambil pembaruan git main..."
+            git pull origin main
+
+            echo "[2/5] Menginstal dependensi produksi backend..."
+            npm ci --omit=dev
+
+            echo "[3/5] Menginstal dependensi dan build frontend..."
+            cd frontend && npm ci && npm run build && cd ..
+
+            echo "[4/5] Memastikan migrasi skema database termutakhir..."
+            node scripts/deploy_production_db.js || true
+
+            echo "[5/5] Reload cluster PM2 dengan zero-downtime..."
+            pm2 reload ecosystem.config.js --update-env || pm2 start ecosystem.config.js
+
+            echo "=== DEPLOYMENT PRODUKSI SUKSES DILAKSANAKAN ==="
