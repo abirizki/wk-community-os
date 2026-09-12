@@ -22,7 +22,8 @@ import {
   Award,
   Building2,
   Landmark,
-  Network
+  Network,
+  MessageSquare
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -61,6 +62,11 @@ export default function DashboardLayout() {
       name: 'Integrasi Pemda',
       path: '/dashboard/integrasi',
       icon: <Network size={20} />
+    });
+    navItems.push({
+      name: 'WhatsApp Gateway',
+      path: '/dashboard/whatsapp',
+      icon: <MessageSquare size={20} />
     });
   }
 

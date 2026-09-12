@@ -383,6 +383,23 @@ class DokumenService {
         link: '/dashboard/dokumen'
       });
 
+      // Notifikasi WhatsApp otomatis ke warga
+      try {
+        const warga = await wargaRepository.findByNik(doc.nik_pemohon);
+        if (warga && warga.no_telepon) {
+          const whatsappService = require('./whatsapp.service');
+          await whatsappService.sendSuratNotification({
+            phone: warga.no_telepon,
+            nama: warga.nama,
+            jenis_surat: doc.jenis_dokumen,
+            nomor_surat: doc.nomor_registrasi || `470/${id}/KBJ/2026`,
+            qr_code_hash: doc.qr_code_hash
+          });
+        }
+      } catch (waErr) {
+        console.warn('Gagal mengirim notifikasi WhatsApp surat:', waErr.message);
+      }
+
       return { 
         success: true, 
         step: 'COMPLETED', 

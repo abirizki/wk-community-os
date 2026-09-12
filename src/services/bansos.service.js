@@ -236,6 +236,20 @@ class BansosService {
         tipe: 'success',
         link: '/dashboard/bansos'
       });
+
+      // Notifikasi WhatsApp otomatis ke penerima bansos
+      const warga = await wargaRepository.findByNik(bansos.nik_penerima);
+      if (warga && warga.no_telepon) {
+        const whatsappService = require('./whatsapp.service');
+        await whatsappService.sendBansosNotification({
+          phone: warga.no_telepon,
+          nama: bansos.nama_penerima,
+          jenis_bansos: bansos.jenis_bansos,
+          nominal: bansos.nominal_bantuan,
+          jadwal_penyerahan: 'Telah Diterima',
+          lokasi: 'Balai RW / Kelurahan'
+        });
+      }
     } catch (e) {
       console.warn('Notifikasi gagal terkirim:', e.message);
     }
