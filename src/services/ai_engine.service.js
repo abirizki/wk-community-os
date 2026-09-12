@@ -8,6 +8,7 @@
 const analyticsRepository = require('../repositories/analytics.repository');
 const completenessRepository = require('../repositories/completeness.repository');
 const completenessService = require('./completeness.service');
+const dayaDukungService = require('./daya_dukung.service');
 
 class AIEngineService {
   /**
@@ -23,7 +24,8 @@ class AIEngineService {
       bansosEquity,
       documentVelocity,
       complaints,
-      maturityStats
+      maturityStats,
+      dayaDukung
     ] = await Promise.all([
       analyticsRepository.getDemographyStats(scope),
       analyticsRepository.getBalitaNutritionByRT(scope),
@@ -31,7 +33,8 @@ class AIEngineService {
       analyticsRepository.getBansosEquityByRT(scope),
       analyticsRepository.getDocumentVelocityStats(scope),
       analyticsRepository.getComplaintsStats(),
-      completenessRepository.getKelurahanDataMaturityIndex().catch(() => null)
+      completenessRepository.getKelurahanDataMaturityIndex().catch(() => null),
+      dayaDukungService.getComprehensiveCarryingCapacity(scope).catch(() => null)
     ]);
 
     // Jalankan Rule-Based Inference Engine
@@ -62,7 +65,8 @@ class AIEngineService {
         demography,
         document_velocity: documentVelocity,
         complaints,
-        data_maturity: maturityStats
+        data_maturity: maturityStats,
+        daya_dukung: dayaDukung
       },
       data_fidelity: dataFidelity,
       rt_risk_matrix: rtMatrix,

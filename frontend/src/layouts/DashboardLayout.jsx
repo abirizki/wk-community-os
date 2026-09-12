@@ -19,7 +19,8 @@ import {
   Sparkles,
   UserCheck,
   Gift,
-  Award
+  Award,
+  Building2
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -51,6 +52,7 @@ export default function DashboardLayout() {
     { name: 'Bantuan Sosial', path: '/dashboard/bansos', icon: <Gift size={20} /> },
     { name: 'Desil DTSEN', path: '/dashboard/desil', icon: <Sparkles size={20} /> },
     { name: 'Kematangan Data & AI', path: '/dashboard/data-maturity', icon: <Award size={20} /> },
+    { name: 'Daya Dukung & Fasilitas', path: '/dashboard/daya-dukung', icon: <Building2 size={20} /> },
     { name: 'Layanan PBB', path: '/dashboard/pbb', icon: <FileText size={20} /> },
     { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={20} /> },
     { name: 'Pengaduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={20} /> },

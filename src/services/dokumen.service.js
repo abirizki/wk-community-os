@@ -12,6 +12,7 @@ const bansosRepository = require('../repositories/bansos.repository');
 const wargaRepository = require('../repositories/warga.repository');
 const completenessService = require('./completeness.service');
 const completenessRepository = require('../repositories/completeness.repository');
+const fasilitasRepository = require('../repositories/fasilitas.repository');
 
 class DokumenService {
   /**
@@ -239,6 +240,30 @@ class DokumenService {
           catatan_verifikasi: 'Evidensi tervalidasi via Surat Keterangan Tidak Mampu resmi Kelurahan Kebonjati.'
         });
         console.log(`[Trigger Sukses] Keluarga ${warga.nama} (KK: ${warga.no_kk}) otomatis dimasukkan ke daftar penerima bantuan SKTM.`);
+        return true;
+      }
+    }
+
+    // 4. Trigger Surat Keterangan Usaha (SKU) -> Masuk Direktori UMKM Otomatis
+    if (jenis.includes('usaha') || jenis.includes('sku')) {
+      const warga = await wargaRepository.findByNik(nik);
+      if (warga) {
+        let namaUsaha = `Usaha Mandiri ${warga.nama}`;
+        const match = (doc.keperluan || '').match(/(?:nama\s*usaha|usaha)\s*[:=]\s*([^,\.\n]+)/i);
+        if (match && match[1]) {
+          namaUsaha = match[1].trim();
+        }
+
+        await fasilitasRepository.upsertFromSKU({
+          nik_pemilik: warga.nik,
+          nama_pemilik: warga.nama,
+          nama_usaha: namaUsaha,
+          keperluan: doc.keperluan,
+          rt: warga.rt,
+          rw: warga.rw,
+          sku_no: doc.nomor_registrasi
+        });
+        console.log(`[Trigger Sukses] UMKM '${namaUsaha}' milik ${warga.nama} otomatis terdaftar di direktori usaha warga.`);
         return true;
       }
     }

@@ -11,6 +11,7 @@ import DokumenPage from './pages/DokumenPage';
 import BansosPage from './pages/BansosPage';
 import DesilPage from './pages/DesilPage';
 import DataMaturityPage from './pages/DataMaturityPage';
+import DayaDukungPage from './pages/DayaDukungPage';
 import WargaList from './pages/WargaList';
 import WargaDetail from './pages/WargaDetail';
 import KartuKeluargaPage from './pages/KartuKeluargaPage';
@@ -42,6 +43,7 @@ function App() {
             <Route path="bansos" element={<BansosPage />} />
             <Route path="desil" element={<DesilPage />} />
             <Route path="data-maturity" element={<DataMaturityPage />} />
+            <Route path="daya-dukung" element={<DayaDukungPage />} />
             <Route path="pbb" element={<PBBPage />} />
             <Route path="posyandu" element={<PosyanduPage />} />
             <Route path="pengaduan" element={<ComplaintPage />} />

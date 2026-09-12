@@ -304,6 +304,9 @@ CREATE TABLE `desil_keluarga` (
   `daya_listrik` ENUM('450 VA', '900 VA', '1300 VA', '> 1300 VA', 'Tanpa Meteran') NOT NULL DEFAULT '900 VA',
   `status_rumah` ENUM('Milik Sendiri', 'Sewa/Kontrak', 'Menumpang', 'Bebas Sewa') NOT NULL DEFAULT 'Milik Sendiri',
   `sumber_air` ENUM('PDAM/Leding', 'Sumur Terlindung', 'Sumur Tidak Terlindung', 'Air Kemasan/Isi Ulang') NOT NULL DEFAULT 'PDAM/Leding',
+  `jenis_sanitasi` ENUM('Jamban Pribadi Leher Angsa', 'Jamban Komunal', 'Jamban Cemplung/Plengsengan', 'Tanpa Jamban/BAB Terbuka') NOT NULL DEFAULT 'Jamban Pribadi Leher Angsa',
+  `pembuangan_limbah` ENUM('Septic Tank Standar', 'Resapan/Selokan Terbuka', 'Sungai/Kolam') NOT NULL DEFAULT 'Septic Tank Standar',
+  `akses_pengangkutan_sampah` ENUM('Rutin 2-3x Seminggu', 'Tidak Teratur', 'Bakar/Buang Mandiri') NOT NULL DEFAULT 'Rutin 2-3x Seminggu',
   `luas_lantai_kategori` ENUM('< 8 m2 (Padat)', '8 - 14 m2', '> 14 m2') NOT NULL DEFAULT '8 - 14 m2',
   `bahan_bakar_memasak` ENUM('Gas 3kg', 'Gas > 3kg', 'Minyak/Kayu', 'Listrik') NOT NULL DEFAULT 'Gas 3kg',
   `kepemilikan_motor` ENUM('0 unit', '1 unit', '>= 2 unit') NOT NULL DEFAULT '1 unit',
@@ -326,6 +329,97 @@ CREATE TABLE `desil_keluarga` (
   INDEX `idx_desil_status` (`status_verifikasi`),
   INDEX `idx_desil_saat_ini` (`desil_saat_ini`),
   CONSTRAINT `fk_desil_kk` FOREIGN KEY (`no_kk`) REFERENCES `kartu_keluarga` (`no_kk`) ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------
+-- 9d. TABEL: fasilitas_pendidikan (Daya Tampung Kursi PPDB & Sekolah)
+-- -----------------------------------------------------------------------
+CREATE TABLE `fasilitas_pendidikan` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `nama_sekolah` VARCHAR(150) NOT NULL,
+  `npsn` VARCHAR(20) NULL UNIQUE,
+  `jenjang` ENUM('PAUD', 'SD', 'SMP', 'SMA', 'SMK', 'SLB', 'PKBM') NOT NULL,
+  `status_sekolah` ENUM('Negeri', 'Swasta') NOT NULL DEFAULT 'Negeri',
+  `alamat` TEXT NOT NULL,
+  `rt` VARCHAR(5) NOT NULL DEFAULT '001',
+  `rw` VARCHAR(5) NOT NULL DEFAULT '001',
+  `kelurahan` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
+  `kecamatan` VARCHAR(100) NOT NULL DEFAULT 'Andir',
+  `kota` VARCHAR(100) NOT NULL DEFAULT 'Bandung',
+  `koordinat_lat_lng` VARCHAR(100) NULL,
+  `daya_tampung_kursi_baru` INT NOT NULL DEFAULT 0 COMMENT 'Kapasitas penerimaan murid baru zonasi',
+  `total_kapasitas_murid` INT NOT NULL DEFAULT 0,
+  `jumlah_rombel` INT NOT NULL DEFAULT 1,
+  `akreditasi` ENUM('A', 'B', 'C', 'Belum Terakreditasi') NOT NULL DEFAULT 'B',
+  `no_telepon` VARCHAR(25) NULL,
+  `kepala_sekolah` VARCHAR(150) NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_sekolah_jenjang` (`jenjang`),
+  INDEX `idx_sekolah_rt_rw` (`rt`, `rw`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------
+-- 9e. TABEL: fasilitas_kesehatan (Daya Dukung Medis & Faskes Kelurahan)
+-- -----------------------------------------------------------------------
+CREATE TABLE `fasilitas_kesehatan` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `nama_faskes` VARCHAR(150) NOT NULL,
+  `jenis_faskes` ENUM('Puskesmas', 'Pustu', 'Klinik Pratama', 'Posyandu', 'Apotek', 'Praktik Mandiri') NOT NULL,
+  `kategori_pengelola` ENUM('Pemerintah', 'Swasta', 'Masyarakat') NOT NULL DEFAULT 'Pemerintah',
+  `alamat` TEXT NOT NULL,
+  `rt` VARCHAR(5) NOT NULL DEFAULT '001',
+  `rw` VARCHAR(5) NOT NULL DEFAULT '001',
+  `kelurahan` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
+  `kecamatan` VARCHAR(100) NOT NULL DEFAULT 'Andir',
+  `kota` VARCHAR(100) NOT NULL DEFAULT 'Bandung',
+  `koordinat_lat_lng` VARCHAR(100) NULL,
+  `jumlah_dokter` INT NOT NULL DEFAULT 0,
+  `jumlah_bidan` INT NOT NULL DEFAULT 0,
+  `jumlah_perawat` INT NOT NULL DEFAULT 0,
+  `jumlah_ahli_gizi` INT NOT NULL DEFAULT 0,
+  `kapasitas_tempat_tidur` INT NOT NULL DEFAULT 0,
+  `layanan_igd_24jam` TINYINT(1) NOT NULL DEFAULT 0,
+  `jam_operasional` VARCHAR(100) NOT NULL DEFAULT '08:00 - 16:00 WIB',
+  `no_kontak` VARCHAR(25) NULL,
+  `penanggung_jawab` VARCHAR(150) NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_faskes_jenis` (`jenis_faskes`),
+  INDEX `idx_faskes_rt_rw` (`rt`, `rw`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------
+-- 9f. TABEL: entitas_usaha (UMKM & Sentra Ekonomi Warga - Terhubung SKU)
+-- -----------------------------------------------------------------------
+CREATE TABLE `entitas_usaha` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `nama_usaha` VARCHAR(150) NOT NULL,
+  `nik_pemilik` VARCHAR(16) NOT NULL,
+  `nama_pemilik` VARCHAR(150) NOT NULL,
+  `kategori_usaha` ENUM('Kuliner & Warung', 'Toko Sembako / Kelontong', 'Jasa & Servis', 'Fashion & Tekstil', 'Kerajinan & Industri Kreatif', 'Pertanian & Peternakan Perkotaan', 'Lainnya') NOT NULL DEFAULT 'Kuliner & Warung',
+  `skala_usaha` ENUM('Mikro', 'Kecil', 'Menengah', 'Swasta Nasional') NOT NULL DEFAULT 'Mikro',
+  `alamat` TEXT NOT NULL,
+  `rt` VARCHAR(5) NOT NULL DEFAULT '001',
+  `rw` VARCHAR(5) NOT NULL DEFAULT '001',
+  `kelurahan` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
+  `kecamatan` VARCHAR(100) NOT NULL DEFAULT 'Andir',
+  `kota` VARCHAR(100) NOT NULL DEFAULT 'Bandung',
+  `koordinat_lat_lng` VARCHAR(100) NULL,
+  `jumlah_tenaga_kerja_lokal` INT NOT NULL DEFAULT 1,
+  `omset_bulanan_kategori` ENUM('< 5 Juta', '5 - 15 Juta', '15 - 50 Juta', '> 50 Juta') NOT NULL DEFAULT '< 5 Juta',
+  `apakah_toko_pangan_murah` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Mitra penyedia sembako terjangkau Desil 1-2',
+  `sku_nomor_registrasi` VARCHAR(50) NULL COMMENT 'Nomor permohonan surat SKU jika terverifikasi',
+  `status_verifikasi` ENUM('TERVERIFIKASI', 'MENUNGGU_VERIFIKASI', 'NONAKTIF') NOT NULL DEFAULT 'TERVERIFIKASI',
+  `no_telepon` VARCHAR(25) NULL,
+  `deskripsi_produk` TEXT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_usaha_nik` (`nik_pemilik`),
+  INDEX `idx_usaha_kategori` (`kategori_usaha`),
+  INDEX `idx_usaha_rt_rw` (`rt`, `rw`),
+  INDEX `idx_usaha_pangan` (`apakah_toko_pangan_murah`),
+  INDEX `idx_usaha_sku` (`sku_nomor_registrasi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------
@@ -428,6 +522,33 @@ INSERT INTO `bansos_pengajuan` (`id`, `nomor_pengajuan`, `no_kk`, `nik_penerima`
   (1, 'BS-2026-001', '3273010101900001', '3273011005500012', 'H. Soleh Santoso', 'Bantuan Lansia', 'Warga lansia berumur 76 tahun dengan riwayat hipertensi memerlukan asupan nutrisi tambahan dan obat berkala.', 600000.00, 'APPROVED', 'COMPLETED', '001', '001', 'Disetujui berdasarkan data posyandu lansia dan kondisi ekonomi keluarga.'),
   (2, 'BS-2026-002', '3273014504900002', '3273014504900004', 'Siti Rahayu', 'Bantuan Balita Stunting', 'Pengajuan PMT (Pemberian Makanan Tambahan) pemulihan gizi protein hewani untuk balita.', 450000.00, 'PENDING_RW', 'RW', '002', '001', 'Diusulkan oleh Ketua RT 002.')
 ON DUPLICATE KEY UPDATE `nama_penerima` = VALUES(`nama_penerima`);
+
+-- SEED 10: fasilitas_pendidikan
+INSERT INTO `fasilitas_pendidikan` (`id`, `nama_sekolah`, `npsn`, `jenjang`, `status_sekolah`, `alamat`, `rt`, `rw`, `daya_tampung_kursi_baru`, `total_kapasitas_murid`, `jumlah_rombel`, `akreditasi`, `no_telepon`) VALUES
+  (1, 'PAUD & TK Al-Ikhlas Kebonjati', '69910001', 'PAUD', 'Swasta', 'Jl. Kebonjati No. 45', '001', '001', 35, 70, 2, 'A', '022-4200101'),
+  (2, 'SD Negeri 035 Kebonjati', '20219801', 'SD', 'Negeri', 'Jl. Kebonjati No. 112', '002', '001', 96, 384, 12, 'A', '022-4200102'),
+  (3, 'SMP Swasta Budi Luhur Andir', '20219802', 'SMP', 'Swasta', 'Jl. Kebon Jati Barat No. 8', '001', '002', 72, 216, 6, 'B', '022-4200103'),
+  (4, 'SMA Negeri 6 Bandung (Zonasi Andir/Kebonjati)', '20219803', 'SMA', 'Negeri', 'Jl. Pasirkaliki No. 102', '003', '002', 120, 720, 20, 'A', '022-4200104'),
+  (5, 'SMK Swasta Mandiri Andir', '20219804', 'SMK', 'Swasta', 'Jl. Gardujati No. 55', '002', '003', 60, 180, 6, 'B', '022-4200105')
+ON DUPLICATE KEY UPDATE `nama_sekolah` = VALUES(`nama_sekolah`), `daya_tampung_kursi_baru` = VALUES(`daya_tampung_kursi_baru`);
+
+-- SEED 11: fasilitas_kesehatan
+INSERT INTO `fasilitas_kesehatan` (`id`, `nama_faskes`, `jenis_faskes`, `kategori_pengelola`, `alamat`, `rt`, `rw`, `jumlah_dokter`, `jumlah_bidan`, `jumlah_perawat`, `jumlah_ahli_gizi`, `kapasitas_tempat_tidur`, `layanan_igd_24jam`, `jam_operasional`, `no_kontak`, `penanggung_jawab`) VALUES
+  (1, 'Puskesmas Pembantu (Pustu) Kebonjati', 'Pustu', 'Pemerintah', 'Jl. Kebonjati No. 78', '001', '001', 2, 3, 4, 1, 4, 0, '08:00 - 15:30 WIB', '022-4209901', 'dr. Siti Rahmawati'),
+  (2, 'Klinik Pratama Sehat Andir', 'Klinik Pratama', 'Swasta', 'Jl. Gardujati No. 20', '002', '002', 3, 2, 3, 0, 6, 1, '24 Jam Penuh', '022-4209902', 'dr. Budi Hartono'),
+  (3, 'Posyandu Balita Dahlia I', 'Posyandu', 'Masyarakat', 'Balai RW 001 Kebonjati', '001', '001', 0, 1, 1, 1, 0, 0, 'Jadwal Rutin Tgl 10 & 25', '0812-3456-7890', 'Bdn. Rina Marlina'),
+  (4, 'Posyandu Balita & Lansia Melati II', 'Posyandu', 'Masyarakat', 'Balai RW 002 Kebonjati', '002', '002', 0, 1, 1, 1, 0, 0, 'Jadwal Rutin Tgl 12 & 28', '0813-8899-7766', 'Bdn. Lilis Suryani'),
+  (5, 'Apotek Kimia Farma Kebonjati', 'Apotek', 'Swasta', 'Jl. Kebonjati No. 15', '003', '001', 0, 0, 2, 0, 0, 0, '07:00 - 22:00 WIB', '022-4208877', 'Apt. Hendra Gunawan, S.Farm')
+ON DUPLICATE KEY UPDATE `nama_faskes` = VALUES(`nama_faskes`), `jumlah_dokter` = VALUES(`jumlah_dokter`);
+
+-- SEED 12: entitas_usaha
+INSERT INTO `entitas_usaha` (`id`, `nama_usaha`, `nik_pemilik`, `nama_pemilik`, `kategori_usaha`, `skala_usaha`, `alamat`, `rt`, `rw`, `jumlah_tenaga_kerja_lokal`, `omset_bulanan_kategori`, `apakah_toko_pangan_murah`, `sku_nomor_registrasi`, `status_verifikasi`, `deskripsi_produk`) VALUES
+  (1, 'Warung Sembako Berkah Bu Siti', '3273010101900001', 'Siti Aminah', 'Toko Sembako / Kelontong', 'Mikro', 'Jl. Kebonjati RT 001/001', '001', '001', 2, '5 - 15 Juta', 1, 'SKU/2026/08/0001', 'TERVERIFIKASI', 'Sembako beras, minyak goreng, telur ayam, dan gas 3kg subsidi'),
+  (2, 'Toko Kelontong Barokah Pak Tatang', '3273010101850002', 'Tatang Sutisna', 'Toko Sembako / Kelontong', 'Mikro', 'Jl. Kasmin No. 12 RT 002/002', '002', '002', 2, '5 - 15 Juta', 1, 'SKU/2026/08/0002', 'TERVERIFIKASI', 'Penyedia sembako murah terdaftar penyaluran bansos lokal'),
+  (3, 'Konveksi Kaos Kebonjati Creative', '3273010101780003', 'Ahmad Hidayat', 'Fashion & Tekstil', 'Kecil', 'Gg. Simpang RT 003/002', '003', '002', 8, '15 - 50 Juta', 0, 'SKU/2026/07/0015', 'TERVERIFIKASI', 'Produksi kaos sablon, seragam kantor, dan kemeja bordir'),
+  (4, 'Warung Nasi Khas Sunda Ibu Kokom', '3273010101920004', 'Kokom Komalasari', 'Kuliner & Warung', 'Mikro', 'Jl. Kebon Jati No. 60 RT 001/001', '001', '001', 3, '< 5 Juta', 0, 'SKU/2026/09/0003', 'TERVERIFIKASI', 'Nasi timbel komplit, ayam goreng serundeng, pepes ikan mas'),
+  (5, 'Bengkel Motor Servis Jaya Abadi', '3273010101890005', 'Dedi Mulyadi', 'Jasa & Servis', 'Mikro', 'Jl. Gardujati RT 002/003', '002', '003', 2, '5 - 15 Juta', 0, 'SKU/2026/06/0008', 'TERVERIFIKASI', 'Servis rutin motor injeksi, tambal ban, ganti oli dan sparepart')
+ON DUPLICATE KEY UPDATE `nama_usaha` = VALUES(`nama_usaha`), `jumlah_tenaga_kerja_lokal` = VALUES(`jumlah_tenaga_kerja_lokal`);
 
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
 SET SQL_MODE = @OLD_SQL_MODE;
