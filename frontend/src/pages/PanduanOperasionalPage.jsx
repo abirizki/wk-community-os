@@ -19,7 +19,9 @@ import {
   WifiOff,
   QrCode,
   Lock,
-  Landmark
+  Landmark,
+  Download,
+  FileText
 } from 'lucide-react';
 
 const SOP_DATA = [
@@ -323,6 +325,13 @@ export default function PanduanOperasionalPage() {
             >
               <Printer size={15} /> Cetak / Ekspor SOP
             </button>
+            <a
+              href="/downloads/DAFTAR_KREDENSIAL_RESMI_BUMI_WARGA.docx"
+              download="DAFTAR_KREDENSIAL_RESMI_BUMI_WARGA.docx"
+              className="inline-flex items-center gap-2 bg-emerald-500/20 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-emerald-500/30 transition border border-emerald-300/40 shadow-sm"
+            >
+              <FileText size={15} /> Unduh Tabel Kredensial (.DOCX)
+            </a>
             <a
               href="/dashboard/command-center"
               className="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-white/20 transition border border-white/20"

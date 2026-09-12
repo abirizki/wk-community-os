@@ -1,0 +1,605 @@
+
+  <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head>
+    <meta charset="utf-8">
+    <title>Daftar Kredensial Resmi Bumi Warga</title>
+    <style>
+      body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; line-height: 1.4; color: #111; margin: 24px; }
+      h1 { font-size: 16pt; color: #1b4332; text-align: center; margin-bottom: 4px; font-weight: bold; }
+      h2 { font-size: 13pt; color: #2d6a4f; text-align: center; margin-top: 0; margin-bottom: 16px; }
+      h3 { font-size: 12pt; color: #1b4332; border-bottom: 2px solid #1b4332; padding-bottom: 4px; margin-top: 24px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 20px; }
+      th, td { border: 1px solid #ddd; padding: 8px 10px; font-size: 9.5pt; }
+      th { background-color: #1b4332; color: #ffffff; font-weight: bold; text-align: center; }
+      tr:nth-child(even) { background-color: #f9fbf9; }
+      .code { font-family: 'Consolas', monospace; font-weight: bold; color: #1b4332; }
+      .pass { font-family: 'Consolas', monospace; font-weight: bold; color: #b91c1c; }
+      .slip { border: 2px dashed #1b4332; background-color: #f4fbf7; padding: 14px 18px; margin-bottom: 18px; border-radius: 8px; page-break-inside: avoid; }
+      .slip-title { font-weight: bold; font-size: 11pt; color: #1b4332; margin-bottom: 8px; }
+      .signature-area { margin-top: 20px; display: flex; justify-content: space-between; }
+    </style>
+  </head>
+  <body>
+    <h1>PEMERINTAH KOTA SUKABUMI</h1>
+    <h2>DINAS KOMUNIKASI DAN INFORMATIKA · KELURAHAN KEBONJATI<br>DAFTAR KREDENSIAL RESMI & SLIP DISTRIBUSI PENGGUNA "BUMI WARGA"</h2>
+    <p>Dokumen ini memuat daftar username dan kata sandi aktivasi awal akun resmi Pemerintah Kota Sukabumi dan Kelurahan Kebonjati. Sesuai standar keamanan siber BSSN dan UU PDP No. 27/2022, pengguna wajib mengganti kata sandi pribadi saat pertama kali login.</p>
+    
+    <h3>BAGIAN I: TABEL REKAPITULASI KREDENSIAL</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Kategori</th>
+          <th>Nama Pemegang / Jabatan</th>
+          <th>Role</th>
+          <th>Wilayah</th>
+          <th>Username Resmi</th>
+          <th>Password Default Awal</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+          <tr>
+            <td align="center">1</td>
+            <td><b>Pemerintah Kota</b></td>
+            <td>Walikota Sukabumi<br><small style="color:#555;">Kepala Daerah Kota Sukabumi</small></td>
+            <td><code>walikota</code></td>
+            <td>Kota Sukabumi (33 Kelurahan)</td>
+            <td class="code">walikota.sukabumi</td>
+            <td class="pass">Sukabumi@Juara2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">2</td>
+            <td><b>Pemerintah Kota</b></td>
+            <td>Super Admin Diskominfo<br><small style="color:#555;">Administrator Utama Sistem & Infrastruktur</small></td>
+            <td><code>superadmin</code></td>
+            <td>Kota Sukabumi (33 Kelurahan)</td>
+            <td class="code">superadmin</td>
+            <td class="pass">Sukabumi@Diskominfo2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">3</td>
+            <td><b>Kecamatan</b></td>
+            <td>Camat Cikole<br><small style="color:#555;">Camat Wilayah Cikole</small></td>
+            <td><code>camat</code></td>
+            <td>Kec. Cikole (6 Kelurahan)</td>
+            <td class="code">camat.cikole</td>
+            <td class="pass">Cikole@Bisa2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">4</td>
+            <td><b>Kecamatan</b></td>
+            <td>Camat Gunungpuyuh<br><small style="color:#555;">Camat Wilayah Gunungpuyuh</small></td>
+            <td><code>camat</code></td>
+            <td>Kec. Gunungpuyuh (4 Kelurahan)</td>
+            <td class="code">camat.gunungpuyuh</td>
+            <td class="pass">Gunungpuyuh@Bisa2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">5</td>
+            <td><b>Kecamatan</b></td>
+            <td>Camat Warudoyong<br><small style="color:#555;">Camat Wilayah Warudoyong</small></td>
+            <td><code>camat</code></td>
+            <td>Kec. Warudoyong (5 Kelurahan)</td>
+            <td class="code">camat.warudoyong</td>
+            <td class="pass">Warudoyong@Bisa2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">6</td>
+            <td><b>Kelurahan</b></td>
+            <td>Ahmad Sofyan, S.IP<br><small style="color:#555;">Lurah Kebonjati (Penandatangan TTE)</small></td>
+            <td><code>lurah</code></td>
+            <td>Kelurahan Kebonjati</td>
+            <td class="code">lurah.kebonjati</td>
+            <td class="pass">Lurah@Kebonjati2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">7</td>
+            <td><b>Kelurahan</b></td>
+            <td>Admin Pelayanan Kelurahan<br><small style="color:#555;">Staf Pelayanan Administrasi Warga</small></td>
+            <td><code>admin_kelurahan</code></td>
+            <td>Kelurahan Kebonjati</td>
+            <td class="code">admin.kebonjati</td>
+            <td class="pass">Kebonjati@Hebat2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">8</td>
+            <td><b>Rukun Warga (RW)</b></td>
+            <td>Ketua RW 001 Kebonjati<br><small style="color:#555;">Ketua Rukun Warga 001</small></td>
+            <td><code>ketua_rw</code></td>
+            <td>Kelurahan Kebonjati (RW 001)</td>
+            <td class="code">rw01_kebonjati</td>
+            <td class="pass">Warga01@Kbj2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">9</td>
+            <td><b>Rukun Warga (RW)</b></td>
+            <td>Ketua RW 002 Kebonjati<br><small style="color:#555;">Ketua Rukun Warga 002</small></td>
+            <td><code>ketua_rw</code></td>
+            <td>Kelurahan Kebonjati (RW 002)</td>
+            <td class="code">rw02_kebonjati</td>
+            <td class="pass">Warga02@Kbj2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">10</td>
+            <td><b>Rukun Tetangga (RT)</b></td>
+            <td>Ketua RT 001 RW 001<br><small style="color:#555;">Ketua Rukun Tetangga 001</small></td>
+            <td><code>ketua_rt</code></td>
+            <td>Kebonjati (RT 001 / RW 001)</td>
+            <td class="code">rt01_rw01_kbj</td>
+            <td class="pass">Guyub01@Kbj2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">11</td>
+            <td><b>Rukun Tetangga (RT)</b></td>
+            <td>Ketua RT 002 RW 001<br><small style="color:#555;">Ketua Rukun Tetangga 002</small></td>
+            <td><code>ketua_rt</code></td>
+            <td>Kebonjati (RT 002 / RW 001)</td>
+            <td class="code">rt02_rw01_kbj</td>
+            <td class="pass">Guyub02@Kbj2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">12</td>
+            <td><b>Rukun Tetangga (RT)</b></td>
+            <td>Ketua RT 001 RW 002<br><small style="color:#555;">Ketua Rukun Tetangga 001</small></td>
+            <td><code>ketua_rt</code></td>
+            <td>Kebonjati (RT 001 / RW 002)</td>
+            <td class="code">rt01_rw02_kbj</td>
+            <td class="pass">Guyub01@Kbj2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">13</td>
+            <td><b>Kader Posyandu</b></td>
+            <td>Bdn. Imas Rohayati<br><small style="color:#555;">Koordinator Posyandu Melati RW 01</small></td>
+            <td><code>kader_posyandu</code></td>
+            <td>Kebonjati (RW 001)</td>
+            <td class="code">posyandu.melati_rw01</td>
+            <td class="pass">Sehat01@Kbj2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">14</td>
+            <td><b>Warga Masyarakat</b></td>
+            <td>Budi Santoso<br><small style="color:#555;">Warga / Kepala Keluarga</small></td>
+            <td><code>warga</code></td>
+            <td>Kebonjati (RT 001 / RW 001)</td>
+            <td class="code">3273010203850003</td>
+            <td class="pass">Warga@0003#2026</td>
+          </tr>
+        
+          <tr>
+            <td align="center">15</td>
+            <td><b>Warga Masyarakat</b></td>
+            <td>Siti Rahayu<br><small style="color:#555;">Warga / Ibu Rumah Tangga</small></td>
+            <td><code>warga</code></td>
+            <td>Kebonjati (RT 002 / RW 001)</td>
+            <td class="code">3273014504900004</td>
+            <td class="pass">Warga@0004#2026</td>
+          </tr>
+        
+      </tbody>
+    </table>
+
+    <br>
+    <h3>BAGIAN II: SLIP DISTRIBUSI KREDENSIAL SIAP CETAK & TANDATANGAN</h3>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — PEMERINTAH KOTA</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Walikota Sukabumi</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Kepala Daerah Kota Sukabumi</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kota Sukabumi (33 Kelurahan)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">walikota.sukabumi</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Sukabumi@Juara2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Walikota Sukabumi</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — PEMERINTAH KOTA</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Super Admin Diskominfo</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Administrator Utama Sistem & Infrastruktur</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kota Sukabumi (33 Kelurahan)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">superadmin</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Sukabumi@Diskominfo2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Super Admin Diskominfo</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — KECAMATAN</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Camat Cikole</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Camat Wilayah Cikole</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kec. Cikole (6 Kelurahan)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">camat.cikole</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Cikole@Bisa2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Camat Cikole</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — KECAMATAN</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Camat Gunungpuyuh</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Camat Wilayah Gunungpuyuh</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kec. Gunungpuyuh (4 Kelurahan)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">camat.gunungpuyuh</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Gunungpuyuh@Bisa2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Camat Gunungpuyuh</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — KECAMATAN</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Camat Warudoyong</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Camat Wilayah Warudoyong</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kec. Warudoyong (5 Kelurahan)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">camat.warudoyong</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Warudoyong@Bisa2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Camat Warudoyong</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — KELURAHAN</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Ahmad Sofyan, S.IP</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Lurah Kebonjati (Penandatangan TTE)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kelurahan Kebonjati</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">lurah.kebonjati</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Lurah@Kebonjati2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Ahmad Sofyan, S.IP</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — KELURAHAN</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Admin Pelayanan Kelurahan</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Staf Pelayanan Administrasi Warga</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kelurahan Kebonjati</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">admin.kebonjati</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Kebonjati@Hebat2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Admin Pelayanan Kelurahan</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — RUKUN WARGA (RW)</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Ketua RW 001 Kebonjati</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Ketua Rukun Warga 001</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kelurahan Kebonjati (RW 001)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">rw01_kebonjati</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Warga01@Kbj2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Ketua RW 001 Kebonjati</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — RUKUN WARGA (RW)</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Ketua RW 002 Kebonjati</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Ketua Rukun Warga 002</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kelurahan Kebonjati (RW 002)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">rw02_kebonjati</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Warga02@Kbj2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Ketua RW 002 Kebonjati</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — RUKUN TETANGGA (RT)</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Ketua RT 001 RW 001</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Ketua Rukun Tetangga 001</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kebonjati (RT 001 / RW 001)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">rt01_rw01_kbj</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Guyub01@Kbj2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Ketua RT 001 RW 001</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — RUKUN TETANGGA (RT)</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Ketua RT 002 RW 001</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Ketua Rukun Tetangga 002</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kebonjati (RT 002 / RW 001)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">rt02_rw01_kbj</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Guyub02@Kbj2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Ketua RT 002 RW 001</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — RUKUN TETANGGA (RT)</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Ketua RT 001 RW 002</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Ketua Rukun Tetangga 001</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kebonjati (RT 001 / RW 002)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">rt01_rw02_kbj</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Guyub01@Kbj2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Ketua RT 001 RW 002</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — KADER POSYANDU</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Bdn. Imas Rohayati</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Koordinator Posyandu Melati RW 01</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kebonjati (RW 001)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">posyandu.melati_rw01</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Sehat01@Kbj2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Bdn. Imas Rohayati</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — WARGA MASYARAKAT</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Budi Santoso</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Warga / Kepala Keluarga</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kebonjati (RT 001 / RW 001)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">3273010203850003</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Warga@0003#2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Budi Santoso</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+      <div class="slip">
+        <div class="slip-title">PEMERINTAH KOTA SUKABUMI · BUMI WARGA COMMUNITY OS<br>SLIP PENYERAHAN KREDENSIAL RESMI — WARGA MASYARAKAT</div>
+        <table style="border:none; margin:0;">
+          <tr style="background:none;"><td style="border:none; width:180px;">Nama Petugas / Warga</td><td style="border:none;">: <b>Siti Rahayu</b></td></tr>
+          <tr style="background:none;"><td style="border:none;">Jabatan / Tugas</td><td style="border:none;">: Warga / Ibu Rumah Tangga</td></tr>
+          <tr style="background:none;"><td style="border:none;">Wilayah Operasional</td><td style="border:none;">: Kebonjati (RT 002 / RW 001)</td></tr>
+          <tr style="background:none;"><td style="border:none;">Username Resmi</td><td style="border:none;">: <span class="code" style="font-size:11pt;">3273014504900004</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Kata Sandi Awal</td><td style="border:none;">: <span class="pass" style="font-size:11pt;">Warga@0004#2026</span></td></tr>
+          <tr style="background:none;"><td style="border:none;">Alamat Login</td><td style="border:none;">: https://bumiwarga.sukabumikota.go.id (atau http://localhost:3000)</td></tr>
+        </table>
+        <p style="font-size:8.5pt; color:#444; margin-top:8px;"><i>*Perhatian: Harap segera ubah kata sandi ini dengan kata sandi pribadi Anda saat login pertama kali.</i></p>
+        <table style="border:none; margin-top:16px;">
+          <tr style="background:none;">
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menyerahkan Akun,<br><br><br><br>
+              ________________________________<br>
+              (Admin Kelurahan / Diskominfo)
+            </td>
+            <td style="border:none; width:50%; text-align:center;">
+              Yang Menerima Akun,<br><br><br><br>
+              ________________________________<br>
+              (<b>Siti Rahayu</b>)
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+  </body>
+  </html>
+  

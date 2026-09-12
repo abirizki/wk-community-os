@@ -101,7 +101,6 @@ export const AuthProvider = ({ children }) => {
       login, 
       loginSapawarga,
       logout,
-      selectProfile
       selectProfile,
       markPasswordChanged
     }}>
