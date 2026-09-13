@@ -270,85 +270,102 @@ class AnalyticsRepository {
    * 4. Agregasi Keadilan Sosial (Bansos vs SKTM) per RT
    */
   async getBansosEquityByRT(scope = {}) {
-    let whereBansos = "WHERE 1=1";
-    let whereSKTM = "WHERE d.jenis_surat LIKE '%Tidak Mampu%' AND d.status = 'APPROVED'";
-    const paramsBansos = [];
-    const paramsSKTM = [];
+    try {
+      let whereBansos = "WHERE 1=1";
+      let whereSKTM = "WHERE (COALESCE(d.jenis_surat, d.jenis_dokumen, '') LIKE '%Tidak Mampu%') AND d.status = 'APPROVED'";
+      const paramsBansos = [];
+      const paramsSKTM = [];
 
-    if (scope.rt) {
-      whereBansos += " AND rt = ?";
-      whereSKTM += " AND w.rt = ?";
-      paramsBansos.push(scope.rt);
-      paramsSKTM.push(scope.rt);
-    }
-    if (scope.rw) {
-      whereBansos += " AND rw = ?";
-      whereSKTM += " AND w.rw = ?";
-      paramsBansos.push(scope.rw);
-      paramsSKTM.push(scope.rw);
-    }
-
-    // Bansos grouped by RT
-    const [bansosRows] = await pool.execute(
-      `SELECT 
-        rt,
-        rw,
-        COUNT(*) AS total_usulan_bansos,
-        SUM(CASE WHEN status = 'APPROVED_KELURAHAN' THEN 1 ELSE 0 END) AS disahkan_bansos,
-        SUM(CASE WHEN status != 'REJECTED' AND status != 'APPROVED_KELURAHAN' THEN 1 ELSE 0 END) AS pending_bansos,
-        SUM(CASE WHEN status = 'APPROVED_KELURAHAN' THEN nominal_bantuan ELSE 0 END) AS total_nominal_disalurkan
-       FROM bansos_pengajuan
-       ${whereBansos}
-       GROUP BY rt, rw
-       ORDER BY rt ASC`,
-      paramsBansos
-    );
-
-    // SKTM approved grouped by RT
-    const [sktmRows] = await pool.execute(
-      `SELECT 
-        COALESCE(w.rt, '001') AS rt,
-        COALESCE(w.rw, '001') AS rw,
-        COUNT(*) AS total_sktm_disahkan
-       FROM dokumen_request d
-       LEFT JOIN warga w ON d.nik_pemohon = w.nik
-       ${whereSKTM}
-       GROUP BY w.rt, w.rw`,
-      paramsSKTM
-    );
-
-    // Map by RT
-    const sktmMap = {};
-    sktmRows.forEach(s => {
-      sktmMap[s.rt] = Number(s.total_sktm_disahkan || 0);
-    });
-
-    const result = bansosRows.map(b => ({
-      rt: b.rt,
-      rw: b.rw,
-      total_usulan_bansos: Number(b.total_usulan_bansos || 0),
-      disahkan_bansos: Number(b.disahkan_bansos || 0),
-      pending_bansos: Number(b.pending_bansos || 0),
-      total_nominal_disalurkan: Number(b.total_nominal_disalurkan || 0),
-      total_sktm: sktmMap[b.rt] || 0
-    }));
-
-    // Tangani RT yang ada di SKTM tapi belum ada di bansos
-    Object.keys(sktmMap).forEach(rt => {
-      if (!result.find(r => r.rt === rt)) {
-        result.push({
-          rt,
-          rw: scope.rw || '001',
-          total_usulan_bansos: 0,
-          disahkan_bansos: 0,
-          pending_bansos: 0,
-          total_nominal_disalurkan: 0,
-          total_sktm: sktmMap[rt]
-        });
+      if (scope.rt) {
+        whereBansos += " AND rt = ?";
+        whereSKTM += " AND w.rt = ?";
+        paramsBansos.push(scope.rt);
+        paramsSKTM.push(scope.rt);
       }
-    });
+      if (scope.rw) {
+        whereBansos += " AND rw = ?";
+        whereSKTM += " AND w.rw = ?";
+        paramsBansos.push(scope.rw);
+        paramsSKTM.push(scope.rw);
+      }
 
-    return result;
+      // Bansos grouped by RT
+      let bansosRows = [];
+      try {
+        const [rows] = await pool.execute(
+          `SELECT 
+            rt,
+            rw,
+            COUNT(*) AS total_usulan_bansos,
+            SUM(CASE WHEN status = 'APPROVED_KELURAHAN' THEN 1 ELSE 0 END) AS disahkan_bansos,
+            SUM(CASE WHEN status != 'REJECTED' AND status != 'APPROVED_KELURAHAN' THEN 1 ELSE 0 END) AS pending_bansos,
+            SUM(CASE WHEN status = 'APPROVED_KELURAHAN' THEN nominal_bantuan ELSE 0 END) AS total_nominal_disalurkan
+           FROM bansos_pengajuan
+           ${whereBansos}
+           GROUP BY rt, rw
+           ORDER BY rt ASC`,
+          paramsBansos
+        );
+        bansosRows = rows;
+      } catch (errBansos) {
+        console.warn('[AnalyticsRepo] bansos_pengajuan query fallback:', errBansos.message);
+      }
+
+      // SKTM approved grouped by RT
+      let sktmRows = [];
+      try {
+        const [rows] = await pool.execute(
+          `SELECT 
+            COALESCE(w.rt, '001') AS rt,
+            COALESCE(w.rw, '001') AS rw,
+            COUNT(*) AS total_sktm_disahkan
+           FROM dokumen_request d
+           LEFT JOIN warga w ON d.nik_pemohon = w.nik
+           ${whereSKTM}
+           GROUP BY w.rt, w.rw`,
+          paramsSKTM
+        );
+        sktmRows = rows;
+      } catch (errSKTM) {
+        console.warn('[AnalyticsRepo] SKTM query fallback:', errSKTM.message);
+      }
+
+      // Map by RT
+      const sktmMap = {};
+      sktmRows.forEach(s => {
+        sktmMap[s.rt] = Number(s.total_sktm_disahkan || 0);
+      });
+
+      const result = bansosRows.map(b => ({
+        rt: b.rt,
+        rw: b.rw,
+        total_usulan_bansos: Number(b.total_usulan_bansos || 0),
+        disahkan_bansos: Number(b.disahkan_bansos || 0),
+        pending_bansos: Number(b.pending_bansos || 0),
+        total_nominal_disalurkan: Number(b.total_nominal_disalurkan || 0),
+        total_sktm: sktmMap[b.rt] || 0
+      }));
+
+      // Tangani RT yang ada di SKTM tapi belum ada di bansos
+      Object.keys(sktmMap).forEach(rt => {
+        if (!result.find(r => r.rt === rt)) {
+          result.push({
+            rt,
+            rw: scope.rw || '001',
+            total_usulan_bansos: 0,
+            disahkan_bansos: 0,
+            pending_bansos: 0,
+            total_nominal_disalurkan: 0,
+            total_sktm: sktmMap[rt]
+          });
+        }
+      });
+
+      return result;
+    } catch (e) {
+      console.warn('[AnalyticsRepo] getBansosEquityByRT global error:', e.message);
+      return [];
+    }
   }
 
   /**

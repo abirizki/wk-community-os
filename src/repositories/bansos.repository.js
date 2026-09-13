@@ -59,98 +59,116 @@ class BansosRepository {
    * Ambil bansos berdasarkan ID
    */
   async findById(id) {
-    const [rows] = await pool.execute(
-      `SELECT b.*, 
-              u_rt.nama AS nama_pengusul_rt,
-              u_rw.nama AS nama_verifikator_rw,
-              u_kel.nama AS nama_pengesah_kelurahan
-              u_kel.nama AS nama_pengesah_kelurahan,
-              u_dis.nama AS nama_penyalur_lapangan,
-              d.desil_saat_ini,
-              d.desil_usulan,
-              d.status_verifikasi AS status_verifikasi_desil
-       FROM bansos_pengajuan b
-       LEFT JOIN users u_rt ON b.diajukan_oleh_user_id = u_rt.id
-       LEFT JOIN users u_rw ON b.diverifikasi_oleh_user_id = u_rw.id
-       LEFT JOIN users u_kel ON b.disahkan_oleh_user_id = u_kel.id
-       LEFT JOIN users u_dis ON b.diserahkan_oleh_user_id = u_dis.id
-       LEFT JOIN desil_keluarga d ON b.no_kk = d.no_kk
-       WHERE b.id = ? LIMIT 1`,
-      [id]
-    );
-    return rows.length > 0 ? rows[0] : null;
+    try {
+      const [rows] = await pool.execute(
+        `SELECT b.*, 
+                u_rt.nama AS nama_pengusul_rt,
+                u_rw.nama AS nama_verifikator_rw,
+                u_kel.nama AS nama_pengesah_kelurahan,
+                u_dis.nama AS nama_penyalur_lapangan,
+                d.desil_saat_ini,
+                d.desil_usulan,
+                d.status_verifikasi AS status_verifikasi_desil
+         FROM bansos_pengajuan b
+         LEFT JOIN users u_rt ON b.diajukan_oleh_user_id = u_rt.id
+         LEFT JOIN users u_rw ON b.diverifikasi_oleh_user_id = u_rw.id
+         LEFT JOIN users u_kel ON b.disahkan_oleh_user_id = u_kel.id
+         LEFT JOIN users u_dis ON b.diserahkan_oleh_user_id = u_dis.id
+         LEFT JOIN desil_keluarga d ON b.no_kk = d.no_kk
+         WHERE b.id = ? LIMIT 1`,
+        [id]
+      );
+      return rows.length > 0 ? rows[0] : null;
+    } catch (e) {
+      console.warn('[BansosRepo] findById error:', e.message);
+      return null;
+    }
   }
 
   /**
    * Ambil usulan bansos berdasarkan No KK
    */
   async findByNoKK(no_kk) {
-    const [rows] = await pool.execute(
-      `SELECT * FROM bansos_pengajuan WHERE no_kk = ? ORDER BY created_at DESC`,
-      `SELECT b.*, d.desil_saat_ini, d.desil_usulan 
-       FROM bansos_pengajuan b 
-       LEFT JOIN desil_keluarga d ON b.no_kk = d.no_kk
-       WHERE b.no_kk = ? ORDER BY b.created_at DESC`,
-      [no_kk]
-    );
-    return rows;
+    try {
+      const [rows] = await pool.execute(
+        `SELECT b.*, d.desil_saat_ini, d.desil_usulan 
+         FROM bansos_pengajuan b 
+         LEFT JOIN desil_keluarga d ON b.no_kk = d.no_kk
+         WHERE b.no_kk = ? ORDER BY b.created_at DESC`,
+        [no_kk]
+      );
+      return rows;
+    } catch (e) {
+      console.warn('[BansosRepo] findByNoKK error:', e.message);
+      return [];
+    }
   }
 
   /**
    * Ambil usulan bansos berdasarkan NIK pemohon
    */
   async findByNik(nik) {
-    const [rows] = await pool.execute(
-      `SELECT b.*, d.desil_saat_ini, d.desil_usulan 
-       FROM bansos_pengajuan b 
-       LEFT JOIN desil_keluarga d ON b.no_kk = d.no_kk
-       WHERE b.nik_penerima = ? ORDER BY b.created_at DESC`,
-      [nik]
-    );
-    return rows;
+    try {
+      const [rows] = await pool.execute(
+        `SELECT b.*, d.desil_saat_ini, d.desil_usulan 
+         FROM bansos_pengajuan b 
+         LEFT JOIN desil_keluarga d ON b.no_kk = d.no_kk
+         WHERE b.nik_penerima = ? ORDER BY b.created_at DESC`,
+        [nik]
+      );
+      return rows;
+    } catch (e) {
+      console.warn('[BansosRepo] findByNik error:', e.message);
+      return [];
+    }
   }
 
   /**
    * Ambil daftar usulan bansos ter-scope hierarki
    */
   async list({ rt, rw, status, jenis_bansos, search, limit = 50, offset = 0 } = {}) {
-    let query = `
-      SELECT b.*, 
-             d.desil_saat_ini, 
-             d.desil_usulan, 
-             d.status_verifikasi AS status_verifikasi_desil 
-      FROM bansos_pengajuan b
-      LEFT JOIN desil_keluarga d ON b.no_kk = d.no_kk
-      WHERE 1=1
-    `;
-    const params = [];
+    try {
+      let query = `
+        SELECT b.*, 
+               d.desil_saat_ini, 
+               d.desil_usulan, 
+               d.status_verifikasi AS status_verifikasi_desil 
+        FROM bansos_pengajuan b
+        LEFT JOIN desil_keluarga d ON b.no_kk = d.no_kk
+        WHERE 1=1
+      `;
+      const params = [];
 
-    if (rw) {
-      query += ' AND b.rw = ?';
-      params.push(rw);
-    }
-    if (rt) {
-      query += ' AND b.rt = ?';
-      params.push(rt);
-    }
-    if (status) {
-      query += ' AND b.status = ?';
-      params.push(status);
-    }
-    if (jenis_bansos) {
-      query += ' AND b.jenis_bansos = ?';
-      params.push(jenis_bansos);
-    }
-    if (search) {
-      query += ' AND (b.nama_penerima LIKE ? OR b.nik_penerima LIKE ? OR b.no_kk LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
-    }
+      if (rw) {
+        query += ' AND b.rw = ?';
+        params.push(rw);
+      }
+      if (rt) {
+        query += ' AND b.rt = ?';
+        params.push(rt);
+      }
+      if (status) {
+        query += ' AND b.status = ?';
+        params.push(status);
+      }
+      if (jenis_bansos) {
+        query += ' AND b.jenis_bansos = ?';
+        params.push(jenis_bansos);
+      }
+      if (search) {
+        query += ' AND (b.nama_penerima LIKE ? OR b.nik_penerima LIKE ? OR b.no_kk LIKE ?)';
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      }
 
-    query += ' ORDER BY b.created_at DESC LIMIT ? OFFSET ?';
-    params.push(String(limit), String(offset));
+      query += ' ORDER BY b.created_at DESC LIMIT ? OFFSET ?';
+      params.push(String(limit), String(offset));
 
-    const [rows] = await pool.execute(query, params);
-    return rows;
+      const [rows] = await pool.execute(query, params);
+      return rows;
+    } catch (e) {
+      console.warn('[BansosRepo] list error:', e.message);
+      return [];
+    }
   }
 
   /**
@@ -221,40 +239,52 @@ class BansosRepository {
    * Statistik agregasi bansos
    */
   async getStats({ rt, rw } = {}) {
-    let query = `
-      SELECT 
-        COUNT(*) AS total_usulan,
-        SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) AS total_disetujui,
-        SUM(CASE WHEN status IN ('APPROVED', 'DISBURSED') THEN 1 ELSE 0 END) AS total_disetujui,
-        SUM(CASE WHEN status = 'DISBURSED' THEN 1 ELSE 0 END) AS total_tersalurkan_lapangan,
-        SUM(CASE WHEN status = 'PENDING_RW' THEN 1 ELSE 0 END) AS pending_rw,
-        SUM(CASE WHEN status = 'PENDING_KELURAHAN' THEN 1 ELSE 0 END) AS pending_kelurahan,
-        SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS total_ditolak,
-        COALESCE(SUM(CASE WHEN status = 'APPROVED' THEN nominal_bantuan ELSE 0 END), 0) AS total_dana_tersalurkan
-        COALESCE(SUM(CASE WHEN status IN ('APPROVED', 'DISBURSED') THEN nominal_bantuan ELSE 0 END), 0) AS total_dana_tersalurkan
-      FROM bansos_pengajuan
-      WHERE 1=1
-    `;
-    const params = [];
+    try {
+      let query = `
+        SELECT 
+          COUNT(*) AS total_usulan,
+          SUM(CASE WHEN status IN ('APPROVED', 'DISBURSED') THEN 1 ELSE 0 END) AS total_disetujui,
+          SUM(CASE WHEN status = 'DISBURSED' THEN 1 ELSE 0 END) AS total_tersalurkan_lapangan,
+          SUM(CASE WHEN status = 'PENDING_RW' THEN 1 ELSE 0 END) AS pending_rw,
+          SUM(CASE WHEN status = 'PENDING_KELURAHAN' THEN 1 ELSE 0 END) AS pending_kelurahan,
+          SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS total_ditolak,
+          COALESCE(SUM(CASE WHEN status IN ('APPROVED', 'DISBURSED') THEN nominal_bantuan ELSE 0 END), 0) AS total_dana_tersalurkan
+        FROM bansos_pengajuan
+        WHERE 1=1
+      `;
+      const params = [];
 
-    if (rw) {
-      query += ' AND rw = ?';
-      params.push(rw);
-    }
-    if (rt) {
-      query += ' AND rt = ?';
-      params.push(rt);
-    }
+      if (rw) {
+        query += ' AND rw = ?';
+        params.push(rw);
+      }
+      if (rt) {
+        query += ' AND rt = ?';
+        params.push(rt);
+      }
 
-    const [rows] = await pool.execute(query, params);
-    return rows[0] || {
-      total_usulan: 0,
-      total_disetujui: 0,
-      pending_rw: 0,
-      pending_kelurahan: 0,
-      total_ditolak: 0,
-      total_dana_tersalurkan: 0
-    };
+      const [rows] = await pool.execute(query, params);
+      return rows[0] || {
+        total_usulan: 0,
+        total_disetujui: 0,
+        total_tersalurkan_lapangan: 0,
+        pending_rw: 0,
+        pending_kelurahan: 0,
+        total_ditolak: 0,
+        total_dana_tersalurkan: 0
+      };
+    } catch (e) {
+      console.warn('[BansosRepo] getStats error:', e.message);
+      return {
+        total_usulan: 0,
+        total_disetujui: 0,
+        total_tersalurkan_lapangan: 0,
+        pending_rw: 0,
+        pending_kelurahan: 0,
+        total_ditolak: 0,
+        total_dana_tersalurkan: 0
+      };
+    }
   }
 }
 

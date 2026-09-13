@@ -173,6 +173,77 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] CREATE posyandu_lansia_pemeriksaan note:', e.message);
     }
 
+    // 4. Pastikan tabel bansos_pengajuan ada
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`bansos_pengajuan\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`nomor_pengajuan\` VARCHAR(50) NOT NULL UNIQUE,
+          \`no_kk\` VARCHAR(16) NOT NULL,
+          \`nik_penerima\` VARCHAR(16) NOT NULL,
+          \`nama_penerima\` VARCHAR(150) NOT NULL,
+          \`jenis_bansos\` VARCHAR(100) NOT NULL DEFAULT 'PKH',
+          \`alasan_pengajuan\` TEXT NOT NULL,
+          \`nominal_bantuan\` DECIMAL(12,2) NULL DEFAULT 0.00,
+          \`status\` VARCHAR(50) NOT NULL DEFAULT 'PENDING_RT',
+          \`approval_step\` VARCHAR(50) NOT NULL DEFAULT 'RT',
+          \`rt\` VARCHAR(5) NOT NULL,
+          \`rw\` VARCHAR(5) NOT NULL,
+          \`diajukan_oleh_user_id\` INT NULL,
+          \`diverifikasi_oleh_user_id\` INT NULL,
+          \`disahkan_oleh_user_id\` INT NULL,
+          \`catatan_verifikasi\` TEXT NULL,
+          \`foto_penyerahan_url\` VARCHAR(255) NULL,
+          \`koordinat_lat_lng\` VARCHAR(100) NULL,
+          \`tanda_tangan_penerima_url\` VARCHAR(255) NULL,
+          \`diserahkan_oleh_user_id\` INT NULL,
+          \`tanggal_penyerahan\` DATETIME NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_bansos_nik\` (\`nik_penerima\`),
+          INDEX \`idx_bansos_no_kk\` (\`no_kk\`),
+          INDEX \`idx_bansos_rt_rw\` (\`rt\`, \`rw\`),
+          INDEX \`idx_bansos_status\` (\`status\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE bansos_pengajuan note:', e.message);
+    }
+
+    // 5. Pastikan kolom jenis_surat dan jenis_dokumen serta kolom pendukung di dokumen_request tersedia
+    const dokCols = [
+      'jenis_surat VARCHAR(100) NULL',
+      'jenis_dokumen VARCHAR(100) NULL',
+      'nomor_registrasi VARCHAR(50) NULL',
+      "approval_step VARCHAR(50) NOT NULL DEFAULT 'RT'",
+      'catatan_petugas TEXT NULL',
+      'catatan_admin TEXT NULL',
+      'approved_by_rt INT NULL',
+      'approved_by_rw INT NULL',
+      'approved_by_kelurahan INT NULL',
+      'trigger_executed TINYINT(1) NOT NULL DEFAULT 0',
+      'is_auto_filled_by_ai TINYINT(1) NOT NULL DEFAULT 0',
+      'file_url VARCHAR(255) NULL',
+      'file_hasil VARCHAR(500) NULL',
+      'rt VARCHAR(5) NULL',
+      'rw VARCHAR(5) NULL'
+    ];
+    for (const def of dokCols) {
+      try {
+        await connection.query(`ALTER TABLE dokumen_request ADD COLUMN ${def}`);
+      } catch (e) {}
+    }
+
+    // Sinkronisasi kolom jenis_surat dan jenis_dokumen jika salah satunya null
+    try {
+      await connection.query(`
+        UPDATE dokumen_request 
+        SET jenis_surat = COALESCE(jenis_surat, jenis_dokumen),
+            jenis_dokumen = COALESCE(jenis_dokumen, jenis_surat)
+        WHERE jenis_surat IS NULL OR jenis_dokumen IS NULL
+      `);
+    } catch (e) {}
+
     // 4. Upsert Akun Standar Resmi
     for (const acc of STANDARD_ACCOUNTS) {
       try {

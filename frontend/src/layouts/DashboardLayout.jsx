@@ -75,7 +75,6 @@ export default function DashboardLayout() {
     if (isWalikota) {
       return [
         { name: 'Command Center Kota', path: '/dashboard/command-center', icon: <Landmark size={19} /> },
-        { name: 'Indeks Kemiskinan (Desil)', path: '/dashboard/desil', icon: <Sparkles size={19} /> },
         { name: 'Monitoring Zero Stunting', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
         { name: 'Neraca PBB & Daya Dukung', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
         { name: 'Panduan Eksekutif Kota', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -99,7 +98,6 @@ export default function DashboardLayout() {
         { name: 'Pengesahan Surat (TTE / QR)', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Penetapan Definitif Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Monitoring Stunting Wilayah', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
-        { name: 'Analisis Kemiskinan (Desil)', path: '/dashboard/desil', icon: <Sparkles size={19} /> },
         { name: 'Evaluasi Aduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP Kelurahan', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
       ];
