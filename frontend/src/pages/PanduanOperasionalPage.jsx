@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 import {
   BookOpen,
   FileCheck2,
@@ -21,7 +22,8 @@ import {
   Lock,
   Landmark,
   Download,
-  FileText
+  FileText,
+  ArrowRight
 } from 'lucide-react';
 
 const SOP_DATA = [
@@ -271,10 +273,168 @@ const SOP_DATA = [
   }
 ];
 
+const ROLE_QUICK_FLOWS = {
+  warga: {
+    title: 'Ringkasan Alur Mandiri Warga',
+    subtitle: 'Layanan administrasi kependudukan cepat, transparan, dan dapat dipantau langsung dari gawai Anda.',
+    badge: 'Warga Masyarakat',
+    steps: [
+      {
+        no: '1',
+        title: 'Pengajuan Mandiri',
+        desc: 'Pilih surat yang dibutuhkan, cantumkan keperluan, dan unggah foto berkas pendukung (KTP/KK).'
+      },
+      {
+        no: '2',
+        title: 'Verifikasi RT & RW',
+        desc: 'Ketua RT dan Ketua RW memeriksa kesesuaian domisili dan memberikan pengantar secara online.'
+      },
+      {
+        no: '3',
+        title: 'Pengesahan Lurah (TTE)',
+        desc: 'Kelurahan memvalidasi dan membubuhkan Tanda Tangan Elektronik ber-QR Code resmi berkekuatan hukum.'
+      },
+      {
+        no: '4',
+        title: 'Unduh Dokumen & WA',
+        desc: 'Surat resmi terbit dalam format PDF dan tautan unduh terkirim otomatis ke WhatsApp Anda.'
+      }
+    ],
+    highlight: '💡 Panduan Ringkas: Dokumen PDF ber-QR Code kriptografis sah digunakan langsung tanpa perlu legalisir cap basah kelurahan.'
+  },
+  rt_rw: {
+    title: 'Ringkasan Alur Kerja Pengurus RT / RW',
+    subtitle: 'Verifikasi permohonan warga lingkungan, audit validitas penerima bansos, dan fasilitasi aspirasi warga.',
+    badge: 'Pengurus RT / RW',
+    steps: [
+      {
+        no: '1',
+        title: 'Notifikasi Permohonan',
+        desc: 'Menerima pemberitahuan permohonan surat atau aduan yang diajukan oleh warga di wilayah Anda.'
+      },
+      {
+        no: '2',
+        title: 'Validasi Domisili & KK',
+        desc: 'Periksa kebenaran data warga pada pangkalan data lingkungan. Berikan persetujuan dalam waktu < 4 jam.'
+      },
+      {
+        no: '3',
+        title: 'Audit & Sanggahan Bansos',
+        desc: 'Tinjau daftar penerima bansos. Laporkan anomali warga yang pindah, meninggal, atau sudah mampu.'
+      },
+      {
+        no: '4',
+        title: 'Eskalasi ke Kelurahan',
+        desc: 'Persetujuan otomatis diteruskan ke meja verifikator Seksi Pelayanan Kelurahan untuk penerbitan surat.'
+      }
+    ],
+    highlight: '💡 Panduan Ringkas: Gunakan menu Validasi & Audit Bansos RT/RW untuk memastikan bantuan sosial tepat sasaran di lingkungan Anda.'
+  },
+  posyandu: {
+    title: 'Ringkasan Alur Kader Posyandu',
+    subtitle: 'Pencatatan antropometri balita, rekam skrining kesehatan lansia, dan pencegahan stunting terintegrasi.',
+    badge: 'Kader Posyandu',
+    steps: [
+      {
+        no: '1',
+        title: 'Pemeriksaan Rutin',
+        desc: 'Lakukan penimbangan BB, pengukuran TB/LK balita, dan pemeriksaan tensi darah/gula darah warga lansia.'
+      },
+      {
+        no: '2',
+        title: 'Input KMS Digital',
+        desc: 'Masukkan data ke aplikasi. Tetap dapat beroperasi lancar meski tanpa koneksi internet (Mode Luring).'
+      },
+      {
+        no: '3',
+        title: 'Peringatan Dini Stunting',
+        desc: 'Sistem otomatis mengalkulasi status gizi (Z-Score) dan memunculkan rekomendasi intervensi bila berisiko.'
+      },
+      {
+        no: '4',
+        title: 'Sinkronisasi Otomatis',
+        desc: 'Ketika terhubung internet, rekapan data langsung tersinkronisasi ke Puskesmas dan Dinas Kesehatan.'
+      }
+    ],
+    highlight: '💡 Panduan Ringkas: Install aplikasi ke layar utama ponsel untuk akses offline cepat saat kegiatan posyandu di balai RW.'
+  },
+  kelurahan: {
+    title: 'Ringkasan Alur Tata Kelola Kelurahan & Lurah',
+    subtitle: 'Pengesahan naskah dinas ber-TTE, pengelolaan penetapan bansos, dan pengawasan ketertiban wilayah.',
+    badge: 'Admin Kelurahan & Lurah',
+    steps: [
+      {
+        no: '1',
+        title: 'Verifikasi Berkas',
+        desc: 'Periksa kelengkapan berkas dan keabsahan pengantar yang telah disetujui berjenjang oleh RT dan RW.'
+      },
+      {
+        no: '2',
+        title: 'Penomoran Otomatis',
+        desc: 'Sistem memberikan nomor surat dinas resmi sesuai tata naskah dinas Permendagri secara teratur.'
+      },
+      {
+        no: '3',
+        title: 'Penetapan TTE Lurah',
+        desc: 'Lurah membubuhkan tanda tangan elektronik kriptografis bersertifikasi dengan satu klik pengesahan.'
+      },
+      {
+        no: '4',
+        title: 'Audit & Review Sanggahan',
+        desc: 'Tinjau usulan bansos dan laporan anomali dari RT/RW sebelum penetapan daftar penerima manfaat definitif.'
+      }
+    ],
+    highlight: '💡 Panduan Ringkas: SLA verifikasi kelurahan adalah maksimal 16 jam kerja demi menjamin kepastian waktu bagi pemohon.'
+  },
+  eksekutif: {
+    title: 'Ringkasan Alur Command Center Eksekutif',
+    subtitle: 'Pemantauan indikator kinerja makro, penanganan kemiskinan ekstrem, dan evaluasi berbasis kecerdasan buatan.',
+    badge: 'Camat & Walikota',
+    steps: [
+      {
+        no: '1',
+        title: 'Pemantauan Peta Tematik',
+        desc: 'Pantau sebaran kemiskinan (Desil 1–10), titik stunting balita, dan kepatuhan PBB di seluruh kelurahan.'
+      },
+      {
+        no: '2',
+        title: 'Audit SLA Pelayanan Publik',
+        desc: 'Awasi kepatuhan kecepatan penerbitan surat dan waktu tanggap pengaduan di masing-masing kelurahan.'
+      },
+      {
+        no: '3',
+        title: 'Rekomendasi AI Terarah',
+        desc: 'Analisis prediktif berbasis data untuk alokasi intervensi sosial dan pembangunan fasilitas lingkungan.'
+      },
+      {
+        no: '4',
+        title: 'Distribusi Satu Data Jabar',
+        desc: 'Pertukaran agregat data berkala dengan portal Satu Data Indonesia dan ekosistem Sapawarga Jawa Barat.'
+      }
+    ],
+    highlight: '💡 Panduan Ringkas: Gunakan filter kecamatan dan kelurahan pada Command Center untuk melakukan evaluasi komparatif kewilayahan.'
+  }
+};
+
 export default function PanduanOperasionalPage() {
-  const [activePersona, setActivePersona] = useState('all');
+  const { user } = useAuth();
+  
+  // Deteksi otomatis persona awal berdasarkan peran yang sedang login
+  const getInitialPersona = () => {
+    const role = user?.role === 'admin' ? 'admin_kelurahan' : (user?.role || 'warga');
+    if (['superadmin', 'walikota', 'camat'].includes(role)) return 'eksekutif';
+    if (['admin_kelurahan', 'lurah'].includes(role)) return 'kelurahan';
+    if (['ketua_rt', 'ketua_rw', 'admin_rw'].includes(role)) return 'rt_rw';
+    if (role === 'kader_posyandu') return 'posyandu';
+    return 'warga';
+  };
+
+  const [activePersona, setActivePersona] = useState(getInitialPersona());
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState('sop-surat');
+
+  const effectiveRole = activePersona === 'all' ? getInitialPersona() : activePersona;
+  const currentFlow = ROLE_QUICK_FLOWS[effectiveRole] || ROLE_QUICK_FLOWS.warga;
 
   const filteredSops = useMemo(() => {
     return SOP_DATA.filter((sop) => {
@@ -383,6 +543,64 @@ export default function PanduanOperasionalPage() {
           ))}
         </div>
       </div>
+
+      {/* ══════════════════════════════════════
+          ILUSTRASI ALUR SINGKAT SESUAI PERAN (ROLE-BASED QUICK FLOW)
+         ══════════════════════════════════════ */}
+      {currentFlow && (
+        <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant p-6 shadow-sm overflow-hidden relative">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-outline-variant">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-on-surface">{currentFlow.title}</h2>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    {currentFlow.badge}
+                  </span>
+                </div>
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  {currentFlow.subtitle}
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-semibold text-primary bg-primary/5 px-3 py-1.5 rounded-xl self-start sm:self-auto border border-primary/15">
+              Alur Ringkas Resmi (4 Langkah)
+            </span>
+          </div>
+
+          {/* Flow Steps Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+            {currentFlow.steps.map((s, idx) => (
+              <div
+                key={idx}
+                className="relative bg-surface-container-low/50 hover:bg-surface-container-low transition-colors rounded-2xl p-4 border border-outline-variant flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="w-7 h-7 rounded-xl bg-primary text-on-primary text-xs font-extrabold flex items-center justify-center shadow-xs">
+                      {s.no}
+                    </span>
+                    {idx < currentFlow.steps.length - 1 && (
+                      <ArrowRight size={15} className="hidden lg:block text-outline" />
+                    )}
+                  </div>
+                  <h3 className="text-xs font-bold text-on-surface mb-1">{s.title}</h3>
+                  <p className="text-[11px] text-on-surface-variant leading-relaxed">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Highlight / Panduan Ringkas Box */}
+          <div className="mt-4 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl flex items-start gap-2.5 text-xs text-emerald-900">
+            <span className="text-base leading-none">📌</span>
+            <p className="text-[11px] leading-relaxed font-medium">{currentFlow.highlight}</p>
+          </div>
+        </div>
+      )}
 
       {/* SOP List Accordions */}
       <div className="space-y-4">
