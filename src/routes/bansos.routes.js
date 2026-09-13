@@ -110,5 +110,25 @@ router.patch('/audit-sanggahan/:id/review', requireAuth, requireRole('admin_kelu
   }
 });
 
+// GET /api/bansos/audit-sanggahan/:id/berita-acara - Format cetak Berita Acara resmi
+router.get('/audit-sanggahan/:id/berita-acara', requireAuth, async (req, res) => {
+  try {
+    const data = await bansosService.getAuditBeritaAcara(Number(req.params.id), req.session.user);
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/bansos/stats-penyelamatan - Metrik penyelamatan kuota bansos dari temuan audit
+router.get('/stats-penyelamatan', requireAuth, async (req, res) => {
+  try {
+    const stats = await bansosService.getStatsPenyelamatan(req.session.user);
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
 

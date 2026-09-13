@@ -23,6 +23,9 @@ import {
   Briefcase,
   Droplet,
   FileCheck
+  FileCheck,
+  Printer,
+  QrCode
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -51,6 +54,7 @@ export default function ProfilePage() {
   });
   const [savingInsurance, setSavingInsurance] = useState(false);
   const [copiedNik, setCopiedNik] = useState(false);
+  const [showPrintSummaryModal, setShowPrintSummaryModal] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -179,6 +183,15 @@ export default function ProfilePage() {
 
           <div className="flex items-center gap-2 self-stretch md:self-auto">
             <div className="px-3.5 py-2 rounded-xl bg-sky-50 border border-sky-200 text-right w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-2 self-stretch md:self-auto">
+            <button
+              onClick={() => setShowPrintSummaryModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-600 text-white hover:bg-sky-700 text-xs font-semibold shadow-sm transition-colors"
+              title="Cetak Rekapitulasi Riwayat Layanan Warga"
+            >
+              <Printer size={15} /> Cetak Riwayat Layanan
+            </button>
+            <div className="px-3.5 py-2 rounded-xl bg-sky-50 border border-sky-200 text-right">
               <span className="text-[10px] uppercase font-bold text-sky-800 block">Status Akun Digital</span>
               <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 justify-end mt-0.5">
                 <CheckCircle2 size={13} /> Terverifikasi SPBE
@@ -668,6 +681,213 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* ===================================================================== */}
+      {/* MODAL CETAK REKAPITULASI RIWAYAT LAYANAN WARGA                        */}
+      {/* ===================================================================== */}
+      {showPrintSummaryModal && profileData && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto print:p-0 print:bg-white print:static">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white text-slate-900 rounded-2xl max-w-3xl w-full p-8 shadow-2xl my-8 border border-slate-300 print:shadow-none print:border-none print:m-0 print:p-4 text-xs"
+          >
+            {/* KOP RESMI */}
+            <div className="text-center border-b-2 border-double border-slate-900 pb-4 mb-5">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-700">
+                PEMERINTAH KOTA SUKABUMI
+              </h3>
+              <h2 className="text-lg font-black uppercase tracking-wide">
+                KECAMATAN CIKOLE &bull; KELURAHAN KEBONJATI
+              </h2>
+              <p className="text-[11px] text-slate-600 mt-0.5">
+                Jl. Kebonjati No. 120, Kota Sukabumi, Jawa Barat 43111 &bull; Telp: (0266) 221-123
+              </p>
+              <p className="text-[10px] text-sky-800 font-semibold mt-0.5">
+                Pusat Integrasi Layanan Administrasi Kependudukan SPBE: bumiwarga.online
+              </p>
+            </div>
+
+            {/* JUDUL DOKUMEN */}
+            <div className="text-center mb-5">
+              <h4 className="text-base font-extrabold underline uppercase tracking-wider text-slate-900">
+                REKAPITULASI BUKU CATATAN LAYANAN & PERLINDUNGAN WARGA
+              </h4>
+              <p className="text-xs font-mono font-semibold text-slate-700 mt-1">
+                Nomor Register: REG-SPBE/KBJ/{warga?.rt || '001'}/{warga?.nik || user?.username}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-0.5">
+                Penerbitan Data: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+
+            {/* BAGIAN I: DATA POKOK KEPENDUDUKAN */}
+            <div className="mb-4">
+              <h5 className="font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase tracking-wide">
+                I. Data Pokok Kependudukan
+              </h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div><span className="text-slate-500">Nama Lengkap:</span> <strong className="text-slate-900">{warga?.nama || user?.nama || '-'}</strong></div>
+                <div><span className="text-slate-500">NIK:</span> <strong className="font-mono text-slate-900">{warga?.nik || user?.username}</strong></div>
+                <div><span className="text-slate-500">No. Kartu Keluarga:</span> <span className="font-mono text-slate-800">{warga?.no_kk || '-'}</span></div>
+                <div><span className="text-slate-500">Tempat, Tgl Lahir:</span> <span className="text-slate-800">{warga?.tempat_lahir || '-'}, {warga?.tanggal_lahir ? new Date(warga.tanggal_lahir).toLocaleDateString('id-ID') : '-'}</span></div>
+                <div><span className="text-slate-500">Jenis Kelamin:</span> <span className="text-slate-800">{warga?.jenis_kelamin === 'L' ? 'Laki-laki' : (warga?.jenis_kelamin === 'P' ? 'Perempuan' : (warga?.jenis_kelamin || '-'))}</span></div>
+                <div><span className="text-slate-500">Wilayah Domisili:</span> <span className="text-slate-800">RT {warga?.rt || '001'} / RW {warga?.rw || '001'}, Kelurahan Kebonjati</span></div>
+                <div><span className="text-slate-500">Agama / Status Kawin:</span> <span className="text-slate-800">{warga?.agama || '-'} &bull; {warga?.status_kawin || '-'}</span></div>
+                <div><span className="text-slate-500">Pekerjaan:</span> <span className="text-slate-800">{warga?.pekerjaan || '-'}</span></div>
+              </div>
+            </div>
+
+            {/* BAGIAN II: JAMINAN SOSIAL & KESEHATAN */}
+            <div className="mb-4">
+              <h5 className="font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase tracking-wide">
+                II. Status Jaminan Sosial & Kesehatan
+              </h5>
+              <div className="bg-sky-50/70 p-3 rounded-lg border border-sky-200 space-y-1">
+                <div className="grid grid-cols-3">
+                  <span className="text-sky-900 font-medium">Kategori Kepesertaan Asuransi:</span>
+                  <span className="col-span-2 font-bold text-sky-950">{warga?.kategori_asuransi || 'Belum Tercatat / Mandiri'}</span>
+                </div>
+                <div className="grid grid-cols-3">
+                  <span className="text-sky-900 font-medium">Nomor Kartu Jaminan (BPJS):</span>
+                  <span className="col-span-2 font-mono font-bold text-sky-950">{warga?.nomor_asuransi || '-'}</span>
+                </div>
+                {warga?.catatan_bansos_mandiri && (
+                  <div className="grid grid-cols-3">
+                    <span className="text-sky-900 font-medium">Catatan Kelayakan Mandiri:</span>
+                    <span className="col-span-2 text-sky-900 italic">&ldquo;{warga.catatan_bansos_mandiri}&rdquo;</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* BAGIAN III: RIWAYAT PELAYANAN SURAT */}
+            <div className="mb-4">
+              <h5 className="font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase tracking-wide">
+                III. Riwayat Pelayanan Surat Keterangan ({profileData.suratList?.length || 0} Pengajuan)
+              </h5>
+              {profileData.suratList && profileData.suratList.length > 0 ? (
+                <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-100 text-slate-700 font-semibold text-[11px]">
+                      <tr>
+                        <th className="p-2">Tgl Pengajuan</th>
+                        <th className="p-2">Jenis Surat</th>
+                        <th className="p-2">Keperluan</th>
+                        <th className="p-2 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 text-[11px]">
+                      {profileData.suratList.map((s) => (
+                        <tr key={s.id}>
+                          <td className="p-2 whitespace-nowrap font-mono">{new Date(s.created_at).toLocaleDateString('id-ID')}</td>
+                          <td className="p-2 font-medium text-slate-900">{s.jenis_surat}</td>
+                          <td className="p-2 text-slate-700">{s.keperluan || '-'}</td>
+                          <td className="p-2 text-center whitespace-nowrap">
+                            <span className="font-bold text-emerald-800">{s.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-slate-500 italic text-[11px]">Belum ada riwayat permohonan surat kedinasan.</p>
+              )}
+            </div>
+
+            {/* BAGIAN IV: RIWAYAT BANTUAN SOSIAL */}
+            <div className="mb-5">
+              <h5 className="font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase tracking-wide">
+                IV. Catatan Program Bantuan Sosial ({profileData.bansosList?.length || 0} Terdaftar)
+              </h5>
+              {profileData.bansosList && profileData.bansosList.length > 0 ? (
+                <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-100 text-slate-700 font-semibold text-[11px]">
+                      <tr>
+                        <th className="p-2">Program Bantuan</th>
+                        <th className="p-2">Nomor Usulan</th>
+                        <th className="p-2 text-right">Nominal</th>
+                        <th className="p-2 text-center">Status Distribusi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 text-[11px]">
+                      {profileData.bansosList.map((b) => (
+                        <tr key={b.id}>
+                          <td className="p-2 font-medium text-slate-900">{b.jenis_bansos}</td>
+                          <td className="p-2 font-mono text-slate-700">{b.nomor_pengajuan}</td>
+                          <td className="p-2 text-right font-mono font-medium">Rp {Number(b.nominal_bantuan || 0).toLocaleString('id-ID')}</td>
+                          <td className="p-2 text-center whitespace-nowrap font-bold text-sky-800">{b.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-slate-500 italic text-[11px]">Tidak tercatat dalam daftar penerima bantuan sosial aktif (Warga Mandiri).</p>
+              )}
+            </div>
+
+            {/* TANDA TANGAN & PENGESAHAN */}
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-200 text-center text-xs">
+              <div>
+                <p className="text-slate-600 font-medium">Warga Pemohon</p>
+                <div className="h-16 flex items-center justify-center">
+                  <span className="text-[10px] text-slate-400 italic">( Tanda Tangan )</span>
+                </div>
+                <p className="font-bold text-slate-900 underline">{warga?.nama || user?.nama || 'Warga'}</p>
+              </div>
+
+              <div>
+                <p className="text-slate-600 font-medium">Mengetahui Pengurus Wilayah</p>
+                <p className="text-[10px] text-slate-500">Ketua RT {warga?.rt || '001'} / RW {warga?.rw || '001'}</p>
+                <div className="h-16 flex items-center justify-center">
+                  <span className="text-[10px] text-slate-400 italic">( Tanda Tangan )</span>
+                </div>
+                <p className="font-bold text-slate-900 underline">Pengurus Lingkungan</p>
+              </div>
+
+              <div>
+                <p className="text-slate-600 font-medium">Pengesahan Digital SPBE</p>
+                <p className="text-[10px] text-slate-500">Kelurahan Kebonjati</p>
+                <div className="h-16 flex items-center justify-center">
+                  <div className="p-1 border border-slate-300 rounded bg-slate-50">
+                    <QrCode size={36} className="text-slate-800" />
+                  </div>
+                </div>
+                <p className="font-bold text-slate-900 underline">H. Rahmat Hidayat, S.IP, M.Si</p>
+                <p className="text-[10px] font-mono text-slate-600">Lurah Kebonjati</p>
+              </div>
+            </div>
+
+            {/* FOOTER */}
+            <div className="mt-6 pt-3 border-t border-slate-200 flex justify-between items-center text-[10px] text-slate-500 font-mono">
+              <span>Bumi Warga - Jabar Pintar Digital &bull; Dokumen Kependudukan Terpadu</span>
+              <span>ID Validasi: VAL-BW-{warga?.nik || '3273'}-{Date.now().toString(36).toUpperCase()}</span>
+            </div>
+
+            {/* BUTTONS (HIDDEN IN PRINT) */}
+            <div className="flex justify-end gap-2 pt-6 mt-6 border-t border-slate-200 print:hidden">
+              <button
+                type="button"
+                onClick={() => setShowPrintSummaryModal(false)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-100 transition-colors text-xs"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="px-5 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors text-xs flex items-center gap-2 shadow-sm"
+              >
+                <Printer size={15} /> Cetak Riwayat Layanan / PDF
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
+

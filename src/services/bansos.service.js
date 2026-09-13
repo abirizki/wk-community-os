@@ -414,6 +414,59 @@ class BansosService {
         });
       } catch (e) {
         console.warn('Update status pencabutan bansos warning:', e.message);
+    // Dampak Otomatis Keputusan ke Status Bantuan & Desil / Kependudukan
+    const pool = require('../db/pool');
+    if (status_review === 'DISETUJUI_PENCABUTAN') {
+      if (sanggahan.bansos_pengajuan_id) {
+        try {
+          await bansosRepository.updateStatus(sanggahan.bansos_pengajuan_id, {
+            status: 'REJECTED',
+            approval_step: 'COMPLETED',
+            catatan_verifikasi: `Pencabutan kuota bantuan sosial disahkan Kelurahan berdasar audit temuan lapangan RT/RW: ${catatan_kelurahan || sanggahan.alasan_lapangan}`
+          });
+        } catch (e) {
+          console.warn('Update status pencabutan bansos warning:', e.message);
+        }
+      }
+
+      // 1. Jika Warga Mampu: Sinkronkan ke Desil Keluarga (Graduasi Desil 7)
+      if (sanggahan.tipe_sanggahan === 'TIDAK_LAYAK' && sanggahan.no_kk) {
+        try {
+          await pool.execute(
+            `UPDATE desil_keluarga 
+             SET desil_saat_ini = 7, 
+                 status_verifikasi = 'VERIFIED_KELURAHAN', 
+                 catatan_kelurahan = 'Graduasi mandiri hasil audit faktual RT/RW' 
+             WHERE no_kk = ?`,
+            [sanggahan.no_kk]
+          );
+        } catch (e) {
+          console.warn('Sync desil mampu warning:', e.message);
+        }
+      }
+
+      // 2. Jika Sudah Pindah: Sinkronkan status kependudukan warga
+      if (sanggahan.tipe_sanggahan === 'SUDAH_PINDAH') {
+        try {
+          await pool.execute(
+            `UPDATE warga SET status_kependudukan = 'Pindah' WHERE nik = ?`,
+            [sanggahan.nik_warga]
+          );
+        } catch (e) {
+          console.warn('Sync warga pindah warning:', e.message);
+        }
+      }
+
+      // 3. Jika Meninggal Dunia: Sinkronkan status kependudukan warga
+      if (sanggahan.tipe_sanggahan === 'MENINGGAL_DUNIA') {
+        try {
+          await pool.execute(
+            `UPDATE warga SET status_kependudukan = 'Meninggal' WHERE nik = ?`,
+            [sanggahan.nik_warga]
+          );
+        } catch (e) {
+          console.warn('Sync warga meninggal warning:', e.message);
+        }
       }
     } else if (status_review === 'DISETUJUI_INKLUSI' && sanggahan.tipe_sanggahan === 'LAYAK_BELUM_TERDAFTAR') {
       try {
@@ -430,6 +483,18 @@ class BansosService {
           rw: sanggahan.rw,
           diajukan_oleh_user_id: currentUser.id
         });
+
+        // Sinkronkan ke Desil 1 (Sangat Miskin / Prioritas Ekstrem)
+        if (sanggahan.no_kk) {
+          await pool.execute(
+            `UPDATE desil_keluarga 
+             SET desil_saat_ini = 1, 
+                 status_verifikasi = 'VERIFIED_KELURAHAN', 
+                 catatan_kelurahan = 'Inklusi prioritas Desil 1 hasil audit RT/RW' 
+             WHERE no_kk = ?`,
+            [sanggahan.no_kk]
+          );
+        }
       } catch (e) {
         console.warn('Inklusi bansos otomatis warning:', e.message);
       }
@@ -457,6 +522,86 @@ class BansosService {
       success: true,
       message: `Keputusan audit bansos berhasil disimpan: ${status_review.replace('_', ' ')}.`,
       data: updated
+    };
+  }
+
+  /**
+   * Ambil data lengkap Berita Acara Audit Sanggahan Bansos format cetak dinas
+   */
+  async getAuditBeritaAcara(id, currentUser) {
+    const sanggahan = await bansosRepository.getAuditSanggahanById(id);
+    if (!sanggahan) {
+      const err = new Error('Data audit sanggahan tidak ditemukan.');
+      err.status = 404;
+      throw err;
+    }
+
+    const warga = await wargaRepository.findByNik(sanggahan.nik_warga);
+    const dateFormatted = new Date(sanggahan.tanggal_review || sanggahan.created_at || Date.now());
+    const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    const nomorBA = `BA-AUDIT/${romanMonths[dateFormatted.getMonth()]}/${dateFormatted.getFullYear()}/${String(sanggahan.id).padStart(4, '0')}`;
+
+    return {
+      nomor_berita_acara: nomorBA,
+      kop: {
+        instansi: 'PEMERINTAH KOTA SUKABUMI',
+        kecamatan: 'KECAMATAN ANDIR',
+        kelurahan: 'KELURAHAN KEBONJATI',
+        alamat: 'Jl. Kebonjati No. 1, Kota Sukabumi, Jawa Barat 40181',
+        telepon: '(0266) 221-123',
+        portal: 'bumiwarga.online'
+      },
+      sanggahan,
+      warga,
+      tanggal_resmi: dateFormatted.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+      pejabat_lurah: {
+        nama: 'H. Rahmat Hidayat, S.IP, M.Si',
+        nip: '19760815 200212 1 003',
+        jabatan: 'Lurah Kebonjati'
+      },
+      qr_verification_code: `VERIF-SPBE-BW-${sanggahan.id}-${Date.now().toString(36).toUpperCase()}`
+    };
+  }
+
+  /**
+   * Ambil metrik transparansi penyelamatan kuota bansos dari temuan audit lapangan
+   */
+  async getStatsPenyelamatan(currentUser) {
+    const pool = require('../db/pool');
+    const { role, rt, rw } = currentUser;
+    let query = `
+      SELECT 
+        COUNT(*) AS total_sanggahan_sah,
+        COALESCE(SUM(CASE WHEN tipe_sanggahan = 'TIDAK_LAYAK' THEN 1 ELSE 0 END), 0) AS total_warga_mampu_graduasi,
+        COALESCE(SUM(CASE WHEN tipe_sanggahan = 'SUDAH_PINDAH' THEN 1 ELSE 0 END), 0) AS total_pindah_wilayah,
+        COALESCE(SUM(CASE WHEN tipe_sanggahan = 'MENINGGAL_DUNIA' THEN 1 ELSE 0 END), 0) AS total_meninggal,
+        COALESCE(SUM(CASE WHEN tipe_sanggahan = 'LAYAK_BELUM_TERDAFTAR' THEN 1 ELSE 0 END), 0) AS total_inklusi_baru
+      FROM bansos_audit_sanggahan
+      WHERE status_review IN ('DISETUJUI_PENCABUTAN', 'DISETUJUI_INKLUSI')
+    `;
+    const params = [];
+    if (role === 'ketua_rt') {
+      query += ' AND rt = ? AND rw = ?';
+      params.push(rt, rw);
+    } else if (role === 'ketua_rw' || role === 'admin_rw') {
+      query += ' AND rw = ?';
+      params.push(rw);
+    }
+
+    const [rows] = await pool.execute(query, params);
+    const row = rows[0] || {};
+    const totalDicabut = Number(row.total_warga_mampu_graduasi || 0) + Number(row.total_pindah_wilayah || 0) + Number(row.total_meninggal || 0);
+    const estimasiDanaDiselamatkan = totalDicabut * 600000;
+
+    return {
+      total_kuota_diselamatkan: totalDicabut,
+      estimasi_dana_diselamatkan: estimasiDanaDiselamatkan,
+      total_inklusi_prioritas: Number(row.total_inklusi_baru || 0),
+      rincian: {
+        warga_mampu: Number(row.total_warga_mampu_graduasi || 0),
+        pindah: Number(row.total_pindah_wilayah || 0),
+        meninggal: Number(row.total_meninggal || 0)
+      }
     };
   }
 }

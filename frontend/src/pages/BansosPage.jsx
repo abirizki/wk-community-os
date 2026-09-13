@@ -25,6 +25,10 @@ import {
   MapPin,
   PenTool,
   Eye
+  Eye,
+  Printer,
+  TrendingUp,
+  QrCode
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -96,6 +100,16 @@ export default function BansosPage() {
     catatan_kelurahan: ''
   });
 
+  // Tahap 3: Berita Acara & Penyelamatan Kuota State
+  const [statsPenyelamatan, setStatsPenyelamatan] = useState({
+    total_kuota_diselamatkan: 0,
+    estimasi_dana_diselamatkan: 0,
+    total_inklusi_prioritas: 0
+  });
+  const [showBeritaAcaraModal, setShowBeritaAcaraModal] = useState(false);
+  const [beritaAcaraData, setBeritaAcaraData] = useState(null);
+  const [loadingBeritaAcara, setLoadingBeritaAcara] = useState(false);
+
   // Penyaluran Lapangan State
   const [disbursePhoto, setDisbursePhoto] = useState('');
   const [disburseCoords, setDisburseCoords] = useState('');
@@ -141,8 +155,35 @@ export default function BansosPage() {
     try {
       const res = await api.get('/bansos/audit-sanggahan');
       setAuditList(res.data || []);
+      const [resAudit, resStats] = await Promise.allSettled([
+        api.get('/bansos/audit-sanggahan'),
+        api.get('/bansos/stats-penyelamatan')
+      ]);
+      if (resAudit.status === 'fulfilled' && resAudit.value?.data) {
+        setAuditList(resAudit.value.data || []);
+      }
+      if (resStats.status === 'fulfilled' && resStats.value?.data) {
+        setStatsPenyelamatan(resStats.value.data || {
+          total_kuota_diselamatkan: 0,
+          estimasi_dana_diselamatkan: 0,
+          total_inklusi_prioritas: 0
+        });
+      }
     } catch (err) {
       console.warn('Gagal memuat daftar audit sanggahan:', err.message);
+    }
+  };
+
+  const openBeritaAcaraModal = async (auditItem) => {
+    try {
+      setLoadingBeritaAcara(true);
+      setShowBeritaAcaraModal(true);
+      const res = await api.get(`/bansos/audit-sanggahan/${auditItem.id}/berita-acara`);
+      setBeritaAcaraData(res.data);
+    } catch (err) {
+      setError('Gagal memuat format Berita Acara: ' + err.message);
+    } finally {
+      setLoadingBeritaAcara(false);
     }
   };
 
@@ -772,6 +813,48 @@ export default function BansosPage() {
       {/* ===================================================================== */}
       {activeTab === 'audit_disputes' && (
         <div className="space-y-4">
+          {/* STATS PENYELAMATAN KUOTA BANTUAN SOSIAL */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-emerald-50/90 border border-emerald-200 rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
+              <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-sm flex-shrink-0">
+                <ShieldCheck size={22} />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-emerald-800">Kuota Bantuan Diselamatkan</p>
+                <h4 className="text-xl font-bold text-emerald-950 mt-0.5">
+                  {statsPenyelamatan.total_kuota_diselamatkan || 0} Keluarga
+                </h4>
+                <p className="text-[10px] text-emerald-700">Dicabut dari anomali/warga mampu</p>
+              </div>
+            </div>
+
+            <div className="bg-sky-50/90 border border-sky-200 rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
+              <div className="p-2.5 bg-sky-600 text-white rounded-xl shadow-sm flex-shrink-0">
+                <TrendingUp size={22} />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-sky-800">Estimasi Efisiensi Anggaran</p>
+                <h4 className="text-xl font-bold text-sky-950 mt-0.5">
+                  Rp {Number(statsPenyelamatan.estimasi_dana_diselamatkan || 0).toLocaleString('id-ID')}
+                </h4>
+                <p className="text-[10px] text-sky-700">Pencegahan salah sasaran bantuan</p>
+              </div>
+            </div>
+
+            <div className="bg-indigo-50/90 border border-indigo-200 rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
+              <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-sm flex-shrink-0">
+                <Users size={22} />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-indigo-800">Inklusi Prioritas Terverifikasi</p>
+                <h4 className="text-xl font-bold text-indigo-950 mt-0.5">
+                  {statsPenyelamatan.total_inklusi_prioritas || 0} Keluarga
+                </h4>
+                <p className="text-[10px] text-indigo-700">Warga sangat rentan masuk Desil 1</p>
+              </div>
+            </div>
+          </div>
+
           <div className="p-4 bg-rose-50/80 border border-rose-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
             <div>
               <h4 className="font-bold text-rose-900 flex items-center gap-1.5 text-sm">
@@ -813,6 +896,7 @@ export default function BansosPage() {
                     <th className="p-3">Pelapor (RT/RW)</th>
                     <th className="p-3 text-center">Status Review</th>
                     <th className="p-3 text-center">Aksi Kelurahan</th>
+                    <th className="p-3 text-center">Aksi Kelurahan & Cetak</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
@@ -867,6 +951,22 @@ export default function BansosPage() {
                         </td>
                         <td className="p-3 text-center whitespace-nowrap">
                           {isKelurahan && item.status_review === 'PENDING_KELURAHAN' ? (
+                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                            {isKelurahan && item.status_review === 'PENDING_KELURAHAN' && (
+                              <button
+                                onClick={() => {
+                                  setSelectedAudit(item);
+                                  setAuditReviewForm({
+                                    status_review: item.tipe_sanggahan === 'LAYAK_BELUM_TERDAFTAR' ? 'DISETUJUI_INKLUSI' : 'DISETUJUI_PENCABUTAN',
+                                    catatan_kelurahan: ''
+                                  });
+                                  setShowAuditReviewModal(true);
+                                }}
+                                className="px-2.5 py-1 bg-primary text-on-primary font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm text-[11px]"
+                              >
+                                Putuskan Review
+                              </button>
+                            )}
                             <button
                               onClick={() => {
                                 setSelectedAudit(item);
@@ -877,14 +977,19 @@ export default function BansosPage() {
                                 setShowAuditReviewModal(true);
                               }}
                               className="px-3 py-1.5 bg-primary text-on-primary font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm text-xs"
+                              onClick={() => openBeritaAcaraModal(item)}
+                              className="px-2.5 py-1 bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-sm"
+                              title="Cetak Dokumen Berita Acara Resmi"
                             >
                               Putuskan Review
+                              <Printer size={12} /> Cetak BA
                             </button>
                           ) : (
                             <span className="text-on-surface-variant text-[11px] font-medium italic">
                               {item.nama_reviewer ? `Direview: ${item.nama_reviewer}` : 'Tercatat'}
                             </span>
                           )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1530,6 +1635,182 @@ export default function BansosPage() {
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL CETAK BERITA ACARA RESMI DINAS                                  */}
+      {/* ===================================================================== */}
+      {showBeritaAcaraModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto print:p-0 print:bg-white print:static">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white text-slate-900 rounded-2xl max-w-3xl w-full p-8 shadow-2xl my-8 border border-slate-300 print:shadow-none print:border-none print:m-0 print:p-4"
+          >
+            {loadingBeritaAcara ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 size={36} className="animate-spin text-primary" />
+                <p className="text-xs text-slate-600 font-medium">Menyusun Berita Acara Dinas...</p>
+              </div>
+            ) : beritaAcaraData ? (
+              <div>
+                {/* KOP SURAT RESMI */}
+                <div className="text-center border-b-2 border-double border-slate-900 pb-4 mb-5">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-700">
+                    {beritaAcaraData.kop?.instansi || 'PEMERINTAH KOTA SUKABUMI'}
+                  </h3>
+                  <h2 className="text-lg font-black uppercase tracking-wide">
+                    {beritaAcaraData.kop?.kecamatan || 'KECAMATAN CIKOLE'} &bull; {beritaAcaraData.kop?.kelurahan || 'KELURAHAN KEBONJATI'}
+                  </h2>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    {beritaAcaraData.kop?.alamat || 'Jl. Kebonjati No. 120, Kota Sukabumi, Jawa Barat 43111'} &bull; Telp: {beritaAcaraData.kop?.telepon || '(0266) 221-123'}
+                  </p>
+                  <p className="text-[10px] text-sky-800 font-semibold mt-0.5">
+                    Sistem Tata Kelola & Verifikasi Bantuan: {beritaAcaraData.kop?.portal || 'bumiwarga.online'}
+                  </p>
+                </div>
+
+                {/* JUDUL BERITA ACARA */}
+                <div className="text-center mb-5">
+                  <h4 className="text-base font-extrabold underline uppercase tracking-wider text-slate-900">
+                    BERITA ACARA AUDIT DAN VERIFIKASI SANGGAHAN BANSOS
+                  </h4>
+                  <p className="text-xs font-mono font-semibold text-slate-700 mt-1">
+                    Nomor: {beritaAcaraData.nomor_berita_acara}
+                  </p>
+                </div>
+
+                {/* PEMBUKA */}
+                <p className="text-xs text-slate-700 leading-relaxed mb-4">
+                  Pada hari ini, tanggal <strong>{beritaAcaraData.tanggal_resmi}</strong>, bertempat di Kantor Kelurahan Kebonjati, telah dilaksanakan sidang penelaahan audit dan verifikasi sanggahan lapangan mengenai ketepatan sasaran penerima Bantuan Sosial sebagai tindak lanjut atas aduan/temuan aparat lingkungan (RT/RW) dengan rincian sebagai berikut:
+                </p>
+
+                {/* TABEL DATA SUBJEK AUDIT */}
+                <div className="border border-slate-300 rounded-lg p-3.5 mb-4 bg-slate-50/70 text-xs space-y-1.5">
+                  <div className="grid grid-cols-3">
+                    <span className="text-slate-600 font-medium">Nama Warga Terlapor</span>
+                    <span className="col-span-2 font-bold text-slate-900">: {beritaAcaraData.sanggahan?.nama_warga}</span>
+                  </div>
+                  <div className="grid grid-cols-3">
+                    <span className="text-slate-600 font-medium">Nomor Induk Kependudukan (NIK)</span>
+                    <span className="col-span-2 font-mono font-bold text-slate-900">: {beritaAcaraData.sanggahan?.nik_warga}</span>
+                  </div>
+                  <div className="grid grid-cols-3">
+                    <span className="text-slate-600 font-medium">Nomor Kartu Keluarga (KK)</span>
+                    <span className="col-span-2 font-mono text-slate-800">: {beritaAcaraData.sanggahan?.no_kk || '-'}</span>
+                  </div>
+                  <div className="grid grid-cols-3">
+                    <span className="text-slate-600 font-medium">Wilayah Domisili</span>
+                    <span className="col-span-2 text-slate-800">
+                      : RT {beritaAcaraData.sanggahan?.rt} / RW {beritaAcaraData.sanggahan?.rw}, Kelurahan Kebonjati
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3">
+                    <span className="text-slate-600 font-medium">Kategori Anomali Temuan</span>
+                    <span className="col-span-2 font-bold text-rose-700">
+                      : {beritaAcaraData.sanggahan?.tipe_sanggahan?.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3">
+                    <span className="text-slate-600 font-medium">Uraian Fakta Lapangan</span>
+                    <span className="col-span-2 text-slate-800 italic">
+                      : &ldquo;{beritaAcaraData.sanggahan?.alasan_lapangan}&rdquo;
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3">
+                    <span className="text-slate-600 font-medium">Pelapor / Pengusul</span>
+                    <span className="col-span-2 text-slate-800">
+                      : {beritaAcaraData.sanggahan?.nama_pelapor || 'Ketua RT'} ({beritaAcaraData.sanggahan?.role_pelapor?.replace(/_/g, ' ') || 'Aparat Lingkungan'})
+                    </span>
+                  </div>
+                </div>
+
+                {/* KEPUTUSAN KELURAHAN */}
+                <div className="border border-sky-200 bg-sky-50/60 rounded-lg p-3.5 mb-5 text-xs space-y-1.5">
+                  <div className="grid grid-cols-3">
+                    <span className="text-sky-900 font-bold">Hasil Putusan Review</span>
+                    <span className="col-span-2 font-bold text-sky-950">
+                      : {beritaAcaraData.sanggahan?.status_review?.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3">
+                    <span className="text-sky-900 font-medium">Pertimbangan Dinas</span>
+                    <span className="col-span-2 text-sky-900">
+                      : {beritaAcaraData.sanggahan?.catatan_kelurahan || 'Sesuai hasil peninjauan dan pemutakhiran data verifikasi lapangan.'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3">
+                    <span className="text-sky-900 font-medium">Tindakan Sistemik</span>
+                    <span className="col-span-2 text-sky-900 font-medium">
+                      : {beritaAcaraData.sanggahan?.status_review === 'DISETUJUI_PENCABUTAN'
+                          ? 'Kuota bansos dicabut untuk dialihkan ke prioritas miskin ekstrem (Desil 1), dan Desil Keluarga diperbarui ke Graduasi Mandiri (Desil 7).'
+                          : beritaAcaraData.sanggahan?.status_review === 'DISETUJUI_INKLUSI'
+                          ? 'Warga diterbitkan kuota darurat prioritas dan data dimasukkan ke Desil 1.'
+                          : 'Status penerima dipertahankan sesuai validasi DTKS aktif.'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* TANDA TANGAN 3 PIHAK */}
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-200 text-center text-xs">
+                  <div>
+                    <p className="text-slate-600 font-medium">Pelapor Lingkungan</p>
+                    <p className="text-[11px] text-slate-500">Ketua RT {beritaAcaraData.sanggahan?.rt} / RW {beritaAcaraData.sanggahan?.rw}</p>
+                    <div className="h-16 flex items-center justify-center">
+                      <span className="text-[10px] text-slate-400 italic">( Tanda Tangan )</span>
+                    </div>
+                    <p className="font-bold text-slate-900 underline">{beritaAcaraData.sanggahan?.nama_pelapor || 'Pengurus RT/RW'}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-slate-600 font-medium">Petugas Verifikator</p>
+                    <p className="text-[11px] text-slate-500">Seksi Kesos Kelurahan</p>
+                    <div className="h-16 flex items-center justify-center">
+                      <span className="text-[10px] text-slate-400 italic">( Tanda Tangan )</span>
+                    </div>
+                    <p className="font-bold text-slate-900 underline">{beritaAcaraData.sanggahan?.nama_reviewer || 'Petugas Kelurahan'}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-slate-600 font-medium">Mengesahkan,</p>
+                    <p className="text-[11px] text-slate-500">{beritaAcaraData.pejabat_lurah?.jabatan || 'Lurah Kebonjati'}</p>
+                    <div className="h-16 flex items-center justify-center">
+                      <div className="p-1 border border-slate-300 rounded bg-slate-50">
+                        <QrCode size={36} className="text-slate-800" />
+                      </div>
+                    </div>
+                    <p className="font-bold text-slate-900 underline">{beritaAcaraData.pejabat_lurah?.nama || 'H. Rahmat Hidayat, S.IP, M.Si'}</p>
+                    <p className="text-[10px] font-mono text-slate-600">NIP. {beritaAcaraData.pejabat_lurah?.nip || '19760815 200212 1 003'}</p>
+                  </div>
+                </div>
+
+                {/* FOOTER VERIFIKASI */}
+                <div className="mt-6 pt-3 border-t border-slate-200 flex justify-between items-center text-[10px] text-slate-500 font-mono">
+                  <span>Dokumen Sah SPBE Bumi Warga - Jabar Pintar Digital</span>
+                  <span>Kode Verifikasi: {beritaAcaraData.spbe_verification_code || `SPBE-BW-${beritaAcaraData.sanggahan?.id}-${Date.now().toString(36).toUpperCase()}`}</span>
+                </div>
+              </div>
+            ) : null}
+
+            {/* BUTTONS (HIDDEN IN PRINT) */}
+            <div className="flex justify-end gap-2 pt-6 mt-6 border-t border-slate-200 print:hidden">
+              <button
+                type="button"
+                onClick={() => setShowBeritaAcaraModal(false)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-100 transition-colors text-xs"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="px-5 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors text-xs flex items-center gap-2 shadow-sm"
+              >
+                <Printer size={15} /> Cetak Berita Acara / PDF
+              </button>
+            </div>
           </motion.div>
         </div>
       )}
