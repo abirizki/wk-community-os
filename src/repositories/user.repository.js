@@ -13,11 +13,27 @@ class UserRepository {
    * @returns {Promise<Object|null>}
    */
   async findByUsername(username) {
-    const [rows] = await pool.execute(
-      'SELECT id, username, password_hash, nama, role, rt, rw, status, created_at FROM users WHERE username = ?',
-      [username]
-    );
-    return rows.length > 0 ? rows[0] : null;
+    try {
+      const [rows] = await pool.execute(
+        'SELECT id, username, password_hash, nama, role, rt, rw, status, created_at FROM users WHERE username = ?',
+        [username]
+      );
+      return rows.length > 0 ? rows[0] : null;
+    } catch (err) {
+      // Graceful fallback if rt/rw columns do not exist in older table schema
+      try {
+        const [rows] = await pool.execute(
+          'SELECT id, username, password_hash, nama, role, status, created_at FROM users WHERE username = ?',
+          [username]
+        );
+        if (rows.length > 0) {
+          return { ...rows[0], rt: null, rw: null };
+        }
+      } catch (innerErr) {
+        console.error('[userRepository.findByUsername] Error:', innerErr.message);
+      }
+      return null;
+    }
   }
 
   /**
@@ -26,11 +42,26 @@ class UserRepository {
    * @returns {Promise<Object|null>}
    */
   async findById(id) {
-    const [rows] = await pool.execute(
-      'SELECT id, username, nama, role, rt, rw, status, created_at FROM users WHERE id = ?',
-      [id]
-    );
-    return rows.length > 0 ? rows[0] : null;
+    try {
+      const [rows] = await pool.execute(
+        'SELECT id, username, nama, role, rt, rw, status, created_at FROM users WHERE id = ?',
+        [id]
+      );
+      return rows.length > 0 ? rows[0] : null;
+    } catch (err) {
+      try {
+        const [rows] = await pool.execute(
+          'SELECT id, username, nama, role, status, created_at FROM users WHERE id = ?',
+          [id]
+        );
+        if (rows.length > 0) {
+          return { ...rows[0], rt: null, rw: null };
+        }
+      } catch (innerErr) {
+        console.error('[userRepository.findById] Error:', innerErr.message);
+      }
+      return null;
+    }
   }
 
   /**

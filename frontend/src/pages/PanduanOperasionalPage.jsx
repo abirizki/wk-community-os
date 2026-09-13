@@ -461,34 +461,34 @@ export default function PanduanOperasionalPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-16">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-primary via-emerald-800 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-elevated relative overflow-hidden">
+      {/* Header Banner (Soft Sky Blue Theme) */}
+      <div className="bg-gradient-to-r from-sky-700 via-sky-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-elevated relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-white/5 pointer-events-none rounded-r-3xl transform skew-x-12 translate-x-10" />
 
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-emerald-200 text-xs font-semibold mb-3 border border-white/10">
-            <Landmark size={14} />
-            Pemerintah Kota Sukabumi · Standar Operasional Prosedur (SOP) Digital
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-sky-200 text-xs font-semibold mb-3 border border-white/15">
+            <BookOpen size={14} />
+            Bumi Warga · Standar Operasional Prosedur (SOP) Tata Kelola Warga
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Buku Panduan Operasional Pelayanan Publik
+            Buku Panduan Operasional Platform Bumi Warga
           </h1>
-          <p className="text-sm text-emerald-100/90 mt-2 max-w-2xl leading-relaxed">
-            Pedoman tata laksana digital resmi bagi Aparatur Pemerintah Daerah, Pengurus RT/RW, Kader Posyandu, dan Warga dalam ekosistem platform <strong>Bumi Warga</strong>.
+          <p className="text-sm text-sky-100/90 mt-2 max-w-2xl leading-relaxed">
+            Pedoman tata laksana digital resmi bagi Pengurus RT, Pengurus RW, Kader Posyandu, Aparatur Lingkungan, dan Warga dalam platform <strong>Bumi Warga</strong> yang dikembangkan secara mandiri oleh <strong>Jabar Pintar Digital</strong>.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-2 bg-white text-primary px-4 py-2 rounded-xl text-xs font-semibold hover:bg-emerald-50 transition shadow-sm"
+              className="inline-flex items-center gap-2 bg-white text-sky-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-sky-50 transition shadow-sm"
             >
               <Printer size={15} /> Cetak / Ekspor SOP
             </button>
             <a
-              href="/downloads/DAFTAR_KREDENSIAL_RESMI_BUMI_WARGA.docx"
+              href="/downloads/DAFTAR_KREDENSIAL_BUMI_WARGA_TERBARU.docx"
               download="DAFTAR_KREDENSIAL_RESMI_BUMI_WARGA.docx"
-              className="inline-flex items-center gap-2 bg-emerald-500/20 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-emerald-500/30 transition border border-emerald-300/40 shadow-sm"
+              className="inline-flex items-center gap-2 bg-sky-500/20 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-sky-500/30 transition border border-sky-300/40 shadow-sm"
             >
               <FileText size={15} /> Unduh Tabel Kredensial (.DOCX)
             </a>

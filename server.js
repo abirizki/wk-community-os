@@ -13,9 +13,13 @@ const session = require('express-session');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { checkDatabase } = require('./src/db/check');
+const { autoPatchDatabase } = require('./src/db/auto_patch');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Run database auto-patch on startup to ensure schema compatibility & standard accounts
+autoPatchDatabase().catch(err => console.warn('[AutoPatch] Startup warn:', err.message));
 
 // Trust 1 level of proxy (Hostinger reverse proxy)
 app.set('trust proxy', 1);
@@ -40,7 +44,7 @@ app.use(helmet({
 // ==========================================
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
+  max: 300, // Limit each IP to 300 requests per window
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Terlalu banyak permintaan dari IP ini, coba lagi nanti.' }
@@ -48,10 +52,10 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per window
+  max: 30, // Limit each IP to 30 requests per window
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: 'Terlalu banyak percobaan login yang gagal, coba lagi nanti.' }
+  message: { success: false, message: 'Terlalu banyak percobaan login yang gagal, coba lagi beberapa saat lagi.' }
 });
 
 // Apply global limiter to all routes

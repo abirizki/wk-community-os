@@ -7,20 +7,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* === DESIGN.md Canonical Tokens === */
-        primary: '#004ac6',
+        /* === Soft Sky Blue Identity Tokens (Jabar Pintar Digital) === */
+        primary: '#0284c7', /* Soft Sky Blue 600 */
         'on-primary': '#ffffff',
-        'primary-container': '#2563eb',
-        'on-primary-container': '#eeefff',
-        'inverse-primary': '#b4c5ff',
+        'primary-container': '#e0f2fe', /* Sky 100 */
+        'on-primary-container': '#0369a1', /* Sky 700 */
+        'inverse-primary': '#7dd3fc', /* Sky 300 */
 
-        secondary: '#505f76',
+        secondary: '#475569', /* Slate 600 */
         'on-secondary': '#ffffff',
-        'secondary-container': '#d0e1fb',
+        'secondary-container': '#f1f5f9', /* Slate 100 */
 
-        tertiary: '#006242',
+        tertiary: '#0284c7',
         'on-tertiary': '#ffffff',
-        'tertiary-container': '#007d55',
+        'tertiary-container': '#bae6fd',
 
         error: '#ba1a1a',
         'on-error': '#ffffff',

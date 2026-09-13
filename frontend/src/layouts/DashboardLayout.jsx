@@ -197,14 +197,15 @@ export default function DashboardLayout() {
     <div className="flex h-screen bg-background font-sans overflow-hidden">
       {/* Sidebar Desktop (Dioptimalkan Lebar & Elegan untuk Executive & Admin) */}
       <aside className="hidden lg:flex flex-col w-64 bg-surface-container-lowest border-r border-outline-variant flex-shrink-0 z-30 shadow-sm">
-        <div className="p-5 border-b border-outline-variant">
+        <div className="p-4 border-b border-outline-variant">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center font-bold text-base shadow-sm">
-              BW
+            <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center p-1 shadow-sm flex-shrink-0">
+              <img src="/icon-bumi-warga.png" alt="BW" className="w-full h-full object-contain rounded-lg" onError={(e) => { e.target.style.display = 'none'; }} />
+              <span className="font-bold text-xs hidden only:block">BW</span>
             </div>
             <div>
-              <h2 className="text-sm font-bold text-on-surface leading-tight">Bumi Warga</h2>
-              <span className="inline-block text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 mt-1">
+              <h2 className="text-sm font-extrabold text-on-surface leading-tight">Bumi Warga</h2>
+              <span className="inline-block text-[10px] font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200 mt-0.5">
                 {getRoleBadge(user?.role)}
               </span>
             </div>
@@ -243,7 +244,7 @@ export default function DashboardLayout() {
                 {displayName}
               </p>
               <p className="text-[10px] text-on-surface-variant truncate">
-                {activeHubungan} · {user?.rt ? `RT ${user.rt}/RW ${user.rw}` : 'Kelurahan Kebonjati'}
+                {activeHubungan} · {user?.rt ? `RT ${user.rt}/RW ${user.rw}` : 'Bumi Warga'}
               </p>
             </div>
           </div>
@@ -251,7 +252,7 @@ export default function DashboardLayout() {
           {user?.family_members && user.family_members.length > 1 && (
             <button
               onClick={() => setFamilyModalOpen(true)}
-              className="w-full mb-2 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition-colors border border-emerald-200"
+              className="w-full mb-2 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-sky-50 text-sky-800 hover:bg-sky-100 transition-colors border border-sky-200"
             >
               <Sparkles size={13} />
               <span>Ganti Persona Anggota</span>
@@ -281,20 +282,24 @@ export default function DashboardLayout() {
               <Menu size={22} />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-xs">
-                BW
+              <div className="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center p-1 shadow-sm flex-shrink-0">
+                <img src="/icon-bumi-warga.png" alt="BW" className="w-full h-full object-contain rounded-md" onError={(e) => { e.target.style.display = 'none'; }} />
+                <span className="font-bold text-xs hidden only:block">BW</span>
               </div>
-              <span className="text-xs font-bold text-on-surface">Bumi Warga</span>
+              <div>
+                <span className="text-xs font-extrabold text-on-surface block leading-none">Bumi Warga</span>
+                <span className="text-[9px] text-sky-600 font-semibold">Jabar Pintar Digital</span>
+              </div>
             </div>
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
             <p className="text-xs text-on-surface-variant font-medium">
-              Pemerintah Kota Sukabumi · Kelurahan Kebonjati
+              Bumi Warga · Dikembangkan oleh <strong className="text-sky-700 font-semibold">Jabar Pintar Digital</strong>
             </p>
             {user?.active_nama && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                <UserCheck size={12} /> {user.active_nama} ({user.active_hubungan || 'Warga'})
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">
+                <UserCheck size={12} /> {user.active_nama} ({user.active_hubungan || 'Pengguna'})
               </span>
             )}
           </div>
@@ -374,12 +379,13 @@ export default function DashboardLayout() {
               >
                 <div className="p-4 border-b border-outline-variant flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
-                      BW
+                    <div className="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center p-0.5 shadow-sm flex-shrink-0">
+                      <img src="/icon-bumi-warga.png" alt="BW" className="w-full h-full object-contain rounded-md" onError={(e) => { e.target.style.display = 'none'; }} />
+                      <span className="font-bold text-xs hidden only:block">BW</span>
                     </div>
                     <div>
-                      <h2 className="text-sm font-bold text-on-surface leading-none">Bumi Warga</h2>
-                      <span className="text-[10px] text-emerald-700 font-semibold">{getRoleBadge(user?.role)}</span>
+                      <h2 className="text-sm font-extrabold text-on-surface leading-none">Bumi Warga</h2>
+                      <span className="text-[10px] text-sky-700 font-semibold">{getRoleBadge(user?.role)}</span>
                     </div>
                   </div>
                   <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-md text-on-surface-variant hover:bg-surface-container">
@@ -412,7 +418,7 @@ export default function DashboardLayout() {
                   {user?.family_members && user.family_members.length > 1 && (
                     <button
                       onClick={() => { setMobileMenuOpen(false); setFamilyModalOpen(true); }}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200"
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-sky-50 text-sky-800 border border-sky-200"
                     >
                       <Sparkles size={14} /> Ganti Persona Anggota
                     </button>
