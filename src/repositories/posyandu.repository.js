@@ -64,16 +64,20 @@ class PosyanduRepository {
    * Ambil histori balita berdasarkan NIK ortu/wali
    */
   async findByNik(nik) {
-    const [rows] = await pool.execute(
-      'SELECT * FROM posyandu WHERE nik_warga = ? ORDER BY tanggal_pemeriksaan DESC',
-      `SELECT p.*, w.nama AS nama_ortu, w.rt, w.rw, w.alamat
-       FROM posyandu p
-       LEFT JOIN warga w ON p.nik_warga = w.nik
-       WHERE p.nik_warga = ? 
-       ORDER BY p.tanggal_pemeriksaan DESC, p.id DESC`,
-      [nik]
-    );
-    return rows;
+    try {
+      const [rows] = await pool.execute(
+        `SELECT p.*, w.nama AS nama_ortu, w.rt, w.rw, w.alamat
+         FROM posyandu p
+         LEFT JOIN warga w ON p.nik_warga = w.nik
+         WHERE p.nik_warga = ? 
+         ORDER BY p.tanggal_pemeriksaan DESC, p.id DESC`,
+        [nik]
+      );
+      return rows;
+    } catch (e) {
+      console.warn('[PosyanduRepo] findByNik warning:', e.message);
+      return [];
+    }
   }
 
   /**
