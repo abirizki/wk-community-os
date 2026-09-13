@@ -1,6 +1,5 @@
 /**
  * src/routes/warga.routes.js
- * Warga API endpoints.
  * Warga API endpoints with Scoped List, Assisted Offline Registration, and Bulk Import.
  * Bumi Warga - Jabar Pintar Digital
  */
@@ -11,16 +10,11 @@ const { requireAuth, requireRole } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
-// GET /api/warga (opsional: daftar warga dengan paginasi, butuh otentikasi)
-router.get('/', async (req, res) => {
 // GET /api/warga - Daftar warga dengan pagination, pencarian, dan scoping terpadu
 router.get('/', requireAuth, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit, 10) || 20;
     const offset = parseInt(req.query.offset, 10) || 0;
-    
-    const data = await wargaService.listWarga({ limit, offset });
-    res.json({ success: true, data });
     const search = req.query.search || '';
     const rt = req.query.rt || null;
     const rw = req.query.rw || null;
@@ -33,14 +27,9 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/warga/:nik
-router.get('/:nik', async (req, res) => {
 // POST /api/warga/assisted - Mode Asistensi RT/RW untuk warga tanpa akses internet
 router.post('/assisted', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin_rw', 'ketua_rw', 'ketua_rt', 'admin'), async (req, res) => {
   try {
-    const { nik } = req.params;
-    const warga = await wargaService.getByNik(nik);
-    
     const newWarga = await wargaService.registerAssistedWarga(req.body, req.session.user);
     res.status(201).json({
       success: true,
@@ -59,17 +48,10 @@ router.post('/bulk-import', requireAuth, requireRole('superadmin', 'admin_kelura
     const summary = await wargaService.bulkImportWarga(records, req.session.user);
     res.json({
       success: true,
-      data: warga
       message: `Import massal selesai: ${summary.imported} warga berhasil ditambahkan, ${summary.skipped} dilewati.`,
       summary
     });
   } catch (error) {
-    if (error.status) {
-      res.status(error.status).json({ success: false, message: error.message });
-    } else {
-      console.error('Error fetching warga by NIK:', error.message);
-      res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server' });
-    }
     res.status(error.status || 500).json({ success: false, message: error.message });
   }
 });
@@ -86,4 +68,3 @@ router.get('/:nik', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
-
