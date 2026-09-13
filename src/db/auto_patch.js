@@ -123,7 +123,57 @@ async function autoPatchDatabase() {
       await connection.query("ALTER TABLE warga ADD COLUMN user_id INT NULL");
     } catch (e) {}
 
-    // 3. Upsert Akun Standar Resmi
+    // 3. Pastikan tabel posyandu_lansia dan posyandu_lansia_pemeriksaan ada
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`posyandu_lansia\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`nik\` VARCHAR(16) NOT NULL UNIQUE,
+          \`nama\` VARCHAR(150) NOT NULL,
+          \`tanggal_lahir\` DATE NOT NULL,
+          \`jenis_kelamin\` ENUM('L', 'P') NOT NULL,
+          \`alamat\` TEXT NOT NULL,
+          \`rt\` VARCHAR(5) NOT NULL,
+          \`rw\` VARCHAR(5) NOT NULL,
+          \`status_tinggal\` ENUM('Bersama Keluarga', 'Sebatang Kara') NOT NULL DEFAULT 'Bersama Keluarga',
+          \`riwayat_penyakit\` VARCHAR(255) DEFAULT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_lansia_rt_rw\` (\`rt\`, \`rw\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE posyandu_lansia note:', e.message);
+    }
+
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`posyandu_lansia_pemeriksaan\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`posyandu_lansia_id\` INT NOT NULL,
+          \`tanggal_pemeriksaan\` DATE NOT NULL,
+          \`tensi_sistolik\` INT NOT NULL,
+          \`tensi_diastolik\` INT NOT NULL,
+          \`gula_darah_sewaktu\` INT NULL,
+          \`kolesterol\` INT NULL,
+          \`asam_urat\` DECIMAL(4,1) NULL,
+          \`berat_badan_kg\` DECIMAL(5,2) NOT NULL,
+          \`tinggi_badan_cm\` DECIMAL(5,2) NOT NULL,
+          \`imt\` DECIMAL(4,1) NULL,
+          \`skor_kemandirian_adl\` ENUM('Mandiri', 'Ketergantungan Ringan', 'Ketergantungan Sedang', 'Ketergantungan Berat') NOT NULL DEFAULT 'Mandiri',
+          \`keluhan\` TEXT NULL,
+          \`tindakan_petugas\` TEXT NULL,
+          \`petugas\` VARCHAR(100) NOT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX \`idx_pemeriksaan_lansia_id\` (\`posyandu_lansia_id\`),
+          INDEX \`idx_pemeriksaan_lansia_tgl\` (\`tanggal_pemeriksaan\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE posyandu_lansia_pemeriksaan note:', e.message);
+    }
+
+    // 4. Upsert Akun Standar Resmi
     for (const acc of STANDARD_ACCOUNTS) {
       try {
         await connection.execute(`

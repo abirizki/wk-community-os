@@ -146,11 +146,16 @@ class PosyanduRepository {
    * Cari data lansia berdasarkan NIK
    */
   async findLansiaByNik(nik) {
-    const [rows] = await pool.execute(
-      'SELECT * FROM posyandu_lansia WHERE nik = ? LIMIT 1',
-      [nik]
-    );
-    return rows.length > 0 ? rows[0] : null;
+    try {
+      const [rows] = await pool.execute(
+        'SELECT * FROM posyandu_lansia WHERE nik = ? LIMIT 1',
+        [nik]
+      );
+      return rows.length > 0 ? rows[0] : null;
+    } catch (e) {
+      console.warn('[PosyanduRepo] findLansiaByNik warning:', e.message);
+      return null;
+    }
   }
 
   /**
@@ -186,56 +191,61 @@ class PosyanduRepository {
    * Daftar lansia dengan pemeriksaan terakhirnya (Scoped RT/RW)
    */
   async listLansia({ rt, rw, search, limit = 50, offset = 0 } = {}) {
-    let query = `
-      SELECT 
-        pl.*,
-        TIMESTAMPDIFF(YEAR, pl.tanggal_lahir, CURDATE()) AS usia,
-        p.id AS pemeriksaan_id,
-        p.tanggal_pemeriksaan,
-        p.tensi_sistolik,
-        p.tensi_diastolik,
-        p.gula_darah_sewaktu,
-        p.kolesterol,
-        p.asam_urat,
-        p.berat_badan_kg,
-        p.tinggi_badan_cm,
-        p.imt,
-        p.skor_kemandirian_adl,
-        p.keluhan,
-        p.tindakan_petugas,
-        p.petugas
-      FROM posyandu_lansia pl
-      LEFT JOIN (
-        SELECT lp1.*
-        FROM posyandu_lansia_pemeriksaan lp1
-        INNER JOIN (
-          SELECT posyandu_lansia_id, MAX(tanggal_pemeriksaan) AS max_tgl, MAX(id) AS max_id
-          FROM posyandu_lansia_pemeriksaan
-          GROUP BY posyandu_lansia_id
-        ) lp2 ON lp1.posyandu_lansia_id = lp2.posyandu_lansia_id AND lp1.id = lp2.max_id
-      ) p ON pl.id = p.posyandu_lansia_id
-      WHERE 1=1
-    `;
-    const params = [];
+    try {
+      let query = `
+        SELECT 
+          pl.*,
+          TIMESTAMPDIFF(YEAR, pl.tanggal_lahir, CURDATE()) AS usia,
+          p.id AS pemeriksaan_id,
+          p.tanggal_pemeriksaan,
+          p.tensi_sistolik,
+          p.tensi_diastolik,
+          p.gula_darah_sewaktu,
+          p.kolesterol,
+          p.asam_urat,
+          p.berat_badan_kg,
+          p.tinggi_badan_cm,
+          p.imt,
+          p.skor_kemandirian_adl,
+          p.keluhan,
+          p.tindakan_petugas,
+          p.petugas
+        FROM posyandu_lansia pl
+        LEFT JOIN (
+          SELECT lp1.*
+          FROM posyandu_lansia_pemeriksaan lp1
+          INNER JOIN (
+            SELECT posyandu_lansia_id, MAX(tanggal_pemeriksaan) AS max_tgl, MAX(id) AS max_id
+            FROM posyandu_lansia_pemeriksaan
+            GROUP BY posyandu_lansia_id
+          ) lp2 ON lp1.posyandu_lansia_id = lp2.posyandu_lansia_id AND lp1.id = lp2.max_id
+        ) p ON pl.id = p.posyandu_lansia_id
+        WHERE 1=1
+      `;
+      const params = [];
 
-    if (rw) {
-      query += ' AND pl.rw = ?';
-      params.push(rw);
-    }
-    if (rt) {
-      query += ' AND pl.rt = ?';
-      params.push(rt);
-    }
-    if (search) {
-      query += ' AND (pl.nama LIKE ? OR pl.nik LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`);
-    }
+      if (rw) {
+        query += ' AND pl.rw = ?';
+        params.push(rw);
+      }
+      if (rt) {
+        query += ' AND pl.rt = ?';
+        params.push(rt);
+      }
+      if (search) {
+        query += ' AND (pl.nama LIKE ? OR pl.nik LIKE ?)';
+        params.push(`%${search}%`, `%${search}%`);
+      }
 
-    query += ' ORDER BY pl.nama ASC LIMIT ? OFFSET ?';
-    params.push(String(limit), String(offset));
+      query += ' ORDER BY pl.nama ASC LIMIT ? OFFSET ?';
+      params.push(String(limit), String(offset));
 
-    const [rows] = await pool.execute(query, params);
-    return rows;
+      const [rows] = await pool.execute(query, params);
+      return rows;
+    } catch (e) {
+      console.warn('[PosyanduRepo] listLansia fallback:', e.message);
+      return [];
+    }
   }
 
   /**
@@ -304,78 +314,88 @@ class PosyanduRepository {
    * Ambil data lansia yang berada dalam satu Kartu Keluarga (untuk persona warga login)
    */
   async findLansiaByFamilyNik(nik) {
-    const [rows] = await pool.execute(
-      `SELECT 
-        pl.*,
-        TIMESTAMPDIFF(YEAR, pl.tanggal_lahir, CURDATE()) AS usia,
-        p.id AS pemeriksaan_id,
-        p.tanggal_pemeriksaan,
-        p.tensi_sistolik,
-        p.tensi_diastolik,
-        p.gula_darah_sewaktu,
-        p.kolesterol,
-        p.asam_urat,
-        p.berat_badan_kg,
-        p.tinggi_badan_cm,
-        p.imt,
-        p.skor_kemandirian_adl,
-        p.keluhan,
-        p.tindakan_petugas,
-        p.petugas
-       FROM posyandu_lansia pl
-       JOIN warga target ON pl.nik = target.nik
-       JOIN warga current_w ON target.no_kk = current_w.no_kk
-       LEFT JOIN (
-        SELECT lp1.*
-        FROM posyandu_lansia_pemeriksaan lp1
-        INNER JOIN (
-          SELECT posyandu_lansia_id, MAX(tanggal_pemeriksaan) AS max_tgl, MAX(id) AS max_id
-          FROM posyandu_lansia_pemeriksaan
-          GROUP BY posyandu_lansia_id
-        ) lp2 ON lp1.posyandu_lansia_id = lp2.posyandu_lansia_id AND lp1.id = lp2.max_id
-       ) p ON pl.id = p.posyandu_lansia_id
-       WHERE current_w.nik = ?
-       ORDER BY pl.tanggal_lahir ASC`,
-      [nik]
-    );
-    return rows;
+    try {
+      const [rows] = await pool.execute(
+        `SELECT 
+          pl.*,
+          TIMESTAMPDIFF(YEAR, pl.tanggal_lahir, CURDATE()) AS usia,
+          p.id AS pemeriksaan_id,
+          p.tanggal_pemeriksaan,
+          p.tensi_sistolik,
+          p.tensi_diastolik,
+          p.gula_darah_sewaktu,
+          p.kolesterol,
+          p.asam_urat,
+          p.berat_badan_kg,
+          p.tinggi_badan_cm,
+          p.imt,
+          p.skor_kemandirian_adl,
+          p.keluhan,
+          p.tindakan_petugas,
+          p.petugas
+         FROM posyandu_lansia pl
+         JOIN warga target ON pl.nik = target.nik
+         JOIN warga current_w ON target.no_kk = current_w.no_kk
+         LEFT JOIN (
+          SELECT lp1.*
+          FROM posyandu_lansia_pemeriksaan lp1
+          INNER JOIN (
+            SELECT posyandu_lansia_id, MAX(tanggal_pemeriksaan) AS max_tgl, MAX(id) AS max_id
+            FROM posyandu_lansia_pemeriksaan
+            GROUP BY posyandu_lansia_id
+          ) lp2 ON lp1.posyandu_lansia_id = lp2.posyandu_lansia_id AND lp1.id = lp2.max_id
+         ) p ON pl.id = p.posyandu_lansia_id
+         WHERE current_w.nik = ?
+         ORDER BY pl.tanggal_lahir ASC`,
+        [nik]
+      );
+      return rows;
+    } catch (e) {
+      console.warn('[PosyanduRepo] findLansiaByFamilyNik fallback:', e.message);
+      return [];
+    }
   }
 
   /**
    * Statistik agregasi kesehatan lansia
    */
   async getLansiaStats({ rt, rw } = {}) {
-    let query = `
-      SELECT 
-        COUNT(DISTINCT pl.id) AS total_lansia,
-        SUM(CASE WHEN p.tensi_sistolik >= 140 OR p.tensi_diastolik >= 90 THEN 1 ELSE 0 END) AS total_hipertensi,
-        SUM(CASE WHEN p.gula_darah_sewaktu >= 200 THEN 1 ELSE 0 END) AS total_diabetes,
-        SUM(CASE WHEN p.skor_kemandirian_adl != 'Mandiri' THEN 1 ELSE 0 END) AS total_ketergantungan
-      FROM posyandu_lansia pl
-      LEFT JOIN (
-        SELECT lp1.*
-        FROM posyandu_lansia_pemeriksaan lp1
-        INNER JOIN (
-          SELECT posyandu_lansia_id, MAX(tanggal_pemeriksaan) AS max_tgl, MAX(id) AS max_id
-          FROM posyandu_lansia_pemeriksaan
-          GROUP BY posyandu_lansia_id
-        ) lp2 ON lp1.posyandu_lansia_id = lp2.posyandu_lansia_id AND lp1.id = lp2.max_id
-      ) p ON pl.id = p.posyandu_lansia_id
-      WHERE 1=1
-    `;
-    const params = [];
+    try {
+      let query = `
+        SELECT 
+          COUNT(DISTINCT pl.id) AS total_lansia,
+          SUM(CASE WHEN p.tensi_sistolik >= 140 OR p.tensi_diastolik >= 90 THEN 1 ELSE 0 END) AS total_hipertensi,
+          SUM(CASE WHEN p.gula_darah_sewaktu >= 200 THEN 1 ELSE 0 END) AS total_diabetes,
+          SUM(CASE WHEN p.skor_kemandirian_adl != 'Mandiri' THEN 1 ELSE 0 END) AS total_ketergantungan
+        FROM posyandu_lansia pl
+        LEFT JOIN (
+          SELECT lp1.*
+          FROM posyandu_lansia_pemeriksaan lp1
+          INNER JOIN (
+            SELECT posyandu_lansia_id, MAX(tanggal_pemeriksaan) AS max_tgl, MAX(id) AS max_id
+            FROM posyandu_lansia_pemeriksaan
+            GROUP BY posyandu_lansia_id
+          ) lp2 ON lp1.posyandu_lansia_id = lp2.posyandu_lansia_id AND lp1.id = lp2.max_id
+        ) p ON pl.id = p.posyandu_lansia_id
+        WHERE 1=1
+      `;
+      const params = [];
 
-    if (rw) {
-      query += ' AND pl.rw = ?';
-      params.push(rw);
-    }
-    if (rt) {
-      query += ' AND pl.rt = ?';
-      params.push(rt);
-    }
+      if (rw) {
+        query += ' AND pl.rw = ?';
+        params.push(rw);
+      }
+      if (rt) {
+        query += ' AND pl.rt = ?';
+        params.push(rt);
+      }
 
-    const [rows] = await pool.execute(query, params);
-    return rows[0] || { total_lansia: 0, total_hipertensi: 0, total_diabetes: 0, total_ketergantungan: 0 };
+      const [rows] = await pool.execute(query, params);
+      return rows[0] || { total_lansia: 0, total_hipertensi: 0, total_diabetes: 0, total_ketergantungan: 0 };
+    } catch (e) {
+      console.warn('[PosyanduRepo] getLansiaStats fallback:', e.message);
+      return { total_lansia: 0, total_hipertensi: 0, total_diabetes: 0, total_ketergantungan: 0 };
+    }
   }
 }
 

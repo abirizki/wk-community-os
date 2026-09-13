@@ -179,86 +179,91 @@ class AnalyticsRepository {
       params.push(scope.rw);
     }
 
-    // Ambil agregasi per RT dengan join pemeriksaan terbaru
-    const [rtRows] = await pool.execute(
-      `SELECT 
-        l.rt,
-        l.rw,
-        COUNT(DISTINCT l.id) AS total_lansia,
-        SUM(CASE WHEN l.status_tinggal = 'Sebatang Kara' THEN 1 ELSE 0 END) AS sebatang_kara,
-        SUM(CASE WHEN latest.tensi_sistolik >= 140 OR latest.tensi_diastolik >= 90 THEN 1 ELSE 0 END) AS hipertensi,
-        SUM(CASE WHEN latest.tensi_sistolik >= 160 OR latest.tensi_diastolik >= 100 THEN 1 ELSE 0 END) AS hipertensi_berat,
-        SUM(CASE WHEN latest.gula_darah_sewaktu >= 200 THEN 1 ELSE 0 END) AS diabetes,
-        SUM(CASE WHEN latest.skor_kemandirian_adl IN ('Ketergantungan Berat', 'Ketergantungan Total') THEN 1 ELSE 0 END) AS ketergantungan_tinggi
-       FROM posyandu_lansia l
-       LEFT JOIN (
-         SELECT p1.*
-         FROM posyandu_lansia_pemeriksaan p1
-         INNER JOIN (
-           SELECT posyandu_lansia_id, MAX(tanggal_pemeriksaan) AS max_date, MAX(id) as max_id
-           FROM posyandu_lansia_pemeriksaan
-           GROUP BY posyandu_lansia_id
-         ) p2 ON p1.posyandu_lansia_id = p2.posyandu_lansia_id AND p1.id = p2.max_id
-       ) latest ON l.id = latest.posyandu_lansia_id
-       ${whereClause}
-       GROUP BY l.rt, l.rw
-       ORDER BY l.rt ASC`,
-      params
-    );
+    try {
+      // Ambil agregasi per RT dengan join pemeriksaan terbaru
+      const [rtRows] = await pool.execute(
+        `SELECT 
+          l.rt,
+          l.rw,
+          COUNT(DISTINCT l.id) AS total_lansia,
+          SUM(CASE WHEN l.status_tinggal = 'Sebatang Kara' THEN 1 ELSE 0 END) AS sebatang_kara,
+          SUM(CASE WHEN latest.tensi_sistolik >= 140 OR latest.tensi_diastolik >= 90 THEN 1 ELSE 0 END) AS hipertensi,
+          SUM(CASE WHEN latest.tensi_sistolik >= 160 OR latest.tensi_diastolik >= 100 THEN 1 ELSE 0 END) AS hipertensi_berat,
+          SUM(CASE WHEN latest.gula_darah_sewaktu >= 200 THEN 1 ELSE 0 END) AS diabetes,
+          SUM(CASE WHEN latest.skor_kemandirian_adl IN ('Ketergantungan Berat', 'Ketergantungan Total') THEN 1 ELSE 0 END) AS ketergantungan_tinggi
+         FROM posyandu_lansia l
+         LEFT JOIN (
+           SELECT p1.*
+           FROM posyandu_lansia_pemeriksaan p1
+           INNER JOIN (
+             SELECT posyandu_lansia_id, MAX(tanggal_pemeriksaan) AS max_date, MAX(id) as max_id
+             FROM posyandu_lansia_pemeriksaan
+             GROUP BY posyandu_lansia_id
+           ) p2 ON p1.posyandu_lansia_id = p2.posyandu_lansia_id AND p1.id = p2.max_id
+         ) latest ON l.id = latest.posyandu_lansia_id
+         ${whereClause}
+         GROUP BY l.rt, l.rw
+         ORDER BY l.rt ASC`,
+        params
+      );
 
-    // Ambil lansia prioritas kritis untuk data bukti AI
-    const [criticalRows] = await pool.execute(
-      `SELECT 
-        l.id,
-        l.nik,
-        l.nama,
-        TIMESTAMPDIFF(YEAR, l.tanggal_lahir, CURDATE()) AS usia,
-        l.status_tinggal,
-        l.riwayat_penyakit,
-        l.alamat,
-        l.rt,
-        l.rw,
-        latest.tensi_sistolik,
-        latest.tensi_diastolik,
-        latest.gula_darah_sewaktu,
-        latest.kolesterol,
-        latest.asam_urat,
-        latest.skor_kemandirian_adl,
-        latest.tanggal_pemeriksaan
-       FROM posyandu_lansia l
-       INNER JOIN (
-         SELECT p1.*
-         FROM posyandu_lansia_pemeriksaan p1
+      // Ambil lansia prioritas kritis untuk data bukti AI
+      const [criticalRows] = await pool.execute(
+        `SELECT 
+          l.id,
+          l.nik,
+          l.nama,
+          TIMESTAMPDIFF(YEAR, l.tanggal_lahir, CURDATE()) AS usia,
+          l.status_tinggal,
+          l.riwayat_penyakit,
+          l.alamat,
+          l.rt,
+          l.rw,
+          latest.tensi_sistolik,
+          latest.tensi_diastolik,
+          latest.gula_darah_sewaktu,
+          latest.kolesterol,
+          latest.asam_urat,
+          latest.skor_kemandirian_adl,
+          latest.tanggal_pemeriksaan
+         FROM posyandu_lansia l
          INNER JOIN (
-           SELECT posyandu_lansia_id, MAX(id) as max_id
-           FROM posyandu_lansia_pemeriksaan
-           GROUP BY posyandu_lansia_id
-         ) p2 ON p1.id = p2.max_id
-       ) latest ON l.id = latest.posyandu_lansia_id
-       ${whereClause}
-       AND (
-         (latest.tensi_sistolik >= 160 OR latest.gula_darah_sewaktu >= 200)
-         OR (l.status_tinggal = 'Sebatang Kara')
-         OR (latest.skor_kemandirian_adl IN ('Ketergantungan Berat', 'Ketergantungan Total'))
-       )
-       ORDER BY latest.tensi_sistolik DESC
-       LIMIT 50`,
-      params
-    );
+           SELECT p1.*
+           FROM posyandu_lansia_pemeriksaan p1
+           INNER JOIN (
+             SELECT posyandu_lansia_id, MAX(id) as max_id
+             FROM posyandu_lansia_pemeriksaan
+             GROUP BY posyandu_lansia_id
+           ) p2 ON p1.id = p2.max_id
+         ) latest ON l.id = latest.posyandu_lansia_id
+         ${whereClause}
+         AND (
+           (latest.tensi_sistolik >= 160 OR latest.gula_darah_sewaktu >= 200)
+           OR (l.status_tinggal = 'Sebatang Kara')
+           OR (latest.skor_kemandirian_adl IN ('Ketergantungan Berat', 'Ketergantungan Total'))
+         )
+         ORDER BY latest.tensi_sistolik DESC
+         LIMIT 50`,
+        params
+      );
 
-    return {
-      per_rt: rtRows.map(r => ({
-        rt: r.rt,
-        rw: r.rw,
-        total_lansia: Number(r.total_lansia || 0),
-        sebatang_kara: Number(r.sebatang_kara || 0),
-        hipertensi: Number(r.hipertensi || 0),
-        hipertensi_berat: Number(r.hipertensi_berat || 0),
-        diabetes: Number(r.diabetes || 0),
-        ketergantungan_tinggi: Number(r.ketergantungan_tinggi || 0)
-      })),
-      critical_lansia: criticalRows
-    };
+      return {
+        per_rt: rtRows.map(r => ({
+          rt: r.rt,
+          rw: r.rw,
+          total_lansia: Number(r.total_lansia || 0),
+          sebatang_kara: Number(r.sebatang_kara || 0),
+          hipertensi: Number(r.hipertensi || 0),
+          hipertensi_berat: Number(r.hipertensi_berat || 0),
+          diabetes: Number(r.diabetes || 0),
+          ketergantungan_tinggi: Number(r.ketergantungan_tinggi || 0)
+        })),
+        critical_cases: criticalRows
+      };
+    } catch (err) {
+      console.warn('[AnalyticsRepo] getLansiaHealthRiskOverview fallback:', err.message);
+      return { per_rt: [], critical_cases: [] };
+    }
   }
 
   /**

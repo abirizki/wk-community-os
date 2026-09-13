@@ -169,9 +169,12 @@ export default function LoginPage() {
             variants={fadeUp} custom={0.15}
             className="my-auto space-y-4 max-w-lg"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-400/20 text-sky-100 text-xs font-semibold border border-sky-300/30">
-              <Sparkles size={13} className="text-sky-300 animate-pulse" />
-              Sistem Tata Kelola Warga Masa Depan
+            {/* Eyebrow Formal & Presisi */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-5 h-[2px] bg-sky-400"></div>
+              <span className="text-[11px] font-bold tracking-widest uppercase text-sky-200">
+                Sistem Tata Kelola Warga Masa Depan
+              </span>
             </div>
 
             <h1 className="text-2xl xl:text-3xl font-extrabold leading-tight tracking-tight text-white">
