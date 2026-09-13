@@ -24,7 +24,6 @@ import {
   Camera,
   MapPin,
   PenTool,
-  Eye
   Eye,
   Printer,
   TrendingUp,
@@ -950,7 +949,6 @@ export default function BansosPage() {
                           {getAuditStatusBadge(item.status_review)}
                         </td>
                         <td className="p-3 text-center whitespace-nowrap">
-                          {isKelurahan && item.status_review === 'PENDING_KELURAHAN' ? (
                           <div className="flex items-center justify-center gap-1.5 flex-wrap">
                             {isKelurahan && item.status_review === 'PENDING_KELURAHAN' && (
                               <button
@@ -968,27 +966,12 @@ export default function BansosPage() {
                               </button>
                             )}
                             <button
-                              onClick={() => {
-                                setSelectedAudit(item);
-                                setAuditReviewForm({
-                                  status_review: item.tipe_sanggahan === 'LAYAK_BELUM_TERDAFTAR' ? 'DISETUJUI_INKLUSI' : 'DISETUJUI_PENCABUTAN',
-                                  catatan_kelurahan: ''
-                                });
-                                setShowAuditReviewModal(true);
-                              }}
-                              className="px-3 py-1.5 bg-primary text-on-primary font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm text-xs"
                               onClick={() => openBeritaAcaraModal(item)}
                               className="px-2.5 py-1 bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-sm"
                               title="Cetak Dokumen Berita Acara Resmi"
                             >
-                              Putuskan Review
                               <Printer size={12} /> Cetak BA
                             </button>
-                          ) : (
-                            <span className="text-on-surface-variant text-[11px] font-medium italic">
-                              {item.nama_reviewer ? `Direview: ${item.nama_reviewer}` : 'Tercatat'}
-                            </span>
-                          )}
                           </div>
                         </td>
                       </tr>

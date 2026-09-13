@@ -52,6 +52,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  const url = new URL(request.url);
+
   // Skip non-GET requests for SW caching (mutations handled by IndexedDB offline queue)
   if (request.method !== 'GET') {
     return;

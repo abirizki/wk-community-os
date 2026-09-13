@@ -24,6 +24,8 @@ import {
   Landmark,
   MessageSquare,
   BookOpen
+  BookOpen,
+  Wallet,
 } from 'lucide-react';
 import OfflineIndicator from '../components/OfflineIndicator';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
@@ -111,6 +113,7 @@ export default function DashboardLayout() {
         { name: 'Register Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={19} /> },
         { name: 'Pengelolaan Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Rekonsiliasi PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
+        { name: 'Buku Kas & Keuangan', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Gerbang Pesan WhatsApp', path: '/dashboard/whatsapp', icon: <MessageSquare size={19} /> },
         { name: 'Panduan SOP Operasional', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
       ];
@@ -122,6 +125,7 @@ export default function DashboardLayout() {
         { name: 'Rekomendasi Surat RW', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Pangkalan Data Warga RW', path: '/dashboard/warga', icon: <User size={19} /> },
         { name: 'Validasi & Audit Bansos RW', path: '/dashboard/bansos', icon: <Gift size={19} /> },
+        { name: 'Buku Kas RW & Rekapitulasi', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Pemetaan Kemiskinan RW', path: '/dashboard/desil', icon: <Sparkles size={19} /> },
         { name: 'Laporan Ketertiban RW', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP Ketua RW', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -135,6 +139,7 @@ export default function DashboardLayout() {
         { name: 'Pangkalan Data Warga RT', path: '/dashboard/warga', icon: <User size={19} /> },
         { name: 'Registrasi KK Wilayah RT', path: '/dashboard/kk', icon: <Users size={19} /> },
         { name: 'Usulan & Audit Bansos RT', path: '/dashboard/bansos', icon: <Gift size={19} /> },
+        { name: 'Buku Kas RT & Iuran Warga', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Laporan Pengaduan RT', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP Ketua RT', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
       ];
@@ -157,6 +162,7 @@ export default function DashboardLayout() {
       { name: 'Kartu Keluarga Digital', path: '/dashboard/kk', icon: <Users size={19} /> },
       { name: 'Informasi Bantuan Sosial', path: '/dashboard/bansos', icon: <Gift size={19} /> },
       { name: 'Kesehatan Keluarga & Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
+      { name: 'Transparansi Kas & Iuran', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
       { name: 'Informasi Tagihan PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
       { name: 'Lapor Pengaduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
       { name: 'Panduan Layanan Warga', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }

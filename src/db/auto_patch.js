@@ -288,6 +288,62 @@ async function autoPatchDatabase() {
     }
 
     // 4. Upsert Akun Standar Resmi
+    // 8. Pastikan tabel keuangan_kas (Buku Kas Masuk & Keluar RT/RW) tersedia
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`keuangan_kas\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`nomor_transaksi\` VARCHAR(50) NOT NULL UNIQUE,
+          \`tipe\` ENUM('MASUK', 'KELUAR') NOT NULL,
+          \`kategori\` VARCHAR(100) NOT NULL,
+          \`nominal\` DECIMAL(12,2) NOT NULL,
+          \`keterangan\` TEXT NOT NULL,
+          \`tanggal_transaksi\` DATE NOT NULL,
+          \`bukti_foto_url\` VARCHAR(255) NULL,
+          \`tingkat_wilayah\` ENUM('RT', 'RW', 'KELURAHAN') NOT NULL DEFAULT 'RT',
+          \`rt\` VARCHAR(5) NOT NULL,
+          \`rw\` VARCHAR(5) NOT NULL,
+          \`dicatat_oleh_user_id\` INT NOT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_kas_tipe\` (\`tipe\`),
+          INDEX \`idx_kas_rt_rw\` (\`rt\`, \`rw\`),
+          INDEX \`idx_kas_tgl\` (\`tanggal_transaksi\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE keuangan_kas note:', e.message);
+    }
+
+    // 9. Pastikan tabel keuangan_iuran_warga (Iuran Bulanan KK) tersedia
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`keuangan_iuran_warga\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`no_kk\` VARCHAR(16) NOT NULL,
+          \`nama_kepala_keluarga\` VARCHAR(150) NOT NULL,
+          \`periode_bulan\` VARCHAR(7) NOT NULL,
+          \`nominal_tagihan\` DECIMAL(12,2) NOT NULL DEFAULT 25000.00,
+          \`status_bayar\` ENUM('LUNAS', 'BELUM_BAYAR') NOT NULL DEFAULT 'BELUM_BAYAR',
+          \`tanggal_bayar\` DATETIME NULL,
+          \`metode_bayar\` ENUM('TUNAI_RT', 'TRANSFER') NULL,
+          \`bukti_bayar_url\` VARCHAR(255) NULL,
+          \`rt\` VARCHAR(5) NOT NULL,
+          \`rw\` VARCHAR(5) NOT NULL,
+          \`diterima_oleh_user_id\` INT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY \`uk_kk_periode\` (\`no_kk\`, \`periode_bulan\`),
+          INDEX \`idx_iuran_rt_rw\` (\`rt\`, \`rw\`),
+          INDEX \`idx_iuran_status\` (\`status_bayar\`),
+          INDEX \`idx_iuran_periode\` (\`periode_bulan\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE keuangan_iuran_warga note:', e.message);
+    }
+
+    // 10. Upsert Akun Standar Resmi
     for (const acc of STANDARD_ACCOUNTS) {
       try {
         await connection.execute(`

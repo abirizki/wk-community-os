@@ -21,6 +21,7 @@ import KartuKeluargaPage from './pages/KartuKeluargaPage';
 import UserManagementPage from './pages/UserManagementPage';
 import PanduanOperasionalPage from './pages/PanduanOperasionalPage';
 import ProfilePage from './pages/ProfilePage';
+import KeuanganPage from './pages/KeuanganPage';
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
             <Route path="data-maturity" element={<DataMaturityPage />} />
             <Route path="daya-dukung" element={<DayaDukungPage />} />
             <Route path="pbb" element={<PBBPage />} />
+            <Route path="keuangan" element={<KeuanganPage />} />
             <Route path="posyandu" element={<PosyanduPage />} />
             <Route path="pengaduan" element={<ComplaintPage />} />
             <Route path="profil" element={<ProfilePage />} />
