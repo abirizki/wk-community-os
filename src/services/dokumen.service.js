@@ -1,6 +1,5 @@
 /**
  * src/services/dokumen.service.js
- * Business Logic Layer for Dokumen Request.
  * Business Logic Layer for Multi-Tier Document Approvals & Demography Event Triggers.
  * Bumi Warga - Jabar Pintar Digital
  */
@@ -127,9 +126,6 @@ class DokumenService {
 
   /**
    * Ambil daftar permohonan surat warga tertentu
-   * @param {string} nik 
-   * @returns {Promise<Array>}
-   * Ambil daftar permohonan surat milik warga aktif atau seluruh keluarga
    */
   async getByNik(nik) {
     if (!nik) {
@@ -142,11 +138,14 @@ class DokumenService {
 
   /**
    * Ambil seluruh permohonan surat (Operator / Admin)
-   * @returns {Promise<Array>}
-   * Ambil seluruh permohonan surat berdasar hierarki peran
    */
   async getAll() {
     return await dokumenRepository.list();
+  }
+
+  /**
+   * Ambil seluruh permohonan surat berdasar hierarki peran
+   */
   async listByScope(currentUser, query = {}) {
     const { role, rt, rw } = currentUser;
     const filter = {
@@ -172,20 +171,8 @@ class DokumenService {
   }
 
   /**
-   * Update status permohonan surat oleh operator/admin
-   * @param {number} id 
-   * @param {string} status 
-   * @param {string} catatan_admin 
-   * @param {string} file_hasil 
-   * @returns {Promise<Object>}
    * Eksekusi trigger demografi otomatis saat surat disahkan oleh Kelurahan
    */
-  async updateStatus(id, status, catatan_admin = null, file_hasil = null) {
-    const validStatuses = ['SUBMITTED', 'VERIFYING', 'APPROVED', 'REJECTED', 'READY_PICKUP'];
-    if (!validStatuses.includes(status)) {
-      const err = new Error(`Status tidak valid. Pilihan: ${validStatuses.join(', ')}`);
-      err.status = 400;
-      throw err;
   async executeDemographyTrigger(doc) {
     const jenis = (doc.jenis_surat || doc.jenis_dokumen || '').toLowerCase();
     const nik = doc.nik_pemohon;
@@ -282,7 +269,6 @@ class DokumenService {
       throw err;
     }
 
-    await dokumenRepository.updateStatus(id, status, catatan_admin, file_hasil);
     if (doc.status === 'APPROVED') {
       throw new Error('Dokumen ini sudah disetujui sebelumnya.');
     }
@@ -290,16 +276,6 @@ class DokumenService {
       throw new Error('Dokumen ini sudah ditolak dan tidak dapat diproses lagi.');
     }
 
-    // Kirim notifikasi status terbaru ke warga
-    try {
-      let pesan = `Status permohonan ${doc.jenis_dokumen} Anda telah diperbarui menjadi: ${status}.`;
-      let tipe = 'info';
-      if (status === 'APPROVED' || status === 'READY_PICKUP') {
-        pesan = `Kabar baik! Permohonan ${doc.jenis_dokumen} Anda telah DISETUJUI dan siap diambil di Kantor Kelurahan Kebonjati.`;
-        tipe = 'success';
-      } else if (status === 'REJECTED') {
-        pesan = `Permohonan ${doc.jenis_dokumen} Anda DITOLAK. Catatan: ${catatan_admin || 'Persyaratan belum lengkap.'}`;
-        tipe = 'error';
     const { role } = currentUser;
 
     // STEP 1: Persetujuan Ketua RT
@@ -315,63 +291,57 @@ class DokumenService {
       });
 
       // Notifikasi ke warga
-      await notifikasiRepository.create({
-        nik_target: doc.nik_pemohon,
-        judul: `Update Status: ${doc.jenis_dokumen}`,
-        pesan,
-        tipe,
-        judul: 'Persetujuan RT Berhasil',
-        pesan: `Permohonan surat ${doc.jenis_dokumen} telah disetujui RT ${doc.rt} dan diteruskan ke RW ${doc.rw}.`,
-        tipe: 'info',
-        link: '/dashboard/dokumen'
-      });
-    } catch (e) {
-      console.warn('Gagal memicu notifikasi update dokumen:', e.message);
+      try {
+        await notifikasiRepository.create({
+          nik_target: doc.nik_pemohon,
+          judul: 'Persetujuan RT Berhasil',
+          pesan: `Permohonan surat ${doc.jenis_dokumen} telah disetujui RT ${doc.rt} dan diteruskan ke RW ${doc.rw}.`,
+          tipe: 'info',
+          link: '/dashboard/dokumen'
+        });
+      } catch (e) {
+        console.warn('Gagal memicu notifikasi update dokumen:', e.message);
+      }
 
       return { success: true, step: 'RW', message: 'Disetujui oleh RT. Menunggu verifikasi RW.' };
     }
 
-    return { id, status, catatan_admin, file_hasil };
     // STEP 2: Persetujuan Ketua RW / Admin RW
     if (role === 'ketua_rw' || role === 'admin_rw') {
-      if (doc.approval_step !== 'RW' && doc.approval_step !== 'RT') {
+      if (doc.approval_step !== 'RW') {
         throw new Error('Tahap verifikasi dokumen ini bukan di tingkat RW.');
       }
       await dokumenRepository.updateApproval(id, {
         status: 'VERIFYING',
         approval_step: 'KELURAHAN',
         approved_by_rw: currentUser.id,
-        catatan_petugas: catatan || 'Disetujui oleh Ketua RW, diteruskan ke Kantor Kelurahan'
+        catatan_petugas: catatan || 'Disetujui oleh RW, diteruskan ke Kelurahan'
       });
 
-      // Notifikasi ke warga
-      await notifikasiRepository.create({
-        nik_target: doc.nik_pemohon,
-        judul: 'Persetujuan RW Berhasil',
-        pesan: `Permohonan surat ${doc.jenis_dokumen} telah disetujui RW ${doc.rw} dan sedang dalam pengesahan Kelurahan Kebonjati.`,
-        tipe: 'info',
-        link: '/dashboard/dokumen'
-      });
+      try {
+        await notifikasiRepository.create({
+          nik_target: doc.nik_pemohon,
+          judul: 'Persetujuan RW Berhasil',
+          pesan: `Permohonan surat ${doc.jenis_dokumen} telah disetujui RW ${doc.rw} dan sedang diproses di Kelurahan Kebonjati.`,
+          tipe: 'info',
+          link: '/dashboard/dokumen'
+        });
+      } catch (e) {
+        console.warn('Gagal memicu notifikasi update dokumen:', e.message);
+      }
 
       return { success: true, step: 'KELURAHAN', message: 'Disetujui oleh RW. Menunggu pengesahan Kelurahan.' };
     }
 
-    // STEP 3: Pengesahan Kelurahan (Admin Kelurahan / Superadmin)
-    if (['admin_kelurahan', 'superadmin', 'admin'].includes(role)) {
-      // Eksekusi trigger demografi
-      let triggerRan = false;
-      try {
-        triggerRan = await this.executeDemographyTrigger(doc);
-      } catch (triggerErr) {
-        console.error('Trigger execution error:', triggerErr.message);
-      }
+    // STEP 3: Otorisasi & Pengesahan Kelurahan (Lurah / Admin Kelurahan)
+    if (['admin_kelurahan', 'superadmin', 'admin', 'lurah'].includes(role)) {
+      const triggerRan = await this.executeDemographyTrigger(doc);
 
       await dokumenRepository.updateApproval(id, {
         status: 'APPROVED',
         approval_step: 'COMPLETED',
         approved_by_kelurahan: currentUser.id,
-        catatan_petugas: catatan || 'Surat resmi telah disahkan dan siap dicetak / diambil di kantor kelurahan.',
-        trigger_executed: triggerRan ? 1 : 0
+        catatan_petugas: catatan || 'Dokumen resmi disahkan oleh Kelurahan Kebonjati'
       });
 
       // Notifikasi akhir ke warga
@@ -449,4 +419,3 @@ class DokumenService {
 }
 
 module.exports = new DokumenService();
-

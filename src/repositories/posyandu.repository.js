@@ -26,8 +26,6 @@ class PosyanduRepository {
       umur_bulan, 
       berat_badan_kg, 
       tinggi_badan_cm, 
-      tanggal_pemeriksaan, 
-      catatan_kesehatan 
       lingkar_kepala_cm = null,
       status_gizi = 'Normal',
       imunisasi = null,
@@ -38,9 +36,6 @@ class PosyanduRepository {
 
     const [result] = await pool.execute(
       `INSERT INTO posyandu 
-      (nik_warga, nama_anak, umur_bulan, berat_badan_kg, tinggi_badan_cm, tanggal_pemeriksaan, catatan_kesehatan) 
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [nik_warga, nama_anak, umur_bulan, berat_badan_kg, tinggi_badan_cm, tanggal_pemeriksaan, catatan_kesehatan || null]
       (nik_warga, nama_anak, tanggal_lahir_anak, jenis_kelamin_anak, umur_bulan, berat_badan_kg, tinggi_badan_cm, lingkar_kepala_cm, status_gizi, imunisasi, tanggal_pemeriksaan, petugas, catatan_kesehatan) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -59,7 +54,6 @@ class PosyanduRepository {
         catatan_kesehatan
       ]
     );
-
     return result;
   }
 

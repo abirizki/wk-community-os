@@ -1,6 +1,5 @@
 /**
  * src/routes/posyandu.routes.js
- * Posyandu API endpoints.
  * Comprehensive Posyandu API endpoints (Balita & Lansia Integratif).
  * Bumi Warga - Jabar Pintar Digital
  */
@@ -11,7 +10,6 @@ const { requireAuth } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
-// GET /api/posyandu/me - Ambil riwayat posyandu milik keluarga yang sedang login
 // ==========================================
 // BALITA ENDPOINTS
 // ==========================================
@@ -19,13 +17,8 @@ const router = express.Router();
 // GET /api/posyandu/me - Riwayat balita milik persona keluarga aktif
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    // Ekstrak NIK mutlak dari sesi server demi privasi
-    const nik = req.session.user.username; 
-    
     const nik = req.session.user.active_nik || req.session.user.username;
     const riwayat = await posyanduService.getHistoryByNik(nik);
-    
-    res.json({
     res.json({ success: true, data: riwayat });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });
@@ -58,17 +51,10 @@ const handleCreateBalita = async (req, res) => {
     const newRecord = await posyanduService.createRecord(req.body, req.session.user);
     res.status(201).json({
       success: true,
-      data: riwayat
       message: 'Data pemeriksaan Balita berhasil disimpan',
       data: newRecord
     });
   } catch (error) {
-    if (error.status) {
-      res.status(error.status).json({ success: false, message: error.message });
-    } else {
-      console.error('Error fetching posyandu history by NIK:', error.message);
-      res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server' });
-    }
     res.status(error.status || 500).json({ success: false, message: error.message });
   }
 };
@@ -90,23 +76,9 @@ router.get('/lansia', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/posyandu - Tambah catatan posyandu baru
-router.post('/', requireAuth, async (req, res) => {
 // GET /api/posyandu/lansia/my - Lansia milik keluarga yang sedang login
 router.get('/lansia/my', requireAuth, async (req, res) => {
   try {
-    // Sebagai perlindungan, pencatat dikunci menggunakan NIK dari sesi login aktif.
-    const nik_warga = req.session.user.username;
-    
-    const payload = {
-      nik_warga,
-      nama_anak: req.body.nama_anak,
-      umur_bulan: req.body.umur_bulan,
-      berat_badan_kg: req.body.berat_badan_kg,
-      tinggi_badan_cm: req.body.tinggi_badan_cm,
-      tanggal_pemeriksaan: req.body.tanggal_pemeriksaan || new Date(),
-      catatan_kesehatan: req.body.catatan_kesehatan
-    };
     const familyLansia = await posyanduService.getFamilyLansia(req.session.user);
     res.json({ success: true, data: familyLansia });
   } catch (error) {
@@ -114,8 +86,6 @@ router.get('/lansia/my', requireAuth, async (req, res) => {
   }
 });
 
-    const newRecord = await posyanduService.createRecord(payload);
-    
 // GET /api/posyandu/lansia/stats - Statistik kesehatan lansia (Hipertensi, GDS, ADL)
 router.get('/lansia/stats', requireAuth, async (req, res) => {
   try {
@@ -142,18 +112,10 @@ router.post('/lansia', requireAuth, async (req, res) => {
     const newLansia = await posyanduService.registerLansia(req.body, req.session.user);
     res.status(201).json({
       success: true,
-      message: 'Data Posyandu berhasil dicatat',
-      data: newRecord
       message: 'Lansia berhasil didaftarkan ke Posyandu Lansia',
       data: newLansia
     });
   } catch (error) {
-    if (error.status) {
-      res.status(error.status).json({ success: false, message: error.message });
-    } else {
-      console.error('Error creating posyandu record:', error.message);
-      res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server' });
-    }
     res.status(error.status || 500).json({ success: false, message: error.message });
   }
 });
@@ -173,4 +135,3 @@ router.post('/lansia/pemeriksaan', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
-

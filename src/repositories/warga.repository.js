@@ -22,18 +22,10 @@ class WargaRepository {
   }
 
   /**
-   * Ambil daftar warga dengan pagination
-   * @param {Object} options
-   * @param {number} options.limit
-   * @param {number} options.offset
-   * @returns {Promise<Array>}
    * Cek keberadaan Kartu Keluarga
    */
-  async list({ limit = 20, offset = 0 } = {}) {
   async findKartuKeluargaByNoKK(no_kk) {
     const [rows] = await pool.execute(
-      'SELECT * FROM warga ORDER BY created_at DESC LIMIT ? OFFSET ?',
-      [limit.toString(), offset.toString()] // using string to ensure correct parameterized substitution
       'SELECT * FROM kartu_keluarga WHERE no_kk = ? LIMIT 1',
       [no_kk]
     );

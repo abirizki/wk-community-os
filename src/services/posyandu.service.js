@@ -13,13 +13,8 @@ class PosyanduService {
   // ----------------------------------------------------
 
   /**
-   * Catat rekam medis baru
-   * @param {Object} payload 
-   * @returns {Promise<Object>}
    * Hitung estimasi status gizi antropometri balita
    */
-  async createRecord(payload) {
-    const { 
   calculateStatusGizi(umur_bulan, berat_badan_kg, tinggi_badan_cm) {
     const imt = parseFloat((berat_badan_kg / Math.pow(tinggi_badan_cm / 100, 2)).toFixed(1));
     
@@ -42,7 +37,6 @@ class PosyanduService {
       umur_bulan, 
       berat_badan_kg, 
       tinggi_badan_cm, 
-      tanggal_pemeriksaan 
       lingkar_kepala_cm,
       status_gizi,
       imunisasi,
@@ -51,9 +45,6 @@ class PosyanduService {
       catatan_kesehatan
     } = payload;
 
-    if (!nik_warga) {
-      const err = new Error('NIK Wali tidak ditemukan dalam sesi');
-      err.status = 400;
     // Proteksi NIK: jika warga biasa, kunci ke identitas sesi
     if (!currentUser) {
       const err = new Error('Sesi autentikasi tidak ditemukan');
@@ -73,7 +64,6 @@ class PosyanduService {
       throw err;
     }
 
-    if (isNaN(berat_badan_kg) || parseFloat(berat_badan_kg) <= 0) {
     const bb = parseFloat(berat_badan_kg);
     const tb = parseFloat(tinggi_badan_cm);
     const umur = parseInt(umur_bulan, 10);
@@ -84,18 +74,12 @@ class PosyanduService {
       throw err;
     }
 
-    if (isNaN(tinggi_badan_cm) || parseFloat(tinggi_badan_cm) <= 0) {
     if (isNaN(tb) || tb <= 0) {
       const err = new Error('Tinggi badan harus berupa angka positif');
       err.status = 400;
       throw err;
     }
 
-    const result = await posyanduRepository.create(payload);
-    
-    return {
-      id: result.insertId,
-      ...payload
     if (isNaN(umur) || umur < 0) {
       const err = new Error('Umur anak dalam bulan tidak boleh negatif');
       err.status = 400;

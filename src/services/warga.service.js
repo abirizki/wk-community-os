@@ -34,13 +34,8 @@ class WargaService {
   }
 
   /**
-   * Ambil daftar warga
-   * @param {Object} options 
-   * @returns {Promise<Array>}
    * Ambil daftar warga ter-scope hierarki dan terpaginasi
    */
-  async listWarga({ limit = 20, offset = 0 } = {}) {
-    return await wargaRepository.list({ limit, offset });
   async listWarga({ limit = 20, offset = 0, search = '', rt, rw } = {}, currentUser = {}) {
     let targetRT = rt || null;
     let targetRW = rw || null;

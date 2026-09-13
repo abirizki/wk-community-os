@@ -91,14 +91,10 @@ class DokumenRepository {
   }
 
   /**
-   * Ambil semua permohonan surat (untuk admin/operator)
-   * @returns {Promise<Array>}
    * Ambil permohonan surat milik satu NIK atau satu No KK
    */
-  async list() {
   async findByNik(nik) {
     const [rows] = await pool.execute(
-      `SELECT d.*, w.nama as nama_pemohon, w.no_telepon 
       `SELECT d.*, 
               d.jenis_surat AS jenis_dokumen,
               w.nama AS nama_pemohon,
@@ -106,8 +102,6 @@ class DokumenRepository {
               COALESCE(d.rt, w.rt) AS rt,
               COALESCE(d.rw, w.rw) AS rw
        FROM dokumen_request d 
-       LEFT JOIN warga w ON d.nik_pemohon = w.nik 
-       ORDER BY d.created_at DESC`
        LEFT JOIN warga w ON d.nik_pemohon = w.nik
        WHERE d.nik_pemohon = ? OR w.no_kk = (SELECT no_kk FROM warga WHERE nik = ? LIMIT 1)
        ORDER BY d.created_at DESC`,
@@ -118,12 +112,6 @@ class DokumenRepository {
 
   /**
    * Update status permohonan dokumen
-   * @param {number} id 
-   * @param {string} status 
-   * @param {string} catatan_admin 
-   * @param {string} file_hasil 
-   * @returns {Promise<Object>}
-   * Ambil daftar permohonan surat berdasar filter dan hierarki kewilayahan
    */
   async updateStatus(id, status, catatan_admin = null, file_hasil = null) {
     const approvedAt = status === 'APPROVED' || status === 'READY_PICKUP' ? new Date() : null;
@@ -133,6 +121,12 @@ class DokumenRepository {
        WHERE id = ?`,
       [status, catatan_admin, file_hasil, approvedAt, id]
     );
+    return result;
+  }
+
+  /**
+   * Ambil daftar permohonan surat berdasar filter dan hierarki kewilayahan
+   */
   async list({ rt, rw, status, approval_step, limit = 50, offset = 0 } = {}) {
     let query = `
       SELECT d.*, 

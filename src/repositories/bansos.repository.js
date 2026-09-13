@@ -101,7 +101,6 @@ class BansosRepository {
    */
   async findByNik(nik) {
     const [rows] = await pool.execute(
-      `SELECT * FROM bansos_pengajuan WHERE nik_penerima = ? ORDER BY created_at DESC`,
       `SELECT b.*, d.desil_saat_ini, d.desil_usulan 
        FROM bansos_pengajuan b 
        LEFT JOIN desil_keluarga d ON b.no_kk = d.no_kk
@@ -115,7 +114,6 @@ class BansosRepository {
    * Ambil daftar usulan bansos ter-scope hierarki
    */
   async list({ rt, rw, status, jenis_bansos, search, limit = 50, offset = 0 } = {}) {
-    let query = `SELECT * FROM bansos_pengajuan WHERE 1=1`;
     let query = `
       SELECT b.*, 
              d.desil_saat_ini, 
@@ -128,32 +126,26 @@ class BansosRepository {
     const params = [];
 
     if (rw) {
-      query += ' AND rw = ?';
       query += ' AND b.rw = ?';
       params.push(rw);
     }
     if (rt) {
-      query += ' AND rt = ?';
       query += ' AND b.rt = ?';
       params.push(rt);
     }
     if (status) {
-      query += ' AND status = ?';
       query += ' AND b.status = ?';
       params.push(status);
     }
     if (jenis_bansos) {
-      query += ' AND jenis_bansos = ?';
       query += ' AND b.jenis_bansos = ?';
       params.push(jenis_bansos);
     }
     if (search) {
-      query += ' AND (nama_penerima LIKE ? OR nik_penerima LIKE ? OR no_kk LIKE ?)';
       query += ' AND (b.nama_penerima LIKE ? OR b.nik_penerima LIKE ? OR b.no_kk LIKE ?)';
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     query += ' ORDER BY b.created_at DESC LIMIT ? OFFSET ?';
     params.push(String(limit), String(offset));
 
