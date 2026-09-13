@@ -13,9 +13,12 @@ export const AuthProvider = ({ children }) => {
     async function checkAuth() {
       try {
         const response = await api.get('/auth/me');
-        if (response?.user) {
+        if (response?.success && response?.user) {
           setUser(response.user);
           setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } catch (e) {
         // Not logged in or session expired

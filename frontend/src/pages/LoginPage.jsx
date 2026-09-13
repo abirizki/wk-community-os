@@ -156,14 +156,9 @@ export default function LoginPage() {
               <span className="font-extrabold text-base text-white hidden only:block">BW</span>
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-extrabold tracking-tight text-white">Bumi Warga</span>
-                <span className="text-[10px] font-bold bg-sky-400/25 text-sky-100 px-2.5 py-0.5 rounded-full border border-sky-300/30">
-                  Civic Tech Platform
-                </span>
-              </div>
-              <p className="text-xs text-sky-200/90 mt-0.5 font-medium tracking-wide">
-                Dikembangkan oleh <strong className="text-white font-semibold">Jabar Pintar Digital</strong>
+              <h2 className="text-2xl font-extrabold tracking-tight text-white leading-none">Bumi Warga</h2>
+              <p className="text-xs text-sky-200/90 font-medium tracking-wide mt-1">
+                Jabar Pintar Digital
               </p>
             </div>
           </motion.div>
@@ -247,9 +242,6 @@ export default function LoginPage() {
               <span className="text-[10px] text-sky-600 font-semibold">Jabar Pintar Digital</span>
             </div>
           </div>
-          <span className="text-[10px] bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full font-bold">
-            Civic Tech
-          </span>
         </div>
 
         {/* Center Container */}
@@ -262,11 +254,21 @@ export default function LoginPage() {
           >
             {/* Form Title */}
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-on-surface tracking-tight">
-                Pintu Masuk Pelayanan Terpadu
-              </h2>
-              <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                Silakan masukkan <strong>NIK KTP-el</strong> bagi warga, atau <strong>Username Kredensial</strong> bagi Pengurus RT, RW, dan Petugas.
+              <div className="flex items-center gap-3 mb-2.5">
+                <div className="w-11 h-11 rounded-2xl bg-sky-50 border border-sky-200 p-1 flex items-center justify-center shadow-sm flex-shrink-0">
+                  <img src="/icon-bumi-warga.png" alt="BW" className="w-full h-full object-contain rounded-xl" onError={(e) => { e.target.style.display = 'none'; }} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-extrabold text-on-surface tracking-tight leading-tight">
+                    Bumi Warga
+                  </h2>
+                  <p className="text-xs font-semibold text-sky-600">
+                    Jabar Pintar Digital
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                Silakan masukkan <strong>NIK KTP-el</strong> bagi warga, atau <strong>Username</strong> bagi Pengurus RT, RW, dan Petugas.
               </p>
             </div>
 

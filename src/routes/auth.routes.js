@@ -247,9 +247,9 @@ router.post('/logout', (req, res) => {
 // GET /api/auth/me
 router.get('/me', (req, res) => {
   if (req.session && req.session.user) {
-    res.json({ success: true, user: req.session.user });
+    res.json({ success: true, authenticated: true, user: req.session.user });
   } else {
-    res.status(401).json({ success: false, message: 'Tidak ada sesi aktif' });
+    res.json({ success: false, authenticated: false, user: null, message: 'Tidak ada sesi aktif' });
   }
 });
 

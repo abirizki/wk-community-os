@@ -47,7 +47,10 @@ self.addEventListener('activate', (event) => {
 // Fetch Interceptor
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
+  // Only process http and https schemes (ignore chrome-extension://, moz-extension://, etc.)
+  if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) {
+    return;
+  }
 
   // Skip non-GET requests for SW caching (mutations handled by IndexedDB offline queue)
   if (request.method !== 'GET') {

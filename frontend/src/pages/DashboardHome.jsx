@@ -27,7 +27,8 @@ import {
   BarChart3, 
   Layers, 
   MapPin,
-  Check
+  Check,
+  FileCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
