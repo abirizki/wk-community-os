@@ -49,87 +49,173 @@ export default function DashboardLayout() {
   };
 
   const normalizedRole = user?.role === 'admin' ? 'admin_kelurahan' : (user?.role || 'warga');
-  const isExecutiveDesktop = ['superadmin', 'walikota', 'camat', 'admin_kelurahan'].includes(normalizedRole);
-  const isRT = normalizedRole === 'ketua_rt';
+  const isSuperadmin = normalizedRole === 'superadmin';
+  const isWalikota = normalizedRole === 'walikota';
+  const isCamat = normalizedRole === 'camat';
+  const isLurah = normalizedRole === 'lurah';
+  const isAdminKelurahan = ['admin_kelurahan', 'admin'].includes(normalizedRole);
   const isRW = ['ketua_rw', 'admin_rw'].includes(normalizedRole);
+  const isRT = normalizedRole === 'ketua_rt';
   const isPosyandu = normalizedRole === 'kader_posyandu';
-  const isWarga = normalizedRole === 'warga';
+  const isWarga = ['warga'].includes(normalizedRole) || (!isSuperadmin && !isWalikota && !isCamat && !isLurah && !isAdminKelurahan && !isRW && !isRT && !isPosyandu);
 
   // Penentuan Menu Sidebar Berdasarkan Role (Role-Based Access Navigation)
   const getNavItems = () => {
-    const items = [
-      { name: 'Beranda', path: '/dashboard', icon: <Home size={19} /> }
-    ];
-
-    if (isExecutiveDesktop) {
-      // Menu Admin Kelurahan & Eksekutif (Dashboard Desktop Profesional)
-      items.push(
-        { name: 'Command Center Kota', path: '/dashboard/command-center', icon: <Landmark size={19} /> },
-        { name: 'Verifikasi Surat Dinas', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
-        { name: 'Audit & Penyaluran Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
-        { name: 'Analisis Kemiskinan (Desil)', path: '/dashboard/desil', icon: <Sparkles size={19} /> },
-        { name: 'Pangkalan Data Warga', path: '/dashboard/warga', icon: <User size={19} /> },
-        { name: 'Register Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={19} /> },
-        { name: 'Monitoring Stunting Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
-        { name: 'Evaluasi Data & AI', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
-        { name: 'Fasilitas & Tata Ruang', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
-        { name: 'Pajak Bumi & Bangunan (PBB)', path: '/dashboard/pbb', icon: <FileText size={19} /> },
-        { name: 'Pusat Pengaduan Publik', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
+    if (isSuperadmin) {
+      return [
+        { name: 'Beranda Sistem', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Command Center Utama', path: '/dashboard/command-center', icon: <Landmark size={19} /> },
+        { name: 'Kelola Hak Akses Pengguna', path: '/dashboard/users', icon: <ShieldCheck size={19} /> },
+        { name: 'Audit Data & Kematangan', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
         { name: 'Gerbang Pesan WhatsApp', path: '/dashboard/whatsapp', icon: <MessageSquare size={19} /> },
-        { name: 'Kelola Hak Akses Pengguna', path: '/dashboard/users', icon: <ShieldCheck size={19} /> }
-      );
-    } else if (isRT || isRW) {
-      // Menu Pengurus RT & RW (Fokus Verifikasi Lingkungan)
-      items.push(
-        { name: 'Verifikasi Permohonan Surat', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
-        { name: 'Validasi & Audit Bansos RT/RW', path: '/dashboard/bansos', icon: <Gift size={19} /> },
-        { name: 'Pangkalan Data Warga Lingkungan', path: '/dashboard/warga', icon: <User size={19} /> },
-        { name: 'Daftar Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={19} /> },
-        { name: 'Pemetaan Kemiskinan Lingkungan', path: '/dashboard/desil', icon: <Sparkles size={19} /> },
-        { name: 'Laporan Pengaduan Lingkungan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
-        { name: 'Pemantauan Posyandu Lingkungan', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> }
-      );
-    } else if (isPosyandu) {
-      // Menu Khusus Kader Posyandu
-      items.push(
-        { name: 'Layanan Balita & Antropometri', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
-        { name: 'Pencarian Data Warga/Ibu', path: '/dashboard/warga', icon: <User size={19} /> },
-        { name: 'Pemberitahuan & Pengaduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> }
-      );
-    } else {
-      // Menu Warga Masyarakat (Layanan Mandiri Ramah Pengguna)
-      items.push(
-        { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
-        { name: 'Kartu Keluarga Digital', path: '/dashboard/kk', icon: <Users size={19} /> },
-        { name: 'Informasi Bantuan Sosial', path: '/dashboard/bansos', icon: <Gift size={19} /> },
-        { name: 'Kesehatan Keluarga & Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
-        { name: 'Lapor Pengaduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
-        { name: 'Informasi Tagihan PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> }
-      );
+        { name: 'Panduan Teknis & SOP', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+      ];
     }
 
-    // Panduan & SOP Operasional tersedia untuk semua peran
-    items.push({ name: 'Panduan & SOP Resmi', path: '/dashboard/panduan', icon: <BookOpen size={19} /> });
+    if (isWalikota) {
+      return [
+        { name: 'Command Center Kota', path: '/dashboard/command-center', icon: <Landmark size={19} /> },
+        { name: 'Indeks Kemiskinan (Desil)', path: '/dashboard/desil', icon: <Sparkles size={19} /> },
+        { name: 'Monitoring Zero Stunting', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
+        { name: 'Neraca PBB & Daya Dukung', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
+        { name: 'Panduan Eksekutif Kota', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+      ];
+    }
 
-    return items;
+    if (isCamat) {
+      return [
+        { name: 'Command Center Wilayah', path: '/dashboard/command-center', icon: <Landmark size={19} /> },
+        { name: 'Monitoring Pelayanan Wilayah', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+        { name: 'Rekapitulasi Bansos Wilayah', path: '/dashboard/bansos', icon: <Gift size={19} /> },
+        { name: 'Peta Fasilitas & Daya Dukung', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
+        { name: 'Kematangan Data & SLA', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
+        { name: 'Panduan Pembinaan Wilayah', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+      ];
+    }
+
+    if (isLurah) {
+      return [
+        { name: 'Ringkasan Eksekutif', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Pengesahan Surat (TTE / QR)', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+        { name: 'Penetapan Definitif Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
+        { name: 'Monitoring Stunting Wilayah', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
+        { name: 'Analisis Kemiskinan (Desil)', path: '/dashboard/desil', icon: <Sparkles size={19} /> },
+        { name: 'Evaluasi Aduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
+        { name: 'Panduan SOP Kelurahan', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+      ];
+    }
+
+    if (isAdminKelurahan) {
+      return [
+        { name: 'Beranda Operasional', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Verifikasi Berkas Surat', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+        { name: 'Master Data Warga', path: '/dashboard/warga', icon: <User size={19} /> },
+        { name: 'Register Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={19} /> },
+        { name: 'Pengelolaan Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
+        { name: 'Rekonsiliasi PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
+        { name: 'Gerbang Pesan WhatsApp', path: '/dashboard/whatsapp', icon: <MessageSquare size={19} /> },
+        { name: 'Panduan SOP Operasional', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+      ];
+    }
+
+    if (isRW) {
+      return [
+        { name: 'Beranda Rekapitulasi RW', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Rekomendasi Surat RW', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+        { name: 'Pangkalan Data Warga RW', path: '/dashboard/warga', icon: <User size={19} /> },
+        { name: 'Validasi & Audit Bansos RW', path: '/dashboard/bansos', icon: <Gift size={19} /> },
+        { name: 'Pemetaan Kemiskinan RW', path: '/dashboard/desil', icon: <Sparkles size={19} /> },
+        { name: 'Laporan Ketertiban RW', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
+        { name: 'Panduan SOP Ketua RW', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+      ];
+    }
+
+    if (isRT) {
+      return [
+        { name: 'Beranda RT', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Verifikasi Pengantar RT', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+        { name: 'Pangkalan Data Warga RT', path: '/dashboard/warga', icon: <User size={19} /> },
+        { name: 'Registrasi KK Wilayah RT', path: '/dashboard/kk', icon: <Users size={19} /> },
+        { name: 'Usulan & Audit Bansos RT', path: '/dashboard/bansos', icon: <Gift size={19} /> },
+        { name: 'Laporan Pengaduan RT', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
+        { name: 'Panduan SOP Ketua RT', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+      ];
+    }
+
+    if (isPosyandu) {
+      return [
+        { name: 'Beranda Posyandu', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Layanan Balita & Antropometri', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
+        { name: 'Pencarian Data Warga/Ibu', path: '/dashboard/warga', icon: <User size={19} /> },
+        { name: 'Pusat Pengaduan Kesehatan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
+        { name: 'Panduan SOP Posyandu', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+      ];
+    }
+
+    // Default: Warga Masyarakat
+    return [
+      { name: 'Beranda Layanan Mandiri', path: '/dashboard', icon: <Home size={19} /> },
+      { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+      { name: 'Kartu Keluarga Digital', path: '/dashboard/kk', icon: <Users size={19} /> },
+      { name: 'Informasi Bantuan Sosial', path: '/dashboard/bansos', icon: <Gift size={19} /> },
+      { name: 'Kesehatan Keluarga & Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
+      { name: 'Informasi Tagihan PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
+      { name: 'Lapor Pengaduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
+      { name: 'Panduan Layanan Warga', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+    ];
   };
 
   const navItems = getNavItems();
 
-  // Bottom navigation khusus mobile untuk user non-eksekutif (Mobile-First)
-  const mobileBottomNav = isWarga ? [
-    { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
-    { name: 'Surat', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
-    { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
-    { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={18} /> },
-    { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
-  ] : (isRT || isRW) ? [
-    { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
-    { name: 'Surat RT', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
-    { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
-    { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
-    { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
-  ] : null;
+  // Bottom navigation khusus mobile per role (Mobile-First)
+  const getMobileBottomNav = () => {
+    if (isWarga) {
+      return [
+        { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Surat', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
+        { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
+        { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={18} /> },
+        { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
+      ];
+    }
+    if (isRT) {
+      return [
+        { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Surat RT', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
+        { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
+        { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
+        { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
+      ];
+    }
+    if (isRW) {
+      return [
+        { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Surat RW', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
+        { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
+        { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
+        { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
+      ];
+    }
+    if (isPosyandu) {
+      return [
+        { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={18} /> },
+        { name: 'Data Ibu', path: '/dashboard/warga', icon: <User size={18} /> },
+        { name: 'Lapor', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={18} /> },
+        { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
+      ];
+    }
+    // Mobile bottom bar untuk Aparatur/Eksekutif saat buka di Smartphone
+    return [
+      { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
+      { name: 'Surat', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
+      { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
+      { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
+      { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
+    ];
+  };
+
+  const mobileBottomNav = getMobileBottomNav();
 
   const fetchNotifications = async () => {
     try {
@@ -168,6 +254,7 @@ export default function DashboardLayout() {
   const getRoleBadge = (role) => {
     switch (role) {
       case 'superadmin':
+        return 'Administrator Sistem';
       case 'walikota':
         return 'Pimpinan Kota';
       case 'camat':
@@ -439,7 +526,7 @@ export default function DashboardLayout() {
         <OfflineIndicator />
 
         {/* Main Content Outlet */}
-        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 lg:p-8 pb-20 lg:pb-8 overflow-y-auto">
           <Outlet />
         </main>
 
