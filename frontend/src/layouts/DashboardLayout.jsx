@@ -334,6 +334,14 @@ export default function DashboardLayout() {
             </div>
           </div>
 
+          <button
+            onClick={() => navigate('/dashboard/profil')}
+            className="w-full mb-2 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors border border-outline-variant"
+          >
+            <User size={13} className="text-sky-700" />
+            <span>Profil & Riwayat Layanan</span>
+          </button>
+
           {user?.family_members && user.family_members.length > 1 && (
             <button
               onClick={() => setFamilyModalOpen(true)}
@@ -441,6 +449,20 @@ export default function DashboardLayout() {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Profile Avatar Pill Button */}
+            <button
+              onClick={() => navigate('/dashboard/profil')}
+              className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant transition-colors"
+              title="Profil & Riwayat Layanan Saya"
+            >
+              <div className="w-6 h-6 rounded-lg bg-sky-600 text-white flex items-center justify-center text-[10px] font-bold">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+              <span className="hidden sm:inline text-xs font-semibold text-on-surface truncate max-w-[110px]">
+                {displayName}
+              </span>
+            </button>
           </div>
         </header>
 
@@ -500,6 +522,13 @@ export default function DashboardLayout() {
                 </nav>
 
                 <div className="p-4 border-t border-outline-variant space-y-2 bg-surface-container-low/50">
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); navigate('/dashboard/profil'); }}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-surface-container text-on-surface border border-outline-variant hover:bg-surface-container-high transition-colors"
+                  >
+                    <User size={14} className="text-sky-700" /> Profil & Riwayat Layanan
+                  </button>
+
                   {user?.family_members && user.family_members.length > 1 && (
                     <button
                       onClick={() => { setMobileMenuOpen(false); setFamilyModalOpen(true); }}

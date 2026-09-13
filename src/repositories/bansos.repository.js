@@ -285,6 +285,134 @@ class BansosRepository {
         total_dana_tersalurkan: 0
       };
     }
+  /**
+   * Simpan laporan sanggahan / audit ketidaksesuaian penerima bansos oleh RT/RW
+   */
+  async createAuditSanggahan(payload) {
+    const {
+      bansos_pengajuan_id = null,
+      nik_warga,
+      nama_warga,
+      no_kk = null,
+      rt,
+      rw,
+      tipe_sanggahan,
+      alasan_lapangan,
+      bukti_foto_url = null,
+      status_review = 'PENDING_KELURAHAN',
+      dilaporkan_oleh_user_id
+    } = payload;
+
+    const [result] = await pool.execute(
+      `INSERT INTO bansos_audit_sanggahan 
+       (bansos_pengajuan_id, nik_warga, nama_warga, no_kk, rt, rw, tipe_sanggahan, alasan_lapangan, bukti_foto_url, status_review, dilaporkan_oleh_user_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        bansos_pengajuan_id,
+        nik_warga,
+        nama_warga,
+        no_kk,
+        rt,
+        rw,
+        tipe_sanggahan,
+        alasan_lapangan,
+        bukti_foto_url,
+        status_review,
+        dilaporkan_oleh_user_id
+      ]
+    );
+
+    return {
+      id: result.insertId,
+      ...payload
+    };
+  }
+
+  /**
+   * Ambil daftar audit sanggahan bansos ter-scope kewilayahan
+   */
+  async listAuditSanggahan({ rt, rw, status_review, tipe_sanggahan, limit = 50, offset = 0 } = {}) {
+    try {
+      let query = `
+        SELECT s.*, 
+               u_rep.nama AS nama_pelapor,
+               u_rep.role AS role_pelapor,
+               u_rev.nama AS nama_reviewer,
+               bp.jenis_bansos,
+               bp.status AS status_bansos_saat_ini
+        FROM bansos_audit_sanggahan s
+        LEFT JOIN users u_rep ON s.dilaporkan_oleh_user_id = u_rep.id
+        LEFT JOIN users u_rev ON s.direview_oleh_user_id = u_rev.id
+        LEFT JOIN bansos_pengajuan bp ON s.bansos_pengajuan_id = bp.id
+        WHERE 1=1
+      `;
+      const params = [];
+
+      if (rw) {
+        query += ' AND s.rw = ?';
+        params.push(rw);
+      }
+      if (rt) {
+        query += ' AND s.rt = ?';
+        params.push(rt);
+      }
+      if (status_review) {
+        query += ' AND s.status_review = ?';
+        params.push(status_review);
+      }
+      if (tipe_sanggahan) {
+        query += ' AND s.tipe_sanggahan = ?';
+        params.push(tipe_sanggahan);
+      }
+
+      query += ' ORDER BY s.created_at DESC LIMIT ? OFFSET ?';
+      params.push(String(limit), String(offset));
+
+      const [rows] = await pool.execute(query, params);
+      return rows;
+    } catch (e) {
+      console.warn('[BansosRepo] listAuditSanggahan error:', e.message);
+      return [];
+    }
+  }
+
+  /**
+   * Ambil detail sanggahan audit berdasarkan ID
+   */
+  async getAuditSanggahanById(id) {
+    try {
+      const [rows] = await pool.execute(
+        `SELECT s.*, 
+                u_rep.nama AS nama_pelapor,
+                u_rev.nama AS nama_reviewer
+         FROM bansos_audit_sanggahan s
+         LEFT JOIN users u_rep ON s.dilaporkan_oleh_user_id = u_rep.id
+         LEFT JOIN users u_rev ON s.direview_oleh_user_id = u_rev.id
+         WHERE s.id = ? LIMIT 1`,
+        [id]
+      );
+      return rows.length > 0 ? rows[0] : null;
+    } catch (e) {
+      console.warn('[BansosRepo] getAuditSanggahanById error:', e.message);
+      return null;
+    }
+  }
+
+  /**
+   * Keputusan review audit sanggahan oleh Kelurahan / Lurah
+   */
+  async reviewAuditSanggahan(id, { status_review, catatan_kelurahan, direview_oleh_user_id }) {
+    await pool.execute(
+      `UPDATE bansos_audit_sanggahan
+       SET status_review = ?,
+           catatan_kelurahan = ?,
+           direview_oleh_user_id = ?,
+           tanggal_review = NOW()
+       WHERE id = ?`,
+      [status_review, catatan_kelurahan || null, direview_oleh_user_id, id]
+    );
+
+    return this.getAuditSanggahanById(id);
   }
 }
 

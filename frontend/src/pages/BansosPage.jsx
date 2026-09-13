@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -10,6 +11,7 @@ import {
   Clock, 
   XCircle, 
   AlertCircle, 
+  AlertTriangle,
   Loader2, 
   Check, 
   X, 
@@ -37,11 +39,14 @@ const JENIS_BANSOS_OPTIONS = [
 
 export default function BansosPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isOfficer = user && ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'].includes(user.role);
   const isRW = user && ['ketua_rw', 'admin_rw'].includes(user.role);
-  const isKelurahan = user && ['admin_kelurahan', 'superadmin', 'admin'].includes(user.role);
+  const isRT = user?.role === 'ketua_rt';
+  const isKelurahan = user && ['admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(user.role);
 
   const [bansosList, setBansosList] = useState([]);
+  const [auditList, setAuditList] = useState([]);
   const [stats, setStats] = useState({
     total_usulan: 0,
     total_disetujui: 0,
@@ -56,7 +61,7 @@ export default function BansosPage() {
   const [successMsg, setSuccessMsg] = useState('');
 
   // Filters & Tabs
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'pending_my_action'
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'pending_my_action' | 'audit_disputes'
   const [search, setSearch] = useState('');
   const [filterJenis, setFilterJenis] = useState('');
   const [filterRT, setFilterRT] = useState('');
@@ -66,11 +71,30 @@ export default function BansosPage() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showDisburseModal, setShowDisburseModal] = useState(false);
   const [showProofModal, setShowProofModal] = useState(false);
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [showAuditReviewModal, setShowAuditReviewModal] = useState(false);
+  const [selectedAudit, setSelectedAudit] = useState(null);
   const [selectedBansos, setSelectedBansos] = useState(null);
   const [verifyAction, setVerifyAction] = useState('APPROVE'); // 'APPROVE' | 'REJECT'
   const [verifyNotes, setVerifyNotes] = useState('');
   const [verifyNominal, setVerifyNominal] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
+  const [auditSubmitting, setAuditSubmitting] = useState(false);
+
+  // Form Audit Sanggahan State
+  const [auditForm, setAuditForm] = useState({
+    bansos_pengajuan_id: null,
+    nik_warga: '',
+    nama_warga: '',
+    no_kk: '',
+    tipe_sanggahan: 'TIDAK_LAYAK',
+    alasan_lapangan: '',
+    bukti_foto_url: ''
+  });
+  const [auditReviewForm, setAuditReviewForm] = useState({
+    status_review: 'DISETUJUI_PENCABUTAN',
+    catatan_kelurahan: ''
+  });
 
   // Penyaluran Lapangan State
   const [disbursePhoto, setDisbursePhoto] = useState('');
@@ -113,9 +137,67 @@ export default function BansosPage() {
     }
   };
 
+  const fetchAuditList = async () => {
+    try {
+      const res = await api.get('/bansos/audit-sanggahan');
+      setAuditList(res.data || []);
+    } catch (err) {
+      console.warn('Gagal memuat daftar audit sanggahan:', err.message);
+    }
+  };
+
   useEffect(() => {
     fetchBansos();
+    if (isOfficer) {
+      fetchAuditList();
+    }
   }, [search, filterJenis, filterRT]);
+
+  // Submit Audit Sanggahan oleh RT/RW
+  const handleAuditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setAuditSubmitting(true);
+      setError('');
+      const res = await api.post('/bansos/audit-sanggahan', auditForm);
+      setSuccessMsg(res.message || 'Laporan sanggahan audit bansos berhasil diajukan ke Kelurahan!');
+      setShowAuditModal(false);
+      setAuditForm({
+        bansos_pengajuan_id: null,
+        nik_warga: '',
+        nama_warga: '',
+        no_kk: '',
+        tipe_sanggahan: 'TIDAK_LAYAK',
+        alasan_lapangan: '',
+        bukti_foto_url: ''
+      });
+      fetchAuditList();
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } catch (err) {
+      setError(err.message || 'Gagal melaporkan sanggahan audit');
+    } finally {
+      setAuditSubmitting(false);
+    }
+  };
+
+  // Submit Keputusan Review Sanggahan oleh Kelurahan / Lurah
+  const handleAuditReviewSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setAuditSubmitting(true);
+      setError('');
+      const res = await api.patch(`/bansos/audit-sanggahan/${selectedAudit.id}/review`, auditReviewForm);
+      setSuccessMsg(res.message || 'Keputusan review sanggahan berhasil disahkan.');
+      setShowAuditReviewModal(false);
+      fetchAuditList();
+      fetchBansos();
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } catch (err) {
+      setError(err.message || 'Gagal menyimpan keputusan review sanggahan');
+    } finally {
+      setAuditSubmitting(false);
+    }
+  };
 
   // Submit Usulan Bansos
   const handleProposeSubmit = async (e) => {
@@ -298,6 +380,68 @@ export default function BansosPage() {
     }
   };
 
+  const getAuditBadge = (tipe) => {
+    switch (tipe) {
+      case 'TIDAK_LAYAK':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+            <AlertTriangle size={12} className="text-amber-600" /> Warga Mampu / Desil Tinggi
+          </span>
+        );
+      case 'SUDAH_PINDAH':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-300">
+            <MapPin size={12} className="text-blue-600" /> Pindah Keluar Wilayah
+          </span>
+        );
+      case 'MENINGGAL_DUNIA':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-300">
+            <User size={12} className="text-slate-600" /> Meninggal Dunia
+          </span>
+        );
+      case 'LAYAK_BELUM_TERDAFTAR':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+            <Plus size={12} className="text-emerald-600" /> Usulan Inklusi Sangat Miskin
+          </span>
+        );
+      default:
+        return <span className="text-xs font-semibold">{tipe}</span>;
+    }
+  };
+
+  const getAuditStatusBadge = (status) => {
+    switch (status) {
+      case 'PENDING_KELURAHAN':
+        return (
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+            Menunggu Review Kelurahan
+          </span>
+        );
+      case 'DISETUJUI_PENCABUTAN':
+        return (
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+            Disetujui: Pencabutan Kuota
+          </span>
+        );
+      case 'DISETUJUI_INKLUSI':
+        return (
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+            Disetujui: Inklusi Bansos Baru
+          </span>
+        );
+      case 'DITOLAK':
+        return (
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            Sanggahan Ditolak (Pertahankan)
+          </span>
+        );
+      default:
+        return <span className="text-xs">{status}</span>;
+    }
+  };
+
   return (
     <div className="max-w-max-width mx-auto space-y-6 pb-12">
       {/* HEADER */}
@@ -315,14 +459,45 @@ export default function BansosPage() {
           </p>
         </div>
 
-        {isOfficer && (
-          <button
-            onClick={() => setShowProposeModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold shadow-sm hover:bg-primary/90 transition-colors text-sm self-start md:self-auto"
-          >
-            <Plus size={18} /> Usulkan Penerima Bansos
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+          {!isOfficer && (
+            <button
+              onClick={() => navigate('/dashboard/profil')}
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-sky-50 text-sky-800 border border-sky-200 rounded-xl font-semibold shadow-sm hover:bg-sky-100 transition-colors text-xs"
+            >
+              <FileCheck size={16} /> Input Bukti Bantuan & BPJS
+            </button>
+          )}
+
+          {isOfficer && (
+            <>
+              <button
+                onClick={() => {
+                  setAuditForm({
+                    bansos_pengajuan_id: null,
+                    nik_warga: '',
+                    nama_warga: '',
+                    no_kk: '',
+                    tipe_sanggahan: 'TIDAK_LAYAK',
+                    alasan_lapangan: '',
+                    bukti_foto_url: ''
+                  });
+                  setShowAuditModal(true);
+                }}
+                className="flex items-center gap-2 px-3.5 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl font-semibold shadow-sm hover:bg-rose-100 transition-colors text-xs"
+              >
+                <AlertTriangle size={15} /> Lapor Sanggahan Bansos
+              </button>
+
+              <button
+                onClick={() => setShowProposeModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold shadow-sm hover:bg-primary/90 transition-colors text-xs"
+              >
+                <Plus size={16} /> Usulkan Penerima Bansos
+              </button>
+            </>
+          )}
+        </div>
       </header>
 
       {/* ALERTS */}
@@ -381,41 +556,56 @@ export default function BansosPage() {
         </div>
       )}
 
-      {/* TABS (FOR RW & KELURAHAN OFFICERS) */}
-      {(isRW || isKelurahan) && (
-        <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-hidden p-1.5 gap-1.5">
+      {/* TABS (FOR OFFICERS: RT, RW, KELURAHAN) */}
+      {isOfficer && (
+        <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-x-auto p-1.5 gap-1.5 scrollbar-none">
           <button
             onClick={() => setActiveTab('all')}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all ${
+            className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
               activeTab === 'all'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-low'
             }`}
           >
-            <Users size={16} />
-            <span>Semua Usulan & Penerima Bansos</span>
+            <Users size={15} />
+            <span>Semua Usulan Bansos ({bansosList.length})</span>
           </button>
+
+          {(isRW || isKelurahan) && (
+            <button
+              onClick={() => setActiveTab('pending_my_action')}
+              className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
+                activeTab === 'pending_my_action'
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'text-on-surface-variant hover:bg-surface-container-low'
+              }`}
+            >
+              <Clock size={15} />
+              <span>
+                Menunggu Verifikasi ({isRW ? (stats.pending_rw || 0) : (stats.pending_kelurahan || 0)})
+              </span>
+            </button>
+          )}
+
           <button
-            onClick={() => setActiveTab('pending_my_action')}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all ${
-              activeTab === 'pending_my_action'
-                ? 'bg-amber-500 text-white shadow-sm'
-                : 'text-on-surface-variant hover:bg-surface-container-low'
+            onClick={() => setActiveTab('audit_disputes')}
+            className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
+              activeTab === 'audit_disputes'
+                ? 'bg-rose-600 text-white shadow-sm font-bold'
+                : 'text-rose-700 bg-rose-50/70 hover:bg-rose-100/70 border border-rose-200'
             }`}
           >
-            <Clock size={16} />
-            <span>
-              Menunggu Verifikasi Anda ({
-                isRW ? (stats.pending_rw || 0) : (stats.pending_kelurahan || 0)
-              })
-            </span>
+            <AlertTriangle size={15} />
+            <span>Review Sanggahan Bansos RT/RW ({auditList.length})</span>
           </button>
         </div>
       )}
 
-      {/* FILTER & SEARCH BAR */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant">
-        <div className="relative flex-1">
+      {/* FILTER & SEARCH BAR (REGULAR BANSOS) */}
+      {activeTab !== 'audit_disputes' && (
+        <>
+          <div className="flex flex-col sm:flex-row gap-3 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant">
+            <div className="relative flex-1">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
           <input
             type="text"
@@ -572,8 +762,139 @@ export default function BansosPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
-      </div>
+      </>
+      )}
+
+      {/* ===================================================================== */}
+      {/* AUDIT SANGGAHAN PANEL (RT/RW & KELURAHAN)                             */}
+      {/* ===================================================================== */}
+      {activeTab === 'audit_disputes' && (
+        <div className="space-y-4">
+          <div className="p-4 bg-rose-50/80 border border-rose-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div>
+              <h4 className="font-bold text-rose-900 flex items-center gap-1.5 text-sm">
+                <AlertTriangle size={16} className="text-rose-600" />
+                Meja Review Audit & Sanggahan Bansos RT/RW
+              </h4>
+              <p className="text-rose-800/80 mt-0.5">
+                Kanal resmi aparat lingkungan untuk melaporkan ketidaksesuaian data faktual (warga mampu, pindah keluar, wafat, atau warga rentan terlewat).
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setAuditForm({
+                  bansos_pengajuan_id: null,
+                  nik_warga: '',
+                  nama_warga: '',
+                  no_kk: '',
+                  tipe_sanggahan: 'TIDAK_LAYAK',
+                  alasan_lapangan: '',
+                  bukti_foto_url: ''
+                });
+                setShowAuditModal(true);
+              }}
+              className="px-3.5 py-2 bg-rose-600 text-white font-bold rounded-lg hover:bg-rose-700 transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+            >
+              <Plus size={15} /> Buat Laporan Sanggahan Baru
+            </button>
+          </div>
+
+          <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-surface-container-low border-b border-outline-variant text-on-surface font-semibold">
+                  <tr>
+                    <th className="p-3">Warga Terlapor</th>
+                    <th className="p-3">Wilayah</th>
+                    <th className="p-3">Kategori Temuan Lapangan</th>
+                    <th className="p-3">Uraian Alasan Fakta</th>
+                    <th className="p-3">Pelapor (RT/RW)</th>
+                    <th className="p-3 text-center">Status Review</th>
+                    <th className="p-3 text-center">Aksi Kelurahan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant">
+                  {auditList.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-on-surface-variant">
+                        Belum ada laporan sanggahan audit bansos yang diajukan.
+                      </td>
+                    </tr>
+                  ) : (
+                    auditList.map((item) => (
+                      <tr key={item.id} className="hover:bg-surface-container-low/50 transition-colors">
+                        <td className="p-3 font-medium text-on-surface">
+                          <div className="font-bold text-sm">{item.nama_warga}</div>
+                          <div className="font-mono text-on-surface-variant">NIK: {item.nik_warga}</div>
+                          {item.no_kk && <div className="font-mono text-[10px] text-on-surface-variant">KK: {item.no_kk}</div>}
+                        </td>
+                        <td className="p-3 whitespace-nowrap">
+                          <span className="font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                            RT {item.rt} / RW {item.rw}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          {getAuditBadge(item.tipe_sanggahan)}
+                          {item.bukti_foto_url && (
+                            <a
+                              href={item.bukti_foto_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-1 inline-flex items-center gap-1 text-[11px] text-primary hover:underline block"
+                            >
+                              <Eye size={12} /> Lihat Bukti Foto
+                            </a>
+                          )}
+                        </td>
+                        <td className="p-3 text-on-surface-variant max-w-xs">
+                          <p className="line-clamp-2">{item.alasan_lapangan}</p>
+                          {item.catatan_kelurahan && (
+                            <p className="text-[10px] text-emerald-700 mt-1 italic font-medium">
+                              Catatan Kelurahan: {item.catatan_kelurahan}
+                            </p>
+                          )}
+                        </td>
+                        <td className="p-3 whitespace-nowrap">
+                          <div className="font-semibold">{item.nama_pelapor || 'Pengurus Wilayah'}</div>
+                          <div className="text-[10px] text-on-surface-variant">
+                            {item.role_pelapor ? item.role_pelapor.replace('_', ' ') : 'RT/RW'} &bull; {new Date(item.created_at).toLocaleDateString('id-ID')}
+                          </div>
+                        </td>
+                        <td className="p-3 text-center whitespace-nowrap">
+                          {getAuditStatusBadge(item.status_review)}
+                        </td>
+                        <td className="p-3 text-center whitespace-nowrap">
+                          {isKelurahan && item.status_review === 'PENDING_KELURAHAN' ? (
+                            <button
+                              onClick={() => {
+                                setSelectedAudit(item);
+                                setAuditReviewForm({
+                                  status_review: item.tipe_sanggahan === 'LAYAK_BELUM_TERDAFTAR' ? 'DISETUJUI_INKLUSI' : 'DISETUJUI_PENCABUTAN',
+                                  catatan_kelurahan: ''
+                                });
+                                setShowAuditReviewModal(true);
+                              }}
+                              className="px-3 py-1.5 bg-primary text-on-primary font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm text-xs"
+                            >
+                              Putuskan Review
+                            </button>
+                          ) : (
+                            <span className="text-on-surface-variant text-[11px] font-medium italic">
+                              {item.nama_reviewer ? `Direview: ${item.nama_reviewer}` : 'Tercatat'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===================================================================== */}
       {/* MODAL USULKAN BANSOS                                                  */}
@@ -1032,7 +1353,188 @@ export default function BansosPage() {
           </motion.div>
         </div>
       )}
+
+      {/* ===================================================================== */}
+      {/* MODAL LAPOR SANGGAHAN ANOMALI BANSOS (RT/RW)                          */}
+      {/* ===================================================================== */}
+      {showAuditModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 border border-outline-variant shadow-xl my-8 text-xs"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-base font-bold text-on-surface flex items-center gap-2">
+                <AlertTriangle className="text-rose-600" size={20} />
+                Laporan Anomali / Sanggahan Bansos Lapangan
+              </h2>
+              <button onClick={() => setShowAuditModal(false)} className="text-on-surface-variant hover:text-on-surface">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAuditSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold text-on-surface mb-1">Kategori Temuan Lapangan:</label>
+                <select
+                  value={auditForm.tipe_sanggahan}
+                  onChange={(e) => setAuditForm({ ...auditForm, tipe_sanggahan: e.target.value })}
+                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                >
+                  <option value="TIDAK_LAYAK">Warga Sudah Mampu / Rumah Mewah (Graduasi/Pencabutan)</option>
+                  <option value="SUDAH_PINDAH">Warga Sudah Pindah Keluar Wilayah RT/RW</option>
+                  <option value="MENINGGAL_DUNIA">Warga Penerima Telah Wafat (Nihil Tanggungan)</option>
+                  <option value="LAYAK_BELUM_TERDAFTAR">Warga Sangat Miskin Terlewat (Usulan Inklusi Baru)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-on-surface mb-1">NIK Warga (16 Digit):</label>
+                <input
+                  type="text"
+                  maxLength={16}
+                  value={auditForm.nik_warga}
+                  onChange={(e) => setAuditForm({ ...auditForm, nik_warga: e.target.value })}
+                  required
+                  placeholder="3273xxxxxxxxxxxx"
+                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-on-surface mb-1">Nama Lengkap Warga:</label>
+                <input
+                  type="text"
+                  value={auditForm.nama_warga}
+                  onChange={(e) => setAuditForm({ ...auditForm, nama_warga: e.target.value })}
+                  placeholder="Nama warga terlapor"
+                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-on-surface mb-1">Uraian Fakta Lapangan:</label>
+                <textarea
+                  rows={3}
+                  value={auditForm.alasan_lapangan}
+                  onChange={(e) => setAuditForm({ ...auditForm, alasan_lapangan: e.target.value })}
+                  required
+                  placeholder="Jelaskan kondisi faktual di RT/RW (misal: telah memiliki kendaraan roda 4, rumah tingkat, atau pindah sejak bulan lalu)..."
+                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-on-surface mb-1">URL Bukti Foto / Dokumen Pendukung (Opsional):</label>
+                <input
+                  type="url"
+                  value={auditForm.bukti_foto_url}
+                  onChange={(e) => setAuditForm({ ...auditForm, bukti_foto_url: e.target.value })}
+                  placeholder="https://... (Foto rumah/aset/surat keterangan)"
+                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant">
+                <button
+                  type="button"
+                  onClick={() => setShowAuditModal(false)}
+                  className="px-4 py-2 border border-outline-variant text-on-surface rounded-xl hover:bg-surface-container"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={auditSubmitting}
+                  className="px-5 py-2 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 transition-colors flex items-center gap-2 shadow-sm"
+                >
+                  {auditSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  Kirim Laporan ke Kelurahan
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL KEPUTUSAN REVIEW SANGGAHAN (KELURAHAN / LURAH)                  */}
+      {/* ===================================================================== */}
+      {showAuditReviewModal && selectedAudit && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 border border-outline-variant shadow-xl my-8 text-xs space-y-4"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-outline-variant">
+              <h2 className="text-base font-bold text-on-surface flex items-center gap-2">
+                <ShieldCheck className="text-sky-600" size={20} />
+                Meja Keputusan Audit Kelurahan
+              </h2>
+              <button onClick={() => setShowAuditReviewModal(false)} className="text-on-surface-variant hover:text-on-surface">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant space-y-1">
+              <p className="font-bold text-sm text-on-surface">{selectedAudit.nama_warga}</p>
+              <p className="text-on-surface-variant">NIK: {selectedAudit.nik_warga} &bull; RT {selectedAudit.rt} / RW {selectedAudit.rw}</p>
+              <p className="text-rose-800 font-semibold mt-1">Temuan: {selectedAudit.tipe_sanggahan.replace('_', ' ')}</p>
+              <p className="text-on-surface-variant italic">&ldquo;{selectedAudit.alasan_lapangan}&rdquo;</p>
+              <p className="text-[11px] text-sky-800 mt-1">Dilaporkan oleh: {selectedAudit.nama_pelapor || 'Ketua RT/RW'}</p>
+            </div>
+
+            <form onSubmit={handleAuditReviewSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold text-on-surface mb-1">Keputusan Pejabat Kelurahan:</label>
+                <select
+                  value={auditReviewForm.status_review}
+                  onChange={(e) => setAuditReviewForm({ ...auditReviewForm, status_review: e.target.value })}
+                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                >
+                  <option value="DISETUJUI_PENCABUTAN">Setujui Pencabutan Kuota (Hapus dari Daftar Penerima)</option>
+                  <option value="DISETUJUI_INKLUSI">Setujui Inklusi Baru (Terbitkan Bantuan Prioritas)</option>
+                  <option value="DITOLAK">Tolak Sanggahan (Pertahankan Status Penerima Manfaat)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-on-surface mb-1">Catatan Resmi Dinas Kelurahan:</label>
+                <textarea
+                  rows={3}
+                  value={auditReviewForm.catatan_kelurahan}
+                  onChange={(e) => setAuditReviewForm({ ...auditReviewForm, catatan_kelurahan: e.target.value })}
+                  required
+                  placeholder="Masukkan pertimbangan kedinasan berdasarkan pencocokan data DTKS atau berita acara musyawarah kelurahan..."
+                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant">
+                <button
+                  type="button"
+                  onClick={() => setShowAuditReviewModal(false)}
+                  className="px-4 py-2 border border-outline-variant text-on-surface rounded-xl hover:bg-surface-container"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={auditSubmitting}
+                  className="px-5 py-2 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
+                >
+                  {auditSubmitting ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                  Sahkan Keputusan Review
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
+
 

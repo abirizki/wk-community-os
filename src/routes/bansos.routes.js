@@ -76,5 +76,39 @@ router.post('/:id/disburse', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'a
   }
 });
 
+// POST /api/bansos/audit-sanggahan - Lapor temuan anomali / sanggahan penerima bansos (RT/RW/Petugas)
+router.post('/audit-sanggahan', requireAuth, async (req, res) => {
+  try {
+    const result = await bansosService.reportAuditSanggahan(req.body, req.session.user);
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/bansos/audit-sanggahan - Ambil daftar sanggahan bansos sesuai hierarki pengguna
+router.get('/audit-sanggahan', requireAuth, async (req, res) => {
+  try {
+    const list = await bansosService.listAuditSanggahan(req.session.user, req.query);
+    res.json({ success: true, data: list });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// PATCH /api/bansos/audit-sanggahan/:id/review - Meja Review Kelurahan untuk putusan sanggahan
+router.patch('/audit-sanggahan/:id/review', requireAuth, requireRole('admin_kelurahan', 'lurah', 'superadmin', 'admin'), async (req, res) => {
+  try {
+    const result = await bansosService.reviewAuditSanggahan(
+      Number(req.params.id),
+      req.body,
+      req.session.user
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
 

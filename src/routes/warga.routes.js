@@ -67,4 +67,58 @@ router.get('/:nik', requireAuth, async (req, res) => {
   }
 });
 
+// PATCH /api/warga/mandiri-asuransi-bansos - Input mandiri BPJS / Asuransi dan Bukti Bantuan Sosial
+router.patch('/mandiri-asuransi-bansos', requireAuth, async (req, res) => {
+  try {
+    const {
+      nik,
+      kategori_asuransi,
+      nomor_asuransi,
+      bukti_bansos_url,
+      catatan_bansos_mandiri
+    } = req.body;
+
+    const user = req.session.user;
+    // Warga hanya boleh mengubah datanya sendiri atau keluarga; aparatur boleh mengubah siapapun
+    let targetNik = nik || user.active_nik || user.username;
+    if (user.role === 'warga' && targetNik !== user.active_nik && targetNik !== user.username) {
+      // Cek apakah targetNik masih dalam satu Kartu Keluarga
+      const wargaRepo = require('../repositories/warga.repository');
+      const callerWarga = await wargaRepo.findByNik(user.active_nik || user.username);
+      const targetWarga = await wargaRepo.findByNik(targetNik);
+      if (!callerWarga || !targetWarga || callerWarga.no_kk !== targetWarga.no_kk) {
+        return res.status(403).json({ success: false, message: 'Anda hanya berwenang memperbarui data jaminan sosial keluarga sendiri.' });
+      }
+    }
+
+    const pool = require('../db/pool');
+    await pool.execute(
+      `UPDATE warga 
+       SET kategori_asuransi = COALESCE(?, kategori_asuransi),
+           nomor_asuransi = COALESCE(?, nomor_asuransi),
+           bukti_bansos_url = COALESCE(?, bukti_bansos_url),
+           catatan_bansos_mandiri = COALESCE(?, catatan_bansos_mandiri)
+       WHERE nik = ?`,
+      [
+        kategori_asuransi || null,
+        nomor_asuransi || null,
+        bukti_bansos_url || null,
+        catatan_bansos_mandiri || null,
+        targetNik
+      ]
+    );
+
+    const [updatedWarga] = await pool.execute('SELECT * FROM warga WHERE nik = ? LIMIT 1', [targetNik]);
+
+    res.json({
+      success: true,
+      message: 'Data jaminan kesehatan & bukti bantuan sosial berhasil diperbarui.',
+      data: updatedWarga[0] || null
+    });
+  } catch (error) {
+    console.error('Update mandiri asuransi bansos error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Gagal memperbarui data jaminan sosial' });
+  }
+});
+
 module.exports = router;

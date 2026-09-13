@@ -31,21 +31,33 @@ router.post('/login', async (req, res) => {
       console.warn('[Auth] Database lookup warning:', dbErr.message);
     }
 
-    // 2. Jika tidak ditemukan langsung tapi cleanUsername adalah 16 digit No KK
-    if (!user && cleanUsername.length === 16) {
+    // 2. Jika tidak ditemukan langsung tapi cleanUsername adalah 16 digit (NIK / No KK)
+    if (!user && /^\d{16}$/.test(cleanUsername)) {
       try {
-        const kk = await userRepository.findKartuKeluarga(cleanUsername);
-        if (kk) {
-          const [wargaRows] = await pool.execute(
-            'SELECT user_id, nik, nama FROM warga WHERE no_kk = ? AND status_hubungan_keluarga = "Kepala Keluarga" LIMIT 1',
-            [cleanUsername]
-          );
-          if (wargaRows.length > 0 && wargaRows[0].user_id) {
-            user = await userRepository.findById(wargaRows[0].user_id);
+        // Cek apakah 16 digit ini adalah NIK warga yang memiliki user_id
+        const [wargaByNik] = await pool.execute(
+          'SELECT user_id, nik, nama, no_kk FROM warga WHERE nik = ? LIMIT 1',
+          [cleanUsername]
+        );
+        if (wargaByNik.length > 0 && wargaByNik[0].user_id) {
+          user = await userRepository.findById(wargaByNik[0].user_id);
+        }
+
+        // Jika belum ditemukan, cek apakah 16 digit ini adalah Nomor KK
+        if (!user) {
+          const kk = await userRepository.findKartuKeluarga(cleanUsername);
+          if (kk) {
+            const [wargaRows] = await pool.execute(
+              'SELECT user_id, nik, nama FROM warga WHERE no_kk = ? AND status_hubungan_keluarga = "Kepala Keluarga" LIMIT 1',
+              [cleanUsername]
+            );
+            if (wargaRows.length > 0 && wargaRows[0].user_id) {
+              user = await userRepository.findById(wargaRows[0].user_id);
+            }
           }
         }
-      } catch (kkErr) {
-        console.warn('[Auth] KK lookup warning:', kkErr.message);
+      } catch (idLookupErr) {
+        console.warn('[Auth] NIK/KK lookup warning:', idLookupErr.message);
       }
     }
 

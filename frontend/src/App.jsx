@@ -20,6 +20,7 @@ import WargaDetail from './pages/WargaDetail';
 import KartuKeluargaPage from './pages/KartuKeluargaPage';
 import UserManagementPage from './pages/UserManagementPage';
 import PanduanOperasionalPage from './pages/PanduanOperasionalPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
             <Route path="pbb" element={<PBBPage />} />
             <Route path="posyandu" element={<PosyanduPage />} />
             <Route path="pengaduan" element={<ComplaintPage />} />
+            <Route path="profil" element={<ProfilePage />} />
             <Route path="panduan" element={<PanduanOperasionalPage />} />
           </Route>
 

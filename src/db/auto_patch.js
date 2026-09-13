@@ -244,6 +244,49 @@ async function autoPatchDatabase() {
       `);
     } catch (e) {}
 
+    // 6. Pastikan tabel bansos_audit_sanggahan (Tahap 2 Audit Anomali RT/RW) tersedia
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`bansos_audit_sanggahan\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`bansos_pengajuan_id\` INT NULL,
+          \`nik_warga\` VARCHAR(16) NOT NULL,
+          \`nama_warga\` VARCHAR(150) NOT NULL,
+          \`no_kk\` VARCHAR(16) NULL,
+          \`rt\` VARCHAR(5) NOT NULL,
+          \`rw\` VARCHAR(5) NOT NULL,
+          \`tipe_sanggahan\` ENUM('TIDAK_LAYAK', 'SUDAH_PINDAH', 'MENINGGAL_DUNIA', 'LAYAK_BELUM_TERDAFTAR') NOT NULL,
+          \`alasan_lapangan\` TEXT NOT NULL,
+          \`bukti_foto_url\` VARCHAR(255) NULL,
+          \`status_review\` ENUM('PENDING_KELURAHAN', 'DISETUJUI_PENCABUTAN', 'DISETUJUI_INKLUSI', 'DITOLAK') NOT NULL DEFAULT 'PENDING_KELURAHAN',
+          \`catatan_kelurahan\` TEXT NULL,
+          \`dilaporkan_oleh_user_id\` INT NULL,
+          \`direview_oleh_user_id\` INT NULL,
+          \`tanggal_review\` DATETIME NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_audit_sanggahan_nik\` (\`nik_warga\`),
+          INDEX \`idx_audit_sanggahan_rt_rw\` (\`rt\`, \`rw\`),
+          INDEX \`idx_audit_sanggahan_status\` (\`status_review\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE bansos_audit_sanggahan note:', e.message);
+    }
+
+    // 7. Kolom jaminan sosial (BPJS / Asuransi & Bukti Bansos Mandiri) pada tabel warga
+    const wargaSocialCols = [
+      "kategori_asuransi VARCHAR(100) NULL DEFAULT 'Tidak Memiliki Asuransi'",
+      "nomor_asuransi VARCHAR(50) NULL",
+      "bukti_bansos_url VARCHAR(255) NULL",
+      "catatan_bansos_mandiri TEXT NULL"
+    ];
+    for (const wCol of wargaSocialCols) {
+      try {
+        await connection.query(`ALTER TABLE warga ADD COLUMN ${wCol}`);
+      } catch (e) {}
+    }
+
     // 4. Upsert Akun Standar Resmi
     for (const acc of STANDARD_ACCOUNTS) {
       try {

@@ -275,7 +275,189 @@ class BansosService {
       if (query.rt) filter.rt = query.rt;
     }
 
-    return await bansosRepository.getStats(filter);
+  /**
+   * RT / RW Melaporkan sanggahan / anomali penerima bansos
+   */
+  async reportAuditSanggahan(payload, currentUser) {
+    const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'];
+    if (!allowedRoles.includes(currentUser.role)) {
+      const err = new Error('Hanya Ketua RT, Ketua RW, dan Petugas yang berwenang melaporkan sanggahan audit bansos.');
+      err.status = 403;
+      throw err;
+    }
+
+    const {
+      bansos_pengajuan_id,
+      nik_warga,
+      nama_warga,
+      no_kk,
+      tipe_sanggahan,
+      alasan_lapangan,
+      bukti_foto_url
+    } = payload;
+
+    if (!nik_warga || String(nik_warga).trim().length !== 16) {
+      const err = new Error('NIK warga yang dilaporkan harus 16 digit valid');
+      err.status = 400;
+      throw err;
+    }
+
+    if (!['TIDAK_LAYAK', 'SUDAH_PINDAH', 'MENINGGAL_DUNIA', 'LAYAK_BELUM_TERDAFTAR'].includes(tipe_sanggahan)) {
+      const err = new Error('Kategori sanggahan/anomali tidak valid');
+      err.status = 400;
+      throw err;
+    }
+
+    if (!alasan_lapangan || alasan_lapangan.trim().length < 5) {
+      const err = new Error('Uraian fakta lapangan minimal 5 karakter');
+      err.status = 400;
+      throw err;
+    }
+
+    let rt = currentUser.rt || '001';
+    let rw = currentUser.rw || '001';
+
+    // Cek warga di database
+    const warga = await wargaRepository.findByNik(nik_warga);
+    let finalNama = nama_warga || (warga ? warga.nama : 'Warga');
+    let finalKK = no_kk || (warga ? warga.no_kk : null);
+    if (warga && !currentUser.rt) {
+      rt = warga.rt || rt;
+      rw = warga.rw || rw;
+    }
+
+    const record = await bansosRepository.createAuditSanggahan({
+      bansos_pengajuan_id: bansos_pengajuan_id ? Number(bansos_pengajuan_id) : null,
+      nik_warga,
+      nama_warga: finalNama,
+      no_kk: finalKK,
+      rt,
+      rw,
+      tipe_sanggahan,
+      alasan_lapangan: alasan_lapangan.trim(),
+      bukti_foto_url: bukti_foto_url || null,
+      status_review: 'PENDING_KELURAHAN',
+      dilaporkan_oleh_user_id: currentUser.id
+    });
+
+    return {
+      success: true,
+      message: 'Laporan audit sanggahan bansos berhasil diajukan ke Meja Review Kelurahan.',
+      data: record
+    };
+  }
+
+  /**
+   * Ambil daftar laporan audit sanggahan
+   */
+  async listAuditSanggahan(currentUser, query = {}) {
+    const { role, rt, rw } = currentUser;
+    const filter = {
+      status_review: query.status_review || null,
+      tipe_sanggahan: query.tipe_sanggahan || null,
+      limit: parseInt(query.limit, 10) || 50,
+      offset: parseInt(query.offset, 10) || 0
+    };
+
+    if (role === 'ketua_rt') {
+      filter.rt = rt;
+      filter.rw = rw;
+    } else if (role === 'ketua_rw' || role === 'admin_rw') {
+      filter.rw = rw;
+      if (query.rt) filter.rt = query.rt;
+    } else {
+      if (query.rw) filter.rw = query.rw;
+      if (query.rt) filter.rt = query.rt;
+    }
+
+    return await bansosRepository.listAuditSanggahan(filter);
+  }
+
+  /**
+   * Review dan Keputusan Sanggahan oleh Admin Kelurahan / Lurah
+   */
+  async reviewAuditSanggahan(id, payload, currentUser) {
+    const allowedRoles = ['admin_kelurahan', 'lurah', 'superadmin', 'admin'];
+    if (!allowedRoles.includes(currentUser.role)) {
+      const err = new Error('Hanya Admin Kelurahan dan Lurah yang berwenang mengambil keputusan audit bansos.');
+      err.status = 403;
+      throw err;
+    }
+
+    const { status_review, catatan_kelurahan } = payload;
+    if (!['DISETUJUI_PENCABUTAN', 'DISETUJUI_INKLUSI', 'DITOLAK'].includes(status_review)) {
+      const err = new Error('Status keputusan review tidak valid');
+      err.status = 400;
+      throw err;
+    }
+
+    const sanggahan = await bansosRepository.getAuditSanggahanById(id);
+    if (!sanggahan) {
+      const err = new Error('Data audit sanggahan tidak ditemukan');
+      err.status = 404;
+      throw err;
+    }
+
+    const updated = await bansosRepository.reviewAuditSanggahan(id, {
+      status_review,
+      catatan_kelurahan: catatan_kelurahan || 'Telah diverifikasi silang dengan DTKS dan data lapangan Kelurahan.',
+      direview_oleh_user_id: currentUser.id
+    });
+
+    // Dampak Otomatis Keputusan ke Status Bantuan
+    if (status_review === 'DISETUJUI_PENCABUTAN' && sanggahan.bansos_pengajuan_id) {
+      try {
+        await bansosRepository.updateStatus(sanggahan.bansos_pengajuan_id, {
+          status: 'REJECTED',
+          approval_step: 'COMPLETED',
+          catatan_verifikasi: `Pencabutan kuota bantuan sosial disahkan Kelurahan berdasar audit temuan lapangan RT/RW: ${catatan_kelurahan || sanggahan.alasan_lapangan}`
+        });
+      } catch (e) {
+        console.warn('Update status pencabutan bansos warning:', e.message);
+      }
+    } else if (status_review === 'DISETUJUI_INKLUSI' && sanggahan.tipe_sanggahan === 'LAYAK_BELUM_TERDAFTAR') {
+      try {
+        await bansosRepository.create({
+          nik_penerima: sanggahan.nik_warga,
+          nama_penerima: sanggahan.nama_warga,
+          no_kk: sanggahan.no_kk || '3273010101900001',
+          jenis_bansos: 'Bantuan Darurat Kelurahan (Inklusi Audit)',
+          alasan_pengajuan: `Inklusi prioritas dari audit lapangan RT/RW: ${sanggahan.alasan_lapangan}`,
+          nominal_bantuan: 600000,
+          status: 'APPROVED',
+          approval_step: 'COMPLETED',
+          rt: sanggahan.rt,
+          rw: sanggahan.rw,
+          diajukan_oleh_user_id: currentUser.id
+        });
+      } catch (e) {
+        console.warn('Inklusi bansos otomatis warning:', e.message);
+      }
+    }
+
+    // Kirim notifikasi ke pelapor (RT/RW)
+    try {
+      if (sanggahan.dilaporkan_oleh_user_id) {
+        const reporter = await require('../repositories/user.repository').findById(sanggahan.dilaporkan_oleh_user_id);
+        if (reporter && reporter.username) {
+          await notifikasiRepository.create({
+            nik_target: reporter.username,
+            judul: 'Hasil Review Audit Bansos Kelurahan',
+            pesan: `Laporan anomali bansos warga a.n ${sanggahan.nama_warga} telah diputus: ${status_review.replace('_', ' ')}. Catatan: ${catatan_kelurahan || '-'}`,
+            tipe: status_review === 'DITOLAK' ? 'warning' : 'success',
+            link: '/dashboard/bansos'
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Notifikasi hasil audit review warning:', e.message);
+    }
+
+    return {
+      success: true,
+      message: `Keputusan audit bansos berhasil disimpan: ${status_review.replace('_', ' ')}.`,
+      data: updated
+    };
   }
 }
 
