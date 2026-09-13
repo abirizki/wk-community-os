@@ -285,6 +285,8 @@ class BansosRepository {
         total_dana_tersalurkan: 0
       };
     }
+  }
+
   /**
    * Simpan laporan sanggahan / audit ketidaksesuaian penerima bansos oleh RT/RW
    */
