@@ -111,7 +111,6 @@ router.post('/login', async (req, res) => {
       active_nik: activeNik,
       active_nama: activeNama,
       active_hubungan: activeHubungan,
-      family_members: familyMembers
       family_members: familyMembers,
       must_change_password: mustChangePassword
     };
