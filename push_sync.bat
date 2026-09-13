@@ -2,5 +2,5 @@
 del /f /q .git\index
 git reset
 git add .
-git commit -m "fix(backend): Tutup kurung kurawal getStats di bansos.repository.js untuk mengatasi 503 error"
+git commit -m "fix(backend): Perbaiki penutupan fungsi getBansosStats dan hapus duplikasi blok di bansos.service.js"
 git push origin main

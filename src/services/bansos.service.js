@@ -275,6 +275,9 @@ class BansosService {
       if (query.rt) filter.rt = query.rt;
     }
 
+    return bansosRepository.getStats(filter);
+  }
+
   /**
    * RT / RW Melaporkan sanggahan / anomali penerima bansos
    */
@@ -404,16 +407,6 @@ class BansosService {
       direview_oleh_user_id: currentUser.id
     });
 
-    // Dampak Otomatis Keputusan ke Status Bantuan
-    if (status_review === 'DISETUJUI_PENCABUTAN' && sanggahan.bansos_pengajuan_id) {
-      try {
-        await bansosRepository.updateStatus(sanggahan.bansos_pengajuan_id, {
-          status: 'REJECTED',
-          approval_step: 'COMPLETED',
-          catatan_verifikasi: `Pencabutan kuota bantuan sosial disahkan Kelurahan berdasar audit temuan lapangan RT/RW: ${catatan_kelurahan || sanggahan.alasan_lapangan}`
-        });
-      } catch (e) {
-        console.warn('Update status pencabutan bansos warning:', e.message);
     // Dampak Otomatis Keputusan ke Status Bantuan & Desil / Kependudukan
     const pool = require('../db/pool');
     if (status_review === 'DISETUJUI_PENCABUTAN') {
