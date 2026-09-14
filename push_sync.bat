@@ -2,5 +2,5 @@
 del /f /q .git\index
 git reset
 git add .
-git commit -m "fix(backend): Perbaiki penutupan fungsi getBansosStats dan hapus duplikasi blok di bansos.service.js"
+git commit -m "docs: Tambahkan laporan audit menyeluruh platform Bumi Warga (AUDIT_MENYELURUH_BUMI_WARGA.md)"
 git push origin main
