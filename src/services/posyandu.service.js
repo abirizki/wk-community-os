@@ -93,6 +93,7 @@ class PosyanduService {
 
     const recordData = {
       nik_warga,
+      nik_anak: nik_anak || null,
       nama_anak: nama_anak.trim(),
       tanggal_lahir_anak: tanggal_lahir_anak || null,
       jenis_kelamin_anak,
@@ -375,14 +376,117 @@ class PosyanduService {
    * Statistik lansia sesuai hierarki
    */
   async getLansiaStats(currentUser, query = {}) {
-    const scope = this.resolveScope(currentUser, query);
+    const scope = await this.resolveScope(currentUser, query);
     return await posyanduRepository.getLansiaStats(scope);
+  }
+
+  // ----------------------------------------------------
+  // FASE 1: PROFIL KADER & MANAJEMEN PENUGASAN
+  // ----------------------------------------------------
+
+  /**
+   * Ambil profil kader posyandu login (nama, NIK, wilayah tugas)
+   */
+  async getKaderProfile(currentUser) {
+    if (!currentUser) {
+      const err = new Error('Sesi tidak valid');
+      err.status = 401;
+      throw err;
+    }
+    return await posyanduRepository.getKaderProfile(currentUser.id, currentUser);
+  }
+
+  /**
+   * Daftar seluruh profil kader posyandu (Admin Kelurahan)
+   */
+  async listAllKader() {
+    return await posyanduRepository.listAllKaderProfiles();
+  }
+
+  /**
+   * Upsert profil kader dan penetapan wilayah tugas RT/RW (Admin Kelurahan)
+   */
+  async upsertKader(payload) {
+    if (!payload.user_id || !payload.nama_lengkap) {
+      const err = new Error('User ID dan nama lengkap kader wajib diisi');
+      err.status = 400;
+      throw err;
+    }
+    return await posyanduRepository.upsertKaderProfile(payload);
+  }
+
+  // ----------------------------------------------------
+  // FASE 2: PENCARIAN CERDAS TARGET WARGA (BALITA & LANSIA)
+  // ----------------------------------------------------
+
+  /**
+   * Pencarian cerdas warga target di wilayah tugas kader (bebas input NIK manual)
+   */
+  async searchTargetWarga(currentUser, { category = 'balita', search = '' } = {}) {
+    let wilayahList = [];
+
+    if (currentUser.role === 'kader_posyandu') {
+      const profile = await posyanduRepository.getKaderProfile(currentUser.id, currentUser);
+      wilayahList = profile.wilayah_tugas || [];
+    } else if (currentUser.role === 'ketua_rt') {
+      wilayahList = [{ rw: currentUser.rw || '001', rt: currentUser.rt || '001' }];
+    } else if (currentUser.role === 'ketua_rw' || currentUser.role === 'admin_rw') {
+      wilayahList = [{ rw: currentUser.rw || '001', rt: null }];
+    }
+
+    if (category === 'lansia') {
+      return await posyanduRepository.listTargetLansia({ wilayahList, search });
+    }
+
+    return await posyanduRepository.listTargetBalita({ wilayahList, search });
+  }
+
+  // ----------------------------------------------------
+  // FASE 3: KARTU KIA DIGITAL & KARTU LANSIA DIGITAL
+  // ----------------------------------------------------
+
+  /**
+   * Mengambil data terpadu Kartu KIA Digital (KMS) & Histori Antropometri
+   */
+  async getKmsCard(currentUser, identifier) {
+    if (!identifier) {
+      const err = new Error('NIK/Identifier balita wajib diisi');
+      err.status = 400;
+      throw err;
+    }
+    return await posyanduRepository.getKmsCardData(identifier);
+  }
+
+  /**
+   * Mengambil data terpadu Kartu Lansia Digital
+   */
+  async getLansiaCard(currentUser, lansiaId) {
+    if (!lansiaId) {
+      const err = new Error('ID Lansia wajib diisi');
+      err.status = 400;
+      throw err;
+    }
+    const history = await posyanduRepository.getPemeriksaanHistoryByLansiaId(lansiaId);
+    const latest = history[0] || {};
+    const previous = history.length > 1 ? history[1] : null;
+
+    let deltaTensi = 0;
+    if (previous && latest.tensi_sistolik && previous.tensi_sistolik) {
+      deltaTensi = latest.tensi_sistolik - previous.tensi_sistolik;
+    }
+
+    return {
+      lansia_id: lansiaId,
+      latest_checkup: latest,
+      delta_tensi: deltaTensi,
+      history
+    };
   }
 
   // ----------------------------------------------------
   // UTILITY / SCOPE RESOLVER
   // ----------------------------------------------------
-  resolveScope(currentUser, query = {}) {
+  async resolveScope(currentUser, query = {}) {
     const { role, rt, rw } = currentUser;
     if (role === 'ketua_rt') {
       return { rt, rw };

@@ -22,7 +22,6 @@ import {
   Calendar,
   Briefcase,
   Droplet,
-  FileCheck
   FileCheck,
   Printer,
   QrCode

@@ -23,9 +23,9 @@ import {
   Building2,
   Landmark,
   MessageSquare,
-  BookOpen
   BookOpen,
   Wallet,
+  Baby,
 } from 'lucide-react';
 import OfflineIndicator from '../components/OfflineIndicator';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
@@ -148,10 +148,11 @@ export default function DashboardLayout() {
     if (isPosyandu) {
       return [
         { name: 'Beranda Posyandu', path: '/dashboard', icon: <Home size={19} /> },
-        { name: 'Layanan Balita & Antropometri', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
-        { name: 'Pencarian Data Warga/Ibu', path: '/dashboard/warga', icon: <User size={19} /> },
-        { name: 'Pusat Pengaduan Kesehatan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
-        { name: 'Panduan SOP Posyandu', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+        { name: 'Catat Balita (KIA)', path: '/dashboard/posyandu?tab=balita', icon: <Baby size={19} /> },
+        { name: 'Catat Lansia', path: '/dashboard/posyandu?tab=lansia', icon: <HeartPulse size={19} /> },
+        { name: 'Riwayat Pemeriksaan', path: '/dashboard/posyandu?tab=riwayat', icon: <FileText size={19} /> },
+        { name: 'Kartu KIA & Lansia', path: '/dashboard/posyandu?tab=kartu', icon: <Award size={19} /> },
+        { name: 'Profil Saya', path: '/dashboard/profil', icon: <User size={19} /> }
       ];
     }
 
@@ -203,10 +204,10 @@ export default function DashboardLayout() {
     if (isPosyandu) {
       return [
         { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
-        { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={18} /> },
-        { name: 'Data Ibu', path: '/dashboard/warga', icon: <User size={18} /> },
-        { name: 'Lapor', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={18} /> },
-        { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
+        { name: 'Balita (KIA)', path: '/dashboard/posyandu?tab=balita', icon: <Baby size={18} /> },
+        { name: 'Lansia', path: '/dashboard/posyandu?tab=lansia', icon: <HeartPulse size={18} /> },
+        { name: 'Riwayat', path: '/dashboard/posyandu?tab=riwayat', icon: <FileText size={18} /> },
+        { name: 'Profil', path: '/dashboard/profil', icon: <User size={18} /> },
       ];
     }
     // Mobile bottom bar untuk Aparatur/Eksekutif saat buka di Smartphone

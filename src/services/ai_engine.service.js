@@ -83,6 +83,247 @@ class AIEngineService {
   }
 
   /**
+   * Menghasilkan Ringkasan Harian Berbasis Peran (Role-Scoped AI Brief)
+   * Setiap role mendapatkan KPI, prioritas, dan tindakan yang relevan dengan wilayahnya.
+   * Menggunakan rule-based engine — BUKAN generative AI.
+   */
+  async getRoleScopedBrief(userSession = {}) {
+    const role = userSession?.role || 'warga';
+    const scope = this.resolveScope(userSession);
+    const today = new Date().toISOString().split('T')[0];
+
+    // Ambil data yang relevan sesuai role
+    const briefData = { role, scope, generated_at: today, greeting: '', kpi_highlights: [], priorities: [], suggested_actions: [] };
+
+    try {
+      // KPI dasar: demografi & dokumen velocity selalu relevan untuk semua petugas
+      const [demography, documentVelocity] = await Promise.all([
+        analyticsRepository.getDemographyStats(scope),
+        analyticsRepository.getDocumentVelocityStats(scope)
+      ]);
+
+      // === BRIEF UNTUK KETUA RT ===
+      if (role === 'ketua_rt') {
+        briefData.greeting = `Selamat pagi, Ketua RT ${userSession.rt || ''}. Berikut ringkasan wilayah binaan Anda hari ini.`;
+
+        briefData.kpi_highlights = [
+          { label: 'Total Warga Aktif', value: demography.total_warga_aktif || 0, unit: 'jiwa' },
+          { label: 'Surat Menunggu Verifikasi RT', value: documentVelocity.total_menunggu_rt || 0, unit: 'berkas', urgency: (documentVelocity.total_menunggu_rt || 0) > 0 ? 'high' : 'low' },
+          { label: 'Surat Dalam Proses', value: documentVelocity.total_dalam_proses || 0, unit: 'berkas' }
+        ];
+
+        if ((documentVelocity.total_menunggu_rt || 0) > 0) {
+          briefData.priorities.push({
+            level: 'CRITICAL',
+            message: `Ada ${documentVelocity.total_menunggu_rt} surat menunggu verifikasi Anda. Segera proses agar tidak melampaui SLA.`,
+            action_path: '/dashboard/dokumen'
+          });
+        }
+
+        briefData.suggested_actions = [
+          { label: 'Verifikasi Surat Masuk', path: '/dashboard/dokumen', icon: 'FileCheck' },
+          { label: 'Cek Iuran Warga Bulan Ini', path: '/dashboard/keuangan', icon: 'Wallet' },
+          { label: 'Lihat Data Warga RT', path: '/dashboard/warga', icon: 'Users' }
+        ];
+      }
+
+      // === BRIEF UNTUK KETUA RW ===
+      else if (['ketua_rw', 'admin_rw'].includes(role)) {
+        briefData.greeting = `Selamat pagi, Ketua RW ${userSession.rw || ''}. Berikut ringkasan wilayah binaan RW Anda.`;
+
+        briefData.kpi_highlights = [
+          { label: 'Total Warga RW', value: demography.total_warga_aktif || 0, unit: 'jiwa' },
+          { label: 'Surat Menunggu Rekomendasi RW', value: documentVelocity.total_menunggu_rw || 0, unit: 'berkas', urgency: (documentVelocity.total_menunggu_rw || 0) > 0 ? 'high' : 'low' },
+          { label: 'Total KK', value: demography.total_kk || 0, unit: 'KK' }
+        ];
+
+        if ((documentVelocity.total_menunggu_rw || 0) > 0) {
+          briefData.priorities.push({
+            level: 'CRITICAL',
+            message: `Ada ${documentVelocity.total_menunggu_rw} surat menunggu rekomendasi RW. Segera proses.`,
+            action_path: '/dashboard/dokumen'
+          });
+        }
+
+        briefData.suggested_actions = [
+          { label: 'Rekomendasi Surat RW', path: '/dashboard/dokumen', icon: 'FileCheck' },
+          { label: 'Validasi Bansos RW', path: '/dashboard/bansos', icon: 'Gift' },
+          { label: 'Rekapitulasi Kas RW', path: '/dashboard/keuangan', icon: 'Wallet' }
+        ];
+      }
+
+      // === BRIEF UNTUK ADMIN KELURAHAN ===
+      else if (['admin_kelurahan', 'admin'].includes(role)) {
+        briefData.greeting = `Selamat pagi, Admin Kelurahan. Berikut ringkasan operasional pelayanan hari ini.`;
+
+        briefData.kpi_highlights = [
+          { label: 'Total Warga Terdaftar', value: demography.total_warga_aktif || 0, unit: 'jiwa' },
+          { label: 'Berkas Menunggu Verifikasi', value: documentVelocity.total_menunggu_kelurahan || 0, unit: 'berkas', urgency: (documentVelocity.total_menunggu_kelurahan || 0) > 0 ? 'high' : 'low' },
+          { label: 'Berkas Selesai Bulan Ini', value: documentVelocity.total_selesai_bulan_ini || 0, unit: 'berkas' }
+        ];
+
+        if ((documentVelocity.total_menunggu_kelurahan || 0) > 3) {
+          briefData.priorities.push({
+            level: 'WARNING',
+            message: `${documentVelocity.total_menunggu_kelurahan} berkas menumpuk di meja Admin Kelurahan. Perlu dipercepat.`,
+            action_path: '/dashboard/dokumen'
+          });
+        }
+
+        briefData.suggested_actions = [
+          { label: 'Verifikasi Berkas Surat', path: '/dashboard/dokumen', icon: 'FileCheck' },
+          { label: 'Kelola Data Warga', path: '/dashboard/warga', icon: 'Users' },
+          { label: 'Pengelolaan Bansos', path: '/dashboard/bansos', icon: 'Gift' }
+        ];
+      }
+
+      // === BRIEF UNTUK LURAH ===
+      else if (role === 'lurah') {
+        briefData.greeting = `Selamat pagi, Pak Lurah. Berikut ringkasan eksekutif wilayah Kelurahan Kebonjati.`;
+
+        const complaints = await analyticsRepository.getComplaintsStats().catch(() => ({}));
+        const tteCount = documentVelocity.total_menunggu_kelurahan || documentVelocity.total_menunggu_tte || 0;
+
+        briefData.kpi_highlights = [
+          { label: 'Total Warga', value: demography.total_warga_aktif || 0, unit: 'jiwa' },
+          { label: 'Surat Menunggu TTE', value: documentVelocity.total_menunggu_tte || documentVelocity.total_menunggu_kelurahan || 0, unit: 'berkas', urgency: 'high' },
+          { label: 'Aduan Aktif', value: complaints.total_belum_selesai || 0, unit: 'aduan' }
+          { label: 'Total Warga Kelurahan', value: demography.total_warga_aktif || 0, unit: 'jiwa' },
+          { label: 'Surat Siap TTE', value: tteCount, unit: 'berkas', urgency: tteCount > 0 ? 'critical' : 'low' },
+          { label: 'Aduan Warga Terbuka', value: complaints.total_belum_selesai || 0, unit: 'aduan', urgency: (complaints.total_belum_selesai || 0) > 0 ? 'high' : 'low' }
+        ];
+
+        if (tteCount > 0) {
+          briefData.priorities.push({
+            level: 'CRITICAL',
+            message: `Terdapat ${tteCount} berkas permohonan surat siap disahkan dengan TTE. Mohon verifikasi dan bubuhkan tanda tangan digital Anda.`,
+            action_path: '/dashboard/dokumen'
+          });
+        }
+
+        if ((complaints.total_belum_selesai || 0) > 0) {
+          briefData.priorities.push({
+            level: 'WARNING',
+            message: `${complaints.total_belum_selesai} aduan warga menanti disposisi dan tindak lanjut aparatur kelurahan.`,
+            action_path: '/dashboard/pengaduan'
+          });
+        }
+
+        briefData.priorities.push({
+          level: 'INFO',
+          message: `Rekapitulasi kependudukan: ${demography.total_warga_aktif || 0} jiwa aktif, ${demography.total_kk || 0} KK.`,
+          action_path: '/dashboard'
+          message: `Rekapitulasi kependudukan: ${demography.total_warga_aktif || 0} jiwa aktif di 12 RW Kelurahan Kebonjati.`,
+          action_path: '/dashboard/warga'
+        });
+
+        briefData.suggested_actions = [
+          { label: 'Pengesahan Surat (TTE)', path: '/dashboard/dokumen', icon: 'FileCheck' },
+          { label: 'Penetapan Bansos', path: '/dashboard/bansos', icon: 'Gift' },
+          { label: 'Evaluasi Aduan Warga', path: '/dashboard/pengaduan', icon: 'MessageSquareWarning' }
+          { label: 'Disposisi Pengaduan', path: '/dashboard/pengaduan', icon: 'MessageSquareWarning' },
+          { label: 'Audit Bansos Kelurahan', path: '/dashboard/bansos', icon: 'Gift' }
+        ];
+      }
+
+      // === BRIEF UNTUK KADER POSYANDU ===
+      else if (role === 'kader_posyandu') {
+        let balitaData = {};
+        try {
+          balitaData = await analyticsRepository.getBalitaNutritionByRT(scope);
+        } catch (e) { /* Silently handle if data not available */ }
+
+        const totalAtRisk = (balitaData.at_risk_balita || []).length;
+
+        briefData.greeting = `Selamat pagi, Kader Posyandu. Berikut ringkasan kondisi balita di wilayah Anda.`;
+
+        briefData.kpi_highlights = [
+          { label: 'Total Balita Terpantau', value: balitaData.total_balita || demography.total_balita || 0, unit: 'anak' },
+          { label: 'Balita Berisiko Gizi', value: totalAtRisk, unit: 'anak', urgency: totalAtRisk > 0 ? 'high' : 'low' },
+          { label: 'Total Lansia', value: demography.total_lansia || 0, unit: 'jiwa' }
+        ];
+
+        if (totalAtRisk > 0) {
+          briefData.priorities.push({
+            level: 'CRITICAL',
+            message: `${totalAtRisk} balita terindikasi gizi kurang/buruk. Segera lakukan kunjungan dan penimbangan ulang.`,
+            action_path: '/dashboard/posyandu'
+          });
+        }
+
+        briefData.suggested_actions = [
+          { label: 'Input Data Posyandu', path: '/dashboard/posyandu', icon: 'HeartPulse' },
+          { label: 'Cari Data Ibu/Warga', path: '/dashboard/warga', icon: 'Users' },
+          { label: 'Lapor Kondisi Darurat', path: '/dashboard/pengaduan', icon: 'MessageSquareWarning' }
+        ];
+      }
+
+      // === BRIEF UNTUK WARGA ===
+      else {
+        briefData.greeting = `Selamat datang di Bumi Warga, ${userSession.nama || userSession.username || 'Warga'}.`;
+
+        briefData.kpi_highlights = [];
+        briefData.priorities = [];
+        const activeNik = userSession.active_nik || userSession.username;
+        let citizenDocs = [];
+        try {
+          const dokumenService = require('./dokumen.service');
+          citizenDocs = await dokumenService.getByNik(activeNik);
+        } catch (e) { /* ignore */ }
+
+        const pendingDocs = citizenDocs.filter(d => !['APPROVED', 'REJECTED'].includes(d.status));
+        const returnedDocs = citizenDocs.filter(d => ['RETURNED', 'REVISION'].includes(d.status));
+
+        briefData.kpi_highlights = [
+          { label: 'Surat Dalam Proses', value: pendingDocs.length, unit: 'berkas', urgency: pendingDocs.length > 0 ? 'medium' : 'low' },
+          { label: 'Surat Selesai', value: citizenDocs.filter(d => d.status === 'APPROVED').length, unit: 'berkas' },
+          { label: 'Aduan Anda', value: 0, unit: 'laporan' }
+        ];
+
+        if (returnedDocs.length > 0) {
+          briefData.priorities.push({
+            level: 'CRITICAL',
+            message: `Ada ${returnedDocs.length} permohonan surat memerlukan perbaikan/revisi berkas dari Anda.`,
+            action_path: '/dashboard/dokumen'
+          });
+        } else if (pendingDocs.length > 0) {
+          const latest = pendingDocs[0];
+          const stepLabel = latest.approval_step === 'RT' ? 'RT' : latest.approval_step === 'RW' ? 'RW' : 'Kelurahan';
+          briefData.priorities.push({
+            level: 'INFO',
+            message: `Permohonan ${latest.jenis_dokumen || 'surat'} Anda saat ini sedang dalam proses verifikasi di tingkat ${stepLabel}.`,
+            action_path: '/dashboard/dokumen'
+          });
+        } else {
+          briefData.priorities.push({
+            level: 'INFO',
+            message: 'Tidak ada berkas yang menunggu tindakan. Semua pengajuan layanan Anda telah mutakhir.',
+            action_path: '/dashboard/dokumen'
+          });
+        }
+
+        briefData.suggested_actions = [
+          { label: 'Ajukan Surat', path: '/dashboard/dokumen', icon: 'FileCheck' },
+          { label: 'Ajukan Surat Baru', path: '/dashboard/dokumen', icon: 'FileCheck' },
+          { label: 'Cek Status Bansos', path: '/dashboard/bansos', icon: 'Gift' },
+          { label: 'Lihat Tagihan PBB', path: '/dashboard/pbb', icon: 'FileText' }
+          { label: 'Riwayat Profil & BPJS', path: '/dashboard/profil', icon: 'Users' }
+        ];
+      }
+
+    } catch (err) {
+      console.warn('[AI Brief] Error generating role brief:', err.message);
+      briefData.priorities.push({
+        level: 'WARNING',
+        message: 'Data analitik sedang tidak tersedia. Coba lagi nanti.',
+        action_path: '/dashboard'
+      });
+    }
+
+    return briefData;
+  }
+
+  /**
    * Menentukan scope wilayah berdasarkan hak akses session user
    */
   resolveScope(user) {

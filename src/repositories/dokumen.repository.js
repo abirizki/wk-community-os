@@ -8,10 +8,7 @@ const pool = require('../db/pool');
 
 class DokumenRepository {
   /**
-   * Buat permohonan surat baru
-   * @param {Object} payload 
-   * @returns {Promise<Object>}
-   * Buat permohonan surat baru dengan nomor registrasi unik
+   * Buat permohonan surat baru dengan nomor registrasi unik, SLA timestamp awal, dan riwayat workflow
    */
   async create(payload) {
     const { 
@@ -21,24 +18,77 @@ class DokumenRepository {
       nomor_registrasi,
       rt = null,
       rw = null,
-      is_auto_filled_by_ai = 0
+      is_auto_filled_by_ai = 0,
+      acted_by_user_id = null
     } = payload;
 
     const noReg = nomor_registrasi || `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const [result] = await pool.execute(
       `INSERT INTO dokumen_request 
-       (nomor_registrasi, nik_pemohon, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai) 
-       VALUES (?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?)`,
+       (nomor_registrasi, nik_pemohon, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, rt_received_at, sla_deadline) 
+       VALUES (?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
       [noReg, nik_pemohon, jenis_dokumen, jenis_dokumen, keperluan, rt, rw, is_auto_filled_by_ai ? 1 : 0]
     );
+
+    const docId = result.insertId;
+
+    // Catat riwayat workflow pengajuan perdana
+    if (acted_by_user_id) {
+      await this.recordWorkflowHistory({
+        dokumen_request_id: docId,
+        from_step: null,
+        to_step: 'RT',
+        acted_by_user_id,
+        acted_by_role: 'warga',
+        action: 'SUBMIT',
+        notes: `Pengajuan surat ${jenis_dokumen} oleh pemohon.`
+      }).catch(err => console.warn('[WorkflowHistory] Note on create:', err.message));
+    }
+
     return {
-      id: result.insertId,
+      id: docId,
       nomor_registrasi: noReg,
       ...payload,
       status: 'SUBMITTED',
       approval_step: 'RT'
     };
+  }
+
+  /**
+   * Catat entri riwayat audit workflow
+   */
+  async recordWorkflowHistory({ dokumen_request_id, from_step, to_step, acted_by_user_id, acted_by_role, action, notes = null }) {
+    try {
+      await pool.execute(
+        `INSERT INTO dokumen_workflow_history 
+         (dokumen_request_id, from_step, to_step, acted_by_user_id, acted_by_role, action, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [dokumen_request_id, from_step, to_step, acted_by_user_id, acted_by_role, action, notes]
+      );
+    } catch (e) {
+      console.warn('[WorkflowHistory] Record error:', e.message);
+    }
+  }
+
+  /**
+   * Ambil seluruh riwayat workflow dokumen untuk audit trail
+   */
+  async getWorkflowHistory(dokumenId) {
+    try {
+      const [rows] = await pool.execute(
+        `SELECT h.*, u.nama AS acted_by_nama, u.username AS acted_by_username
+         FROM dokumen_workflow_history h
+         LEFT JOIN users u ON h.acted_by_user_id = u.id
+         WHERE h.dokumen_request_id = ?
+         ORDER BY h.created_at ASC`,
+        [dokumenId]
+      );
+      return rows;
+    } catch (e) {
+      console.warn('[WorkflowHistory] getWorkflowHistory error:', e.message);
+      return [];
+    }
   }
 
   /**
@@ -167,7 +217,7 @@ class DokumenRepository {
   }
 
   /**
-   * Update status dan step approval berjenjang
+   * Update status dan step approval berjenjang dengan pencatatan SLA & riwayat audit
    */
   async updateApproval(id, updateData) {
     const {
@@ -178,7 +228,12 @@ class DokumenRepository {
       approved_by_rw = null,
       approved_by_kelurahan = null,
       trigger_executed = null,
-      file_url = null
+      file_url = null,
+      from_step = null,
+      acted_by_user_id = null,
+      acted_by_role = null,
+      action = 'APPROVE',
+      notes = null
     } = updateData;
 
     let query = 'UPDATE dokumen_request SET status = ?, approval_step = ?';
@@ -189,16 +244,19 @@ class DokumenRepository {
       params.push(catatan_petugas, catatan_petugas);
     }
     if (approved_by_rt !== null) {
-      query += ', approved_by_rt = ?';
+      query += ', approved_by_rt = ?, rt_processed_at = NOW(), rw_received_at = NOW(), sla_deadline = DATE_ADD(NOW(), INTERVAL 24 HOUR)';
       params.push(approved_by_rt);
     }
     if (approved_by_rw !== null) {
-      query += ', approved_by_rw = ?';
+      query += ', approved_by_rw = ?, rw_processed_at = NOW(), kelurahan_received_at = NOW(), sla_deadline = DATE_ADD(NOW(), INTERVAL 24 HOUR)';
       params.push(approved_by_rw);
     }
     if (approved_by_kelurahan !== null) {
       query += ', approved_by_kelurahan = ?, approved_at = NOW()';
       params.push(approved_by_kelurahan);
+    }
+    if (status === 'REJECTED') {
+      query += ', sla_deadline = NULL';
     }
     if (trigger_executed !== null) {
       query += ', trigger_executed = ?';
@@ -213,6 +271,20 @@ class DokumenRepository {
     params.push(id);
 
     const [result] = await pool.execute(query, params);
+
+    // Catat audit trail ke dokumen_workflow_history
+    if (acted_by_user_id && acted_by_role) {
+      await this.recordWorkflowHistory({
+        dokumen_request_id: id,
+        from_step: from_step || (approved_by_rt ? 'RT' : approved_by_rw ? 'RW' : 'KELURAHAN'),
+        to_step: approval_step,
+        acted_by_user_id,
+        acted_by_role,
+        action: action || (status === 'REJECTED' ? 'REJECT' : 'APPROVE'),
+        notes: notes || catatan_petugas
+      }).catch(err => console.warn('[WorkflowHistory] Note on updateApproval:', err.message));
+    }
+
     return result;
   }
 

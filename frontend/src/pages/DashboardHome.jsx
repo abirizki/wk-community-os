@@ -32,9 +32,33 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import DashboardKaderPosyandu from './dashboard/DashboardKaderPosyandu';
+import DashboardKetuaRT from './dashboard/DashboardKetuaRT';
+import DashboardLurah from './dashboard/DashboardLurah';
+import DashboardWarga from './dashboard/DashboardWarga';
+
 export default function DashboardHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Role routing khusus Sprint 2: Kader Posyandu & Ketua RT
+  // Role routing khusus Sprint 2 & 3:
+  // 1. Kader Posyandu
+  if (user?.role === 'kader_posyandu') {
+    return <DashboardKaderPosyandu />;
+  }
+  // 2. Ketua RT
+  if (user?.role === 'ketua_rt') {
+    return <DashboardKetuaRT />;
+  }
+  // 3. Lurah (Executive Command Center & TTE)
+  if (user?.role === 'lurah') {
+    return <DashboardLurah />;
+  }
+  // 4. Warga (Citizen Experience & Workflow Stepper)
+  if (user?.role === 'warga') {
+    return <DashboardWarga />;
+  }
 
   const isOfficer = user && user.role !== 'warga';
   const isKelurahan = user && ['admin_kelurahan', 'superadmin', 'admin'].includes(user.role);

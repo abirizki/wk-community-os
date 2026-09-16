@@ -1,115 +1,78 @@
 /**
- * frontend/src/utils/offlineQueue.js
- * Offline-First Mutation Queue Manager (Tahap 6: Anti-Blank Spot)
- * Bumi Warga - Jabar Pintar Digital
+ * Offline Queue Helper for Bumi Warga
+ * Backwards-compatible facade backed by IndexedDB & LocalStorage offlineStorage
  */
 
-const QUEUE_KEY = 'WK_OFFLINE_MUTATION_QUEUE';
+import {
+  enqueueOfflineAction,
+  getPendingQueue,
+  getPendingCount,
+  removeQueueItem,
+  clearQueue,
+  flushOfflineQueue,
+  initOfflineSync,
+  notifyQueueChanged
+} from './offlineStorage';
 
-export const offlineQueue = {
-  /**
-   * Cek apakah saat ini perangkat sedang online
-   */
-  isOnline() {
-    return typeof navigator !== 'undefined' ? navigator.onLine : true;
-  },
+const QUEUE_KEY = 'bw_offline_queue';
 
-  /**
-   * Ambil seluruh antrean transaksi yang tertahan offline
-   */
-  getQueue() {
+export const isOnline = () => {
+  return typeof navigator !== 'undefined' ? navigator.onLine : true;
+};
+
+export const getQueue = async () => {
+  try {
+    return await getPendingQueue();
+  } catch (e) {
+    console.warn('Gagal membaca antrean offline IndexedDB, fallback ke localStorage:', e);
     try {
       const data = localStorage.getItem(QUEUE_KEY);
       return data ? JSON.parse(data) : [];
-    } catch (e) {
-      console.warn('Gagal membaca antrean offline:', e);
+    } catch {
       return [];
     }
-  },
-
-  /**
-   * Tambahkan aksi transaksi ke antrean offline
-   */
-  enqueue({ endpoint, method = 'POST', payload = {}, title = 'Transaksi Offline' }) {
-    const queue = this.getQueue();
-    const item = {
-      id: `OFFLINE-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      endpoint,
-      method,
-      payload,
-      title,
-      createdAt: new Date().toISOString(),
-      retryCount: 0
-    };
-    queue.push(item);
-    try {
-      localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
-      // Dispatch custom event agar UI segera merespons
-      window.dispatchEvent(new CustomEvent('offline-queue-updated', { detail: { count: queue.length } }));
-    } catch (e) {
-      console.error('Gagal menyimpan ke antrean offline:', e);
-    }
-    return item;
-  },
-
-  /**
-   * Hapus satu item dari antrean
-   */
-  removeItem(id) {
-    const queue = this.getQueue().filter((item) => item.id !== id);
-    try {
-      localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
-      window.dispatchEvent(new CustomEvent('offline-queue-updated', { detail: { count: queue.length } }));
-    } catch (e) {}
-    return queue;
-  },
-
-  /**
-   * Bersihkan seluruh antrean offline
-   */
-  clear() {
-    try {
-      localStorage.removeItem(QUEUE_KEY);
-      window.dispatchEvent(new CustomEvent('offline-queue-updated', { detail: { count: 0 } }));
-    } catch (e) {}
-  },
-
-  /**
-   * Kirim ulang seluruh antrean offline ke server saat koneksi internet pulih
-   */
-  async flush(apiInstance) {
-    const queue = this.getQueue();
-    if (queue.length === 0) return { successCount: 0, failCount: 0 };
-
-    let successCount = 0;
-    let failCount = 0;
-    const remainingQueue = [];
-
-    for (const item of queue) {
-      try {
-        if (item.method === 'POST') {
-          await apiInstance.post(item.endpoint, item.payload);
-        } else if (item.method === 'PATCH') {
-          await apiInstance.patch(item.endpoint, item.payload);
-        } else if (item.method === 'PUT') {
-          await apiInstance.put(item.endpoint, item.payload);
-        }
-        successCount++;
-      } catch (err) {
-        console.warn(`Sinkronisasi item ${item.title} gagal:`, err.message);
-        item.retryCount = (item.retryCount || 0) + 1;
-        item.lastError = err.message;
-        remainingQueue.push(item);
-        failCount++;
-      }
-    }
-
-    try {
-      localStorage.setItem(QUEUE_KEY, JSON.stringify(remainingQueue));
-      window.dispatchEvent(new CustomEvent('offline-queue-updated', { detail: { count: remainingQueue.length } }));
-    } catch (e) {}
-
-    return { successCount, failCount, remaining: remainingQueue.length };
   }
 };
 
+export const offlineQueue = {
+  isOnline,
+  getQueue,
+  getPendingQueue,
+  getPendingCount,
+
+  enqueue: async (options) => {
+    const item = await enqueueOfflineAction({
+      type: options.type || 'MUTATION',
+      endpoint: options.endpoint,
+      method: options.method || 'POST',
+      payload: options.payload || {},
+      label: options.label || options.title || 'Transaksi Offline',
+      title: options.title || options.label || 'Transaksi Offline'
+    });
+    return item;
+  },
+
+  removeItem: async (id) => {
+    return await removeQueueItem(id);
+  },
+
+  clear: async () => {
+    return await clearQueue();
+  },
+
+  flush: async (apiInstance) => {
+    const res = await flushOfflineQueue(apiInstance);
+    return {
+      successCount: res?.synced || 0,
+      failCount: res?.failed || 0,
+      deadLetterCount: res?.deadLetters || 0,
+      remaining: res?.pending || 0
+    };
+  },
+
+  initSync: (apiCaller) => {
+    initOfflineSync(apiCaller);
+  }
+};
+
+export default offlineQueue;

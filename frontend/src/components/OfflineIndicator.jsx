@@ -29,6 +29,11 @@ export default function OfflineIndicator() {
 
     const handleQueueChanged = (e) => {
       setPendingCount(e.detail?.count ?? 0);
+      if (typeof e.detail?.count === 'number') {
+        setPendingCount(e.detail.count);
+      } else {
+        updateQueueCount();
+      }
     };
 
     const handleSyncCompleted = (e) => {
@@ -42,12 +47,14 @@ export default function OfflineIndicator() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('bw-offline-queue-changed', handleQueueChanged);
+    window.addEventListener('offline-queue-updated', handleQueueChanged);
     window.addEventListener('bw-sync-completed', handleSyncCompleted);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('bw-offline-queue-changed', handleQueueChanged);
+      window.removeEventListener('offline-queue-updated', handleQueueChanged);
       window.removeEventListener('bw-sync-completed', handleSyncCompleted);
     };
   }, []);

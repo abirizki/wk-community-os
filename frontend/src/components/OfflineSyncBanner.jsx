@@ -12,11 +12,16 @@ import { api } from '../utils/api';
 
 export default function OfflineSyncBanner() {
   const [isOnline, setIsOnline] = useState(offlineQueue.isOnline());
-  const [queueCount, setQueueCount] = useState(offlineQueue.getQueue().length);
+  const [queueCount, setQueueCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
 
   useEffect(() => {
+    // Initial fetch from IndexedDB
+    offlineQueue.getPendingCount().then((count) => {
+      setQueueCount(count);
+    });
+
     const handleOnline = () => {
       setIsOnline(true);
       // Coba flush otomatis saat koneksi kembali
@@ -30,23 +35,30 @@ export default function OfflineSyncBanner() {
 
     const handleQueueUpdate = (e) => {
       setQueueCount(e.detail?.count || offlineQueue.getQueue().length);
+      if (typeof e.detail?.count === 'number') {
+        setQueueCount(e.detail.count);
+      } else {
+        offlineQueue.getPendingCount().then(setQueueCount);
+      }
     };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('offline-queue-updated', handleQueueUpdate);
+    window.addEventListener('bw-offline-queue-changed', handleQueueUpdate);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('offline-queue-updated', handleQueueUpdate);
+      window.removeEventListener('bw-offline-queue-changed', handleQueueUpdate);
     };
   }, []);
 
   const triggerSync = async () => {
     if (!offlineQueue.isOnline()) return;
-    const currentQueue = offlineQueue.getQueue();
-    if (currentQueue.length === 0) return;
+    const count = await offlineQueue.getPendingCount();
+    if (count === 0) return;
 
     try {
       setSyncing(true);

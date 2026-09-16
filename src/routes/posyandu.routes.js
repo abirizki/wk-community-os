@@ -134,4 +134,82 @@ router.post('/lansia/pemeriksaan', requireAuth, async (req, res) => {
   }
 });
 
+// ==========================================
+// FASE 1 & 2: PROFIL KADER & PENCARIAN CERDAS WARGA TARGET
+// ==========================================
+
+// GET /api/posyandu/kader/my-profile - Profil & cakupan wilayah tugas kader login
+router.get('/kader/my-profile', requireAuth, async (req, res) => {
+  try {
+    const profile = await posyanduService.getKaderProfile(req.session.user);
+    res.json({ success: true, data: profile });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/posyandu/kader - Daftar seluruh kader posyandu (Admin Kelurahan)
+router.get('/kader', requireAuth, async (req, res) => {
+  try {
+    const list = await posyanduService.listAllKader();
+    res.json({ success: true, data: list });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// POST & PUT /api/posyandu/kader - Kelola profil kader & penetapan wilayah (Admin Kelurahan)
+router.post('/kader', requireAuth, async (req, res) => {
+  try {
+    const result = await posyanduService.upsertKader(req.body);
+    res.status(201).json({ success: true, message: 'Profil kader posyandu berhasil disimpan', data: result });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+router.put('/kader/:id', requireAuth, async (req, res) => {
+  try {
+    const result = await posyanduService.upsertKader({ ...req.body, id: req.params.id });
+    res.json({ success: true, message: 'Penugasan kader berhasil diperbarui', data: result });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/posyandu/warga-target - Pencarian cerdas warga target (balita / lansia di wilayah tugas)
+router.get('/warga-target', requireAuth, async (req, res) => {
+  try {
+    const targets = await posyanduService.searchTargetWarga(req.session.user, req.query);
+    res.json({ success: true, data: targets });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// ==========================================
+// FASE 3: KARTU KIA DIGITAL & KARTU LANSIA DIGITAL
+// ==========================================
+
+// GET /api/posyandu/kia/:identifier - Kartu KIA Digital & Histori Antropometri Balita
+router.get('/kia/:identifier', requireAuth, async (req, res) => {
+  try {
+    const cardData = await posyanduService.getKmsCard(req.session.user, req.params.identifier);
+    res.json({ success: true, data: cardData });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/posyandu/lansia-card/:id - Kartu Lansia Digital & Histori Pemeriksaan
+router.get('/lansia-card/:id', requireAuth, async (req, res) => {
+  try {
+    const cardData = await posyanduService.getLansiaCard(req.session.user, req.params.id);
+    res.json({ success: true, data: cardData });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
+

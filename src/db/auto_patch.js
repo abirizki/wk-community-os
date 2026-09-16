@@ -342,8 +342,46 @@ async function autoPatchDatabase() {
     } catch (e) {
       console.warn('[AutoPatch] CREATE keuangan_iuran_warga note:', e.message);
     }
+    // 10. Kolom SLA & Timestamp Workflow pada dokumen_request (Sprint 1 - Data Foundation)
+    const slaCols = [
+      'rt_received_at DATETIME NULL',
+      'rt_processed_at DATETIME NULL',
+      'rw_received_at DATETIME NULL',
+      'rw_processed_at DATETIME NULL',
+      'kelurahan_received_at DATETIME NULL',
+      'sla_deadline DATETIME NULL',
+      'sla_breached_at DATETIME NULL'
+    ];
+    for (const slaDef of slaCols) {
+      try {
+        await connection.query(`ALTER TABLE dokumen_request ADD COLUMN ${slaDef}`);
+      } catch (e) {}
+    }
 
-    // 10. Upsert Akun Standar Resmi
+    // 11. Tabel Riwayat Workflow Dokumen (Audit Trail Persetujuan Berjenjang)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`dokumen_workflow_history\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`dokumen_request_id\` INT NOT NULL,
+          \`from_step\` VARCHAR(50) NULL,
+          \`to_step\` VARCHAR(50) NOT NULL,
+          \`acted_by_user_id\` INT NOT NULL,
+          \`acted_by_role\` VARCHAR(50) NOT NULL,
+          \`action\` ENUM('APPROVE', 'REJECT', 'RETURN', 'SUBMIT', 'ESCALATE') NOT NULL,
+          \`notes\` TEXT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX \`idx_wfh_dokumen_id\` (\`dokumen_request_id\`),
+          INDEX \`idx_wfh_acted_by\` (\`acted_by_user_id\`),
+          INDEX \`idx_wfh_action\` (\`action\`),
+          INDEX \`idx_wfh_created\` (\`created_at\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE dokumen_workflow_history note:', e.message);
+    }
+
+    // 12. Upsert Akun Standar Resmi
     for (const acc of STANDARD_ACCOUNTS) {
       try {
         await connection.execute(`
@@ -358,6 +396,58 @@ async function autoPatchDatabase() {
             status = 'active'
         `, [acc.username, acc.password_hash, acc.nama, acc.role, acc.rt, acc.rw]);
       } catch (errAcc) {}
+    }
+
+    // 13. Tabel Profil & Penugasan Kader Posyandu (Sprint Khusus KIA Digital)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`kader_posyandu_profile\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`user_id\` INT NOT NULL UNIQUE,
+          \`nik\` VARCHAR(16) NOT NULL,
+          \`nama_lengkap\` VARCHAR(150) NOT NULL,
+          \`no_hp\` VARCHAR(20) NULL,
+          \`nama_posyandu\` VARCHAR(150) NOT NULL DEFAULT 'Posyandu Melati',
+          \`posyandu_list\` JSON NULL,
+          \`wilayah_tugas\` JSON NOT NULL,
+          \`status_aktif\` TINYINT(1) NOT NULL DEFAULT 1,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          CONSTRAINT \`fk_kader_user\` FOREIGN KEY (\`user_id\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE,
+          INDEX \`idx_kader_nik\` (\`nik\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE kader_posyandu_profile note:', e.message);
+    }
+
+    try {
+      await connection.query('ALTER TABLE posyandu ADD COLUMN nik_anak VARCHAR(16) NULL');
+    } catch (e) {}
+
+    // Seeding Profil Kader Posyandu Default (posyandu.melati_rw01)
+    try {
+      const [uRows] = await connection.execute("SELECT id, nama FROM users WHERE username = 'posyandu.melati_rw01' LIMIT 1");
+      if (uRows.length > 0) {
+        const kaderUserId = uRows[0].id;
+        const defaultWilayah = JSON.stringify([
+          { rw: '001', rt: '001' },
+          { rw: '001', rt: '002' }
+        ]);
+        const defaultPosyanduList = JSON.stringify(['Posyandu Melati RW 001', 'Posyandu Mawar RT 002']);
+
+        await connection.execute(`
+          INSERT INTO kader_posyandu_profile 
+            (user_id, nik, nama_lengkap, no_hp, nama_posyandu, posyandu_list, wilayah_tugas, status_aktif)
+          VALUES (?, '3273016008920005', ?, '081234567890', 'Posyandu Melati RW 001', ?, ?, 1)
+          ON DUPLICATE KEY UPDATE
+            nama_lengkap = VALUES(nama_lengkap),
+            wilayah_tugas = VALUES(wilayah_tugas),
+            nama_posyandu = VALUES(nama_posyandu)
+        `, [kaderUserId, uRows[0].nama || 'Kader Posyandu Melati', defaultPosyanduList, defaultWilayah]);
+      }
+    } catch (errKader) {
+      console.warn('[AutoPatch] Seed kader_posyandu_profile note:', errKader.message);
     }
 
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');

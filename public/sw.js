@@ -1,15 +1,16 @@
 /**
  * Service Worker: Bumi Warga — Community OS
- * Progressive Web App & Offline First Support
+ * Progressive Web App & Robust Offline-First Support
  */
 
-const CACHE_VERSION = 'bumi-warga-v1';
+const CACHE_VERSION = 'bumi-warga-v2';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 
 // Pre-cached assets for offline shell
 const PRECACHE_URLS = [
   '/',
+  '/index.html',
   '/manifest.json',
   '/offline.html',
   '/icons/icon.svg',
@@ -47,6 +48,7 @@ self.addEventListener('activate', (event) => {
 // Fetch Interceptor
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+
   // Only process http and https schemes (ignore chrome-extension://, moz-extension://, etc.)
   if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) {
     return;
@@ -54,43 +56,50 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Skip non-GET requests for SW caching (mutations handled by IndexedDB offline queue)
-  if (request.method !== 'GET') {
-    return;
-  }
-
-  // 1. Navigation requests (HTML pages) -> Network First with Offline Fallback
-  if (request.mode === 'navigate') {
+  // 1. Navigation requests (HTML documents like /dashboard, /posyandu, /)
+  if (
+    request.mode === 'navigate' ||
+    request.destination === 'document' ||
+    (request.method === 'GET' && request.headers.get('accept')?.includes('text/html'))
+  ) {
     event.respondWith(
       fetch(request)
         .then((response) => {
           // Cache latest successful navigation response
           if (response && response.status === 200) {
             const copy = response.clone();
-            caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
+            caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
           }
           return response;
         })
         .catch(async () => {
-          // Fallback to cached route, then root '/', then '/offline.html'
-          const cachedResponse = await caches.match(request);
-          if (cachedResponse) return cachedResponse;
+          // Fallback to cached route, then root /index.html, then /offline.html
+          try {
+            const cachedResponse = await caches.match(request);
+            if (cachedResponse) return cachedResponse;
 
-          const cachedRoot = await caches.match('/');
-          if (cachedRoot) return cachedRoot;
+            const cachedRoot = (await caches.match('/index.html')) || (await caches.match('/'));
+            if (cachedRoot) return cachedRoot;
 
-          const offlinePage = await caches.match('/offline.html');
-          if (offlinePage) return offlinePage;
+            const offlinePage = await caches.match('/offline.html');
+            if (offlinePage) return offlinePage;
+          } catch (matchErr) {
+            console.warn('[SW] Cache match failed during navigation:', matchErr);
+          }
 
-          return new Response('Offline - Bumi Warga', {
-            headers: { 'Content-Type': 'text/plain' }
-          });
+          return new Response(
+            '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"/><title>Bumi Warga - Mode Offline</title><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head><body style="font-family:system-ui,-apple-system,sans-serif;padding:2rem;text-align:center;"><h2>Anda Sedang Offline</h2><p>Koneksi internet terputus. Buka kembali halaman ini setelah tersambung ke jaringan.</p></body></html>',
+            {
+              headers: { 'Content-Type': 'text/html; charset=utf-8' },
+              status: 200
+            }
+          );
         })
     );
     return;
   }
 
-  // 2. Static Assets (/assets/*, fonts, icons) -> Cache First / Stale-While-Revalidate
+  // 2. Static Assets (/assets/*, fonts, icons, styles, scripts) -> Stale-While-Revalidate with Safe Fallback
   const isStaticAsset = (
     url.pathname.startsWith('/assets/') ||
     url.pathname.startsWith('/icons/') ||
@@ -105,32 +114,66 @@ self.addEventListener('fetch', (event) => {
   if (isStaticAsset) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
-        const fetchPromise = fetch(request)
+        if (cachedResponse) {
+          // Return cache immediately, revalidate in background safely
+          fetch(request)
+            .then((networkResponse) => {
+              if (networkResponse && networkResponse.status === 200) {
+                const copy = networkResponse.clone();
+                caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+              }
+            })
+            .catch(() => {});
+          return cachedResponse;
+        }
+
+        return fetch(request)
           .then((networkResponse) => {
             if (networkResponse && networkResponse.status === 200) {
               const copy = networkResponse.clone();
-              caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
+              caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
             }
             return networkResponse;
           })
-          .catch(() => null);
-
-        // Return cached version immediately if available, otherwise wait for network
-        return cachedResponse || fetchPromise;
+          .catch(() => {
+            return new Response('', { status: 404, statusText: 'Not Found Offline' });
+          });
       })
     );
     return;
   }
 
-  // 3. API GET Requests -> Network First with Dynamic Cache Fallback
+  // 3. API Requests
   if (url.pathname.startsWith('/api/')) {
+    if (request.method !== 'GET') {
+      // Mutations (POST, PUT, DELETE, etc.) are never cached in CacheStorage
+      event.respondWith(
+        fetch(request).catch(() => {
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              offline: true, 
+              message: 'Tidak dapat terhubung ke server (Offline).' 
+            }),
+            {
+              headers: { 'Content-Type': 'application/json' },
+              status: 503,
+              statusText: 'Service Unavailable (Offline)'
+            }
+          );
+        })
+      );
+      return;
+    }
+
+    // API GET Requests -> Network First with Dynamic Cache Fallback
     event.respondWith(
       fetch(request)
         .then((response) => {
           if (response && response.status === 200) {
             const copy = response.clone();
             caches.open(DYNAMIC_CACHE).then((cache) => {
-              cache.put(request, copy);
+              cache.put(request, copy).catch(() => {});
             });
           }
           return response;
@@ -142,12 +185,15 @@ self.addEventListener('fetch', (event) => {
           }
           return new Response(
             JSON.stringify({ 
+              success: false, 
               offline: true, 
-              message: 'Tidak ada koneksi internet. Menggunakan status offline.' 
+              data: null, 
+              message: 'Tidak ada koneksi internet. Menggunakan mode offline.' 
             }),
             {
               headers: { 'Content-Type': 'application/json' },
-              status: 503
+              status: 503,
+              statusText: 'Service Unavailable (Offline)'
             }
           );
         })
@@ -155,9 +201,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Default: Network with Cache fallback
+  // 4. Default: Network with Cache fallback and safe catch
   event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request))
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).catch(() => {
+        return new Response('Offline', { 
+          status: 503, 
+          statusText: 'Service Unavailable (Offline)',
+          headers: { 'Content-Type': 'text/plain' } 
+        });
+      });
+    })
   );
 });
 
@@ -173,4 +228,3 @@ self.addEventListener('sync', (event) => {
     );
   }
 });
-

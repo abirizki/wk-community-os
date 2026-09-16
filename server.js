@@ -10,10 +10,12 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { checkDatabase } = require('./src/db/check');
 const { autoPatchDatabase } = require('./src/db/auto_patch');
+const pool = require('./src/db/pool');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -83,17 +85,35 @@ app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // ==========================================
-// SESSION CONFIGURATION
+// SESSION CONFIGURATION (MySQL-Backed Persistent Store)
 // ==========================================
+const sessionStore = new MySQLStore({
+  clearExpired: true,
+  checkExpirationInterval: 15 * 60 * 1000, // Bersihkan session expired setiap 15 menit
+  expiration: 24 * 60 * 60 * 1000, // Session berlaku 24 jam
+  createDatabaseTable: true,
+  schema: {
+    tableName: 'sessions',
+    columnNames: {
+      session_id: 'session_id',
+      expires: 'expires',
+      data: 'data'
+    }
+  }
+}, pool);
+
 app.use(
   session({
+    key: 'wk_session_id',
     secret: process.env.SESSION_SECRET || 'wk-community-os-super-secret-key-2026',
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax'
     }
   })
 );

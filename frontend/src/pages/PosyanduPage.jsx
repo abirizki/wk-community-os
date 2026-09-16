@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { enqueueOfflineAction, cacheData, getCachedData } from '../utils/offlineStorage';
+import { offlineQueue } from '../utils/offlineQueue';
 
 export default function PosyanduPage() {
   const { user } = useAuth();
@@ -201,17 +202,7 @@ export default function PosyanduPage() {
       setSubmittingBalita(true);
       setError(null);
 
-      // If offline, save into background sync queue
-      if (!navigator.onLine) {
-        await enqueueOfflineAction({
-          type: 'POSYANDU_BALITA',
-          endpoint: '/api/posyandu/balita',
-          method: 'POST',
-          payload: balitaForm,
-          label: `Pemeriksaan Balita: ${balitaForm.nama_anak}`
-        });
-        setSuccessMsg('Tersimpan di antrean offline! Data akan otomatis disinkronkan saat terhubung kembali.');
-        setShowBalitaModal(false);
+      const resetBalitaForm = () => {
         setBalitaForm({
           nik_warga: '',
           nama_anak: '',
@@ -225,28 +216,60 @@ export default function PosyanduPage() {
           imunisasi: '',
           catatan_kesehatan: ''
         });
+      };
+
+      // 1. Jika offline: Langsung simpan ke IndexedDB
+      if (!navigator.onLine) {
+        await offlineQueue.enqueue({
+          type: 'POSYANDU_BALITA',
+          endpoint: '/api/posyandu/balita',
+          method: 'POST',
+          payload: balitaForm,
+          label: `Pencatatan Balita (Offline): ${balitaForm.nama_anak}`,
+          title: `Pencatatan Balita (Offline): ${balitaForm.nama_anak}`
+        });
+        setSuccessMsg('Disimpan secara offline. Akan disinkronkan saat online.');
+        setShowBalitaModal(false);
+        resetBalitaForm();
         setTimeout(() => setSuccessMsg(''), 5000);
         return;
       }
 
-      await api.post('/posyandu/balita', balitaForm);
-      setSuccessMsg('Pemeriksaan Balita berhasil dicatat!');
-      setShowBalitaModal(false);
-      setBalitaForm({
-        nik_warga: '',
-        nama_anak: '',
-        tanggal_lahir_anak: '',
-        jenis_kelamin_anak: 'L',
-        umur_bulan: '',
-        berat_badan_kg: '',
-        tinggi_badan_cm: '',
-        lingkar_kepala_cm: '',
-        status_gizi: 'Auto',
-        imunisasi: '',
-        catatan_kesehatan: ''
-      });
-      fetchBalita();
-      setTimeout(() => setSuccessMsg(''), 4000);
+      // 2. Jika online: Coba post ke server, jika network error fallback ke antrean offline
+      try {
+        await api.post('/posyandu/balita', balitaForm);
+        setSuccessMsg('Pemeriksaan Balita berhasil dicatat!');
+        setShowBalitaModal(false);
+        resetBalitaForm();
+        fetchBalita();
+        setTimeout(() => setSuccessMsg(''), 4000);
+      } catch (postErr) {
+        const isNetworkErr = !navigator.onLine || 
+          postErr.status === 0 || 
+          postErr.status === 503 || 
+          postErr.code === 'ERR_NETWORK' || 
+          postErr.message?.includes('Network') || 
+          postErr.message?.includes('koneksi') || 
+          postErr.message?.includes('Failed to fetch') || 
+          postErr.message?.includes('ERR_NAME_NOT_RESOLVED');
+
+        if (isNetworkErr) {
+          await offlineQueue.enqueue({
+            type: 'POSYANDU_BALITA',
+            endpoint: '/api/posyandu/balita',
+            method: 'POST',
+            payload: balitaForm,
+            label: `Pencatatan Balita (Offline): ${balitaForm.nama_anak}`,
+            title: `Pencatatan Balita (Offline): ${balitaForm.nama_anak}`
+          });
+          setSuccessMsg('Koneksi terputus. Data berhasil disimpan secara offline.');
+          setShowBalitaModal(false);
+          resetBalitaForm();
+          setTimeout(() => setSuccessMsg(''), 5000);
+        } else {
+          throw postErr;
+        }
+      }
     } catch (err) {
       setError(err.message || 'Gagal mencatat data balita');
     } finally {
@@ -261,25 +284,55 @@ export default function PosyanduPage() {
       setSubmittingLansia(true);
       setError(null);
 
+      // 1. Jika offline: Langsung simpan ke antrean offline
       if (!navigator.onLine) {
-        await enqueueOfflineAction({
+        await offlineQueue.enqueue({
           type: 'POSYANDU_REG_LANSIA',
           endpoint: '/api/posyandu/lansia',
           method: 'POST',
           payload: regLansiaForm,
-          label: `Registrasi Lansia: ${regLansiaForm.nama}`
+          label: `Registrasi Lansia: ${regLansiaForm.nama}`,
+          title: `Registrasi Lansia: ${regLansiaForm.nama}`
         });
-        setSuccessMsg(`Tersimpan di antrean offline! Pendaftaran lansia ${regLansiaForm.nama} akan disinkronkan saat online.`);
+        setSuccessMsg(`Disimpan secara offline. Pendaftaran lansia ${regLansiaForm.nama} akan disinkronkan saat online.`);
         setShowRegLansiaModal(false);
         setTimeout(() => setSuccessMsg(''), 5000);
         return;
       }
 
-      await api.post('/posyandu/lansia', regLansiaForm);
-      setSuccessMsg(`Lansia ${regLansiaForm.nama} berhasil didaftarkan!`);
-      setShowRegLansiaModal(false);
-      fetchLansia();
-      setTimeout(() => setSuccessMsg(''), 4000);
+      // 2. Jika online: Coba kirim ke server, jika network error fallback ke antrean offline
+      try {
+        await api.post('/posyandu/lansia', regLansiaForm);
+        setSuccessMsg(`Lansia ${regLansiaForm.nama} berhasil didaftarkan!`);
+        setShowRegLansiaModal(false);
+        fetchLansia();
+        setTimeout(() => setSuccessMsg(''), 4000);
+      } catch (postErr) {
+        const isNetworkErr = !navigator.onLine || 
+          postErr.status === 0 || 
+          postErr.status === 503 || 
+          postErr.code === 'ERR_NETWORK' || 
+          postErr.message?.includes('Network') || 
+          postErr.message?.includes('koneksi') || 
+          postErr.message?.includes('Failed to fetch') || 
+          postErr.message?.includes('ERR_NAME_NOT_RESOLVED');
+
+        if (isNetworkErr) {
+          await offlineQueue.enqueue({
+            type: 'POSYANDU_REG_LANSIA',
+            endpoint: '/api/posyandu/lansia',
+            method: 'POST',
+            payload: regLansiaForm,
+            label: `Registrasi Lansia: ${regLansiaForm.nama}`,
+            title: `Registrasi Lansia: ${regLansiaForm.nama}`
+          });
+          setSuccessMsg(`Koneksi terputus. Pendaftaran lansia ${regLansiaForm.nama} disimpan secara offline.`);
+          setShowRegLansiaModal(false);
+          setTimeout(() => setSuccessMsg(''), 5000);
+        } else {
+          throw postErr;
+        }
+      }
     } catch (err) {
       setError(err.message || 'Gagal mendaftarkan lansia');
     } finally {
@@ -294,16 +347,7 @@ export default function PosyanduPage() {
       setSubmittingLansia(true);
       setError(null);
 
-      if (!navigator.onLine) {
-        await enqueueOfflineAction({
-          type: 'POSYANDU_CHECKUP_LANSIA',
-          endpoint: '/api/posyandu/lansia/pemeriksaan',
-          method: 'POST',
-          payload: checkupLansiaForm,
-          label: `Pemeriksaan Lansia ID: ${checkupLansiaForm.posyandu_lansia_id}`
-        });
-        setSuccessMsg('Tersimpan di antrean offline! Rekam medis lansia akan disinkronkan otomatis saat online.');
-        setShowCheckupLansiaModal(false);
+      const resetCheckupForm = () => {
         setCheckupLansiaForm({
           posyandu_lansia_id: '',
           tanggal_pemeriksaan: new Date().toISOString().split('T')[0],
@@ -318,29 +362,60 @@ export default function PosyanduPage() {
           keluhan: '',
           tindakan_petugas: ''
         });
+      };
+
+      // 1. Jika offline: Langsung simpan ke antrean offline
+      if (!navigator.onLine) {
+        await offlineQueue.enqueue({
+          type: 'POSYANDU_CHECKUP_LANSIA',
+          endpoint: '/api/posyandu/lansia/pemeriksaan',
+          method: 'POST',
+          payload: checkupLansiaForm,
+          label: `Pemeriksaan Lansia ID: ${checkupLansiaForm.posyandu_lansia_id}`,
+          title: `Pemeriksaan Lansia ID: ${checkupLansiaForm.posyandu_lansia_id}`
+        });
+        setSuccessMsg('Disimpan secara offline. Rekam medis lansia akan disinkronkan otomatis saat online.');
+        setShowCheckupLansiaModal(false);
+        resetCheckupForm();
         setTimeout(() => setSuccessMsg(''), 5000);
         return;
       }
 
-      await api.post('/posyandu/lansia/pemeriksaan', checkupLansiaForm);
-      setSuccessMsg('Rekam medis pemeriksaan lansia berhasil dicatat!');
-      setShowCheckupLansiaModal(false);
-      setCheckupLansiaForm({
-        posyandu_lansia_id: '',
-        tanggal_pemeriksaan: new Date().toISOString().split('T')[0],
-        tensi_sistolik: '',
-        tensi_diastolik: '',
-        gula_darah_sewaktu: '',
-        kolesterol: '',
-        asam_urat: '',
-        berat_badan_kg: '',
-        tinggi_badan_cm: '',
-        skor_kemandirian_adl: 'Mandiri',
-        keluhan: '',
-        tindakan_petugas: ''
-      });
-      fetchLansia();
-      setTimeout(() => setSuccessMsg(''), 4000);
+      // 2. Jika online: Coba kirim ke server, jika network error fallback ke antrean offline
+      try {
+        await api.post('/posyandu/lansia/pemeriksaan', checkupLansiaForm);
+        setSuccessMsg('Rekam medis pemeriksaan lansia berhasil dicatat!');
+        setShowCheckupLansiaModal(false);
+        resetCheckupForm();
+        fetchLansia();
+        setTimeout(() => setSuccessMsg(''), 4000);
+      } catch (postErr) {
+        const isNetworkErr = !navigator.onLine || 
+          postErr.status === 0 || 
+          postErr.status === 503 || 
+          postErr.code === 'ERR_NETWORK' || 
+          postErr.message?.includes('Network') || 
+          postErr.message?.includes('koneksi') || 
+          postErr.message?.includes('Failed to fetch') || 
+          postErr.message?.includes('ERR_NAME_NOT_RESOLVED');
+
+        if (isNetworkErr) {
+          await offlineQueue.enqueue({
+            type: 'POSYANDU_CHECKUP_LANSIA',
+            endpoint: '/api/posyandu/lansia/pemeriksaan',
+            method: 'POST',
+            payload: checkupLansiaForm,
+            label: `Pemeriksaan Lansia ID: ${checkupLansiaForm.posyandu_lansia_id}`,
+            title: `Pemeriksaan Lansia ID: ${checkupLansiaForm.posyandu_lansia_id}`
+          });
+          setSuccessMsg('Koneksi terputus. Rekam medis lansia disimpan secara offline.');
+          setShowCheckupLansiaModal(false);
+          resetCheckupForm();
+          setTimeout(() => setSuccessMsg(''), 5000);
+        } else {
+          throw postErr;
+        }
+      }
     } catch (err) {
       setError(err.message || 'Gagal mencatat pemeriksaan lansia');
     } finally {

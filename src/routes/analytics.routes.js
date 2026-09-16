@@ -42,5 +42,20 @@ router.get('/ai-insights', requireAuth, async (req, res) => {
   }
 });
 
-module.exports = router;
+// GET /api/analytics/role-brief - Ringkasan Harian Berbasis Peran (Role-Scoped AI Brief)
+router.get('/role-brief', requireAuth, async (req, res) => {
+  try {
+    const brief = await aiEngineService.getRoleScopedBrief(req.session.user);
+    res.json({
+      success: true,
+      data: brief
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Gagal memuat ringkasan harian'
+    });
+  }
+});
 
+module.exports = router;
