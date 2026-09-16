@@ -225,6 +225,9 @@ async function autoPatchDatabase() {
       'is_auto_filled_by_ai TINYINT(1) NOT NULL DEFAULT 0',
       'file_url VARCHAR(255) NULL',
       'file_hasil VARCHAR(500) NULL',
+      'catatan_revisi TEXT NULL',
+      'lampiran_ktp VARCHAR(500) NULL',
+      'lampiran_kk VARCHAR(500) NULL',
       'rt VARCHAR(5) NULL',
       'rw VARCHAR(5) NULL'
     ];
@@ -448,6 +451,144 @@ async function autoPatchDatabase() {
       }
     } catch (errKader) {
       console.warn('[AutoPatch] Seed kader_posyandu_profile note:', errKader.message);
+    }
+
+    // 14. Tabel Fasilitas Keagamaan / Tempat Ibadah (Termasuk Fasilitas Beririsan Lintas RT/RW)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`fasilitas_keagamaan\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`nama_tempat_ibadah\` VARCHAR(150) NOT NULL,
+          \`jenis_agama\` VARCHAR(50) NOT NULL DEFAULT 'Islam',
+          \`jenis_tempat_ibadah\` VARCHAR(50) NOT NULL DEFAULT 'Masjid',
+          \`alamat\` TEXT NOT NULL,
+          \`rt\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
+          \`daya_tampung_jamaah\` INT NOT NULL DEFAULT 100,
+          \`status_tanah\` VARCHAR(100) NOT NULL DEFAULT 'Wakaf',
+          \`apakah_beririsan\` TINYINT(1) NOT NULL DEFAULT 0,
+          \`rt_rw_beririsan\` JSON NULL,
+          \`nama_pengurus_dkm\` VARCHAR(150) NULL,
+          \`no_kontak_pengurus\` VARCHAR(20) NULL,
+          \`titik_evakuasi_bencana\` TINYINT(1) NOT NULL DEFAULT 0,
+          \`status_verifikasi\` VARCHAR(50) NOT NULL DEFAULT 'TERVERIFIKASI',
+          \`catatan_verifikasi\` TEXT NULL,
+          \`created_by_user_id\` INT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_ibadah_wilayah\` (\`rw\`, \`rt\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      // Seed Tempat Ibadah Percontohan jika kosong
+      const [ibadahRows] = await connection.query("SELECT COUNT(*) as count FROM fasilitas_keagamaan");
+      if (ibadahRows[0].count === 0) {
+        await connection.execute(`
+          INSERT INTO fasilitas_keagamaan 
+            (nama_tempat_ibadah, jenis_agama, jenis_tempat_ibadah, alamat, rt, rw, daya_tampung_jamaah, status_tanah, apakah_beririsan, rt_rw_beririsan, nama_pengurus_dkm, no_kontak_pengurus, titik_evakuasi_bencana, status_verifikasi)
+          VALUES 
+            ('Masjid Jami\\' Al-Ikhlas', 'Islam', 'Masjid', 'Jl. Kebonjati No. 45', '001', '001', 350, 'Wakaf', 1, ?, 'H. Ahmad Syukri', '081298765432', 1, 'TERVERIFIKASI'),
+            ('Musholla Nurul Hidayah', 'Islam', 'Musholla', 'Gang Melati II RT 02', '002', '001', 80, 'Wakaf', 0, NULL, 'Ust. Deden', '081387654321', 0, 'TERVERIFIKASI')
+        `, [JSON.stringify(['RT 001 / RW 001', 'RT 002 / RW 001'])]);
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE fasilitas_keagamaan note:', e.message);
+    }
+
+    // 15. Tabel Hunian Sewa (Rumah Kontrakan & Kos-Kosan Warga)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`hunian_sewa\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`nama_hunian\` VARCHAR(150) NOT NULL,
+          \`jenis_hunian\` VARCHAR(50) NOT NULL DEFAULT 'Kos-Kosan',
+          \`alamat\` TEXT NOT NULL,
+          \`rt\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
+          \`jumlah_kamar_pintu\` INT NOT NULL DEFAULT 1,
+          \`jumlah_penghuni_aktif\` INT NOT NULL DEFAULT 0,
+          \`jumlah_penghuni_pelajar\` INT NOT NULL DEFAULT 0,
+          \`jumlah_penghuni_pekerja\` INT NOT NULL DEFAULT 0,
+          \`nama_pemilik\` VARCHAR(150) NOT NULL,
+          \`no_kontak_pemilik\` VARCHAR(20) NOT NULL,
+          \`apakah_pemilik_tinggal_di_rt\` TINYINT(1) NOT NULL DEFAULT 0,
+          \`alamat_pemilik\` TEXT NULL,
+          \`kepatuhan_wajib_lapor_24jam\` TINYINT(1) NOT NULL DEFAULT 1,
+          \`status_verifikasi\` VARCHAR(50) NOT NULL DEFAULT 'TERVERIFIKASI',
+          \`catatan_verifikasi\` TEXT NULL,
+          \`created_by_user_id\` INT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_hunian_wilayah\` (\`rw\`, \`rt\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      // Seed Kos/Kontrakan Percontohan jika kosong
+      const [hunianRows] = await connection.query("SELECT COUNT(*) as count FROM hunian_sewa");
+      if (hunianRows[0].count === 0) {
+        await connection.execute(`
+          INSERT INTO hunian_sewa 
+            (nama_hunian, jenis_hunian, alamat, rt, rw, jumlah_kamar_pintu, jumlah_penghuni_aktif, jumlah_penghuni_pelajar, jumlah_penghuni_pekerja, nama_pemilik, no_kontak_pemilik, apakah_pemilik_tinggal_di_rt, alamat_pemilik, kepatuhan_wajib_lapor_24jam, status_verifikasi)
+          VALUES 
+            ('Kos Melati Asri', 'Kos-Kosan', 'Jl. Melati No. 18 RT 01', '001', '001', 12, 10, 8, 2, 'Bpk. Joko Susanto', '081234567891', 0, 'Jl. Dago No. 120 Kota Bandung', 1, 'TERVERIFIKASI'),
+            ('Kontrakan Berkah 4 Pintu', 'Rumah Kontrakan', 'Gang Belakang RT 01', '001', '001', 4, 4, 0, 4, 'Ibu Hj. Aminah', '081398761234', 1, 'Jl. Melati No. 5 RT 01', 1, 'TERVERIFIKASI')
+        `);
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE hunian_sewa note:', e.message);
+    }
+
+    // 16. Tabel Kelompok Rentan Lingkungan RT (Anak Yatim Piatu & Lansia Sebatang Kara)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`kelompok_rentan_rt\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`kategori\` VARCHAR(50) NOT NULL,
+          \`nik\` VARCHAR(16) NOT NULL,
+          \`nama\` VARCHAR(150) NOT NULL,
+          \`no_kk\` VARCHAR(16) NULL,
+          \`tanggal_lahir\` DATE NULL,
+          \`usia\` INT NULL,
+          \`jenis_kelamin\` ENUM('L', 'P') NOT NULL DEFAULT 'L',
+          \`alamat\` TEXT NOT NULL,
+          \`rt\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
+          \`status_tempat_tinggal\` VARCHAR(100) NOT NULL DEFAULT 'Tinggal Sendiri',
+          \`nama_wali_pengasuh\` VARCHAR(150) NULL,
+          \`no_kontak_wali\` VARCHAR(20) NULL,
+          \`status_sekolah\` VARCHAR(50) NOT NULL DEFAULT 'Tidak Berlaku',
+          \`nama_sekolah\` VARCHAR(150) NULL,
+          \`tingkat_kemandirian_adl\` VARCHAR(50) NOT NULL DEFAULT 'Tidak Berlaku',
+          \`riwayat_penyakit_kronis\` TEXT NULL,
+          \`bansos_diterima\` VARCHAR(150) NULL DEFAULT 'Belum Pernah Menerima',
+          \`kebutuhan_mendesak\` TEXT NULL,
+          \`sumber_pendataan\` VARCHAR(50) NOT NULL DEFAULT 'INPUT_RT',
+          \`status_verifikasi\` VARCHAR(50) NOT NULL DEFAULT 'TERVERIFIKASI',
+          \`catatan_verifikasi\` TEXT NULL,
+          \`created_by_user_id\` INT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_rentan_nik\` (\`nik\`),
+          INDEX \`idx_rentan_wilayah\` (\`rw\`, \`rt\`, \`kategori\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      // Seed Kelompok Rentan Percontohan jika kosong
+      const [rentanRows] = await connection.query("SELECT COUNT(*) as count FROM kelompok_rentan_rt");
+      if (rentanRows[0].count === 0) {
+        await connection.execute(`
+          INSERT INTO kelompok_rentan_rt 
+            (kategori, nik, nama, no_kk, tanggal_lahir, usia, jenis_kelamin, alamat, rt, rw, status_tempat_tinggal, nama_wali_pengasuh, no_kontak_wali, status_sekolah, nama_sekolah, tingkat_kemandirian_adl, riwayat_penyakit_kronis, bansos_diterima, kebutuhan_mendesak, sumber_pendataan, status_verifikasi)
+          VALUES 
+            ('ANAK_YATIM_PIATU', '3273011205130002', 'Fajar Ramadhan', '3273011802900012', '2013-05-12', 11, 'L', 'Jl. Melati No. 8 RT 01', '001', '001', 'Bersama Kakek/Nenek', 'Bpk. Mamat (Kakek)', '081399887766', 'Aktif Sekolah', 'SDN Kebonjati 01', 'Tidak Berlaku', NULL, 'Santunan RT Swadaya', 'Kebutuhan Seragam & Beasiswa Pendidikan', 'INPUT_RT', 'TERVERIFIKASI'),
+            ('LANSIA_SEBATANG_KARA', '3273015004500001', 'Mbah Sumiati', '3273015004500001', '1950-04-10', 74, 'P', 'Gang Melati Bawah No. 3 RT 01', '001', '001', 'Tinggal Sendiri', NULL, NULL, 'Tidak Berlaku', NULL, 'Ketergantungan Sedang', 'Hipertensi Kronis & Asam Urat', 'PKH Lansia', 'Bantuan Makanan Harian & Kunjungan Posyandu', 'INPUT_RT', 'TERVERIFIKASI')
+        `);
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE kelompok_rentan_rt note:', e.message);
     }
 
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');

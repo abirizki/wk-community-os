@@ -116,6 +116,17 @@ router.patch('/:id/reject', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'ad
   }
 });
 
+// PATCH /api/dokumen/:id/revise - Pengembalian surat untuk perbaikan / revisi (SOP Resmi)
+router.patch('/:id/revise', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin', 'lurah'), async (req, res) => {
+  try {
+    const { catatan } = req.body;
+    const result = await dokumenService.reviseDokumen(Number(req.params.id), req.session.user, catatan);
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 // PATCH /api/dokumen/:id/status - Kompatibilitas mundur
 router.patch('/:id/status', requireAuth, async (req, res) => {
   try {

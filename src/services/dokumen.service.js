@@ -416,6 +416,56 @@ class DokumenService {
       message: 'Permohonan surat berhasil ditolak dengan catatan pemberitahuan ke warga.'
     };
   }
+
+  /**
+   * Pengembalian Dokumen untuk Perbaikan / Revisi (SOP Resmi RT/RW/Kelurahan)
+   */
+  async reviseDokumen(id, currentUser, catatan = '') {
+    const doc = await dokumenRepository.findById(id);
+    if (!doc) {
+      const err = new Error('Dokumen tidak ditemukan');
+      err.status = 404;
+      throw err;
+    }
+
+    if (!catatan || catatan.trim().length < 3) {
+      const err = new Error('Mohon sertakan instruksi perbaikan atau catatan revisi yang jelas untuk warga.');
+      err.status = 400;
+      throw err;
+    }
+
+    const catatanRevisi = `Dikembalikan untuk perbaikan oleh ${currentUser.nama} (${currentUser.role}): ${catatan.trim()}`;
+
+    await dokumenRepository.updateApproval(id, {
+      status: 'REVISION',
+      approval_step: doc.approval_step || 'RT',
+      catatan_petugas: catatanRevisi
+    });
+
+    await dokumenRepository.recordWorkflowHistory({
+      dokumen_request_id: id,
+      from_step: doc.approval_step || 'RT',
+      to_step: doc.approval_step || 'RT',
+      acted_by_user_id: currentUser.id,
+      acted_by_role: currentUser.role,
+      action: 'RETURN_FOR_REVISION',
+      notes: catatan.trim()
+    });
+
+    await notifikasiRepository.create({
+      nik_target: doc.nik_pemohon,
+      judul: 'Permohonan Surat Perlu Perbaikan',
+      pesan: `Permohonan ${doc.jenis_dokumen} Anda membutuhkan perbaikan berkas: "${catatan.trim()}". Silakan perbaiki melalui aplikasi.`,
+      tipe: 'warning',
+      link: '/dashboard/dokumen'
+    });
+
+    return {
+      success: true,
+      status: 'REVISION',
+      message: 'Permohonan surat berhasil dikembalikan ke pemohon dengan instruksi perbaikan.'
+    };
+  }
 }
 
 module.exports = new DokumenService();

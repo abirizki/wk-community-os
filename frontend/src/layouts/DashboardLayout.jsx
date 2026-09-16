@@ -143,6 +143,11 @@ export default function DashboardLayout() {
         { name: 'Buku Kas RT & Iuran Warga', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Laporan Pengaduan RT', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP Ketua RT', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
+        { name: 'Meja Kerja RT', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Buku Warga & KK RT', path: '/dashboard/warga', icon: <Users size={19} /> },
+        { name: 'Kas & Iuran Warga', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
+        { name: 'Aduan Lingkungan RT', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
+        { name: 'Panduan SOP RT', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
       ];
     }
 
@@ -191,6 +196,11 @@ export default function DashboardLayout() {
         { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
         { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
         { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
+        { name: 'Meja Kerja', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Warga & KK', path: '/dashboard/warga', icon: <Users size={18} /> },
+        { name: 'Kas RT', path: '/dashboard/keuangan', icon: <Wallet size={18} /> },
+        { name: 'Aduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={18} /> },
+        { name: 'Profil RT', path: '/dashboard/profil', icon: <User size={18} /> },
       ];
     }
     if (isRW) {

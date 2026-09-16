@@ -435,6 +435,285 @@ class FasilitasRepository {
       stunting_rt: stuntingRows
     };
   }
+
+  // =========================================================================
+  // 5. SEKTOR KEAGAMAAN / TEMPAT IBADAH (TERMASUK FASILITAS BERIRISAN)
+  // =========================================================================
+  async getKeagamaanInventory(scope = {}) {
+    let query = `
+      SELECT id, nama_tempat_ibadah, jenis_agama, jenis_tempat_ibadah, alamat,
+             rt, rw, kelurahan, daya_tampung_jamaah, status_tanah, apakah_beririsan,
+             rt_rw_beririsan, nama_pengurus_dkm, no_kontak_pengurus, titik_evakuasi_bencana,
+             status_verifikasi, catatan_verifikasi, created_at, updated_at
+      FROM fasilitas_keagamaan
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (scope.rw) {
+      if (scope.rt) {
+        query += ` AND ( (rw = ? AND rt = ?) OR (apakah_beririsan = 1 AND JSON_SEARCH(rt_rw_beririsan, 'one', ?) IS NOT NULL) )`;
+        params.push(scope.rw, scope.rt, `%RT ${scope.rt}%`);
+      } else {
+        query += ` AND rw = ?`;
+        params.push(scope.rw);
+      }
+    }
+
+    query += ` ORDER BY nama_tempat_ibadah ASC`;
+    const [rows] = await pool.query(query, params);
+    return rows;
+  }
+
+  async createKeagamaan(data, currentUser = null) {
+    const isKelurahan = currentUser && ['admin_kelurahan', 'superadmin', 'admin', 'lurah'].includes(currentUser.role);
+    const status_verifikasi = isKelurahan ? 'TERVERIFIKASI' : 'MENUNGGU_VERIFIKASI_KELURAHAN';
+
+    const {
+      nama_tempat_ibadah, jenis_agama = 'Islam', jenis_tempat_ibadah = 'Masjid',
+      alamat, rt = '001', rw = '001', daya_tampung_jamaah = 100, status_tanah = 'Wakaf',
+      apakah_beririsan = 0, rt_rw_beririsan = null, nama_pengurus_dkm = null,
+      no_kontak_pengurus = null, titik_evakuasi_bencana = 0
+    } = data;
+
+    const beririsanJson = Array.isArray(rt_rw_beririsan) ? JSON.stringify(rt_rw_beririsan) : (rt_rw_beririsan || null);
+
+    const [result] = await pool.execute(`
+      INSERT INTO fasilitas_keagamaan (
+        nama_tempat_ibadah, jenis_agama, jenis_tempat_ibadah, alamat, rt, rw,
+        daya_tampung_jamaah, status_tanah, apakah_beririsan, rt_rw_beririsan,
+        nama_pengurus_dkm, no_kontak_pengurus, titik_evakuasi_bencana, status_verifikasi,
+        created_by_user_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      nama_tempat_ibadah, jenis_agama, jenis_tempat_ibadah, alamat, rt, rw,
+      Number(daya_tampung_jamaah) || 100, status_tanah, apakah_beririsan ? 1 : 0, beririsanJson,
+      nama_pengurus_dkm, no_kontak_pengurus, titik_evakuasi_bencana ? 1 : 0, status_verifikasi,
+      currentUser?.id || null
+    ]);
+
+    return { id: result.insertId, ...data, status_verifikasi };
+  }
+
+  // =========================================================================
+  // 6. SEKTOR HUNIAN SEWA (RUMAH KONTRAKAN & KOS-KOSAN)
+  // =========================================================================
+  async getHunianSewaInventory(scope = {}) {
+    let query = `
+      SELECT id, nama_hunian, jenis_hunian, alamat, rt, rw, kelurahan,
+             jumlah_kamar_pintu, jumlah_penghuni_aktif, jumlah_penghuni_pelajar,
+             jumlah_penghuni_pekerja, nama_pemilik, no_kontak_pemilik,
+             apakah_pemilik_tinggal_di_rt, alamat_pemilik, kepatuhan_wajib_lapor_24jam,
+             status_verifikasi, catatan_verifikasi, created_at, updated_at
+      FROM hunian_sewa
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (scope.rw) {
+      query += ` AND rw = ?`;
+      params.push(scope.rw);
+    }
+    if (scope.rt) {
+      query += ` AND rt = ?`;
+      params.push(scope.rt);
+    }
+
+    query += ` ORDER BY nama_hunian ASC`;
+    const [rows] = await pool.query(query, params);
+    return rows;
+  }
+
+  async createHunianSewa(data, currentUser = null) {
+    const isKelurahan = currentUser && ['admin_kelurahan', 'superadmin', 'admin', 'lurah'].includes(currentUser.role);
+    const status_verifikasi = isKelurahan ? 'TERVERIFIKASI' : 'MENUNGGU_VERIFIKASI_KELURAHAN';
+
+    const {
+      nama_hunian, jenis_hunian = 'Kos-Kosan', alamat, rt = '001', rw = '001',
+      jumlah_kamar_pintu = 1, jumlah_penghuni_aktif = 0, jumlah_penghuni_pelajar = 0,
+      jumlah_penghuni_pekerja = 0, nama_pemilik, no_kontak_pemilik,
+      apakah_pemilik_tinggal_di_rt = 0, alamat_pemilik = null,
+      kepatuhan_wajib_lapor_24jam = 1
+    } = data;
+
+    const [result] = await pool.execute(`
+      INSERT INTO hunian_sewa (
+        nama_hunian, jenis_hunian, alamat, rt, rw,
+        jumlah_kamar_pintu, jumlah_penghuni_aktif, jumlah_penghuni_pelajar,
+        jumlah_penghuni_pekerja, nama_pemilik, no_kontak_pemilik,
+        apakah_pemilik_tinggal_di_rt, alamat_pemilik, kepatuhan_wajib_lapor_24jam,
+        status_verifikasi, created_by_user_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      nama_hunian, jenis_hunian, alamat, rt, rw,
+      Number(jumlah_kamar_pintu) || 1, Number(jumlah_penghuni_aktif) || 0,
+      Number(jumlah_penghuni_pelajar) || 0, Number(jumlah_penghuni_pekerja) || 0,
+      nama_pemilik, no_kontak_pemilik, apakah_pemilik_tinggal_di_rt ? 1 : 0,
+      alamat_pemilik, kepatuhan_wajib_lapor_24jam ? 1 : 0,
+      status_verifikasi, currentUser?.id || null
+    ]);
+
+    return { id: result.insertId, ...data, status_verifikasi };
+  }
+
+  // =========================================================================
+  // 7. KELOMPOK RENTAN LINGKUNGAN RT (ANAK YATIM PIATU & LANSIA SEBATANG KARA)
+  // =========================================================================
+  async getKelompokRentanList(scope = {}, filter = {}) {
+    let query = `
+      SELECT id, kategori, nik, nama, no_kk, tanggal_lahir, usia, jenis_kelamin,
+             alamat, rt, rw, kelurahan, status_tempat_tinggal, nama_wali_pengasuh,
+             no_kontak_wali, status_sekolah, nama_sekolah, tingkat_kemandirian_adl,
+             riwayat_penyakit_kronis, bansos_diterima, kebutuhan_mendesak,
+             sumber_pendataan, status_verifikasi, catatan_verifikasi, created_at, updated_at
+      FROM kelompok_rentan_rt
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (scope.rw) {
+      query += ` AND rw = ?`;
+      params.push(scope.rw);
+    }
+    if (scope.rt) {
+      query += ` AND rt = ?`;
+      params.push(scope.rt);
+    }
+    if (filter.kategori) {
+      query += ` AND kategori = ?`;
+      params.push(filter.kategori);
+    }
+
+    query += ` ORDER BY FIELD(kategori, 'ANAK_YATIM_PIATU', 'ANAK_YATIM', 'ANAK_PIATU', 'LANSIA_SEBATANG_KARA', 'LANSIA_PASANGAN_RENTAN'), nama ASC`;
+    const [rows] = await pool.query(query, params);
+    return rows;
+  }
+
+  async createKelompokRentan(data, currentUser = null) {
+    const isKelurahan = currentUser && ['admin_kelurahan', 'superadmin', 'admin', 'lurah'].includes(currentUser.role);
+    const status_verifikasi = isKelurahan ? 'TERVERIFIKASI' : 'MENUNGGU_VERIFIKASI_KELURAHAN';
+
+    const {
+      kategori, nik, nama, no_kk = null, tanggal_lahir = null, usia = null,
+      jenis_kelamin = 'L', alamat, rt = '001', rw = '001',
+      status_tempat_tinggal = 'Tinggal Sendiri', nama_wali_pengasuh = null,
+      no_kontak_wali = null, status_sekolah = 'Tidak Berlaku', nama_sekolah = null,
+      tingkat_kemandirian_adl = 'Tidak Berlaku', riwayat_penyakit_kronis = null,
+      bansos_diterima = 'Belum Pernah Menerima', kebutuhan_mendesak = null,
+      sumber_pendataan = 'INPUT_RT'
+    } = data;
+
+    const [result] = await pool.execute(`
+      INSERT INTO kelompok_rentan_rt (
+        kategori, nik, nama, no_kk, tanggal_lahir, usia, jenis_kelamin,
+        alamat, rt, rw, status_tempat_tinggal, nama_wali_pengasuh, no_kontak_wali,
+        status_sekolah, nama_sekolah, tingkat_kemandirian_adl, riwayat_penyakit_kronis,
+        bansos_diterima, kebutuhan_mendesak, sumber_pendataan, status_verifikasi,
+        created_by_user_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        kategori = VALUES(kategori),
+        status_tempat_tinggal = VALUES(status_tempat_tinggal),
+        nama_wali_pengasuh = VALUES(nama_wali_pengasuh),
+        status_sekolah = VALUES(status_sekolah),
+        tingkat_kemandirian_adl = VALUES(tingkat_kemandirian_adl),
+        bansos_diterima = VALUES(bansos_diterima),
+        kebutuhan_mendesak = VALUES(kebutuhan_mendesak),
+        status_verifikasi = VALUES(status_verifikasi)
+    `, [
+      kategori, nik, nama, no_kk, tanggal_lahir, usia ? Number(usia) : null, jenis_kelamin,
+      alamat, rt, rw, status_tempat_tinggal, nama_wali_pengasuh, no_kontak_wali,
+      status_sekolah, nama_sekolah, tingkat_kemandirian_adl, riwayat_penyakit_kronis,
+      bansos_diterima, kebutuhan_mendesak, sumber_pendataan, status_verifikasi,
+      currentUser?.id || null
+    ]);
+
+    return { id: result.insertId, ...data, status_verifikasi };
+  }
+
+  /**
+   * Algoritma Auto-Detect: Deteksi potensi anak yatim piatu dan lansia rentan dari tabel warga & KK
+   */
+  async autoDetectKelompokRentan(scope = {}) {
+    let rtClause = '';
+    const params = [];
+    if (scope.rt && scope.rw) {
+      rtClause = ' AND w.rt = ? AND w.rw = ?';
+      params.push(scope.rt, scope.rw);
+    } else if (scope.rw) {
+      rtClause = ' AND w.rw = ?';
+      params.push(scope.rw);
+    }
+
+    // 1. Deteksi anak < 18 thn dengan indikasi yatim / piatu
+    const [yatimCandidates] = await pool.query(`
+      SELECT 
+        w.nik, w.nama, w.no_kk, w.tanggal_lahir, w.jenis_kelamin, w.alamat, w.rt, w.rw,
+        TIMESTAMPDIFF(YEAR, w.tanggal_lahir, CURDATE()) as usia,
+        w.status_hubungan_keluarga,
+        kk.kepala_keluarga,
+        kk.nik_kepala_keluarga
+      FROM warga w
+      LEFT JOIN kartu_keluarga kk ON w.no_kk = kk.no_kk
+      WHERE TIMESTAMPDIFF(YEAR, w.tanggal_lahir, CURDATE()) < 18
+        AND (
+          w.status_hubungan_keluarga IN ('Famili Lain', 'Cucu', 'Lainnya')
+          OR w.nik = kk.nik_kepala_keluarga
+        )
+        ${rtClause}
+      LIMIT 50
+    `, params);
+
+    // 2. Deteksi lansia >= 60 thn yang tinggal sendiri atau pasangan lansia
+    const [lansiaCandidates] = await pool.query(`
+      SELECT 
+        w.nik, w.nama, w.no_kk, w.tanggal_lahir, w.jenis_kelamin, w.alamat, w.rt, w.rw,
+        TIMESTAMPDIFF(YEAR, w.tanggal_lahir, CURDATE()) as usia,
+        member_counts.total_anggota_kk
+      FROM warga w
+      JOIN (
+        SELECT no_kk, COUNT(*) as total_anggota_kk
+        FROM warga
+        GROUP BY no_kk
+        HAVING total_anggota_kk <= 2
+      ) member_counts ON w.no_kk = member_counts.no_kk
+      WHERE TIMESTAMPDIFF(YEAR, w.tanggal_lahir, CURDATE()) >= 60
+        ${rtClause}
+      LIMIT 50
+    `, params);
+
+    return {
+      potensi_yatim_piatu: yatimCandidates,
+      potensi_lansia_rentan: lansiaCandidates
+    };
+  }
+
+  /**
+   * Verifikasi oleh Kelurahan
+   */
+  async verifyFasilitas(kategori, id, verifiedByUserId, status = 'TERVERIFIKASI', catatan = null) {
+    const tableMap = {
+      keagamaan: 'fasilitas_keagamaan',
+      hunian: 'hunian_sewa',
+      rentan: 'kelompok_rentan_rt',
+      kesehatan: 'fasilitas_kesehatan',
+      pendidikan: 'fasilitas_pendidikan',
+      usaha: 'entitas_usaha'
+    };
+
+    const targetTable = tableMap[kategori];
+    if (!targetTable) {
+      throw new Error(`Kategori fasilitas '${kategori}' tidak valid`);
+    }
+
+    const [result] = await pool.execute(`
+      UPDATE \`${targetTable}\`
+      SET status_verifikasi = ?, catatan_verifikasi = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `, [status, catatan, id]);
+
+    return { success: true, table: targetTable, id, status, catatan };
+  }
 }
 
 module.exports = new FasilitasRepository();

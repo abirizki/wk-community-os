@@ -70,6 +70,8 @@ router.get('/pendidikan', requireAuth, async (req, res) => {
 
 // POST /api/fasilitas/pendidikan - Tambah Fasilitas Sekolah (Admin/Kelurahan)
 router.post('/pendidikan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin'), async (req, res) => {
+// POST /api/fasilitas/pendidikan - Tambah Fasilitas Sekolah (Kelurahan & RT/RW)
+router.post('/pendidikan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw'), async (req, res) => {
   try {
     const { nama_sekolah, jenjang, alamat } = req.body;
     if (!nama_sekolah || !jenjang || !alamat) {
@@ -77,6 +79,16 @@ router.post('/pendidikan', requireAuth, requireRole('superadmin', 'admin_kelurah
     }
     const created = await fasilitasRepository.createPendidikan(req.body);
     res.status(201).json({ success: true, message: 'Fasilitas pendidikan berhasil ditambahkan', data: created });
+    const payload = {
+      ...req.body,
+      rt: req.body.rt || req.session.user.rt || '001',
+      rw: req.body.rw || req.session.user.rw || '001',
+      status_verifikasi: ['superadmin', 'admin_kelurahan', 'admin', 'lurah'].includes(req.session.user.role)
+        ? 'TERVERIFIKASI'
+        : 'MENUNGGU_VERIFIKASI_KELURAHAN'
+    };
+    const created = await fasilitasRepository.createPendidikan(payload);
+    res.status(201).json({ success: true, message: 'Fasilitas pendidikan berhasil didaftarkan', data: created });
   } catch (error) {
     console.error('Error creating pendidikan:', error);
     res.status(500).json({ success: false, message: 'Gagal menambahkan fasilitas pendidikan' });
@@ -112,12 +124,23 @@ router.get('/kesehatan', requireAuth, async (req, res) => {
 
 // POST /api/fasilitas/kesehatan - Tambah Faskes (Admin/Kelurahan)
 router.post('/kesehatan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin'), async (req, res) => {
+// POST /api/fasilitas/kesehatan - Tambah Faskes & Nakes (Kelurahan & RT/RW)
+router.post('/kesehatan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw'), async (req, res) => {
   try {
     const { nama_faskes, jenis_faskes, alamat } = req.body;
     if (!nama_faskes || !jenis_faskes || !alamat) {
       return res.status(400).json({ success: false, message: 'Nama faskes, jenis faskes, dan alamat wajib diisi' });
     }
     const created = await fasilitasRepository.createKesehatan(req.body);
+    const payload = {
+      ...req.body,
+      rt: req.body.rt || req.session.user.rt || '001',
+      rw: req.body.rw || req.session.user.rw || '001',
+      status_verifikasi: ['superadmin', 'admin_kelurahan', 'admin', 'lurah'].includes(req.session.user.role)
+        ? 'TERVERIFIKASI'
+        : 'MENUNGGU_VERIFIKASI_KELURAHAN'
+    };
+    const created = await fasilitasRepository.createKesehatan(payload);
     res.status(201).json({ success: true, message: 'Fasilitas kesehatan berhasil didaftarkan', data: created });
   } catch (error) {
     console.error('Error creating kesehatan:', error);
@@ -194,6 +217,147 @@ router.get('/sanitasi', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching sanitasi:', error);
     res.status(500).json({ success: false, message: 'Gagal memuat profil sanitasi lingkungan' });
+  }
+});
+
+// =========================================================================
+// 6. SEKTOR KEAGAMAAN / TEMPAT IBADAH (TERMASUK FASILITAS BERIRISAN)
+// =========================================================================
+
+// GET /api/fasilitas/keagamaan - Daftar Tempat Ibadah di RT/RW atau yang Beririsan
+router.get('/keagamaan', requireAuth, async (req, res) => {
+  try {
+    const scope = resolveScope(req.session.user);
+    const data = await fasilitasRepository.getKeagamaanInventory(scope);
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error fetching keagamaan:', error);
+    res.status(500).json({ success: false, message: 'Gagal memuat data tempat ibadah' });
+  }
+});
+
+// POST /api/fasilitas/keagamaan - Pendaftaran Tempat Ibadah (Kelurahan & RT/RW)
+router.post('/keagamaan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw'), async (req, res) => {
+  try {
+    const { nama_tempat_ibadah, alamat } = req.body;
+    if (!nama_tempat_ibadah || !alamat) {
+      return res.status(400).json({ success: false, message: 'Nama tempat ibadah dan alamat wajib diisi' });
+    }
+    const payload = {
+      ...req.body,
+      rt: req.body.rt || req.session.user.rt || '001',
+      rw: req.body.rw || req.session.user.rw || '001'
+    };
+    const created = await fasilitasRepository.createKeagamaan(payload, req.session.user);
+    res.status(201).json({ success: true, message: 'Tempat ibadah berhasil didaftarkan', data: created });
+  } catch (error) {
+    console.error('Error creating keagamaan:', error);
+    res.status(500).json({ success: false, message: 'Gagal mendaftarkan tempat ibadah' });
+  }
+});
+
+// =========================================================================
+// 7. SEKTOR HUNIAN SEWA (RUMAH KONTRAKAN & KOS-KOSAN)
+// =========================================================================
+
+// GET /api/fasilitas/hunian-sewa - Daftar Rumah Kos & Kontrakan Warga
+router.get('/hunian-sewa', requireAuth, async (req, res) => {
+  try {
+    const scope = resolveScope(req.session.user);
+    const data = await fasilitasRepository.getHunianSewaInventory(scope);
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error fetching hunian sewa:', error);
+    res.status(500).json({ success: false, message: 'Gagal memuat data hunian sewa' });
+  }
+});
+
+// POST /api/fasilitas/hunian-sewa - Pendaftaran Rumah Kos / Kontrakan
+router.post('/hunian-sewa', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw'), async (req, res) => {
+  try {
+    const { nama_hunian, nama_pemilik, no_kontak_pemilik, alamat } = req.body;
+    if (!nama_hunian || !nama_pemilik || !no_kontak_pemilik || !alamat) {
+      return res.status(400).json({ success: false, message: 'Nama hunian, pemilik, nomor kontak, dan alamat wajib diisi' });
+    }
+    const payload = {
+      ...req.body,
+      rt: req.body.rt || req.session.user.rt || '001',
+      rw: req.body.rw || req.session.user.rw || '001'
+    };
+    const created = await fasilitasRepository.createHunianSewa(payload, req.session.user);
+    res.status(201).json({ success: true, message: 'Data kos/kontrakan berhasil didaftarkan', data: created });
+  } catch (error) {
+    console.error('Error creating hunian sewa:', error);
+    res.status(500).json({ success: false, message: 'Gagal mendaftarkan hunian sewa' });
+  }
+});
+
+// =========================================================================
+// 8. KELOMPOK RENTAN (ANAK YATIM PIATU & LANSIA SEBATANG KARA)
+// =========================================================================
+
+// GET /api/fasilitas/kelompok-rentan - Daftar Anak Yatim Piatu & Lansia Sebatang Kara
+router.get('/kelompok-rentan', requireAuth, async (req, res) => {
+  try {
+    const scope = resolveScope(req.session.user);
+    const { kategori } = req.query;
+    const data = await fasilitasRepository.getKelompokRentanList(scope, { kategori });
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error fetching kelompok rentan:', error);
+    res.status(500).json({ success: false, message: 'Gagal memuat data kelompok rentan' });
+  }
+});
+
+// POST /api/fasilitas/kelompok-rentan - Pendaftaran Warga Rentan Lapangan
+router.post('/kelompok-rentan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw'), async (req, res) => {
+  try {
+    const { kategori, nik, nama, alamat } = req.body;
+    if (!kategori || !nik || !nama || !alamat) {
+      return res.status(400).json({ success: false, message: 'Kategori, NIK, nama, dan alamat wajib diisi' });
+    }
+    const payload = {
+      ...req.body,
+      rt: req.body.rt || req.session.user.rt || '001',
+      rw: req.body.rw || req.session.user.rw || '001',
+      sumber_pendataan: ['admin_kelurahan', 'superadmin', 'admin', 'lurah'].includes(req.session.user.role)
+        ? 'INPUT_KELURAHAN'
+        : 'INPUT_RT'
+    };
+    const created = await fasilitasRepository.createKelompokRentan(payload, req.session.user);
+    res.status(201).json({ success: true, message: 'Data warga rentan berhasil dicatat', data: created });
+  } catch (error) {
+    console.error('Error creating kelompok rentan:', error);
+    res.status(500).json({ success: false, message: 'Gagal mencatat data warga rentan' });
+  }
+});
+
+// GET /api/fasilitas/kelompok-rentan/auto-detect - Deteksi Otomatis Algoritma KK
+router.get('/kelompok-rentan/auto-detect', requireAuth, async (req, res) => {
+  try {
+    const scope = resolveScope(req.session.user);
+    const results = await fasilitasRepository.autoDetectKelompokRentan(scope);
+    res.json({ success: true, data: results });
+  } catch (error) {
+    console.error('Error auto-detecting kelompok rentan:', error);
+    res.status(500).json({ success: false, message: 'Gagal menjalankan pemindaian otomatis KK' });
+  }
+});
+
+// =========================================================================
+// 9. VERIFIKASI FASILITAS / POTENSI WILAYAH (OLEH KELURAHAN)
+// =========================================================================
+
+// PATCH /api/fasilitas/:kategori/:id/verify - Verifikasi & Validasi Lapangan oleh Kelurahan
+router.patch('/:kategori/:id/verify', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah'), async (req, res) => {
+  try {
+    const { kategori, id } = req.params;
+    const { status = 'TERVERIFIKASI', catatan } = req.body;
+    const result = await fasilitasRepository.verifyFasilitas(kategori, Number(id), req.session.user.id, status, catatan);
+    res.json({ success: true, message: `Status verifikasi fasilitas ${kategori} berhasil diperbarui`, data: result });
+  } catch (error) {
+    console.error('Error verifying fasilitas:', error);
+    res.status(500).json({ success: false, message: error.message || 'Gagal memverifikasi fasilitas' });
   }
 });
 
