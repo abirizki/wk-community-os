@@ -503,6 +503,36 @@ class PosyanduService {
       rt: query.rt || null
     };
   }
+
+  /**
+   * Pendaftaran sasaran baru (balita / lansia) oleh kader di lapangan
+   */
+  async registerSasaranBaru(payload, currentUser) {
+    if (!payload.nama || !payload.tanggal_lahir) {
+      const err = new Error('Nama dan tanggal lahir sasaran wajib diisi');
+      err.status = 400;
+      throw err;
+    }
+
+    const kaderProfile = await posyanduRepository.getKaderProfile(currentUser.id, currentUser);
+    const posyanduName = kaderProfile?.nama_posyandu || 'Posyandu Melati RW 001';
+
+    return await posyanduRepository.createSasaranBaru({
+      ...payload,
+      nama_posyandu: posyanduName,
+      rt: payload.rt || currentUser.rt || '001',
+      rw: payload.rw || currentUser.rw || '001'
+    });
+  }
+
+  /**
+   * Ambil daftar seluruh rekan kader dalam satu tim posyandu
+   */
+  async getKaderTeam(currentUser) {
+    const kaderProfile = await posyanduRepository.getKaderProfile(currentUser.id, currentUser);
+    const posyanduName = kaderProfile?.nama_posyandu || 'Posyandu Melati RW 001';
+    return await posyanduRepository.listKaderTeam(posyanduName, currentUser);
+  }
 }
 
 module.exports = new PosyanduService();

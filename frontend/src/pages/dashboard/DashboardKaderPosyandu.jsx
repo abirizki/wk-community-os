@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 import { offlineQueue } from '../../utils/offlineQueue';
@@ -47,13 +47,18 @@ import {
   MapPin,
   Calendar,
   UserCheck,
-  HelpCircle
+  HelpCircle,
+  UserPlus,
+  FileText,
+  Send,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DashboardKaderPosyandu() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // State Data & Profil Kader
   const [loading, setLoading] = useState(true);
@@ -61,23 +66,44 @@ export default function DashboardKaderPosyandu() {
   const [aiBrief, setAiBrief] = useState(null);
   const [loadingBrief, setLoadingBrief] = useState(true);
   const [kaderProfile, setKaderProfile] = useState(null);
+  const [kaderTeam, setKaderTeam] = useState([]);
 
   // Target Warga Lists (Scoped by Wilayah Tugas)
   const [targetBalita, setTargetBalita] = useState([]);
   const [targetLansia, setTargetLansia] = useState([]);
   const [offlinePendingCount, setOfflinePendingCount] = useState(0);
 
-  // Active View Tab on Dashboard
-  const [activeTab, setActiveTab] = useState('balita'); // 'balita' | 'lansia'
+  // Active View Tab on Dashboard: 'balita' | 'lansia' | 'riwayat' | 'offline'
+  const [activeTab, setActiveTab] = useState('balita');
   const [balitaFilter, setBalitaFilter] = useState('all'); // 'all' | 'unweighed' | 'at_risk'
   const [lansiaFilter, setLansiaFilter] = useState('all'); // 'all' | 'unexamined' | 'at_risk'
 
   // Modals State
   const [showBalitaModal, setShowBalitaModal] = useState(false);
   const [showLansiaModal, setShowLansiaModal] = useState(false);
+  const [showDaftarSasaranModal, setShowDaftarSasaranModal] = useState(false);
   const [savingRecord, setSavingRecord] = useState(false);
+  const [submittingSasaran, setSubmittingSasaran] = useState(false);
   const [modalSuccessMsg, setModalSuccessMsg] = useState('');
   const [formError, setFormError] = useState('');
+
+  // Form State: Pendaftaran Sasaran Baru (Bayi / Lansia belum ada di KK)
+  const [daftarSasaranForm, setDaftarSasaranForm] = useState({
+    tipe: 'balita',
+    nama: '',
+    jenis_kelamin: 'L',
+    tanggal_lahir: '',
+    tempat_lahir: 'Bandung',
+    rt: '001',
+    rw: '001',
+    alamat: 'Jl. Kebonjati',
+    nama_ibu: '',
+    nama_ayah: '',
+    no_kk: '',
+    nik: '',
+    status_tinggal: 'Bersama Keluarga',
+    riwayat_penyakit: ''
+  });
 
   // Selected Warga State for Measurement Form
   const [selectedBalita, setSelectedBalita] = useState(null);
@@ -155,6 +181,13 @@ export default function DashboardKaderPosyandu() {
       const count = await offlineQueue.getPendingCount();
       setOfflinePendingCount(count);
 
+      // 5. Fetch Kader Team Members
+      api.get('/posyandu/tim-kader')
+        .then((res) => {
+          if (res.success && res.data) setKaderTeam(res.data);
+        })
+        .catch(() => {});
+
     } catch (e) {
       console.warn('[KaderDashboard] Network fetch failed, loading offline cache:', e.message);
       // Load offline cached data
@@ -169,6 +202,110 @@ export default function DashboardKaderPosyandu() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  // Sync URL query tab (?tab=balita | lansia | riwayat | offline)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['balita', 'lansia', 'riwayat', 'offline'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+    const actionParam = searchParams.get('action');
+    if (actionParam === 'catat-balita') {
+      setSelectedBalita(null);
+      setBalitaSearchQuery('');
+      setFormError('');
+      setShowBalitaModal(true);
+    } else if (actionParam === 'catat-lansia') {
+      setSelectedLansia(null);
+      setLansiaSearchQuery('');
+      setFormError('');
+      setShowLansiaModal(true);
+    } else if (actionParam === 'tambah-sasaran') {
+      setShowDaftarSasaranModal(true);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    setSearchParams({ tab: newTab });
+  };
+
+  // Pendaftaran Sasaran Baru (Bayi / Lansia)
+  const handleSaveSasaranBaru = async (e) => {
+    e.preventDefault();
+    setFormError('');
+    if (!daftarSasaranForm.nama.trim()) {
+      setFormError('Nama lengkap sasaran wajib diisi.');
+      return;
+    }
+    if (!daftarSasaranForm.tanggal_lahir) {
+      setFormError('Tanggal lahir sasaran wajib diisi.');
+      return;
+    }
+
+    setSubmittingSasaran(true);
+    try {
+      const payload = {
+        ...daftarSasaranForm,
+        nama_posyandu: kaderProfile?.nama_posyandu || 'Posyandu Melati RW 001',
+        rt: daftarSasaranForm.rt || (kaderProfile?.wilayah_tugas?.[0]?.rt) || '001',
+        rw: daftarSasaranForm.rw || (kaderProfile?.wilayah_tugas?.[0]?.rw) || '001'
+      };
+
+      if (!navigator.onLine) {
+        await offlineQueue.enqueue({
+          type: 'POSYANDU_SASARAN_BARU',
+          endpoint: '/api/posyandu/sasaran-baru',
+          method: 'POST',
+          payload,
+          label: `Daftar Sasaran Baru (${payload.tipe}): ${payload.nama}`
+        });
+
+        setModalSuccessMsg(`Disimpan secara offline. Sasaran baru ${payload.nama} akan disinkronkan saat online.`);
+      } else {
+        await api.post('/posyandu/sasaran-baru', payload);
+        setModalSuccessMsg(`Sasaran baru ${payload.nama} berhasil didaftarkan!`);
+      }
+
+      await loadDashboardData();
+
+      setTimeout(() => {
+        setShowDaftarSasaranModal(false);
+        setModalSuccessMsg('');
+        // Langsung arahkan ke pencatatan hasil ukur
+        if (daftarSasaranForm.tipe === 'balita') {
+          setSelectedBalita({
+            nama_anak: daftarSasaranForm.nama,
+            nik_anak: daftarSasaranForm.nik || `TEMP-${Date.now().toString().slice(-8)}`,
+            jenis_kelamin_anak: daftarSasaranForm.jenis_kelamin,
+            tanggal_lahir_anak: daftarSasaranForm.tanggal_lahir,
+            umur_bulan: 0,
+            rt: daftarSasaranForm.rt,
+            rw: daftarSasaranForm.rw,
+            nama_ibu: daftarSasaranForm.nama_ibu,
+            nama_ayah: daftarSasaranForm.nama_ayah,
+            alamat: daftarSasaranForm.alamat
+          });
+          setShowBalitaModal(true);
+        } else {
+          setSelectedLansia({
+            nama: daftarSasaranForm.nama,
+            nik: daftarSasaranForm.nik || `TEMP-${Date.now().toString().slice(-8)}`,
+            jenis_kelamin: daftarSasaranForm.jenis_kelamin,
+            usia: 60,
+            rt: daftarSasaranForm.rt,
+            rw: daftarSasaranForm.rw,
+            alamat: daftarSasaranForm.alamat
+          });
+          setShowLansiaModal(true);
+        }
+      }, 1500);
+    } catch (err) {
+      setFormError(err.message || 'Gagal mendaftarkan sasaran baru.');
+    } finally {
+      setSubmittingSasaran(false);
     }
   };
 
@@ -669,26 +806,42 @@ export default function DashboardKaderPosyandu() {
       {/* SECTION TABS & REGISTER KARTU DIGITAL                                     */}
       {/* ========================================================================= */}
       <div className="space-y-4 pb-20">
+        {/* Team Banner: Multi-Kader Posyandu */}
+        {kaderTeam.length > 1 && (
+          <div className="bg-sky-50 border border-sky-200 rounded-2xl px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-sky-900">
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-sky-700 shrink-0" />
+              <span>
+                <strong>Tim Posyandu Aktif ({kaderProfile?.nama_posyandu || 'Posyandu Melati'}):</strong>{' '}
+                {kaderTeam.map(k => `${k.nama_lengkap} (${k.wilayah_tugas?.map(w => `RT ${w.rt}`).join(', ') || 'Semua RT'})`).join(' · ')}
+              </span>
+            </div>
+            <span className="text-[11px] font-bold text-sky-800 bg-white px-2.5 py-0.5 rounded-full border border-sky-200 shrink-0 self-start sm:self-auto">
+              {kaderTeam.length} Kader Bertugas
+            </span>
+          </div>
+        )}
+
         {/* Tab Navigation Header */}
-        <div className="bg-surface-container-lowest p-3 sm:p-4 rounded-2xl border border-outline-variant shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="bg-surface-container-lowest p-3 sm:p-4 rounded-2xl border border-outline-variant shadow-xs flex flex-col lg:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
             <button
               type="button"
-              onClick={() => setActiveTab('balita')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              onClick={() => handleTabChange('balita')}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 ${
                 activeTab === 'balita'
                   ? 'bg-teal-600 text-white shadow-xs'
                   : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
               }`}
             >
               <Baby size={16} />
-              <span>Kartu KIA Balita ({targetBalita.length})</span>
+              <span>Buku KIA Balita ({targetBalita.length})</span>
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab('lansia')}
-              className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              onClick={() => handleTabChange('lansia')}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 ${
                 activeTab === 'lansia'
                   ? 'bg-emerald-700 text-white shadow-xs'
                   : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
@@ -697,73 +850,117 @@ export default function DashboardKaderPosyandu() {
               <HeartPulse size={16} />
               <span>Kartu Lansia ({targetLansia.length})</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabChange('riwayat')}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 ${
+                activeTab === 'riwayat'
+                  ? 'bg-slate-800 text-white shadow-xs'
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
+              }`}
+            >
+              <FileText size={16} />
+              <span>Riwayat & Rekap</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabChange('offline')}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 ${
+                activeTab === 'offline'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
+              }`}
+            >
+              <Database size={16} />
+              <span>Offline ({offlinePendingCount})</span>
+            </button>
           </div>
 
-          {/* Quick Filter Chips */}
-          <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto text-xs pb-1 sm:pb-0">
-            {activeTab === 'balita' ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setBalitaFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
-                    balitaFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  Semua ({targetBalita.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBalitaFilter('unweighed')}
-                  className={`px-3 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
-                    balitaFilter === 'unweighed' ? 'bg-amber-500 text-amber-950' : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
-                  }`}
-                >
-                  Belum Ditimbang Bulan Ini
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBalitaFilter('at_risk')}
-                  className={`px-3 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
-                    balitaFilter === 'at_risk' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-900 hover:bg-red-200'
-                  }`}
-                >
-                  Perlu Perhatian Gizi
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setLansiaFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
-                    lansiaFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  Semua ({targetLansia.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLansiaFilter('unexamined')}
-                  className={`px-3 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
-                    lansiaFilter === 'unexamined' ? 'bg-amber-500 text-amber-950' : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
-                  }`}
-                >
-                  Belum Diperiksa Bulan Ini
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLansiaFilter('at_risk')}
-                  className={`px-3 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
-                    lansiaFilter === 'at_risk' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-900 hover:bg-red-200'
-                  }`}
-                >
-                  Hipertensi / Sebatang Kara
-                </button>
-              </>
-            )}
+          <div className="flex items-center gap-2 w-full lg:w-auto justify-between lg:justify-end">
+            {/* Action: Tambah Sasaran Baru (Bayi / Lansia) */}
+            <button
+              type="button"
+              onClick={() => {
+                setFormError('');
+                setModalSuccessMsg('');
+                setShowDaftarSasaranModal(true);
+              }}
+              className="px-3.5 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 font-extrabold text-xs flex items-center gap-1.5 border border-teal-200 transition-all cursor-pointer"
+            >
+              <UserPlus size={15} className="text-teal-700" />
+              <span>+ Daftarkan Sasaran Baru</span>
+            </button>
+
+            {/* Quick Filter Chips (Hanya muncul saat tab Balita / Lansia) */}
+            <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+              {activeTab === 'balita' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setBalitaFilter('all')}
+                    className={`px-2.5 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
+                      balitaFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    Semua ({targetBalita.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBalitaFilter('unweighed')}
+                    className={`px-2.5 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
+                      balitaFilter === 'unweighed' ? 'bg-amber-500 text-amber-950' : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
+                    }`}
+                  >
+                    Belum Ditimbang
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBalitaFilter('at_risk')}
+                    className={`px-2.5 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
+                      balitaFilter === 'at_risk' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-900 hover:bg-red-200'
+                    }`}
+                  >
+                    Perhatian Gizi
+                  </button>
+                </>
+              )}
+              {activeTab === 'lansia' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setLansiaFilter('all')}
+                    className={`px-2.5 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
+                      lansiaFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    Semua ({targetLansia.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLansiaFilter('unexamined')}
+                    className={`px-2.5 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
+                      lansiaFilter === 'unexamined' ? 'bg-amber-500 text-amber-950' : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
+                    }`}
+                  >
+                    Belum Diperiksa
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLansiaFilter('at_risk')}
+                    className={`px-2.5 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
+                      lansiaFilter === 'at_risk' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-900 hover:bg-red-200'
+                    }`}
+                  >
+                    Hipertensi
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
+
 
         {/* ========================================================================= */}
         {/* GRID KARTU KIA DIGITAL / KARTU LANSIA DIGITAL                              */}
@@ -884,12 +1081,124 @@ export default function DashboardKaderPosyandu() {
             )}
           </div>
         )}
+
+        {/* ========================================================================= */}
+        {/* TAB 3: RIWAYAT & REKAP PEMERIKSAAN                                        */}
+        {/* ========================================================================= */}
+        {activeTab === 'riwayat' && (
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4 sm:p-6 space-y-4 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant pb-3">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <FileText size={18} className="text-teal-700" />
+                  <span>Riwayat & Rekap Posyandu Lapangan</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Daftar rekap penimbangan balita & skrining kesehatan lansia terkini di wilayah tugas.
+                </p>
+              </div>
+              <span className="text-xs font-bold text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
+                {targetBalita.filter(b => b.sudah_ditimbang_bulan_ini === 1).length} Balita & {targetLansia.filter(l => l.sudah_diperiksa_bulan_ini === 1).length} Lansia Selesai Bulan Ini
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                  <tr>
+                    <th className="py-2.5 px-3">Nama Sasaran</th>
+                    <th className="py-2.5 px-3">Kategori</th>
+                    <th className="py-2.5 px-3">Wilayah</th>
+                    <th className="py-2.5 px-3">Tgl Pemeriksaan</th>
+                    <th className="py-2.5 px-3">Hasil Ukur / Tensi</th>
+                    <th className="py-2.5 px-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {targetBalita.filter(b => b.last_pemeriksaan_id).slice(0, 15).map((b) => (
+                    <tr key={`b-${b.nik_anak}`} className="hover:bg-slate-50/80">
+                      <td className="py-2.5 px-3 font-bold text-slate-900">{b.nama_anak}</td>
+                      <td className="py-2.5 px-3"><span className="px-2 py-0.5 rounded bg-teal-50 text-teal-800 font-semibold">Balita ({b.umur_bulan} Bln)</span></td>
+                      <td className="py-2.5 px-3 text-slate-600">RT {b.rt}/RW {b.rw}</td>
+                      <td className="py-2.5 px-3 text-slate-500 font-mono tabular-nums">{b.last_tanggal_pemeriksaan || '-'}</td>
+                      <td className="py-2.5 px-3 font-mono tabular-nums font-bold text-slate-800">{b.last_berat_badan ? `${b.last_berat_badan} kg / ${b.last_tinggi_badan} cm` : '-'}</td>
+                      <td className="py-2.5 px-3"><span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">{b.last_status_gizi || 'Normal'}</span></td>
+                    </tr>
+                  ))}
+                  {targetLansia.filter(l => l.last_pemeriksaan_id).slice(0, 15).map((l) => (
+                    <tr key={`l-${l.nik}`} className="hover:bg-slate-50/80">
+                      <td className="py-2.5 px-3 font-bold text-slate-900">{l.nama}</td>
+                      <td className="py-2.5 px-3"><span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold">Lansia ({l.usia} Thn)</span></td>
+                      <td className="py-2.5 px-3 text-slate-600">RT {l.rt}/RW {l.rw}</td>
+                      <td className="py-2.5 px-3 text-slate-500 font-mono tabular-nums">{l.last_tanggal_pemeriksaan || '-'}</td>
+                      <td className="py-2.5 px-3 font-mono tabular-nums font-bold text-slate-800">{l.last_tensi_sistolik ? `${l.last_tensi_sistolik}/${l.last_tensi_diastolik} mmHg` : '-'}</td>
+                      <td className="py-2.5 px-3"><span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 font-bold">{l.last_adl || 'Mandiri'}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 4: ANTREAN OFFLINE & STATUS SINKRONISASI                               */}
+        {/* ========================================================================= */}
+        {activeTab === 'offline' && (
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4 sm:p-6 space-y-4 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+                  <Database size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">Antrean Offline Lapangan (IndexedDB)</h3>
+                  <p className="text-xs text-slate-500">
+                    Penyimpanan lokal perangkat agar pencatatan tetap berjalan lancar saat berada di daerah tanpa sinyal.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await offlineQueue.flush(api);
+                    await loadDashboardData();
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+              >
+                <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+                <span>Sinkronkan Sekarang</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-xs text-slate-500 block">Menunggu Sinkronisasi</span>
+                <p className="text-lg font-mono tabular-nums font-extrabold text-slate-900">{offlinePendingCount} data</p>
+              </div>
+              <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200">
+                <span className="text-xs text-emerald-700 block">Status Jaringan Perangkat</span>
+                <p className="text-sm font-extrabold text-emerald-900 mt-0.5">
+                  {typeof navigator !== 'undefined' && navigator.onLine ? '🟢 Terhubung ke Internet' : '🔴 Mode Offline (Tanpa Sinyal)'}
+                </p>
+              </div>
+              <div className="p-3.5 bg-sky-50 rounded-xl border border-sky-200">
+                <span className="text-xs text-sky-700 block">Kapasitas Cache Lokal</span>
+                <p className="text-sm font-extrabold text-sky-900 mt-0.5">IndexedDB Aktif & Siap</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
-      {/* THUMB-ZONE FLOATING ACTIONS (Khusus Mobile-First)                          */}
+      {/* THUMB-ZONE FLOATING ACTIONS (Khusus Mobile-First - Clearance 24px)         */}
       {/* ========================================================================= */}
-      <div className="fixed bottom-16 lg:bottom-6 left-0 right-0 z-30 px-4 pointer-events-none">
+      <div className="fixed bottom-20 lg:bottom-6 left-0 right-0 z-30 px-4 pointer-events-none">
         <div className="max-w-md mx-auto flex items-center gap-2 pointer-events-auto">
           {/* Tombol Utama: Catat Balita */}
           <button
@@ -900,11 +1209,11 @@ export default function DashboardKaderPosyandu() {
               setFormError('');
               setShowBalitaModal(true);
             }}
-            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-extrabold text-sm shadow-elevated border border-teal-500 transition-all cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-extrabold text-xs sm:text-sm shadow-elevated border border-teal-500 transition-all cursor-pointer"
             aria-label="Catat Balita Baru"
           >
             <Baby size={18} className="shrink-0" />
-            <span>+ Catat Balita (KIA)</span>
+            <span>+ Catat Balita</span>
           </button>
 
           {/* Tombol Utama: Catat Lansia */}
@@ -916,7 +1225,7 @@ export default function DashboardKaderPosyandu() {
               setFormError('');
               setShowLansiaModal(true);
             }}
-            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-extrabold text-sm shadow-elevated border border-emerald-600 transition-all cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-extrabold text-xs sm:text-sm shadow-elevated border border-emerald-600 transition-all cursor-pointer"
             aria-label="Catat Pemeriksaan Lansia"
           >
             <HeartPulse size={18} className="shrink-0" />
@@ -999,14 +1308,32 @@ export default function DashboardKaderPosyandu() {
                     {/* Daftar Hasil Pencarian Balita */}
                     <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                       {balitaCandidates.length === 0 ? (
-                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-2">
                           <p className="font-bold flex items-center gap-1.5">
-                            <HelpCircle size={15} className="text-amber-700" />
+                            <HelpCircle size={15} className="text-amber-700 shrink-0" />
                             <span>Balita tidak ditemukan di wilayah tugas Anda</span>
                           </p>
                           <p className="text-[11px] text-amber-800 leading-relaxed">
-                            Pastikan data keluarga sudah tercatat resmi di sistem kelurahan. Jika keluarga baru pindah, silakan hubungi <strong>Admin Kelurahan</strong> untuk pendaftaran/mutasi kependudukan.
+                            Jika bayi baru lahir atau belum tercatat di data keluarga (KK), Anda dapat langsung mendaftarkannya sekarang.
                           </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowBalitaModal(false);
+                              setDaftarSasaranForm(prev => ({
+                                ...prev,
+                                tipe: 'balita',
+                                nama: balitaSearchQuery || '',
+                                rt: user?.wilayah_tugas?.rt || '001',
+                                rw: user?.wilayah_tugas?.rw || '001'
+                              }));
+                              setShowDaftarSasaranModal(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
+                          >
+                            <UserPlus size={14} />
+                            <span>+ Daftarkan Sasaran Balita Baru</span>
+                          </button>
                         </div>
                       ) : (
                         balitaCandidates.map((b) => (
@@ -1248,14 +1575,32 @@ export default function DashboardKaderPosyandu() {
 
                     <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                       {lansiaCandidates.length === 0 ? (
-                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-2">
                           <p className="font-bold flex items-center gap-1.5">
-                            <HelpCircle size={15} className="text-amber-700" />
+                            <HelpCircle size={15} className="text-amber-700 shrink-0" />
                             <span>Data lansia tidak ditemukan di wilayah tugas</span>
                           </p>
-                          <p className="text-[11px] text-amber-800">
-                            Silakan hubungi Admin Kelurahan untuk verifikasi data kependudukan lansia.
+                          <p className="text-[11px] text-amber-800 leading-relaxed">
+                            Jika warga lansia baru berdomisili dan belum terdata di Kartu Keluarga (KK), Anda dapat langsung mendaftarkannya sekarang.
                           </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowLansiaModal(false);
+                              setDaftarSasaranForm(prev => ({
+                                ...prev,
+                                tipe: 'lansia',
+                                nama: lansiaSearchQuery || '',
+                                rt: user?.wilayah_tugas?.rt || '001',
+                                rw: user?.wilayah_tugas?.rw || '001'
+                              }));
+                              setShowDaftarSasaranModal(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
+                          >
+                            <UserPlus size={14} />
+                            <span>+ Daftarkan Sasaran Lansia Baru</span>
+                          </button>
                         </div>
                       ) : (
                         lansiaCandidates.map((l) => (
@@ -1408,6 +1753,215 @@ export default function DashboardKaderPosyandu() {
                   </form>
                 )}
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* MODAL 3: PENDAFTARAN SASARAN BARU DI LAPANGAN                             */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {showDaftarSasaranModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-3 sm:p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-lg bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-elevated max-h-[92vh] flex flex-col overflow-hidden"
+            >
+              <div className="p-4 bg-teal-700 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold">
+                    <UserPlus size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold">Daftarkan Sasaran Baru di Lapangan</h3>
+                    <p className="text-[11px] text-teal-100">Bayi baru lahir atau lansia yang belum terdata di KK</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowDaftarSasaranModal(false)}
+                  className="p-1 rounded-lg text-teal-100 hover:bg-white/10"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveSasaranBaru} className="p-4 space-y-3.5 overflow-y-auto flex-1 text-xs">
+                {formError && (
+                  <div className="p-3 bg-red-50 text-red-900 border border-red-200 rounded-lg text-xs font-semibold flex items-center gap-2">
+                    <AlertTriangle size={15} className="text-red-600 shrink-0" />
+                    <span>{formError}</span>
+                  </div>
+                )}
+                {modalSuccessMsg && (
+                  <div className="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-lg text-xs font-semibold flex items-center gap-2">
+                    <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+                    <span>{modalSuccessMsg}</span>
+                  </div>
+                )}
+
+                {/* Tipe Sasaran */}
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Kategori Sasaran</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDaftarSasaranForm(f => ({ ...f, tipe: 'balita' }))}
+                      className={`flex-1 py-2 rounded-xl font-extrabold flex items-center justify-center gap-1.5 transition-all ${
+                        daftarSasaranForm.tipe === 'balita' ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <Baby size={16} /> Bayi / Balita
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDaftarSasaranForm(f => ({ ...f, tipe: 'lansia' }))}
+                      className={`flex-1 py-2 rounded-xl font-extrabold flex items-center justify-center gap-1.5 transition-all ${
+                        daftarSasaranForm.tipe === 'lansia' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <HeartPulse size={16} /> Lansia (Kesehatan)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Nama Lengkap */}
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">
+                    Nama Lengkap <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={daftarSasaranForm.tipe === 'balita' ? 'Nama Bayi / Balita' : 'Nama Lengkap Lansia'}
+                    value={daftarSasaranForm.nama}
+                    onChange={e => setDaftarSasaranForm(f => ({ ...f, nama: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                  />
+                </div>
+
+                {/* Jenis Kelamin & Tanggal Lahir */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">Jenis Kelamin</label>
+                    <select
+                      value={daftarSasaranForm.jenis_kelamin}
+                      onChange={e => setDaftarSasaranForm(f => ({ ...f, jenis_kelamin: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                    >
+                      <option value="L">Laki-Laki (L)</option>
+                      <option value="P">Perempuan (P)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">
+                      Tanggal Lahir <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={daftarSasaranForm.tanggal_lahir}
+                      onChange={e => setDaftarSasaranForm(f => ({ ...f, tanggal_lahir: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Orang Tua (Jika Balita) */}
+                {daftarSasaranForm.tipe === 'balita' ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Nama Ibu</label>
+                      <input
+                        type="text"
+                        placeholder="Nama Ibu Kandung"
+                        value={daftarSasaranForm.nama_ibu}
+                        onChange={e => setDaftarSasaranForm(f => ({ ...f, nama_ibu: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Nama Ayah</label>
+                      <input
+                        type="text"
+                        placeholder="Nama Ayah / Kepala Keluarga"
+                        value={daftarSasaranForm.nama_ayah}
+                        onChange={e => setDaftarSasaranForm(f => ({ ...f, nama_ayah: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">Status Tinggal Lansia</label>
+                    <select
+                      value={daftarSasaranForm.status_tinggal}
+                      onChange={e => setDaftarSasaranForm(f => ({ ...f, status_tinggal: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                    >
+                      <option value="Bersama Keluarga">Bersama Keluarga</option>
+                      <option value="Sebatang Kara">Sebatang Kara (Risiko Tinggi)</option>
+                      <option value="Bersama Pasangan Lansia">Bersama Pasangan Lansia</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* RT, RW, dan Alamat */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">RT</label>
+                    <select
+                      value={daftarSasaranForm.rt}
+                      onChange={e => setDaftarSasaranForm(f => ({ ...f, rt: e.target.value }))}
+                      className="w-full px-2.5 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white outline-none"
+                    >
+                      {(kaderProfile?.wilayah_tugas || [{ rt: '001' }, { rt: '002' }]).map(w => (
+                        <option key={w.rt} value={w.rt}>RT {w.rt}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">RW</label>
+                    <input
+                      type="text"
+                      disabled
+                      value={kaderProfile?.wilayah_tugas?.[0]?.rw || '001'}
+                      className="w-full px-2.5 py-2 rounded-xl border border-slate-200 bg-slate-100 text-xs font-bold text-slate-500 text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">No. KK (Opsional)</label>
+                    <input
+                      type="text"
+                      placeholder="16 digit"
+                      value={daftarSasaranForm.no_kk}
+                      onChange={e => setDaftarSasaranForm(f => ({ ...f, no_kk: e.target.value }))}
+                      className="w-full px-2.5 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs font-mono text-slate-900 focus:bg-white outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowDaftarSasaranModal(false)}
+                    className="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingSasaran}
+                    className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                  >
+                    {submittingSasaran ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
+                    <span>Daftarkan & Langsung Catat</span>
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

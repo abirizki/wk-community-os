@@ -211,5 +211,25 @@ router.get('/lansia-card/:id', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/posyandu/tim-kader - Daftar rekan kader dalam satu tim posyandu
+router.get('/tim-kader', requireAuth, async (req, res) => {
+  try {
+    const team = await posyanduService.getKaderTeam(req.session.user);
+    res.json({ success: true, data: team });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/posyandu/sasaran-baru - Pendaftaran sasaran baru (balita / lansia) oleh kader
+router.post('/sasaran-baru', requireAuth, async (req, res) => {
+  try {
+    const result = await posyanduService.registerSasaranBaru(req.body, req.session.user);
+    res.status(201).json({ success: true, message: 'Sasaran baru berhasil didaftarkan', data: result });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
 

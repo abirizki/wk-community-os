@@ -19,9 +19,13 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { enqueueOfflineAction, cacheData, getCachedData } from '../utils/offlineStorage';
 import { offlineQueue } from '../utils/offlineQueue';
+import DashboardKaderPosyandu from './dashboard/DashboardKaderPosyandu';
 
 export default function PosyanduPage() {
   const { user } = useAuth();
+  if (user?.role === 'kader_posyandu') {
+    return <DashboardKaderPosyandu />;
+  }
   const isOfficer = user && ['kader_posyandu', 'ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'].includes(user.role);
 
   // Tab State: 'balita' | 'lansia'

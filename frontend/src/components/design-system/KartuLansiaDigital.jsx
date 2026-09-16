@@ -153,16 +153,16 @@ export default function KartuLansiaDigital({
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="p-2 bg-white/80 rounded-xl border border-emerald-100 shadow-2xs">
               <span className="text-[10px] text-slate-400 block font-medium">Tensi Darah</span>
-              <p className="text-sm font-extrabold text-emerald-950">
+              <p className="text-sm font-extrabold text-emerald-950 font-mono tabular-nums">
                 {sistolik && diastolik ? `${sistolik}/${diastolik}` : '-'}
-                <span className="text-[10px] font-normal text-slate-400 ml-0.5">mmHg</span>
+                <span className="text-[10px] font-normal text-slate-400 ml-0.5 font-sans">mmHg</span>
               </p>
             </div>
             <div className="p-2 bg-white/80 rounded-xl border border-emerald-100 shadow-2xs">
               <span className="text-[10px] text-slate-400 block font-medium">Gula Darah</span>
-              <p className="text-sm font-extrabold text-emerald-950">
+              <p className="text-sm font-extrabold text-emerald-950 font-mono tabular-nums">
                 {gds ? `${gds}` : '-'}
-                <span className="text-[10px] font-normal text-slate-400 ml-0.5">mg/dL</span>
+                <span className="text-[10px] font-normal text-slate-400 ml-0.5 font-sans">mg/dL</span>
               </p>
             </div>
             <div className="p-2 bg-white/80 rounded-xl border border-emerald-100 shadow-2xs">
@@ -264,10 +264,10 @@ export default function KartuLansiaDigital({
                       ) : (
                         history.map((h, i) => (
                           <tr key={h.id || i} className="hover:bg-emerald-50/40">
-                            <td className="p-2.5 font-semibold text-slate-900">{h.tanggal_pemeriksaan || '-'}</td>
-                            <td className="p-2.5 font-bold text-emerald-900">{h.tensi_sistolik}/{h.tensi_diastolik}</td>
-                            <td className="p-2.5">{h.gula_darah_sewaktu ? `${h.gula_darah_sewaktu} mg/dL` : '-'}</td>
-                            <td className="p-2.5">{h.berat_badan_kg || '-'} kg / {h.tinggi_badan_cm || '-'} cm</td>
+                            <td className="p-2.5 font-semibold text-slate-900 font-mono tabular-nums">{h.tanggal_pemeriksaan || '-'}</td>
+                            <td className="p-2.5 font-bold text-emerald-900 font-mono tabular-nums">{h.tensi_sistolik}/{h.tensi_diastolik}</td>
+                            <td className="p-2.5 font-mono tabular-nums">{h.gula_darah_sewaktu ? `${h.gula_darah_sewaktu} mg/dL` : '-'}</td>
+                            <td className="p-2.5 font-mono tabular-nums">{h.berat_badan_kg || '-'} kg / {h.tinggi_badan_cm || '-'} cm</td>
                             <td className="p-2.5 text-slate-500 truncate max-w-xs">{h.keluhan || h.tindakan_petugas || '-'}</td>
                           </tr>
                         ))

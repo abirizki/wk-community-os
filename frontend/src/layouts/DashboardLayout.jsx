@@ -26,6 +26,7 @@ import {
   BookOpen,
   Wallet,
   Baby,
+  Database,
 } from 'lucide-react';
 import OfflineIndicator from '../components/OfflineIndicator';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
@@ -148,11 +149,11 @@ export default function DashboardLayout() {
     if (isPosyandu) {
       return [
         { name: 'Beranda Posyandu', path: '/dashboard', icon: <Home size={19} /> },
-        { name: 'Catat Balita (KIA)', path: '/dashboard/posyandu?tab=balita', icon: <Baby size={19} /> },
-        { name: 'Catat Lansia', path: '/dashboard/posyandu?tab=lansia', icon: <HeartPulse size={19} /> },
-        { name: 'Riwayat Pemeriksaan', path: '/dashboard/posyandu?tab=riwayat', icon: <FileText size={19} /> },
-        { name: 'Kartu KIA & Lansia', path: '/dashboard/posyandu?tab=kartu', icon: <Award size={19} /> },
-        { name: 'Profil Saya', path: '/dashboard/profil', icon: <User size={19} /> }
+        { name: 'Buku KIA Balita', path: '/dashboard?tab=balita', icon: <Baby size={19} /> },
+        { name: 'Kesehatan Lansia', path: '/dashboard?tab=lansia', icon: <HeartPulse size={19} /> },
+        { name: 'Riwayat & Rekap', path: '/dashboard?tab=riwayat', icon: <FileText size={19} /> },
+        { name: 'Antrean Offline', path: '/dashboard?tab=offline', icon: <Database size={19} /> },
+        { name: 'Profil & Tim Kader', path: '/dashboard/profil', icon: <User size={19} /> }
       ];
     }
 
@@ -204,9 +205,9 @@ export default function DashboardLayout() {
     if (isPosyandu) {
       return [
         { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
-        { name: 'Balita (KIA)', path: '/dashboard/posyandu?tab=balita', icon: <Baby size={18} /> },
-        { name: 'Lansia', path: '/dashboard/posyandu?tab=lansia', icon: <HeartPulse size={18} /> },
-        { name: 'Riwayat', path: '/dashboard/posyandu?tab=riwayat', icon: <FileText size={18} /> },
+        { name: 'Balita', path: '/dashboard?tab=balita', icon: <Baby size={18} /> },
+        { name: 'Lansia', path: '/dashboard?tab=lansia', icon: <HeartPulse size={18} /> },
+        { name: 'Riwayat', path: '/dashboard?tab=riwayat', icon: <FileText size={18} /> },
         { name: 'Profil', path: '/dashboard/profil', icon: <User size={18} /> },
       ];
     }
@@ -285,6 +286,17 @@ export default function DashboardLayout() {
   const displayName = user?.active_nama || user?.nama || user?.username || 'Pengguna';
   const activeHubungan = user?.active_hubungan || getRoleBadge(user?.role);
 
+  const isCurrentActive = (itemPath) => {
+    const currentUrl = location.pathname + (location.search || '');
+    if (itemPath === '/dashboard') {
+      return location.pathname === '/dashboard' && (!location.search || location.search === '' || location.search === '?tab=dashboard');
+    }
+    if (itemPath.includes('?')) {
+      return currentUrl === itemPath;
+    }
+    return location.pathname === itemPath;
+  };
+
   return (
     <div className="flex h-screen bg-background font-sans overflow-hidden">
       {/* Sidebar Desktop (Dioptimalkan Lebar & Elegan untuk Executive & Admin) */}
@@ -306,23 +318,23 @@ export default function DashboardLayout() {
 
         {/* Menu Navigasi Berdasarkan Role */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/dashboard'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs transition-all ${
-                  isActive
+          {navItems.map((item) => {
+            const active = isCurrentActive(item.path);
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs transition-all ${
+                  active
                     ? 'bg-primary text-on-primary font-bold shadow-sm'
                     : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium'
-                }`
-              }
-            >
-              {item.icon}
-              <span className="truncate">{item.name}</span>
-            </NavLink>
-          ))}
+                }`}
+              >
+                {item.icon}
+                <span className="truncate">{item.name}</span>
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* User Card & Family Profile Switcher */}
@@ -508,24 +520,24 @@ export default function DashboardLayout() {
                 </div>
 
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-                  {navItems.map((item) => (
-                    <NavLink
-                      key={item.path}
-                      to={item.path}
-                      end={item.path === '/dashboard'}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-colors ${
-                          isActive
+                  {navItems.map((item) => {
+                    const active = isCurrentActive(item.path);
+                    return (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-colors ${
+                          active
                             ? 'bg-primary text-on-primary font-bold'
                             : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
-                        }`
-                      }
-                    >
-                      {item.icon}
-                      <span>{item.name}</span>
-                    </NavLink>
-                  ))}
+                        }`}
+                      >
+                        {item.icon}
+                        <span>{item.name}</span>
+                      </NavLink>
+                    );
+                  })}
                 </nav>
 
                 <div className="p-4 border-t border-outline-variant space-y-2 bg-surface-container-low/50">
@@ -568,16 +580,16 @@ export default function DashboardLayout() {
         {mobileBottomNav && (
           <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-14 bg-surface-container-lowest border-t border-outline-variant flex items-center justify-around z-30 shadow-lg px-2">
             {mobileBottomNav.map((item) => {
-              const isActive = location.pathname === item.path;
+              const active = isCurrentActive(item.path);
               return (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   className={`flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors ${
-                    isActive ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'
+                    active ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'
                   }`}
                 >
-                  <div className={`p-1 rounded-md ${isActive ? 'bg-primary/10 text-primary' : ''}`}>
+                  <div className={`p-1 rounded-md ${active ? 'bg-primary/10 text-primary' : ''}`}>
                     {item.icon}
                   </div>
                   <span className="truncate mt-0.5">{item.name}</span>

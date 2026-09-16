@@ -185,19 +185,19 @@ export default function KartuKIADigital({
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="p-2 bg-white/80 rounded-xl border border-teal-100 shadow-2xs">
               <span className="text-[10px] text-slate-400 block font-medium">Berat Badan</span>
-              <p className="text-sm sm:text-base font-extrabold text-teal-950">
+              <p className="text-sm sm:text-base font-extrabold text-teal-950 font-mono tabular-nums">
                 {latest_checkup?.berat_badan_kg ? `${latest_checkup.berat_badan_kg} kg` : '-'}
               </p>
             </div>
             <div className="p-2 bg-white/80 rounded-xl border border-teal-100 shadow-2xs">
               <span className="text-[10px] text-slate-400 block font-medium">Tinggi Badan</span>
-              <p className="text-sm sm:text-base font-extrabold text-teal-950">
+              <p className="text-sm sm:text-base font-extrabold text-teal-950 font-mono tabular-nums">
                 {latest_checkup?.tinggi_badan_cm ? `${latest_checkup.tinggi_badan_cm} cm` : '-'}
               </p>
             </div>
             <div className="p-2 bg-white/80 rounded-xl border border-teal-100 shadow-2xs">
               <span className="text-[10px] text-slate-400 block font-medium">Lingkar Kepala</span>
-              <p className="text-sm sm:text-base font-extrabold text-teal-950">
+              <p className="text-sm sm:text-base font-extrabold text-teal-950 font-mono tabular-nums">
                 {latest_checkup?.lingkar_kepala_cm ? `${latest_checkup.lingkar_kepala_cm} cm` : '-'}
               </p>
             </div>
@@ -317,19 +317,19 @@ export default function KartuKIADigital({
                       ) : (
                         history.map((rec, idx) => (
                           <tr key={rec.id || idx} className="hover:bg-teal-50/40 transition-colors">
-                            <td className="p-2.5 font-semibold text-slate-900 whitespace-nowrap">
+                            <td className="p-2.5 font-semibold text-slate-900 whitespace-nowrap font-mono tabular-nums">
                               {rec.tanggal_pemeriksaan || rec.tanggal || '-'}
                             </td>
-                            <td className="p-2.5 whitespace-nowrap">
+                            <td className="p-2.5 whitespace-nowrap font-mono tabular-nums">
                               {rec.umur_bulan !== undefined ? `${rec.umur_bulan} bln` : '-'}
                             </td>
-                            <td className="p-2.5 text-right font-extrabold text-teal-900">
+                            <td className="p-2.5 text-right font-extrabold text-teal-900 font-mono tabular-nums">
                               {rec.berat_badan_kg ? `${rec.berat_badan_kg} kg` : '-'}
                             </td>
-                            <td className="p-2.5 text-right font-bold text-slate-800">
+                            <td className="p-2.5 text-right font-bold text-slate-800 font-mono tabular-nums">
                               {rec.tinggi_badan_cm ? `${rec.tinggi_badan_cm} cm` : '-'}
                             </td>
-                            <td className="p-2.5 text-right text-slate-600">
+                            <td className="p-2.5 text-right text-slate-600 font-mono tabular-nums">
                               {rec.lingkar_kepala_cm ? `${rec.lingkar_kepala_cm} cm` : '-'}
                             </td>
                             <td className="p-2.5 whitespace-nowrap">
