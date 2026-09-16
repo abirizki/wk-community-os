@@ -4,6 +4,7 @@
  */
 
 const CACHE_VERSION = 'bumi-warga-v2';
+const CACHE_VERSION = 'bumi-warga-v3';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 

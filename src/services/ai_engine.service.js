@@ -185,9 +185,6 @@ class AIEngineService {
         const tteCount = documentVelocity.total_menunggu_kelurahan || documentVelocity.total_menunggu_tte || 0;
 
         briefData.kpi_highlights = [
-          { label: 'Total Warga', value: demography.total_warga_aktif || 0, unit: 'jiwa' },
-          { label: 'Surat Menunggu TTE', value: documentVelocity.total_menunggu_tte || documentVelocity.total_menunggu_kelurahan || 0, unit: 'berkas', urgency: 'high' },
-          { label: 'Aduan Aktif', value: complaints.total_belum_selesai || 0, unit: 'aduan' }
           { label: 'Total Warga Kelurahan', value: demography.total_warga_aktif || 0, unit: 'jiwa' },
           { label: 'Surat Siap TTE', value: tteCount, unit: 'berkas', urgency: tteCount > 0 ? 'critical' : 'low' },
           { label: 'Aduan Warga Terbuka', value: complaints.total_belum_selesai || 0, unit: 'aduan', urgency: (complaints.total_belum_selesai || 0) > 0 ? 'high' : 'low' }
@@ -211,16 +208,12 @@ class AIEngineService {
 
         briefData.priorities.push({
           level: 'INFO',
-          message: `Rekapitulasi kependudukan: ${demography.total_warga_aktif || 0} jiwa aktif, ${demography.total_kk || 0} KK.`,
-          action_path: '/dashboard'
           message: `Rekapitulasi kependudukan: ${demography.total_warga_aktif || 0} jiwa aktif di 12 RW Kelurahan Kebonjati.`,
           action_path: '/dashboard/warga'
         });
 
         briefData.suggested_actions = [
           { label: 'Pengesahan Surat (TTE)', path: '/dashboard/dokumen', icon: 'FileCheck' },
-          { label: 'Penetapan Bansos', path: '/dashboard/bansos', icon: 'Gift' },
-          { label: 'Evaluasi Aduan Warga', path: '/dashboard/pengaduan', icon: 'MessageSquareWarning' }
           { label: 'Disposisi Pengaduan', path: '/dashboard/pengaduan', icon: 'MessageSquareWarning' },
           { label: 'Audit Bansos Kelurahan', path: '/dashboard/bansos', icon: 'Gift' }
         ];
@@ -303,10 +296,9 @@ class AIEngineService {
         }
 
         briefData.suggested_actions = [
-          { label: 'Ajukan Surat', path: '/dashboard/dokumen', icon: 'FileCheck' },
           { label: 'Ajukan Surat Baru', path: '/dashboard/dokumen', icon: 'FileCheck' },
           { label: 'Cek Status Bansos', path: '/dashboard/bansos', icon: 'Gift' },
-          { label: 'Lihat Tagihan PBB', path: '/dashboard/pbb', icon: 'FileText' }
+          { label: 'Lihat Tagihan PBB', path: '/dashboard/pbb', icon: 'FileText' },
           { label: 'Riwayat Profil & BPJS', path: '/dashboard/profil', icon: 'Users' }
         ];
       }

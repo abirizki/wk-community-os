@@ -68,7 +68,6 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // PATCH /api/dokumen/:id/approve - Persetujuan berjenjang (RT -> RW -> Kelurahan)
-router.patch('/:id/approve', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'), async (req, res) => {
 router.patch('/:id/approve', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin', 'lurah'), async (req, res) => {
   try {
     const { catatan } = req.body;
@@ -107,7 +106,6 @@ router.post('/batch-approve', requireAuth, requireRole('admin_kelurahan', 'super
 });
 
 // PATCH /api/dokumen/:id/reject - Penolakan permohonan surat
-router.patch('/:id/reject', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'), async (req, res) => {
 router.patch('/:id/reject', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin', 'lurah'), async (req, res) => {
   try {
     const { catatan } = req.body;
