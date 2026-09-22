@@ -68,8 +68,6 @@ router.get('/pendidikan', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/fasilitas/pendidikan - Tambah Fasilitas Sekolah (Admin/Kelurahan)
-router.post('/pendidikan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin'), async (req, res) => {
 // POST /api/fasilitas/pendidikan - Tambah Fasilitas Sekolah (Kelurahan & RT/RW)
 router.post('/pendidikan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw'), async (req, res) => {
   try {
@@ -77,8 +75,6 @@ router.post('/pendidikan', requireAuth, requireRole('superadmin', 'admin_kelurah
     if (!nama_sekolah || !jenjang || !alamat) {
       return res.status(400).json({ success: false, message: 'Nama sekolah, jenjang, dan alamat wajib diisi' });
     }
-    const created = await fasilitasRepository.createPendidikan(req.body);
-    res.status(201).json({ success: true, message: 'Fasilitas pendidikan berhasil ditambahkan', data: created });
     const payload = {
       ...req.body,
       rt: req.body.rt || req.session.user.rt || '001',
@@ -122,8 +118,6 @@ router.get('/kesehatan', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/fasilitas/kesehatan - Tambah Faskes (Admin/Kelurahan)
-router.post('/kesehatan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin'), async (req, res) => {
 // POST /api/fasilitas/kesehatan - Tambah Faskes & Nakes (Kelurahan & RT/RW)
 router.post('/kesehatan', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw'), async (req, res) => {
   try {
@@ -131,7 +125,6 @@ router.post('/kesehatan', requireAuth, requireRole('superadmin', 'admin_keluraha
     if (!nama_faskes || !jenis_faskes || !alamat) {
       return res.status(400).json({ success: false, message: 'Nama faskes, jenis faskes, dan alamat wajib diisi' });
     }
-    const created = await fasilitasRepository.createKesehatan(req.body);
     const payload = {
       ...req.body,
       rt: req.body.rt || req.session.user.rt || '001',
