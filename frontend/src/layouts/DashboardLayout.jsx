@@ -69,6 +69,7 @@ export default function DashboardLayout() {
         { name: 'Beranda Sistem', path: '/dashboard', icon: <Home size={19} /> },
         { name: 'Command Center Utama', path: '/dashboard/command-center', icon: <Landmark size={19} /> },
         { name: 'Kelola Hak Akses Pengguna', path: '/dashboard/users', icon: <ShieldCheck size={19} /> },
+        { name: 'Pengelolaan Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Audit Data & Kematangan', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
         { name: 'Gerbang Pesan WhatsApp', path: '/dashboard/whatsapp', icon: <MessageSquare size={19} /> },
         { name: 'Panduan Teknis & SOP', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -124,6 +125,7 @@ export default function DashboardLayout() {
       return [
         { name: 'Meja Kerja RW', path: '/dashboard', icon: <Home size={19} /> },
         { name: 'Buku Warga & KK RW', path: '/dashboard/warga', icon: <Users size={19} /> },
+        { name: 'Bantuan Sosial RW', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Kas & Keuangan RW', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Aduan Lingkungan RW', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP RW', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -134,6 +136,7 @@ export default function DashboardLayout() {
       return [
         { name: 'Meja Kerja RT', path: '/dashboard', icon: <Home size={19} /> },
         { name: 'Buku Warga & KK RT', path: '/dashboard/warga', icon: <Users size={19} /> },
+        { name: 'Bantuan Sosial RT', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Kas & Iuran Warga', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Aduan Lingkungan RT', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP RT', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -181,6 +184,7 @@ export default function DashboardLayout() {
     if (isRT) {
       return [
         { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Meja Kerja', path: '/dashboard', icon: <Home size={18} /> },
         { name: 'Surat RT', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
         { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
         { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
@@ -190,11 +194,13 @@ export default function DashboardLayout() {
         { name: 'Kas RT', path: '/dashboard/keuangan', icon: <Wallet size={18} /> },
         { name: 'Aduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={18} /> },
         { name: 'Profil RT', path: '/dashboard/profil', icon: <User size={18} /> },
+        { name: 'Warga', path: '/dashboard/warga', icon: <Users size={18} /> },
       ];
     }
     if (isRW) {
       return [
         { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Meja Kerja', path: '/dashboard', icon: <Home size={18} /> },
         { name: 'Surat RW', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
         { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
         { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
@@ -204,6 +210,7 @@ export default function DashboardLayout() {
         { name: 'Kas RW', path: '/dashboard/keuangan', icon: <Wallet size={18} /> },
         { name: 'Aduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={18} /> },
         { name: 'Profil RW', path: '/dashboard/profil', icon: <User size={18} /> },
+        { name: 'Warga', path: '/dashboard/warga', icon: <Users size={18} /> },
       ];
     }
     if (isPosyandu) {

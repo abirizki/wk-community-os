@@ -46,6 +46,7 @@ router.post('/', requireAuth, async (req, res) => {
 
 // PATCH /api/bansos/:id/verify - Verifikasi berjenjang usulan bansos (RW / Kelurahan)
 router.patch('/:id/verify', requireAuth, requireRole('ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'), async (req, res) => {
+router.patch('/:id/verify', requireAuth, requireRole('ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'), async (req, res) => {
   try {
     const { action, catatan, nominal } = req.body;
     const result = await bansosService.verifyBansos(
@@ -63,6 +64,7 @@ router.patch('/:id/verify', requireAuth, requireRole('ketua_rw', 'admin_rw', 'ad
 
 // POST /api/bansos/:id/disburse - Penyaluran Lapangan & Serah Terima (Foto Geotag GPS + Canvas Signature)
 router.post('/:id/disburse', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'), async (req, res) => {
+router.post('/:id/disburse', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'), async (req, res) => {
   try {
     const { foto_penyerahan_url, koordinat_lat_lng, tanda_tangan_penerima_url } = req.body;
     const result = await bansosService.disburseBansos(

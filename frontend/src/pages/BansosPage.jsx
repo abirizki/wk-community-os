@@ -21,13 +21,15 @@ import {
   ShieldCheck, 
   Coins, 
   FileText,
+  FileCheck,
   Camera,
   MapPin,
   PenTool,
   Eye,
   Printer,
   TrendingUp,
-  QrCode
+  QrCode,
+  Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -43,7 +45,7 @@ const JENIS_BANSOS_OPTIONS = [
 export default function BansosPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isOfficer = user && ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'].includes(user.role);
+  const isOfficer = user && ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(user.role);
   const isRW = user && ['ketua_rw', 'admin_rw'].includes(user.role);
   const isRT = user?.role === 'ketua_rt';
   const isKelurahan = user && ['admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(user.role);

@@ -14,8 +14,10 @@ class BansosService {
    */
   async proposeBansos(payload, currentUser) {
     const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'];
+    const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'];
     if (!allowedRoles.includes(currentUser.role)) {
       const err = new Error('Hanya Ketua RT, RW, dan Admin yang berwenang mengusulkan penerima bansos.');
+      const err = new Error('Hanya Ketua RT, RW, Lurah, dan Admin yang berwenang mengusulkan penerima bansos.');
       err.status = 403;
       throw err;
     }
@@ -64,6 +66,7 @@ class BansosService {
     let initialStep = 'RW';
 
     if (['admin_kelurahan', 'superadmin', 'admin'].includes(currentUser.role)) {
+    if (['admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(currentUser.role)) {
       initialStatus = 'APPROVED';
       initialStep = 'COMPLETED';
     }
@@ -177,6 +180,7 @@ class BansosService {
     }
 
     if (['admin_kelurahan', 'superadmin', 'admin'].includes(role)) {
+    if (['admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(role)) {
       await bansosRepository.updateStatus(id, {
         status: 'APPROVED',
         approval_step: 'COMPLETED',
@@ -206,6 +210,7 @@ class BansosService {
    */
   async disburseBansos(id, disburseData, currentUser) {
     const allowedRoles = ['superadmin', 'admin_kelurahan', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt'];
+    const allowedRoles = ['superadmin', 'admin_kelurahan', 'lurah', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt'];
     if (!allowedRoles.includes(currentUser.role)) {
       const err = new Error('Anda tidak memiliki wewenang untuk menyalurkan bantuan sosial.');
       err.status = 403;
@@ -283,6 +288,7 @@ class BansosService {
    */
   async reportAuditSanggahan(payload, currentUser) {
     const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'];
+    const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'];
     if (!allowedRoles.includes(currentUser.role)) {
       const err = new Error('Hanya Ketua RT, Ketua RW, dan Petugas yang berwenang melaporkan sanggahan audit bansos.');
       err.status = 403;

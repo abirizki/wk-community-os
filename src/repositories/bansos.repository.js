@@ -162,6 +162,9 @@ class BansosRepository {
 
       query += ' ORDER BY b.created_at DESC LIMIT ? OFFSET ?';
       params.push(String(limit), String(offset));
+      const safeLimit = Math.max(1, parseInt(limit, 10) || 50);
+      const safeOffset = Math.max(0, parseInt(offset, 10) || 0);
+      query += ` ORDER BY b.created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
 
       const [rows] = await pool.execute(query, params);
       return rows;
