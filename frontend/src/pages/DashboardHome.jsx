@@ -34,6 +34,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import DashboardKaderPosyandu from './dashboard/DashboardKaderPosyandu';
 import DashboardKetuaRT from './dashboard/DashboardKetuaRT';
+import DashboardKetuaRW from './dashboard/DashboardKetuaRW';
 import DashboardLurah from './dashboard/DashboardLurah';
 import DashboardWarga from './dashboard/DashboardWarga';
 
@@ -43,6 +44,7 @@ export default function DashboardHome() {
 
   // Role routing khusus Sprint 2: Kader Posyandu & Ketua RT
   // Role routing khusus Sprint 2 & 3:
+  // Role routing khusus:
   // 1. Kader Posyandu
   if (user?.role === 'kader_posyandu') {
     return <DashboardKaderPosyandu />;
@@ -52,10 +54,16 @@ export default function DashboardHome() {
     return <DashboardKetuaRT />;
   }
   // 3. Lurah (Executive Command Center & TTE)
+  // 3. Ketua RW & Admin RW (Meja Kerja Koordinator Kewilayahan)
+  if (user?.role === 'ketua_rw' || user?.role === 'admin_rw') {
+    return <DashboardKetuaRW />;
+  }
+  // 4. Lurah (Executive Command Center & TTE)
   if (user?.role === 'lurah') {
     return <DashboardLurah />;
   }
   // 4. Warga (Citizen Experience & Workflow Stepper)
+  // 5. Warga (Citizen Experience & Workflow Stepper)
   if (user?.role === 'warga') {
     return <DashboardWarga />;
   }

@@ -161,6 +161,7 @@ app.use('/api/integrasi', integrasiRoutes);
 app.use('/api/v1/partner', integrasiRoutes.partnerRouter);
 app.use('/api/whatsapp', require('./src/routes/whatsapp.routes'));
 app.use('/api/keuangan', require('./src/routes/keuangan.routes'));
+app.use('/api/rw', require('./src/routes/rw.routes'));
 
 // Pure MySQL REST Routes (No hardcoded mock data)
 console.log(`[Bumi Warga] API routes mounted cleanly. Connected to MySQL database.`);
