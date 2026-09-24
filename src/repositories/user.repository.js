@@ -74,6 +74,8 @@ class UserRepository {
       `SELECT id, nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, 
               agama, status_perkawinan, status_hubungan_keluarga, pekerjaan, 
               pendidikan_terakhir, golongan_darah, rt, rw, status_kependudukan, no_telepon
+              pendidikan_terakhir, golongan_darah, rt, rw, status_kependudukan, no_telepon,
+              (pin_mandiri IS NOT NULL) AS has_pin_mandiri
        FROM warga 
        WHERE no_kk = ? AND status_kependudukan != 'Meninggal'
        ORDER BY 

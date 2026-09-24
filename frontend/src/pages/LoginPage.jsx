@@ -272,6 +272,7 @@ export default function LoginPage() {
               </div>
               <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
                 Silakan masukkan <strong>NIK KTP-el</strong> bagi warga, atau <strong>Username</strong> bagi Pengurus RT, RW, dan Petugas.
+                Silakan masukkan <strong>NIK KTP-el</strong> (warga), <strong>Nomor Kartu Keluarga</strong>, atau <strong>Username</strong> bagi Pengurus RT, RW, dan Petugas.
               </p>
             </div>
 
@@ -287,6 +288,15 @@ export default function LoginPage() {
               </motion.div>
             )}
 
+            {/* Family Login Guidance Box */}
+            <div className="mb-4 p-3 rounded-xl bg-sky-50/80 border border-sky-200 text-xs text-sky-950 flex items-start gap-2.5">
+              <Users size={16} className="text-sky-600 flex-shrink-0 mt-0.5" />
+              <div className="text-[11px] leading-relaxed">
+                <span className="font-bold block text-sky-900">Akses Terpadu Seluruh Anggota Keluarga:</span>
+                Setiap anggota keluarga dalam 1 KK dapat masuk menggunakan <strong>NIK masing-masing</strong> dan <strong>Kata Sandi Keluarga</strong>, atau <strong>PIN Tanggal Lahir</strong> (<code className="font-mono bg-sky-100 px-1 py-0.5 rounded text-[10px]">DDMMYYYY</code>).
+              </div>
+            </div>
+
             {/* Form */}
             <motion.form
               className="flex flex-col gap-4"
@@ -300,6 +310,7 @@ export default function LoginPage() {
                 <div className="flex justify-between items-center mb-1.5">
                   <label htmlFor="identifier" className="text-xs font-semibold text-on-surface">
                     NIK (16 Digit) / Username Kredensial
+                    NIK (16 Digit) / No. KK / Username Kredensial
                   </label>
                   {isNik && (
                     <span className={`text-[10px] font-medium ${identifierValid ? 'text-sky-600 font-bold' : 'text-on-surface-variant'}`}>
@@ -338,6 +349,7 @@ export default function LoginPage() {
                 </div>
                 <p className="text-[10px] text-on-surface-variant mt-1 italic">
                   *Warga gunakan NIK pada e-KTP. Pengurus gunakan username akun terdaftar.
+                  *Warga gunakan NIK pribadi atau Nomor KK. Pengurus gunakan username akun terdaftar.
                 </p>
               </motion.div>
 
@@ -346,10 +358,14 @@ export default function LoginPage() {
                 <div className="flex justify-between items-center mb-1.5">
                   <label htmlFor="password" className="text-xs font-semibold text-on-surface">
                     Kata Sandi
+                    Kata Sandi / PIN Tanggal Lahir
                   </label>
                   <a href="#" className="text-[11px] font-semibold text-primary hover:underline">
                     Bantuan Akses?
                   </a>
+                  <span className="text-[10px] text-sky-700 font-medium">
+                    Keluarga: Sandi KK atau PIN Tanggal Lahir
+                  </span>
                 </div>
                 <div className="relative">
                   <Lock
@@ -362,6 +378,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={handlePasswordChange}
                     placeholder="Masukkan kata sandi akun"
+                    placeholder="Kata sandi akun atau PIN DDMMYYYY"
                     autoComplete="current-password"
                     required
                     disabled={isLoading}

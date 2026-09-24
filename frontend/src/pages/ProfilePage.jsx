@@ -30,7 +30,10 @@ import {
   Building2,
   Phone,
   Mail,
-  ArrowRight
+  ArrowRight,
+  Lock,
+  Key,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -61,6 +64,56 @@ export default function ProfilePage() {
   const [savingInsurance, setSavingInsurance] = useState(false);
   const [copiedNik, setCopiedNik] = useState(false);
   const [showPrintSummaryModal, setShowPrintSummaryModal] = useState(false);
+
+  // Personal PIN Modal for Family Members
+  const [pinModal, setPinModal] = useState({
+    open: false,
+    nik: '',
+    nama: '',
+    hubungan: '',
+    pin: '',
+    confirmPin: '',
+    loading: false,
+    error: ''
+  });
+
+  const openPinModal = (fam) => {
+    setPinModal({
+      open: true,
+      nik: fam.nik,
+      nama: fam.nama,
+      hubungan: fam.status_hubungan_keluarga || 'Anggota',
+      pin: '',
+      confirmPin: '',
+      loading: false,
+      error: ''
+    });
+  };
+
+  const handleSavePin = async (e) => {
+    e.preventDefault();
+    if (!pinModal.pin || !/^\d{6}$/.test(pinModal.pin)) {
+      setPinModal(prev => ({ ...prev, error: 'PIN harus berupa tepat 6 digit angka numerik.' }));
+      return;
+    }
+    if (pinModal.pin !== pinModal.confirmPin) {
+      setPinModal(prev => ({ ...prev, error: 'Konfirmasi PIN tidak cocok.' }));
+      return;
+    }
+    try {
+      setPinModal(prev => ({ ...prev, loading: true, error: '' }));
+      const res = await api.post('/auth/set-personal-pin', {
+        nik: pinModal.nik,
+        pin: pinModal.pin
+      });
+      setSuccessMsg(res.message || 'PIN Mandiri berhasil disimpan!');
+      setPinModal({ open: false, nik: '', nama: '', hubungan: '', pin: '', confirmPin: '', loading: false, error: '' });
+      fetchProfile();
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      setPinModal(prev => ({ ...prev, loading: false, error: err.message || 'Gagal menyimpan PIN' }));
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -400,6 +453,16 @@ export default function ProfilePage() {
                           </div>
 
                           <div className="flex items-center gap-2 self-end sm:self-auto">
+                          <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => openPinModal(fam)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-colors border border-outline-variant"
+                              title={`Atur PIN Mandiri Login untuk ${fam.nama}`}
+                            >
+                              <Key size={13} className="text-sky-700" />
+                              <span>{fam.has_pin_mandiri ? 'Ubah PIN' : 'Buat PIN'}</span>
+                            </button>
                             <button
                               onClick={() => navigate(`/dashboard/dokumen?for_nik=${fam.nik}&action=new`)}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold shadow-sm transition-colors"
@@ -853,6 +916,108 @@ export default function ProfilePage() {
           )}
         </div>
       )}
+
+      {/* ===================================================================== */}
+      {/* MODAL ATUR PIN MANDIRI ANGGOTA KELUARGA                               */}
+      {/* ===================================================================== */}
+      <AnimatePresence>
+        {pinModal.open && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-outline-variant text-xs space-y-4"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center">
+                    <Key size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-on-surface">Atur PIN Mandiri Login</h3>
+                    <p className="text-[11px] text-on-surface-variant font-mono">
+                      {pinModal.nama} ({pinModal.hubungan})
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPinModal({ ...pinModal, open: false })}
+                  className="p-1 text-on-surface-variant hover:text-on-surface rounded-lg"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {pinModal.error && (
+                <div className="p-3 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 text-xs flex items-center gap-2">
+                  <AlertCircle size={15} className="flex-shrink-0 text-rose-600" />
+                  <span>{pinModal.error}</span>
+                </div>
+              )}
+
+              <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                PIN ini dapat digunakan oleh <strong>{pinModal.nama}</strong> untuk login langsung ke aplikasi menggunakan NIK pribadinya tanpa perlu mengetahui kata sandi akun keluarga.
+              </p>
+
+              <form onSubmit={handleSavePin} className="space-y-3">
+                <div>
+                  <label className="font-bold text-on-surface block mb-1">
+                    PIN Baru (6 Digit Angka):
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={6}
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                    placeholder="Contoh: 123456"
+                    value={pinModal.pin}
+                    onChange={(e) => setPinModal({ ...pinModal, pin: e.target.value.replace(/\D/g, '').slice(0, 6), error: '' })}
+                    required
+                    className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl font-mono text-center text-sm tracking-widest focus:ring-2 focus:ring-primary focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-on-surface block mb-1">
+                    Ulangi PIN Konfirmasi:
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={6}
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                    placeholder="Ulangi 6 digit PIN"
+                    value={pinModal.confirmPin}
+                    onChange={(e) => setPinModal({ ...pinModal, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 6), error: '' })}
+                    required
+                    className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl font-mono text-center text-sm tracking-widest focus:ring-2 focus:ring-primary focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-outline-variant">
+                  <button
+                    type="button"
+                    onClick={() => setPinModal({ ...pinModal, open: false })}
+                    className="px-4 py-2 border border-outline-variant rounded-xl font-semibold hover:bg-surface-container transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={pinModal.loading || pinModal.pin.length !== 6}
+                    className="px-5 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {pinModal.loading ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                    <span>Simpan PIN</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ===================================================================== */}
       {/* MODAL CETAK REKAPITULASI RIWAYAT LAYANAN WARGA                        */}

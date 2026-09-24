@@ -258,6 +258,12 @@ export default function DashboardLayout() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (user?.needs_profile_selection && user?.family_members?.length > 1) {
+      setFamilyModalOpen(true);
+    }
+  }, [user?.needs_profile_selection]);
+
   const markAllRead = async () => {
     try {
       await api.patch('/notifikasi/mark-all-read');
