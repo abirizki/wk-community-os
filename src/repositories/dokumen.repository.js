@@ -19,16 +19,37 @@ class DokumenRepository {
       rt = null,
       rw = null,
       is_auto_filled_by_ai = 0,
-      acted_by_user_id = null
+      acted_by_user_id = null,
+      diajukan_oleh_nik = null,
+      nama_subjek = null,
+      hubungan_keluarga = null,
+      data_tambahan = null,
+      syarat_berkas = null
     } = payload;
 
     const noReg = nomor_registrasi || `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const dataTambahanStr = typeof data_tambahan === 'object' && data_tambahan !== null ? JSON.stringify(data_tambahan) : data_tambahan;
+    const syaratBerkasStr = typeof syarat_berkas === 'object' && syarat_berkas !== null ? JSON.stringify(syarat_berkas) : syarat_berkas;
 
     const [result] = await pool.execute(
       `INSERT INTO dokumen_request 
-       (nomor_registrasi, nik_pemohon, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, rt_received_at, sla_deadline) 
-       VALUES (?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
-      [noReg, nik_pemohon, jenis_dokumen, jenis_dokumen, keperluan, rt, rw, is_auto_filled_by_ai ? 1 : 0]
+       (nomor_registrasi, nik_pemohon, diajukan_oleh_nik, nama_subjek, hubungan_keluarga, data_tambahan, syarat_berkas, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, rt_received_at, sla_deadline) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
+      [
+        noReg, 
+        nik_pemohon, 
+        diajukan_oleh_nik, 
+        nama_subjek, 
+        hubungan_keluarga, 
+        dataTambahanStr, 
+        syaratBerkasStr, 
+        jenis_dokumen, 
+        jenis_dokumen, 
+        keperluan, 
+        rt, 
+        rw, 
+        is_auto_filled_by_ai ? 1 : 0
+      ]
     );
 
     const docId = result.insertId;
@@ -100,7 +121,7 @@ class DokumenRepository {
         `SELECT d.*, 
                 COALESCE(d.jenis_surat, d.jenis_dokumen, 'Surat') AS jenis_dokumen,
                 COALESCE(d.jenis_surat, d.jenis_dokumen, 'Surat') AS jenis_surat,
-                w.nama AS nama_pemohon, 
+                COALESCE(d.nama_subjek, w.nama, d.nik_pemohon) AS nama_pemohon, 
                 w.no_kk, 
                 w.jenis_kelamin,
                 w.tanggal_lahir,
@@ -137,15 +158,15 @@ class DokumenRepository {
         `SELECT d.*, 
                 COALESCE(d.jenis_surat, d.jenis_dokumen, 'Surat') AS jenis_dokumen,
                 COALESCE(d.jenis_surat, d.jenis_dokumen, 'Surat') AS jenis_surat,
-                w.nama AS nama_pemohon,
+                COALESCE(d.nama_subjek, w.nama, d.nik_pemohon) AS nama_pemohon,
                 w.no_kk,
                 COALESCE(d.rt, w.rt) AS rt,
                 COALESCE(d.rw, w.rw) AS rw
          FROM dokumen_request d 
          LEFT JOIN warga w ON d.nik_pemohon = w.nik
-         WHERE d.nik_pemohon = ? OR w.no_kk = (SELECT no_kk FROM warga WHERE nik = ? LIMIT 1)
+         WHERE d.nik_pemohon = ? OR d.diajukan_oleh_nik = ? OR w.no_kk = (SELECT no_kk FROM warga WHERE nik = ? LIMIT 1)
          ORDER BY d.created_at DESC`,
-        [nik, nik]
+        [nik, nik, nik]
       );
       return rows;
     } catch (e) {
@@ -177,7 +198,7 @@ class DokumenRepository {
         SELECT d.*, 
                COALESCE(d.jenis_surat, d.jenis_dokumen, 'Surat') AS jenis_dokumen,
                COALESCE(d.jenis_surat, d.jenis_dokumen, 'Surat') AS jenis_surat,
-               w.nama AS nama_pemohon, 
+               COALESCE(d.nama_subjek, w.nama, d.nik_pemohon) AS nama_pemohon, 
                w.no_kk, 
                w.no_telepon,
                COALESCE(d.rt, w.rt) AS rt,

@@ -34,6 +34,17 @@ class DokumenService {
       rawData.user
     );
 
+    // Ambil anggota keluarga dalam 1 KK yang sama
+    let familyMembers = [];
+    if (rawData.warga.no_kk) {
+      try {
+        const userRepo = require('../repositories/user.repository');
+        familyMembers = await userRepo.findFamilyMembersByNoKK(rawData.warga.no_kk);
+      } catch (e) {
+        console.warn('Error fetching familyMembers in getPrefillData:', e.message);
+      }
+    }
+
     return {
       eligible: scoreResult.auto_fill_eligible,
       score: scoreResult.total_score,
@@ -48,6 +59,7 @@ class DokumenService {
         jenis_kelamin: rawData.warga.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
         agama: rawData.warga.agama,
         status_perkawinan: rawData.warga.status_perkawinan,
+        status_hubungan_keluarga: rawData.warga.status_hubungan_keluarga,
         pekerjaan: rawData.warga.pekerjaan,
         pendidikan_terakhir: rawData.warga.pendidikan_terakhir,
         golongan_darah: rawData.warga.golongan_darah,
@@ -56,19 +68,27 @@ class DokumenService {
         rw: rawData.warga.rw,
         no_telepon: rawData.warga.no_telepon,
         email: rawData.warga.email
-      }
+      },
+      familyMembers
     };
   }
 
   /**
-   * Ajukan permohonan surat baru
+   * Ajukan permohonan surat baru (bisa untuk diri sendiri atau anggota keluarga dalam 1 KK)
    * @param {Object} payload 
    * @param {Object} currentUser
    * @returns {Promise<Object>}
    */
   async requestDokumen(payload, currentUser) {
     const activeNik = currentUser.active_nik || currentUser.username;
-    const { jenis_dokumen, keperluan, is_auto_filled_by_ai } = payload;
+    const { 
+      jenis_dokumen, 
+      keperluan, 
+      is_auto_filled_by_ai,
+      nik_pemohon: requestedNik,
+      data_tambahan,
+      syarat_berkas
+    } = payload;
 
     if (!activeNik) {
       const err = new Error('Sesi autentikasi NIK pemohon tidak ditemukan');
@@ -88,18 +108,63 @@ class DokumenService {
       throw err;
     }
 
-    // Ambil data domisili pemohon
-    const warga = await wargaRepository.findByNik(activeNik);
-    const rt = warga ? warga.rt : (currentUser.rt || '001');
-    const rw = warga ? warga.rw : (currentUser.rw || '001');
+    // Ambil data domisili user pemohon
+    const userWarga = await wargaRepository.findByNik(activeNik);
+
+    // Tentukan subjek permohonan (Diri Sendiri atau Anggota Keluarga dalam 1 KK)
+    let targetNik = activeNik;
+    let targetNama = userWarga?.nama || currentUser.nama || currentUser.username;
+    let targetHubungan = userWarga?.status_hubungan_keluarga || 'Kepala Keluarga';
+    let isDiajukanUntukKeluarga = false;
+
+    if (requestedNik && requestedNik !== activeNik) {
+      // Validasi bahwa requestedNik berada dalam 1 KK yang sama untuk role warga
+      if (currentUser.role === 'warga') {
+        if (!userWarga || !userWarga.no_kk) {
+          const err = new Error('Data Kartu Keluarga Anda tidak ditemukan untuk memverifikasi anggota keluarga.');
+          err.status = 403;
+          throw err;
+        }
+        const userRepo = require('../repositories/user.repository');
+        const family = await userRepo.findFamilyMembersByNoKK(userWarga.no_kk);
+        const member = family.find(f => f.nik === requestedNik);
+        if (!member) {
+          const err = new Error('Permohonan hanya dapat diajukan untuk diri sendiri atau anggota keluarga yang terdaftar dalam satu Kartu Keluarga (KK) yang sama.');
+          err.status = 403;
+          throw err;
+        }
+        targetNik = member.nik;
+        targetNama = member.nama;
+        targetHubungan = member.status_hubungan_keluarga;
+        isDiajukanUntukKeluarga = true;
+      } else {
+        // Petugas / Admin dapat mengajukan atas nama warga
+        const targetW = await wargaRepository.findByNik(requestedNik);
+        if (targetW) {
+          targetNik = targetW.nik;
+          targetNama = targetW.nama;
+          targetHubungan = targetW.status_hubungan_keluarga;
+        }
+      }
+    }
+
+    const targetWarga = (targetNik === activeNik) ? userWarga : await wargaRepository.findByNik(targetNik);
+    const rt = targetWarga ? targetWarga.rt : (userWarga ? userWarga.rt : (currentUser.rt || '001'));
+    const rw = targetWarga ? targetWarga.rw : (userWarga ? userWarga.rw : (currentUser.rw || '001'));
 
     const result = await dokumenRepository.create({
-      nik_pemohon: activeNik,
+      nik_pemohon: targetNik,
+      diajukan_oleh_nik: isDiajukanUntukKeluarga ? activeNik : null,
+      nama_subjek: targetNama,
+      hubungan_keluarga: targetHubungan,
+      data_tambahan,
+      syarat_berkas,
       jenis_dokumen: jenis_dokumen.trim(),
       keperluan: keperluan.trim(),
       rt,
       rw,
-      is_auto_filled_by_ai: Boolean(is_auto_filled_by_ai)
+      is_auto_filled_by_ai: Boolean(is_auto_filled_by_ai),
+      acted_by_user_id: currentUser.id
     });
 
     // Kirim notifikasi konfirmasi ke pemohon
@@ -107,7 +172,9 @@ class DokumenService {
       await notifikasiRepository.create({
         nik_target: activeNik,
         judul: 'Permohonan Surat Diajukan',
-        pesan: `Permohonan ${jenis_dokumen} berhasil diajukan dan sedang menunggu verifikasi Ketua RT ${rt}.`,
+        pesan: isDiajukanUntukKeluarga 
+          ? `Permohonan ${jenis_dokumen} untuk anggota keluarga an. ${targetNama} (${targetHubungan}) berhasil diajukan dan sedang menunggu verifikasi Ketua RT ${rt}.`
+          : `Permohonan ${jenis_dokumen} berhasil diajukan dan sedang menunggu verifikasi Ketua RT ${rt}.`,
         tipe: 'info',
         link: '/dashboard/dokumen'
       });
@@ -116,8 +183,12 @@ class DokumenService {
     }
 
     return {
-      id: result.insertId,
+      id: result.id || result.insertId,
       nomor_registrasi: result.nomor_registrasi,
+      nik_pemohon: targetNik,
+      nama_pemohon: targetNama,
+      diajukan_oleh_nik: isDiajukanUntukKeluarga ? activeNik : null,
+      hubungan_keluarga: targetHubungan,
       ...payload,
       status: 'SUBMITTED',
       created_at: new Date()

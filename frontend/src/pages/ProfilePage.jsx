@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -24,7 +25,12 @@ import {
   Droplet,
   FileCheck,
   Printer,
-  QrCode
+  QrCode,
+  FilePlus,
+  Building2,
+  Phone,
+  Mail,
+  ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -38,6 +44,7 @@ const ASURANSI_OPTIONS = [
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -112,7 +119,7 @@ export default function ProfilePage() {
 
   const getRoleBadge = (role) => {
     switch (role) {
-      case 'superadmin': return 'Administrator Sistem';
+      case 'superadmin': return 'Administrator Sistem SPBE';
       case 'walikota': return 'Pimpinan Kota';
       case 'camat': return 'Pimpinan Kecamatan';
       case 'admin_kelurahan':
@@ -126,7 +133,7 @@ export default function ProfilePage() {
   };
 
   const warga = profileData?.warga;
-  const isOfficer = profileData?.rekapKinerja !== null && profileData?.rekapKinerja !== undefined;
+  const isOfficer = ['lurah', 'admin_kelurahan', 'admin', 'superadmin', 'ketua_rw', 'ketua_rt', 'kader_posyandu'].includes(user?.role) || (profileData?.rekapKinerja !== null && profileData?.rekapKinerja !== undefined);
 
   if (loading) {
     return (
@@ -146,7 +153,7 @@ export default function ProfilePage() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-sky-600 text-white flex items-center justify-center font-bold text-2xl shadow-md border-2 border-white flex-shrink-0">
-              {warga?.nama ? warga.nama.charAt(0).toUpperCase() : (user?.nama?.charAt(0) || 'U')}
+              {warga?.nama ? warga.nama.charAt(0).toUpperCase() : (user?.nama?.charAt(0) || user?.username?.charAt(0) || 'U').toUpperCase()}
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -160,11 +167,11 @@ export default function ProfilePage() {
 
               <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-on-surface-variant">
                 <span className="flex items-center gap-1 font-mono font-medium">
-                  NIK: {warga?.nik || user?.username}
+                  {warga?.nik ? 'NIK: ' + warga.nik : 'ID Akun: ' + (user?.username || '-')}
                   <button
                     onClick={() => copyToClipboard(warga?.nik || user?.username)}
                     className="p-1 text-sky-700 hover:text-sky-900 rounded"
-                    title="Salin NIK"
+                    title="Salin Identitas"
                   >
                     {copiedNik ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
                   </button>
@@ -180,16 +187,16 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-stretch md:self-auto">
-            <div className="px-3.5 py-2 rounded-xl bg-sky-50 border border-sky-200 text-right w-full md:w-auto">
           <div className="flex flex-wrap items-center gap-2 self-stretch md:self-auto">
-            <button
-              onClick={() => setShowPrintSummaryModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-600 text-white hover:bg-sky-700 text-xs font-semibold shadow-sm transition-colors"
-              title="Cetak Rekapitulasi Riwayat Layanan Warga"
-            >
-              <Printer size={15} /> Cetak Riwayat Layanan
-            </button>
+            {warga && (
+              <button
+                onClick={() => setShowPrintSummaryModal(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-600 text-white hover:bg-sky-700 text-xs font-semibold shadow-sm transition-colors"
+                title="Cetak Rekapitulasi Riwayat Layanan Warga"
+              >
+                <Printer size={15} /> Cetak Riwayat Layanan
+              </button>
+            )}
             <div className="px-3.5 py-2 rounded-xl bg-sky-50 border border-sky-200 text-right">
               <span className="text-[10px] uppercase font-bold text-sky-800 block">Status Akun Digital</span>
               <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 justify-end mt-0.5">
@@ -236,7 +243,7 @@ export default function ProfilePage() {
             }`}
           >
             <User size={15} />
-            <span>Identitas & BPJS/Asuransi</span>
+            <span>{warga ? 'Identitas & BPJS/Asuransi' : 'Kredensial & Profil Kedinasan'}</span>
           </button>
 
           <button
@@ -291,208 +298,372 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TAB 1: IDENTITAS & ASURANSI/BPJS */}
+      {/* TAB 1: BIODATA / KREDENSIAL */}
       {activeTab === 'biodata' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Data Pribadi Kependudukan */}
-          <div className="lg:col-span-2 bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-              <User size={18} className="text-sky-600" /> Data Kependudukan Terdaftar
-            </h3>
+          {warga ? (
+            <>
+              {/* Data Pribadi Kependudukan */}
+              <div className="lg:col-span-2 bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                    <User size={18} className="text-sky-600" /> Data Kependudukan Terdaftar
+                  </h3>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+                    SIAK & Dukcapil Sinkron
+                  </span>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
-                <span className="text-on-surface-variant block mb-1">Tempat, Tanggal Lahir</span>
-                <span className="font-semibold text-on-surface flex items-center gap-1">
-                  <Calendar size={13} className="text-sky-600" />
-                  {warga?.tempat_lahir || 'Bandung'}, {warga?.tanggal_lahir ? new Date(warga.tanggal_lahir).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
-                </span>
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Tempat, Tanggal Lahir</span>
+                    <span className="font-semibold text-on-surface flex items-center gap-1">
+                      <Calendar size={13} className="text-sky-600" />
+                      {warga?.tempat_lahir || '-'}, {warga?.tanggal_lahir ? new Date(warga.tanggal_lahir).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                    </span>
+                  </div>
 
-              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
-                <span className="text-on-surface-variant block mb-1">Jenis Kelamin</span>
-                <span className="font-semibold text-on-surface">
-                  {warga?.jenis_kelamin === 'L' ? 'Laki-Laki' : (warga?.jenis_kelamin === 'P' ? 'Perempuan' : '-')}
-                </span>
-              </div>
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Jenis Kelamin</span>
+                    <span className="font-semibold text-on-surface">
+                      {warga?.jenis_kelamin === 'L' ? 'Laki-Laki' : (warga?.jenis_kelamin === 'P' ? 'Perempuan' : '-')}
+                    </span>
+                  </div>
 
-              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
-                <span className="text-on-surface-variant block mb-1">Agama</span>
-                <span className="font-semibold text-on-surface">{warga?.agama || 'Islam'}</span>
-              </div>
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Agama</span>
+                    <span className="font-semibold text-on-surface">{warga?.agama || '-'}</span>
+                  </div>
 
-              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
-                <span className="text-on-surface-variant block mb-1">Golongan Darah</span>
-                <span className="font-semibold text-on-surface flex items-center gap-1">
-                  <Droplet size={13} className="text-rose-500" /> {warga?.golongan_darah || 'Tidak Tahu'}
-                </span>
-              </div>
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Golongan Darah</span>
+                    <span className="font-semibold text-on-surface flex items-center gap-1">
+                      <Droplet size={13} className="text-rose-500" /> {warga?.golongan_darah || 'Tidak Tahu'}
+                    </span>
+                  </div>
 
-              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
-                <span className="text-on-surface-variant block mb-1">Pekerjaan</span>
-                <span className="font-semibold text-on-surface flex items-center gap-1">
-                  <Briefcase size={13} className="text-sky-600" /> {warga?.pekerjaan || 'Wiraswasta / Karyawan'}
-                </span>
-              </div>
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Pekerjaan</span>
+                    <span className="font-semibold text-on-surface flex items-center gap-1">
+                      <Briefcase size={13} className="text-sky-600" /> {warga?.pekerjaan || '-'}
+                    </span>
+                  </div>
 
-              <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
-                <span className="text-on-surface-variant block mb-1">Status Perkawinan</span>
-                <span className="font-semibold text-on-surface">{warga?.status_perkawinan || 'Kawin'}</span>
-              </div>
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Status Perkawinan</span>
+                    <span className="font-semibold text-on-surface">{warga?.status_perkawinan || '-'}</span>
+                  </div>
 
-              <div className="sm:col-span-2 p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
-                <span className="text-on-surface-variant block mb-1">Alamat Lengkap Domisili</span>
-                <span className="font-semibold text-on-surface flex items-center gap-1">
-                  <MapPin size={14} className="text-red-500 flex-shrink-0" />
-                  {warga?.alamat || 'Jl. Kebonjati'}, RT {warga?.rt || '001'} / RW {warga?.rw || '001'}, Kelurahan Kebonjati, Kecamatan Andir, Kota Sukabumi
-                </span>
-              </div>
-            </div>
+                  <div className="sm:col-span-2 p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Alamat Lengkap Domisili</span>
+                    <span className="font-semibold text-on-surface flex items-center gap-1">
+                      <MapPin size={14} className="text-red-500 flex-shrink-0" />
+                      {warga?.alamat || 'Kelurahan Kebonjati'}, RT {warga?.rt || '001'} / RW {warga?.rw || '001'}, Kelurahan Kebonjati, Kecamatan Cikole, Kota Sukabumi
+                    </span>
+                  </div>
+                </div>
 
-            {/* ANGGOTA KELUARGA DALAM 1 KK */}
-            {profileData?.familyMembers && profileData.familyMembers.length > 0 && (
-              <div className="pt-3 border-t border-outline-variant">
-                <h4 className="text-xs font-bold text-on-surface flex items-center gap-2 mb-3">
-                  <Users size={16} className="text-sky-600" /> Anggota Keluarga (KK: {warga?.no_kk})
-                </h4>
-                <div className="space-y-2">
-                  {profileData.familyMembers.map((fam) => (
-                    <div
-                      key={fam.nik}
-                      className="p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/60 flex items-center justify-between text-xs"
-                    >
-                      <div>
-                        <span className="font-bold text-on-surface">{fam.nama}</span>
-                        <span className="text-[11px] text-on-surface-variant block">
-                          NIK: {fam.nik} &bull; {fam.jenis_kelamin === 'L' ? 'Laki-Laki' : 'Perempuan'}
-                        </span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100 text-sky-800">
-                        {fam.status_hubungan_keluarga || 'Anggota'}
+                {/* ANGGOTA KELUARGA DALAM 1 KK */}
+                {profileData?.familyMembers && profileData.familyMembers.length > 0 && (
+                  <div className="pt-4 border-t border-outline-variant space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-on-surface flex items-center gap-2">
+                        <Users size={16} className="text-sky-600" /> Anggota Keluarga Terdaftar (No. KK: {warga?.no_kk || '-'})
+                      </h4>
+                      <span className="text-[11px] text-on-surface-variant font-medium">
+                        Total {profileData.familyMembers.length} Jiwa Terdaftar
                       </span>
                     </div>
-                  ))}
+
+                    <div className="space-y-2.5">
+                      {profileData.familyMembers.map((fam) => (
+                        <div
+                          key={fam.nik}
+                          className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:border-sky-300 transition-colors"
+                        >
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-on-surface text-sm">{fam.nama}</span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100 text-sky-800">
+                                {fam.status_hubungan_keluarga || 'Anggota'}
+                              </span>
+                              {fam.nik === warga?.nik && (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                  Akun Anda
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-on-surface-variant font-mono">
+                              NIK: {fam.nik} &bull; {fam.jenis_kelamin === 'L' ? 'Laki-Laki' : 'Perempuan'}
+                              {fam.pekerjaan ? ` • ${fam.pekerjaan}` : ''}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-end sm:self-auto">
+                            <button
+                              onClick={() => navigate(`/dashboard/dokumen?for_nik=${fam.nik}&action=new`)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold shadow-sm transition-colors"
+                              title={`Ajukan Surat atas nama ${fam.nama}`}
+                            >
+                              <FilePlus size={14} /> Ajukan Surat
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Form Jaminan Sosial Mandiri (BPJS / Asuransi & Bukti Bansos) */}
+              <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+                <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                  <HeartPulse size={18} className="text-rose-500" /> Jaminan Kesehatan & Bansos
+                </h3>
+                <p className="text-[11px] text-on-surface-variant">
+                  Perbarui status kepesertaan BPJS atau asuransi Anda untuk sinkronisasi data perlindungan sosial kelurahan.
+                </p>
+
+                <form onSubmit={handleSaveInsurance} className="space-y-3 text-xs">
+                  <div>
+                    <label className="font-bold text-on-surface block mb-1">
+                      Kategori Jaminan Kesehatan / Asuransi:
+                    </label>
+                    <select
+                      value={insuranceForm.kategori_asuransi}
+                      onChange={(e) => setInsuranceForm({ ...insuranceForm, kategori_asuransi: e.target.value })}
+                      className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                    >
+                      {ASURANSI_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-on-surface block mb-1">
+                      Nomor Kartu BPJS / Polis Asuransi:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: 0001234567890"
+                      value={insuranceForm.nomor_asuransi}
+                      onChange={(e) => setInsuranceForm({ ...insuranceForm, nomor_asuransi: e.target.value })}
+                      className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl font-mono focus:ring-2 focus:ring-primary focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-on-surface block mb-1">
+                      Catatan Kelayakan Mandiri / Kondisi Ekonomi:
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="Catatan kondisi sosial ekonomi untuk pertimbangan bansos..."
+                      value={insuranceForm.catatan_bansos_mandiri}
+                      onChange={(e) => setInsuranceForm({ ...insuranceForm, catatan_bansos_mandiri: e.target.value })}
+                      className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingInsurance}
+                    className="w-full py-2.5 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {savingInsurance ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Save size={16} />
+                    )}
+                    <span>Simpan Data Jaminan Sosial</span>
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            /* Tampilan Pejabat / Aparatur Tanpa Data Warga */
+            <>
+              <div className="lg:col-span-2 bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                    <Building2 size={18} className="text-sky-600" /> Kredensial Jabatan & Hak Akses SPBE
+                  </h3>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 font-semibold border border-sky-200">
+                    Aparatur Pelayan Publik
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Jabatan Resmi</span>
+                    <span className="font-bold text-on-surface flex items-center gap-1.5">
+                      <ShieldCheck size={14} className="text-sky-600" />
+                      {getRoleBadge(user?.role)}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">NIP / ID Kedinasan</span>
+                    <span className="font-mono font-bold text-on-surface">
+                      {user?.username || '-'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Wilayah Penugasan</span>
+                    <span className="font-semibold text-on-surface flex items-center gap-1">
+                      <MapPin size={13} className="text-red-500" />
+                      {user?.rt && user?.rw ? `RT ${user.rt} / RW ${user.rw}` : 'Seluruh Wilayah Kelurahan Kebonjati'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Instansi / Unit Kerja</span>
+                    <span className="font-semibold text-on-surface">
+                      Kelurahan Kebonjati, Kec. Cikole, Kota Sukabumi
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Email Kedinasan</span>
+                    <span className="font-semibold text-on-surface flex items-center gap-1">
+                      <Mail size={13} className="text-sky-600" />
+                      {user?.email || 'admin.spbe@kebonjati.sukabumi.go.id'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Kontak Resmi</span>
+                    <span className="font-semibold text-on-surface flex items-center gap-1">
+                      <Phone size={13} className="text-emerald-600" />
+                      {user?.phone || '(0266) 221-123'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-outline-variant space-y-2">
+                  <h4 className="text-xs font-bold text-on-surface">Otoritas & Hak Akses Sistem:</h4>
+                  <ul className="text-xs text-on-surface-variant space-y-1.5 list-disc list-inside">
+                    <li>Verifikasi dan validasi permohonan surat keterangan warga berjenjang.</li>
+                    <li>Persetujuan dan audit kelayakan bantuan sosial serta transparansi DTKS.</li>
+                    <li>Monitoring laporan pengaduan masyarakat dan tanggap darurat lingkungan.</li>
+                    <li>Penerbitan dokumen digital ber-QR Code dengan verifikasi keabsahan SPBE.</li>
+                  </ul>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Form Jaminan Sosial Mandiri (BPJS / Asuransi & Bukti Bansos) */}
-          <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-              <HeartPulse size={18} className="text-rose-500" /> Jaminan Kesehatan & Bansos
-            </h3>
-            <p className="text-[11px] text-on-surface-variant">
-              Perbarui status kepesertaan BPJS atau asuransi Anda untuk sinkronisasi data perlindungan sosial kelurahan.
-            </p>
+              {/* Ringkasan Kinerja Aparatur */}
+              <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+                <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                  <Award size={18} className="text-amber-500" /> Ikhtisar Kinerja Pelayanan
+                </h3>
+                <p className="text-[11px] text-on-surface-variant">
+                  Pantau performa layanan dan pemenuhan target standar pelayanan minimal (SPM).
+                </p>
 
-            <form onSubmit={handleSaveInsurance} className="space-y-3 text-xs">
-              <div>
-                <label className="font-bold text-on-surface block mb-1">
-                  Kategori Jaminan Kesehatan / Asuransi:
-                </label>
-                <select
-                  value={insuranceForm.kategori_asuransi}
-                  onChange={(e) => setInsuranceForm({ ...insuranceForm, kategori_asuransi: e.target.value })}
-                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                {profileData?.rekapKinerja && (
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 bg-sky-50 rounded-xl border border-sky-200">
+                      <span className="text-sky-800 block text-[11px] font-semibold">Surat Diproses</span>
+                      <span className="text-xl font-bold text-sky-900 mt-1 block">
+                        {profileData.rekapKinerja.total_surat_diproses}
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                      <span className="text-emerald-800 block text-[11px] font-semibold">Bansos Disalurkan</span>
+                      <span className="text-xl font-bold text-emerald-900 mt-1 block">
+                        {profileData.rekapKinerja.total_bansos_diproses}
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                      <span className="text-amber-800 block text-[11px] font-semibold">Audit Sanggahan</span>
+                      <span className="text-xl font-bold text-amber-900 mt-1 block">
+                        {profileData.rekapKinerja.total_audit_sanggahan}
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-purple-50 rounded-xl border border-purple-200">
+                      <span className="text-purple-800 block text-[11px] font-semibold">Kepatuhan SLA</span>
+                      <span className="text-xl font-bold text-purple-900 mt-1 block">
+                        {profileData.rekapKinerja.kepatuhan_sla_persen}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setActiveTab('kinerja')}
+                  className="w-full py-2.5 bg-surface-container-high text-on-surface rounded-xl font-semibold flex items-center justify-center gap-1.5 hover:bg-surface-container-highest transition-colors text-xs"
                 >
-                  {ASURANSI_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
+                  <span>Buka Tab Kinerja Lengkap</span>
+                  <ArrowRight size={14} />
+                </button>
               </div>
-
-              <div>
-                <label className="font-bold text-on-surface block mb-1">
-                  Nomor Kartu BPJS / Polis Asuransi:
-                </label>
-                <input
-                  type="text"
-                  value={insuranceForm.nomor_asuransi}
-                  onChange={(e) => setInsuranceForm({ ...insuranceForm, nomor_asuransi: e.target.value })}
-                  placeholder="Contoh: 0001234567890"
-                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-on-surface block mb-1">
-                  URL Bukti Kartu / Surat Bantuan:
-                </label>
-                <input
-                  type="url"
-                  value={insuranceForm.bukti_bansos_url}
-                  onChange={(e) => setInsuranceForm({ ...insuranceForm, bukti_bansos_url: e.target.value })}
-                  placeholder="https://... (Foto kartu/bukti penerimaan)"
-                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-on-surface block mb-1">
-                  Catatan Penerimaan Bantuan Mandiri:
-                </label>
-                <textarea
-                  rows={2}
-                  value={insuranceForm.catatan_bansos_mandiri}
-                  onChange={(e) => setInsuranceForm({ ...insuranceForm, catatan_bansos_mandiri: e.target.value })}
-                  placeholder="Pernah menerima beras sembako / bantuan modal UMKM..."
-                  className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={savingInsurance}
-                className="w-full py-2.5 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-sm"
-              >
-                {savingInsurance ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                Simpan Perubahan
-              </button>
-            </form>
-          </div>
+            </>
+          )}
         </div>
       )}
 
-      {/* TAB 2: RIWAYAT LAYANAN SURAT (DOKUMEN) */}
+      {/* TAB 2: RIWAYAT SURAT */}
       {activeTab === 'surat' && (
         <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-              <FileCheck size={18} className="text-sky-600" /> Riwayat Permohonan Dokumen & Surat
-            </h3>
-            <span className="text-xs text-on-surface-variant font-medium">
-              Total {profileData?.riwayatSurat?.length || 0} Pengajuan
-            </span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                <FileText size={18} className="text-sky-600" /> Riwayat Permohonan Surat Kependudukan
+              </h3>
+              <p className="text-xs text-on-surface-variant mt-0.5">
+                Dokumen pengajuan atas nama Anda maupun anggota keluarga dalam satu Kartu Keluarga (KK).
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/dokumen?action=new')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold shadow-sm transition-colors"
+            >
+              <FilePlus size={14} /> Buat Permohonan Baru
+            </button>
           </div>
 
           {(!profileData?.riwayatSurat || profileData.riwayatSurat.length === 0) ? (
             <div className="text-center py-12 text-xs text-on-surface-variant">
               <FileText size={36} className="mx-auto mb-2 text-outline" />
-              <p>Belum ada riwayat permohonan surat dinas yang diajukan.</p>
+              <p>Belum ada permohonan surat kependudukan yang diajukan.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-outline-variant bg-surface-container-low text-on-surface-variant">
-                    <th className="p-3 font-semibold">Nomor Registrasi</th>
-                    <th className="p-3 font-semibold">Jenis Surat</th>
-                    <th className="p-3 font-semibold">Keperluan</th>
-                    <th className="p-3 font-semibold">Tanggal</th>
-                    <th className="p-3 font-semibold">Tahap Verifikasi</th>
-                    <th className="p-3 font-semibold">Status Dokumen</th>
-                    <th className="p-3 font-semibold text-right">Aksi</th>
+            <div className="overflow-x-auto border border-outline-variant/60 rounded-xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-surface-container-low text-on-surface-variant font-semibold">
+                  <tr>
+                    <th className="p-3">Nomor & Jenis Surat</th>
+                    <th className="p-3">Subjek / Pemohon</th>
+                    <th className="p-3">Keperluan</th>
+                    <th className="p-3">Tanggal</th>
+                    <th className="p-3">Tahap</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3 text-right">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-outline-variant">
+                <tbody className="divide-y divide-outline-variant/60">
                   {profileData.riwayatSurat.map((surat) => (
-                    <tr key={surat.id} className="hover:bg-surface-container-low/50">
-                      <td className="p-3 font-mono font-medium text-primary">
-                        {surat.nomor_registrasi || `REG-${surat.id}`}
+                    <tr key={surat.id} className="hover:bg-surface-container-lowest/60">
+                      <td className="p-3">
+                        <span className="font-bold text-on-surface block">{surat.jenis_surat}</span>
+                        <span className="font-mono text-[11px] text-on-surface-variant">
+                          {surat.nomor_surat || `REQ-${surat.id}`}
+                        </span>
                       </td>
-                      <td className="p-3 font-bold text-on-surface">
-                        {surat.jenis_surat || surat.jenis_dokumen || 'Surat Pengantar'}
+                      <td className="p-3">
+                        <div className="font-semibold text-on-surface">
+                          {surat.nama_subjek || surat.nama_pemohon || surat.nik_pemohon}
+                        </div>
+                        {surat.hubungan_keluarga && surat.hubungan_keluarga !== 'Diri Sendiri' && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-100 text-sky-800">
+                            {surat.hubungan_keluarga}
+                          </span>
+                        )}
                       </td>
                       <td className="p-3 text-on-surface-variant max-w-xs truncate">
                         {surat.keperluan || '-'}
@@ -645,39 +816,41 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div className="p-4 bg-sky-50 rounded-xl border border-sky-200">
-              <span className="text-sky-800 block font-semibold">Surat Diverifikasi</span>
-              <span className="text-2xl font-extrabold text-sky-900 mt-1 block">
-                {profileData.rekapKinerja.total_surat_diproses}
-              </span>
-              <span className="text-[10px] text-sky-700">Berkas Pelayanan</span>
-            </div>
+          {profileData?.rekapKinerja && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+              <div className="p-4 bg-sky-50 rounded-xl border border-sky-200">
+                <span className="text-sky-800 block font-semibold">Surat Diverifikasi</span>
+                <span className="text-2xl font-extrabold text-sky-900 mt-1 block">
+                  {profileData.rekapKinerja.total_surat_diproses}
+                </span>
+                <span className="text-[10px] text-sky-700">Berkas Pelayanan</span>
+              </div>
 
-            <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-              <span className="text-emerald-800 block font-semibold">Bansos Diproses</span>
-              <span className="text-2xl font-extrabold text-emerald-900 mt-1 block">
-                {profileData.rekapKinerja.total_bansos_diproses}
-              </span>
-              <span className="text-[10px] text-emerald-700">Penyaluran / Usulan</span>
-            </div>
+              <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                <span className="text-emerald-800 block font-semibold">Bansos Diproses</span>
+                <span className="text-2xl font-extrabold text-emerald-900 mt-1 block">
+                  {profileData.rekapKinerja.total_bansos_diproses}
+                </span>
+                <span className="text-[10px] text-emerald-700">Penyaluran / Usulan</span>
+              </div>
 
-            <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-              <span className="text-amber-800 block font-semibold">Audit Sanggahan</span>
-              <span className="text-2xl font-extrabold text-amber-900 mt-1 block">
-                {profileData.rekapKinerja.total_audit_sanggahan}
-              </span>
-              <span className="text-[10px] text-amber-700">Temuan Lapangan RT/RW</span>
-            </div>
+              <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <span className="text-amber-800 block font-semibold">Audit Sanggahan</span>
+                <span className="text-2xl font-extrabold text-amber-900 mt-1 block">
+                  {profileData.rekapKinerja.total_audit_sanggahan}
+                </span>
+                <span className="text-[10px] text-amber-700">Temuan Lapangan RT/RW</span>
+              </div>
 
-            <div className="p-4 bg-purple-50 rounded-xl border border-purple-200">
-              <span className="text-purple-800 block font-semibold">Kepatuhan SLA Respons</span>
-              <span className="text-2xl font-extrabold text-purple-900 mt-1 block">
-                {profileData.rekapKinerja.kepatuhan_sla_persen}%
-              </span>
-              <span className="text-[10px] text-purple-700">&le; 24 Jam Kerja</span>
+              <div className="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                <span className="text-purple-800 block font-semibold">Kepatuhan SLA Respons</span>
+                <span className="text-2xl font-extrabold text-purple-900 mt-1 block">
+                  {profileData.rekapKinerja.kepatuhan_sla_persen}%
+                </span>
+                <span className="text-[10px] text-purple-700">&le; 24 Jam Kerja</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -763,24 +936,26 @@ export default function ProfilePage() {
             {/* BAGIAN III: RIWAYAT PELAYANAN SURAT */}
             <div className="mb-4">
               <h5 className="font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase tracking-wide">
-                III. Riwayat Pelayanan Surat Keterangan ({profileData.suratList?.length || 0} Pengajuan)
+                III. Riwayat Pelayanan Surat Keterangan ({profileData.riwayatSurat?.length || 0} Pengajuan)
               </h5>
-              {profileData.suratList && profileData.suratList.length > 0 ? (
+              {profileData.riwayatSurat && profileData.riwayatSurat.length > 0 ? (
                 <div className="overflow-x-auto border border-slate-200 rounded-lg">
                   <table className="w-full text-left">
                     <thead className="bg-slate-100 text-slate-700 font-semibold text-[11px]">
                       <tr>
                         <th className="p-2">Tgl Pengajuan</th>
                         <th className="p-2">Jenis Surat</th>
+                        <th className="p-2">Subjek Pemohon</th>
                         <th className="p-2">Keperluan</th>
                         <th className="p-2 text-center">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 text-[11px]">
-                      {profileData.suratList.map((s) => (
+                      {profileData.riwayatSurat.map((s) => (
                         <tr key={s.id}>
                           <td className="p-2 whitespace-nowrap font-mono">{new Date(s.created_at).toLocaleDateString('id-ID')}</td>
                           <td className="p-2 font-medium text-slate-900">{s.jenis_surat}</td>
+                          <td className="p-2 font-medium text-slate-900">{s.nama_subjek || s.nama_pemohon || '-'}</td>
                           <td className="p-2 text-slate-700">{s.keperluan || '-'}</td>
                           <td className="p-2 text-center whitespace-nowrap">
                             <span className="font-bold text-emerald-800">{s.status}</span>
@@ -798,9 +973,9 @@ export default function ProfilePage() {
             {/* BAGIAN IV: RIWAYAT BANTUAN SOSIAL */}
             <div className="mb-5">
               <h5 className="font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase tracking-wide">
-                IV. Catatan Program Bantuan Sosial ({profileData.bansosList?.length || 0} Terdaftar)
+                IV. Catatan Program Bantuan Sosial ({profileData.riwayatBansos?.length || 0} Terdaftar)
               </h5>
-              {profileData.bansosList && profileData.bansosList.length > 0 ? (
+              {profileData.riwayatBansos && profileData.riwayatBansos.length > 0 ? (
                 <div className="overflow-x-auto border border-slate-200 rounded-lg">
                   <table className="w-full text-left">
                     <thead className="bg-slate-100 text-slate-700 font-semibold text-[11px]">
@@ -812,10 +987,10 @@ export default function ProfilePage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 text-[11px]">
-                      {profileData.bansosList.map((b) => (
+                      {profileData.riwayatBansos.map((b) => (
                         <tr key={b.id}>
                           <td className="p-2 font-medium text-slate-900">{b.jenis_bansos}</td>
-                          <td className="p-2 font-mono text-slate-700">{b.nomor_pengajuan}</td>
+                          <td className="p-2 font-mono text-slate-700">{b.nomor_pengajuan || `BS-${b.id}`}</td>
                           <td className="p-2 text-right font-mono font-medium">Rp {Number(b.nominal_bantuan || 0).toLocaleString('id-ID')}</td>
                           <td className="p-2 text-center whitespace-nowrap font-bold text-sky-800">{b.status}</td>
                         </tr>
@@ -887,8 +1062,5 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
-  </div>
-</div>
   );
 }
-

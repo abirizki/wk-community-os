@@ -229,7 +229,12 @@ async function autoPatchDatabase() {
       'lampiran_ktp VARCHAR(500) NULL',
       'lampiran_kk VARCHAR(500) NULL',
       'rt VARCHAR(5) NULL',
-      'rw VARCHAR(5) NULL'
+      'rw VARCHAR(5) NULL',
+      'diajukan_oleh_nik VARCHAR(16) NULL',
+      'nama_subjek VARCHAR(150) NULL',
+      'hubungan_keluarga VARCHAR(50) NULL',
+      'data_tambahan TEXT NULL',
+      'syarat_berkas TEXT NULL'
     ];
     for (const def of dokCols) {
       try {
