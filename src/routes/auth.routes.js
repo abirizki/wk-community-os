@@ -1,6 +1,5 @@
 /**
  * src/routes/auth.routes.js
- * Authentication & Family Profile Switching API
  * Comprehensive Multi-Tier & Secure Family Authentication API
  * Bumi Warga - Jabar Pintar Digital
  */
@@ -13,7 +12,6 @@ const { STANDARD_ACCOUNTS } = require('../db/auto_patch');
 
 const router = express.Router();
 
-// POST /api/auth/login (Mendukung Username, NIK, dan Nomor KK)
 /**
  * Helper to match birthdate PIN (DDMMYYYY, YYYYMMDD, or DDMMYY) against civil registry date
  * @param {string} inputPassword 
@@ -53,45 +51,31 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ success: false, message: 'Username/NIK/No KK dan password wajib diisi' });
       return res.status(400).json({ success: false, message: 'Identitas (NIK/No KK/Username) dan kata sandi/PIN wajib diisi.' });
     }
 
     const cleanUsername = String(username).trim();
     const is16Digits = /^\d{16}$/.test(cleanUsername);
 
-    // 1. Cari user di tabel users
     let user = null;
-    try {
-      user = await userRepository.findByUsername(cleanUsername);
-    } catch (dbErr) {
-      console.warn('[Auth] Database lookup warning:', dbErr.message);
-    }
     let identifiedWarga = null;
     let identifiedKK = null;
     let isFamilyAccount = false;
     let no_kk = null;
     let familyMembers = [];
 
-    // 2. Jika tidak ditemukan langsung tapi cleanUsername adalah 16 digit (NIK / No KK)
-    if (!user && /^\d{16}$/.test(cleanUsername)) {
     // =========================================================================
     // TAHAP 1: DETEKSI ENTITAS (NIK Warga / Nomor KK / Username Kedinasan)
     // =========================================================================
     if (is16Digits) {
       // 1.A. Periksa apakah 16 digit adalah NIK anggota keluarga di tabel warga
       try {
-        // Cek apakah 16 digit ini adalah NIK warga yang memiliki user_id
-        const [wargaByNik] = await pool.execute(
-          'SELECT user_id, nik, nama, no_kk FROM warga WHERE nik = ? LIMIT 1',
         const [wRows] = await pool.execute(
           `SELECT id, nik, no_kk, nama, tanggal_lahir, jenis_kelamin, status_hubungan_keluarga, 
                   rt, rw, user_id, pin_mandiri 
            FROM warga WHERE nik = ? LIMIT 1`,
           [cleanUsername]
         );
-        if (wargaByNik.length > 0 && wargaByNik[0].user_id) {
-          user = await userRepository.findById(wargaByNik[0].user_id);
         if (wRows.length > 0) {
           identifiedWarga = wRows[0];
           no_kk = identifiedWarga.no_kk;
@@ -100,17 +84,6 @@ router.post('/login', async (req, res) => {
         console.warn('[Auth] Warga NIK lookup warning:', wErr.message);
       }
 
-        // Jika belum ditemukan, cek apakah 16 digit ini adalah Nomor KK
-        if (!user) {
-          const kk = await userRepository.findKartuKeluarga(cleanUsername);
-          if (kk) {
-            const [wargaRows] = await pool.execute(
-              'SELECT user_id, nik, nama FROM warga WHERE no_kk = ? AND status_hubungan_keluarga = "Kepala Keluarga" LIMIT 1',
-              [cleanUsername]
-            );
-            if (wargaRows.length > 0 && wargaRows[0].user_id) {
-              user = await userRepository.findById(wargaRows[0].user_id);
-            }
       // 1.B. Jika bukan NIK warga, periksa apakah merupakan Nomor Kartu Keluarga (No KK)
       if (!identifiedWarga) {
         try {
@@ -123,13 +96,9 @@ router.post('/login', async (req, res) => {
         } catch (kkErr) {
           console.warn('[Auth] KK lookup warning:', kkErr.message);
         }
-      } catch (idLookupErr) {
-        console.warn('[Auth] NIK/KK lookup warning:', idLookupErr.message);
       }
     }
 
-    // Fallback darurat: Jika user tidak ditemukan di database (misal hosting belum di-patch),
-    // cek apakah terdaftar di STANDARD_ACCOUNTS resmi
     // =========================================================================
     // TAHAP 2: CARI AKUN PENGGUNA TERKAIT (USERS TABLE)
     // =========================================================================
@@ -189,7 +158,6 @@ router.post('/login', async (req, res) => {
     // 2.D. Fallback Akun Standar Resmi (jika database belum terisi lengkap)
     let isFallbackAccount = false;
     if (!user) {
-      const standardAcc = STANDARD_ACCOUNTS.find(acc => acc.username === cleanUsername);
       const standardAcc = STANDARD_ACCOUNTS.find(acc => 
         acc.username === cleanUsername || (identifiedWarga && acc.username === identifiedWarga.nik)
       );
@@ -209,8 +177,6 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Identitas atau password salah' });
     // 2.E. Aktivasi Akun Otomatis bagi Warga Terdaftar (Safe Auto-Activation)
     // Jika warga ada di Dukcapil tapi belum memiliki baris di tabel users, dan login menggunakan PIN Tanggal Lahir
     if (!user && identifiedWarga) {
@@ -244,39 +210,20 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    if (user.status !== 'active') {
-      return res.status(403).json({ success: false, message: 'Akun dinonaktifkan atau ditangguhkan. Hubungi petugas kelurahan.' });
     if (!user && !identifiedWarga) {
       return res.status(401).json({ success: false, message: 'Identitas atau kata sandi tidak sesuai.' });
     }
 
-    // 3. Verifikasi password hash
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Identitas atau password salah' });
     if (user && user.status !== 'active') {
       return res.status(403).json({ success: false, message: 'Akun dinonaktifkan atau ditangguhkan. Hubungi pengurus RT/Kelurahan.' });
     }
 
-    // 4. Periksa apakah user terafiliasi dengan Nomor KK
-    let no_kk = null;
-    let familyMembers = [];
-    let isFamilyAccount = false;
     // =========================================================================
     // TAHAP 3: MEKANISME VERIFIKASI KEAMANAN BERLAPIS (MULTI-CREDENTIAL VERIFICATION)
     // =========================================================================
     let isMatch = false;
     let loginMethod = 'password';
 
-    try {
-      const kkDirect = await userRepository.findKartuKeluarga(cleanUsername);
-      if (kkDirect) {
-        no_kk = cleanUsername;
-        isFamilyAccount = true;
-      } else if (user.role === 'warga') {
-        const [wargaProfil] = await pool.execute(
-          'SELECT no_kk, nama, nik FROM warga WHERE nik = ? LIMIT 1',
-          [user.username]
     // 3.A. Cek PIN Mandiri Anggota Keluarga (jika sudah diatur secara privat)
     if (identifiedWarga && identifiedWarga.pin_mandiri) {
       try {
@@ -310,17 +257,13 @@ router.post('/login', async (req, res) => {
           'SELECT tanggal_lahir FROM warga WHERE no_kk = ? AND status_hubungan_keluarga = "Kepala Keluarga" LIMIT 1',
           [no_kk]
         );
-        if (wargaProfil && wargaProfil.length > 0) {
-          no_kk = wargaProfil[0].no_kk;
         if (kepalaRows.length > 0 && checkBirthdateMatch(password, kepalaRows[0].tanggal_lahir)) {
           isMatch = true;
           loginMethod = 'kk_birthdate_pin';
         }
-      }
       } catch (e) {}
     }
 
-      if (no_kk) {
     if (!isMatch) {
       return res.status(401).json({ 
         success: false, 
@@ -340,14 +283,8 @@ router.post('/login', async (req, res) => {
       } catch (famErr) {
         console.warn('[Auth] Family fetch warning:', famErr.message);
       }
-    } catch (familyErr) {
-      console.warn('[Auth] Family members fetch warning:', familyErr.message);
     }
 
-    // 5. Tentukan Persona Aktif Pertama Kali
-    let activeNik = user.username;
-    let activeNama = user.nama;
-    let activeHubungan = 'Pengguna';
     // =========================================================================
     // TAHAP 5: PENETAPAN PERSONA AKTIF SESUAI ANGGOTA YANG LOGIN
     // =========================================================================
@@ -355,8 +292,6 @@ router.post('/login', async (req, res) => {
     let activeNama = identifiedWarga ? identifiedWarga.nama : (user ? user.nama : cleanUsername);
     let activeHubungan = identifiedWarga ? identifiedWarga.status_hubungan_keluarga : 'Pengguna';
 
-    if (familyMembers.length > 0) {
-      const match = familyMembers.find(m => m.nik === user.username) || familyMembers[0];
     // Jika login menggunakan Nomor KK (bukan NIK individu), default ke Kepala Keluarga
     if (!identifiedWarga && familyMembers.length > 0) {
       const match = familyMembers.find(m => m.nik === user?.username) || familyMembers[0];
@@ -365,15 +300,7 @@ router.post('/login', async (req, res) => {
       activeHubungan = match.status_hubungan_keluarga;
     }
 
-    const mustChangePassword = Boolean(user.must_change_password);
-
     const userData = {
-      id: user.id,
-      username: user.username,
-      nama: user.nama,
-      role: user.role === 'admin' ? 'admin_kelurahan' : user.role,
-      rt: user.rt || (familyMembers[0]?.rt ?? null),
-      rw: user.rw || (familyMembers[0]?.rw ?? null),
       id: user ? user.id : 0,
       username: user ? user.username : activeNik,
       nama: user ? user.nama : activeNama,
@@ -389,24 +316,17 @@ router.post('/login', async (req, res) => {
       logged_in_by_nama: identifiedWarga ? identifiedWarga.nama : (user ? user.nama : activeNama),
       login_method: loginMethod,
       family_members: familyMembers,
-      must_change_password: mustChangePassword
       must_change_password: Boolean(user && user.must_change_password),
       needs_profile_selection: Boolean(identifiedKK && familyMembers.length > 1)
     };
 
     req.session.user = userData;
 
-    // Catat last login secara aman tanpa menggagalkan login
-    if (!isFallbackAccount) {
-      try {
     // Catat log audit login secara aman
     try {
       if (user && user.id && !isFallbackAccount) {
         await pool.execute('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id]);
-      } catch (lastLoginErr) {
-        // Abaikan jika kolom last_login_at belum tersedia
       }
-    }
       if (identifiedWarga && identifiedWarga.id) {
         await pool.execute('UPDATE warga SET last_login_at = NOW(), login_method = ? WHERE id = ?', [loginMethod, identifiedWarga.id]);
       }
@@ -414,7 +334,6 @@ router.post('/login', async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Login berhasil',
       message: identifiedWarga 
         ? `Selamat datang, ${identifiedWarga.nama} (${identifiedWarga.status_hubungan_keluarga})` 
         : 'Login berhasil',
@@ -427,12 +346,10 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /api/auth/select-profile (Ganti Persona Anggota Keluarga)
 // POST /api/auth/select-profile (Ganti Persona Anggota Keluarga dalam 1 KK)
 router.post('/select-profile', async (req, res) => {
   try {
     if (!req.session || !req.session.user) {
-      return res.status(401).json({ success: false, message: 'Tidak ada sesi aktif' });
       return res.status(401).json({ success: false, message: 'Tidak ada sesi aktif. Harap login terlebih dahulu.' });
     }
 
@@ -441,20 +358,16 @@ router.post('/select-profile', async (req, res) => {
       return res.status(400).json({ success: false, message: 'NIK anggota keluarga wajib dipilih' });
     }
 
-    const user = req.session.user;
-    if (!user.no_kk) {
     const sessionUser = req.session.user;
     if (!sessionUser.no_kk) {
       return res.status(400).json({ success: false, message: 'Akun ini tidak terikat pada Kartu Keluarga' });
     }
 
     // Pastikan NIK yang dipilih benar-benar anggota dari KK tersebut
-    const members = await userRepository.findFamilyMembersByNoKK(user.no_kk);
     const members = await userRepository.findFamilyMembersByNoKK(sessionUser.no_kk);
     const selected = members.find(m => m.nik === nik);
 
     if (!selected) {
-      return res.status(403).json({ success: false, message: 'Anggota keluarga tidak ditemukan dalam KK ini' });
       return res.status(403).json({ success: false, message: 'Anggota keluarga tidak ditemukan dalam Kartu Keluarga ini' });
     }
 
@@ -463,10 +376,8 @@ router.post('/select-profile', async (req, res) => {
     req.session.user.active_nama = selected.nama;
     req.session.user.active_hubungan = selected.status_hubungan_keluarga;
 
-    res.json({
     return res.json({
       success: true,
-      message: `Beralih profil ke ${selected.nama} (${selected.status_hubungan_keluarga})`,
       message: `Beralih profil aktif ke ${selected.nama} (${selected.status_hubungan_keluarga})`,
       active_persona: {
         nik: selected.nik,
@@ -476,7 +387,6 @@ router.post('/select-profile', async (req, res) => {
     });
   } catch (error) {
     console.error('Select profile error:', error);
-    res.status(500).json({ success: false, message: 'Gagal mengganti profil keluarga' });
     return res.status(500).json({ success: false, message: 'Gagal mengganti profil keluarga' });
   }
 });
@@ -547,11 +457,9 @@ router.get('/family-members', async (req, res) => {
     }
 
     const members = await userRepository.findFamilyMembersByNoKK(no_kk);
-    res.json({ success: true, data: members });
     return res.json({ success: true, data: members });
   } catch (error) {
     console.error('Fetch family members error:', error);
-    res.status(500).json({ success: false, message: 'Gagal memuat data keluarga' });
     return res.status(500).json({ success: false, message: 'Gagal memuat data keluarga' });
   }
 });
@@ -564,7 +472,6 @@ router.post('/logout', (req, res) => {
       return res.status(500).json({ success: false, message: 'Gagal logout' });
     }
     res.clearCookie('connect.sid');
-    res.json({ success: true, message: 'Logout berhasil' });
     res.clearCookie('wk_session_id');
     return res.json({ success: true, message: 'Logout berhasil' });
   });
@@ -573,10 +480,8 @@ router.post('/logout', (req, res) => {
 // GET /api/auth/me
 router.get('/me', (req, res) => {
   if (req.session && req.session.user) {
-    res.json({ success: true, authenticated: true, user: req.session.user });
     return res.json({ success: true, authenticated: true, user: req.session.user });
   } else {
-    res.json({ success: false, authenticated: false, user: null, message: 'Tidak ada sesi aktif' });
     return res.json({ success: false, authenticated: false, user: null, message: 'Tidak ada sesi aktif' });
   }
 });
@@ -616,14 +521,10 @@ router.post('/change-initial-password', async (req, res) => {
         'UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?',
         [passwordHash, userId]
       );
-    } catch (dbErr) {
-      // Graceful fallback jika kolom belum ada di DB lokal
-    }
     } catch (dbErr) {}
 
     req.session.user.must_change_password = false;
 
-    res.json({
     return res.json({
       success: true,
       message: 'Kata sandi pribadi Anda berhasil disimpan! Anda kini memiliki akses penuh ke sistem.',
@@ -631,7 +532,6 @@ router.post('/change-initial-password', async (req, res) => {
     });
   } catch (error) {
     console.error('Change initial password error:', error);
-    res.status(500).json({ success: false, message: 'Gagal memperbarui kata sandi.' });
     return res.status(500).json({ success: false, message: 'Gagal memperbarui kata sandi.' });
   }
 });

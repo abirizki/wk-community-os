@@ -452,7 +452,6 @@ export default function ProfilePage() {
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-2 self-end sm:self-auto">
                           <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
                             <button
                               type="button"

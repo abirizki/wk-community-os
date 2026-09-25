@@ -377,7 +377,6 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={handlePasswordChange}
-                    placeholder="Masukkan kata sandi akun"
                     placeholder="Kata sandi akun atau PIN DDMMYYYY"
                     autoComplete="current-password"
                     required

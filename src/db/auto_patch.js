@@ -282,13 +282,11 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] CREATE bansos_audit_sanggahan note:', e.message);
     }
 
-    // 7. Kolom jaminan sosial (BPJS / Asuransi & Bukti Bansos Mandiri) pada tabel warga
     // 7. Kolom jaminan sosial & login aman mandiri pada tabel warga
     const wargaSocialCols = [
       "kategori_asuransi VARCHAR(100) NULL DEFAULT 'Tidak Memiliki Asuransi'",
       "nomor_asuransi VARCHAR(50) NULL",
       "bukti_bansos_url VARCHAR(255) NULL",
-      "catatan_bansos_mandiri TEXT NULL"
       "catatan_bansos_mandiri TEXT NULL",
       "pin_mandiri VARCHAR(255) NULL",
       "last_login_at TIMESTAMP NULL DEFAULT NULL",

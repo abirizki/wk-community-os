@@ -13,10 +13,8 @@ class BansosService {
    * Usulkan calon penerima bansos baru (RT / RW / Kelurahan)
    */
   async proposeBansos(payload, currentUser) {
-    const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'];
     const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'];
     if (!allowedRoles.includes(currentUser.role)) {
-      const err = new Error('Hanya Ketua RT, RW, dan Admin yang berwenang mengusulkan penerima bansos.');
       const err = new Error('Hanya Ketua RT, RW, Lurah, dan Admin yang berwenang mengusulkan penerima bansos.');
       err.status = 403;
       throw err;
@@ -65,7 +63,6 @@ class BansosService {
     let initialStatus = 'PENDING_RW';
     let initialStep = 'RW';
 
-    if (['admin_kelurahan', 'superadmin', 'admin'].includes(currentUser.role)) {
     if (['admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(currentUser.role)) {
       initialStatus = 'APPROVED';
       initialStep = 'COMPLETED';
@@ -179,7 +176,6 @@ class BansosService {
       return { success: true, status: 'PENDING_KELURAHAN', message: 'Usulan bansos diverifikasi RW dan diteruskan ke Kelurahan.' };
     }
 
-    if (['admin_kelurahan', 'superadmin', 'admin'].includes(role)) {
     if (['admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(role)) {
       await bansosRepository.updateStatus(id, {
         status: 'APPROVED',
@@ -209,7 +205,6 @@ class BansosService {
    * Menyimpan foto serah terima GPS geotagged, koordinat, dan tanda tangan digital
    */
   async disburseBansos(id, disburseData, currentUser) {
-    const allowedRoles = ['superadmin', 'admin_kelurahan', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt'];
     const allowedRoles = ['superadmin', 'admin_kelurahan', 'lurah', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt'];
     if (!allowedRoles.includes(currentUser.role)) {
       const err = new Error('Anda tidak memiliki wewenang untuk menyalurkan bantuan sosial.');
@@ -287,7 +282,6 @@ class BansosService {
    * RT / RW Melaporkan sanggahan / anomali penerima bansos
    */
   async reportAuditSanggahan(payload, currentUser) {
-    const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'];
     const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'];
     if (!allowedRoles.includes(currentUser.role)) {
       const err = new Error('Hanya Ketua RT, Ketua RW, dan Petugas yang berwenang melaporkan sanggahan audit bansos.');
