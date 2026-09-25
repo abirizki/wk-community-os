@@ -9,6 +9,7 @@
     "build:frontend": "cd frontend && npm run build",
     "preflight": "node scripts/production_preflight.js",
     "uat": "node scripts/run_e2e_uat.js",
+    "test:warga": "node scripts/test_warga_suite.js",
     "deploy:db": "node scripts/deploy_production_db.js",
     "deploy:accounts": "node database/migrate_standard_accounts.js"
   },
