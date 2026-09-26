@@ -597,6 +597,131 @@ class BansosService {
       }
     };
   }
+
+  /**
+   * Penyesuaian kuota bansos APBD Kelurahan / Dana Kelurahan berbasis Berita Acara Muskel
+   */
+  async adjustQuota(id, payload, currentUser) {
+    const allowedRoles = ['admin_kelurahan', 'lurah', 'superadmin', 'admin'];
+    if (!allowedRoles.includes(currentUser.role)) {
+      const err = new Error('Hanya Admin Kelurahan dan Lurah yang berwenang menyesuaikan kuota bansos.');
+      err.status = 403;
+      throw err;
+    }
+
+    const bansos = await bansosRepository.findById(id);
+    if (!bansos) {
+      const err = new Error('Data bantuan sosial tidak ditemukan.');
+      err.status = 404;
+      throw err;
+    }
+
+    // PENGAMANAN HUKUM ANTI-PUNGLI: Bantuan APBN Pusat mutlak dilarang diubah nominalnya
+    if (bansos.sumber_dana === 'APBN_PUSAT') {
+      const err = new Error('Bantuan bersumber APBN Pusat (PKH, BPNT, Beras Bulog) terkunci mutlak dan dilarang diubah nominalnya untuk mematuhi regulasi perundang-undangan (UU Tipikor / UU Keuangan Negara).');
+      err.status = 400;
+      throw err;
+    }
+
+    const { nominal_baru, alasan_penyesuaian, nomor_ba_penyesuaian } = payload;
+    if (!nominal_baru || parseFloat(nominal_baru) <= 0) {
+      const err = new Error('Nominal bantuan baru harus lebih dari Rp 0.');
+      err.status = 400;
+      throw err;
+    }
+
+    const updated = await bansosRepository.adjustQuota(id, {
+      nominal_bantuan: parseFloat(nominal_baru),
+      nominal_awal: bansos.nominal_awal || bansos.nominal_bantuan,
+      alasan_penyesuaian: alasan_penyesuaian || 'Penyesuaian proporsional hasil kesepakatan Musyawarah Kelurahan (Muskel).',
+      nomor_ba_penyesuaian: nomor_ba_penyesuaian || `BA-MUSKEL/X/${new Date().getFullYear()}/${id}`,
+      disetujui_penyesuaian_rw: 1,
+      disetujui_penyesuaian_rt: 1
+    });
+
+    return {
+      success: true,
+      message: 'Besaran kuota bantuan sosial APBD berhasil disesuaikan berbasis Berita Acara Muskel.',
+      data: updated
+    };
+  }
+
+  /**
+   * Penjadwalan & Penerbitan Tiket Undangan Pengambilan Bantuan Ber-QR
+   */
+  async scheduleTicket(id, scheduleData, currentUser) {
+    const allowedRoles = ['admin_kelurahan', 'lurah', 'superadmin', 'admin'];
+    if (!allowedRoles.includes(currentUser.role)) {
+      const err = new Error('Hanya Petugas Kelurahan yang berwenang menjadwalkan pengambilan bantuan.');
+      err.status = 403;
+      throw err;
+    }
+
+    const bansos = await bansosRepository.findById(id);
+    if (!bansos) {
+      const err = new Error('Data bantuan sosial tidak ditemukan.');
+      err.status = 404;
+      throw err;
+    }
+
+    if (bansos.status !== 'APPROVED') {
+      const err = new Error('Jadwal pengambilan hanya dapat diterbitkan untuk usulan bantuan yang telah disahkan (APPROVED).');
+      err.status = 400;
+      throw err;
+    }
+
+    const qrCode = `VERIF-BW-${bansos.id}-${Date.now().toString(36).toUpperCase()}`;
+    const updated = await bansosRepository.scheduleTicket(id, {
+      ...scheduleData,
+      qr_ticket_code: qrCode
+    });
+
+    // Notifikasi tiket ke warga penerima
+    try {
+      await notifikasiRepository.create({
+        nik_target: bansos.nik_penerima,
+        judul: 'Tiket Pengambilan Bantuan Sosial Terbit',
+        pesan: `Bantuan ${bansos.jenis_bansos} untuk keluarga Anda siap diambil pada ${scheduleData.jadwal_pengambilan_tanggal || 'jadwal ditentukan'} di ${scheduleData.lokasi_pengambilan || 'Kantor Kelurahan'}. Bawa KTP & KK Asli serta tunjukkan Tiket QR Code di dashboard Anda.`,
+        tipe: 'success',
+        link: '/dashboard/bansos'
+      });
+    } catch (e) {
+      console.warn('Notifikasi tiket bansos warning:', e.message);
+    }
+
+    return {
+      success: true,
+      message: 'Jadwal dan Tiket Undangan Pengambilan Bantuan Ber-QR berhasil diterbitkan.',
+      data: updated
+    };
+  }
+
+  /**
+   * Mengambil daftar tiket bansos aktif milik warga / KK yang login
+   */
+  async getMyBansosTickets(currentUser) {
+    const pool = require('../db/pool');
+    const activeNik = currentUser.active_nik || currentUser.username;
+    let userKK = currentUser.no_kk;
+
+    if (!userKK) {
+      const warga = await wargaRepository.findByNik(activeNik);
+      if (warga) userKK = warga.no_kk;
+    }
+
+    const [rows] = await pool.execute(
+      `SELECT b.*, 
+              COALESCE(b.qr_ticket_code, CONCAT('VERIF-BW-', b.id)) AS qr_ticket_code
+       FROM bansos_pengajuan b
+       WHERE (b.nik_penerima = ? OR (b.no_kk = ? AND ? IS NOT NULL))
+         AND b.status = 'APPROVED'
+         AND b.jadwal_pengambilan_tanggal IS NOT NULL
+       ORDER BY b.jadwal_pengambilan_tanggal DESC, b.created_at DESC`,
+      [activeNik, userKK || '', userKK || null]
+    );
+
+    return rows;
+  }
 }
 
 module.exports = new BansosService();

@@ -122,6 +122,30 @@ class DesilService {
 
   /**
    * Mengajukan pengesahan pembaruan desil resmi dengan bukti kementerian
+   * Menentukan status sinkronisasi komparasi (Dual-Track Reconciliation)
+   */
+  determineSyncStatus(desilUsulan, desilResmi, idDTKS) {
+    if (!desilResmi && !idDTKS) {
+      return 'MENUNGGU_GROUND_CHECK';
+    }
+    const dResmi = parseInt(desilResmi, 10);
+    const dUsulan = parseInt(desilUsulan, 10);
+
+    // Kasus 1: Di Cek Bansos tercatat miskin (Desil 1-3) tapi kondisi lapangan mampu (Desil >= 7)
+    if (dResmi && dResmi <= 3 && dUsulan >= 7) {
+      return 'ANOMALI_MAMPU'; // Usul Graduasi
+    }
+
+    // Kasus 2: Di Cek Bansos tidak ada atau tercatat mampu (Desil >= 6), tapi lapangan sangat miskin (Desil <= 3)
+    if ((!dResmi || dResmi >= 6 || !idDTKS) && dUsulan <= 3) {
+      return 'ANOMALI_BELUM_TERDAFTAR'; // Usul Inklusi Baru
+    }
+
+    return 'SINKRON';
+  }
+
+  /**
+   * Mengajukan pengesahan pembaruan desil resmi dengan bukti kementerian & SPTJM Warga
    */
   async submitUpdateWithBukti(payload, user) {
     const no_kk = payload.no_kk || user.no_kk;
@@ -131,19 +155,58 @@ class DesilService {
       throw new Error('Wajib melampirkan berkas bukti kementerian (Cek Bansos / DTSEN BPS) atau ID DTKS.');
     }
 
+    // 1. Validasi Wajib SPTJM Pakta Integritas Warga
+    if (!payload.sptjm_warga_accepted) {
+      throw new Error('Anda wajib menyetujui Surat Pernyataan Tanggung Jawab Mutlak (SPTJM) sebelum mengajukan data.');
+    }
+
+    // 2. Hitung Desil Usulan Lapangan
     const desil_usulan = payload.desil_usulan || this.calculatePMTDesil(payload);
     payload.desil_usulan = desil_usulan;
+
+    // 3. Tentukan Estimasi Status Sinkronisasi
+    const syncStatus = this.determineSyncStatus(desil_usulan, payload.desil_resmi_pemerintah, payload.id_dtks_kemensos);
+    payload.status_sinkronisasi = syncStatus;
 
     return desilRepository.submitUpdateWithBukti(no_kk, payload, user.id, user.role);
   }
 
   /**
    * Pengesahan desil oleh Admin Kelurahan
+   * RT / RW Melakukan Verifikasi Lapangan (Ground Checking) & Pakta Integritas
+   */
+  async recordGroundCheckRT(id, payload, user) {
+    const allowedRoles = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'];
+    if (!allowedRoles.includes(user.role)) {
+      throw new Error('Hanya Pengurus RT/RW atau Petugas Lapangan yang berwenang melakukan ground checking.');
+    }
+
+    if (!payload.sptjm_verifikator_accepted) {
+      throw new Error('Verifikator wajib menyetujui pakta integritas verifikasi faktual lapangan.');
+    }
+
+    return desilRepository.recordGroundCheckRT(id, payload, user);
+  }
+
+  /**
+   * Meja Rekonsiliasi & Koreksi Data Pembanding Resmi oleh Admin Kelurahan / Lurah
+   */
+  async reconcileKelurahan(id, payload, user) {
+    const allowedRoles = ['superadmin', 'admin_kelurahan', 'lurah', 'admin'];
+    if (!allowedRoles.includes(user.role)) {
+      throw new Error('Hanya Admin Kelurahan dan Lurah yang berwenang melakukan rekonsiliasi data desil resmi.');
+    }
+
+    return desilRepository.reconcileKelurahan(id, payload, user);
+  }
+
+  /**
+   * Pengesahan desil oleh Admin Kelurahan / Lurah
    */
   async verifyDesil(id, { status, desilFinal, catatan }, user) {
-    const allowedRoles = ['superadmin', 'admin_kelurahan', 'admin'];
+    const allowedRoles = ['superadmin', 'admin_kelurahan', 'lurah', 'admin'];
     if (!allowedRoles.includes(user.role)) {
-      throw new Error('Hanya Admin Kelurahan yang memiliki wewenang mengesahkan status Desil resmi.');
+      throw new Error('Hanya Admin Kelurahan dan Lurah yang memiliki wewenang mengesahkan status Desil resmi.');
     }
 
     if (!['VERIFIED_KELURAHAN', 'REJECTED'].includes(status)) {

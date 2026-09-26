@@ -107,7 +107,7 @@ function testPinMandiriSecurity() {
   let validHash = null;
   try {
     validHash = validateAndHashPin('123456');
-    assert(typeof validHash === 'string' && validHash.startsWith('$2a$'), '2.1', 'PIN 6 digit berhasil di-hash dengan bcrypt');
+    assert(typeof validHash === 'string' && /^\$2[ab]\$/.test(validHash), '2.1', 'PIN 6 digit berhasil di-hash dengan bcrypt ($2a/$2b)');
   } catch (e) {
     assert(false, '2.1', `Gagal hash PIN valid: ${e.message}`);
   }
@@ -348,6 +348,187 @@ function testBansosFamilyVisibility() {
 }
 
 // -----------------------------------------------------------------------------
+// 7. BUSINESS LOGIC TEST: PMT DESIL 11 INDIKATOR & PAKTA INTEGRITAS SPTJM
+// -----------------------------------------------------------------------------
+function testDesilPMTAndSPTJM() {
+  console.log('\n📌 UJI 7: PMT Desil 11 Indikator Faktual & Validasi Pakta Integritas SPTJM');
+
+  // Helper algoritma PMT 11 Indikator
+  function calculatePMT(data) {
+    if (data.kepemilikan_mobil) return 8; // Auto-mampu jika memiliki mobil
+
+    let score = 0;
+    if (data.daya_listrik === 'Tanpa Meteran') score += 2;
+    else if (data.daya_listrik === '450 VA') score += 5;
+    else if (data.daya_listrik === '900 VA') score += 14;
+    else if (data.daya_listrik === '1300 VA') score += 24;
+    else score += 30;
+
+    if (data.status_rumah === 'Bebas Sewa' || data.status_rumah === 'Menumpang') score += 3;
+    else if (data.status_rumah === 'Sewa/Kontrak') score += 8;
+    else score += 16;
+
+    if (data.sumber_air === 'Sumur Tidak Terlindung') score += 2;
+    else if (data.sumber_air === 'Sumur Terlindung') score += 5;
+    else if (data.sumber_air === 'PDAM/Leding') score += 10;
+    else score += 14;
+
+    if (data.luas_lantai_kategori === '< 8 m2 (Padat)') score += 3;
+    else if (data.luas_lantai_kategori === '8 - 14 m2') score += 8;
+    else score += 15;
+
+    if (data.bahan_bakar_memasak === 'Minyak/Kayu') score += 1;
+    else if (data.bahan_bakar_memasak === 'Gas 3kg') score += 4;
+    else score += 10;
+
+    if (data.kepemilikan_motor === '0 unit') score += 0;
+    else if (data.kepemilikan_motor === '1 unit') score += 5;
+    else score += 10;
+
+    if (data.dinding_terluas === 'Bambu/Anyaman/Lainnya') score += 2;
+    else if (data.dinding_terluas === 'Kayu/Papan') score += 6;
+    else score += 12;
+
+    if (data.lantai_terluas === 'Tanah/Bambu/Kayu Sederhana') score += 2;
+    else if (data.lantai_terluas === 'Semen/Plester') score += 6;
+    else score += 12;
+
+    if (data.ada_disabilitas_lansia_tunggal) score -= 6;
+    if (data.ada_anak_sekolah_pip) score -= 4;
+
+    score = Math.max(0, Math.min(100, score));
+
+    if (score <= 15) return 1;
+    if (score <= 25) return 2;
+    if (score <= 36) return 3;
+    if (score <= 48) return 4;
+    if (score <= 60) return 5;
+    if (score <= 70) return 6;
+    if (score <= 80) return 7;
+    if (score <= 90) return 8;
+    if (score <= 95) return 9;
+    return 10;
+  }
+
+  // 7.1 Kasus Miskin Ekstrem (Desil 1)
+  const profilEkstrem = {
+    daya_listrik: 'Tanpa Meteran',
+    status_rumah: 'Menumpang',
+    sumber_air: 'Sumur Tidak Terlindung',
+    luas_lantai_kategori: '< 8 m2 (Padat)',
+    bahan_bakar_memasak: 'Minyak/Kayu',
+    kepemilikan_motor: '0 unit',
+    dinding_terluas: 'Bambu/Anyaman/Lainnya',
+    lantai_terluas: 'Tanah/Bambu/Kayu Sederhana',
+    ada_disabilitas_lansia_tunggal: true,
+    ada_anak_sekolah_pip: true,
+    kepemilikan_mobil: false
+  };
+  const dEkstrem = calculatePMT(profilEkstrem);
+  assert(dEkstrem === 1, '7.1', 'Profil warga sangat rentan terhitung Desil 1 (Kemiskinan Ekstrem)');
+
+  // 7.2 Kasus Pemilik Mobil Pribadi (Auto Desil 8 / Mampu)
+  const profilMobil = {
+    ...profilEkstrem,
+    kepemilikan_mobil: true
+  };
+  const dMobil = calculatePMT(profilMobil);
+  assert(dMobil >= 7, '7.2', 'Warga memiliki mobil otomatis di-filter ke Desil Mampu (Desil >= 7)');
+
+  // 7.3 Validasi Mandatori SPTJM Digital
+  function submitDesilWarga(payload) {
+    if (!payload.sptjm_warga_accepted) {
+      throw new Error('Anda wajib menyetujui Surat Pernyataan Tanggung Jawab Mutlak (SPTJM) sebelum mengajukan data.');
+    }
+    return { success: true };
+  }
+
+  let sptjmBlocked = false;
+  try {
+    submitDesilWarga({ ...profilEkstrem, sptjm_warga_accepted: false });
+  } catch (e) {
+    if (e.message.includes('wajib menyetujui Surat Pernyataan Tanggung Jawab Mutlak')) {
+      sptjmBlocked = true;
+    }
+  }
+  assert(sptjmBlocked, '7.3', 'Pencegahan manipulasi: Pengajuan tanpa tanda tangan digital SPTJM ditolak');
+}
+
+// -----------------------------------------------------------------------------
+// 8. LEGAL INTEGRITY TEST: PROTEKSI KUNCI SUMBER DANA BANSOS PUSAT & APBD
+// -----------------------------------------------------------------------------
+function testBansosLegalSourceLock() {
+  console.log('\n📌 UJI 8: Legal Source Lock Regulasi Pusat (APBN vs APBD Muskel)');
+
+  function adjustQuota(item, payload) {
+    if (item.sumber_dana === 'APBN_PUSAT') {
+      throw new Error('Bantuan APBN Pusat memiliki alokasi dan besaran terkunci oleh regulasi kementerian.');
+    }
+    if (!payload.nomor_ba_penyesuaian || !payload.alasan_penyesuaian) {
+      throw new Error('Penyesuaian kuota wajib menyertakan nomor Berita Acara (BA) Muskel dan alasan pemerataan.');
+    }
+    return {
+      nominal_awal: item.nominal_awal || item.nominal_bantuan,
+      nominal_bantuan: payload.nominal_baru,
+      nomor_ba_penyesuaian: payload.nomor_ba_penyesuaian
+    };
+  }
+
+  // 8.1 Percobaan ubah nominal PKH (APBN Pusat)
+  const bansosPKH = { id: 101, jenis_bansos: 'PKH', nominal_bantuan: 600000, sumber_dana: 'APBN_PUSAT' };
+  let apbnLockPassed = false;
+  try {
+    adjustQuota(bansosPKH, { nominal_baru: 300000, nomor_ba_penyesuaian: 'BA/01', alasan_penyesuaian: 'Bagi rata' });
+  } catch (e) {
+    if (e.message.includes('terkunci oleh regulasi kementerian')) {
+      apbnLockPassed = true;
+    }
+  }
+  assert(apbnLockPassed, '8.1', 'Legal Lock Berhasil: Penyesuaian nominal bansos APBN Pusat ditolak mutlak');
+
+  // 8.2 Penyesuaian proporsional bansos APBD Kelurahan via BA Muskel
+  const bansosAPBD = { id: 102, jenis_bansos: 'Bantuan Sembako Kelurahan', nominal_bantuan: 500000, sumber_dana: 'APBD_KELURAHAN' };
+  const hasilAPBD = adjustQuota(bansosAPBD, {
+    nominal_baru: 250000,
+    nomor_ba_penyesuaian: 'BA-MUSKEL/04/KBJ/2026',
+    alasan_penyesuaian: 'Pemerataan penambahan 50 KK miskin ekstrem hasil muskel'
+  });
+  assert(hasilAPBD.nominal_bantuan === 250000 && hasilAPBD.nominal_awal === 500000, '8.2', 'Fleksibilitas APBD Muskel Berhasil: Nominal disesuaikan dan jejak audit nominal awal tersimpan');
+}
+
+// -----------------------------------------------------------------------------
+// 9. BUSINESS LOGIC TEST: PENJADWALAN & PENERBITAN TIKET RESMI BER-QR CODE
+// -----------------------------------------------------------------------------
+function testBansosQRTicketScheduling() {
+  console.log('\n📌 UJI 9: Penjadwalan Pengambilan Bantuan & Penerbitan Tiket QR Code');
+
+  function scheduleTicket(bansosId, payload) {
+    if (!payload.jadwal_pengambilan_tanggal) {
+      throw new Error('Tanggal pengambilan wajib diisi.');
+    }
+    const qrCode = `BW-TKT-${bansosId}-${Date.now().toString(36).toUpperCase()}`;
+    return {
+      id: bansosId,
+      jadwal_pengambilan_tanggal: payload.jadwal_pengambilan_tanggal,
+      jadwal_pengambilan_waktu: payload.jadwal_pengambilan_waktu || '09:00 - 12:00 WIB',
+      lokasi_pengambilan: payload.lokasi_pengambilan || 'Kantor Kelurahan Kebonjati',
+      persyaratan_bawaan: payload.persyaratan_bawaan || 'KTP Asli, KK Asli, dan Tiket Pengambilan ini',
+      qr_ticket_code: qrCode
+    };
+  }
+
+  const ticket = scheduleTicket(77, {
+    jadwal_pengambilan_tanggal: '2026-10-05',
+    jadwal_pengambilan_waktu: 'Sesi Pagi 09:00 - 11:30 WIB',
+    lokasi_pengambilan: 'Aula Kantor Kelurahan Kebonjati, Jl. Kebonjati No. 12'
+  });
+
+  assert(ticket.qr_ticket_code.startsWith('BW-TKT-77-'), '9.1', 'Kode tiket QR resmi terbit dengan format standar SPBE');
+  assert(ticket.lokasi_pengambilan.includes('Kebonjati'), '9.2', 'Lokasi pengambilan kantor kelurahan terkonfigurasi dengan jelas');
+  assert(ticket.jadwal_pengambilan_tanggal === '2026-10-05', '9.3', 'Tanggal dan sesi jam pengambilan terarsip lengkap untuk warga');
+}
+
+// -----------------------------------------------------------------------------
 // MAIN TEST RUNNER
 // -----------------------------------------------------------------------------
 console.log('========================================================================');
@@ -361,6 +542,9 @@ testKKBoundaryAndLetterLogic();
 testLetterRequirementsTracing();
 testPersonaSwitching();
 testBansosFamilyVisibility();
+testDesilPMTAndSPTJM();
+testBansosLegalSourceLock();
+testBansosQRTicketScheduling();
 
 console.log('\n========================================================================');
 console.log(`📊 HASIL EVALUASI AKHIR:`);

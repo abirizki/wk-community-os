@@ -85,18 +85,32 @@ class DesilRepository {
 
   /**
    * Mengajukan pembaruan desil resmi ke kelurahan dengan melampirkan berkas bukti kementerian
+   * Mengajukan pembaruan desil resmi ke kelurahan dengan melampirkan berkas bukti kementerian & SPTJM Warga
    */
   async submitUpdateWithBukti(no_kk, data, userId, userRole) {
     const query = `
       INSERT INTO desil_keluarga (
         no_kk, desil_usulan, daya_listrik, status_rumah, sumber_air,
+        no_kk, desil_usulan, desil_resmi_pemerintah, id_dtks_kemensos, id_dtks_resmi, status_dtks,
+        bansos_diterima_resmi, status_sinkronisasi,
+        daya_listrik, status_rumah, sumber_air,
         luas_lantai_kategori, bahan_bakar_memasak, kepemilikan_motor, kepemilikan_mobil,
         ada_disabilitas_lansia_tunggal, ada_anak_sekolah_pip, id_dtks_kemensos,
+        ada_disabilitas_lansia_tunggal, ada_anak_sekolah_pip,
         bukti_kementerian_url, nomor_referensi_bukti,
+        foto_rumah_depan_url, foto_rumah_dalam_url, foto_meteran_listrik_url,
+        sptjm_warga_accepted, sptjm_warga_at,
         status_verifikasi, diajukan_oleh_user_id, diajukan_oleh_role, tanggal_pengajuan
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'MENUNGGU_VERIFIKASI_KELURAHAN', ?, ?, NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'MENUNGGU_GROUND_CHECK_RT', ?, ?, NOW())
       ON DUPLICATE KEY UPDATE
         desil_usulan = VALUES(desil_usulan),
+        desil_resmi_pemerintah = VALUES(desil_resmi_pemerintah),
+        id_dtks_kemensos = VALUES(id_dtks_kemensos),
+        id_dtks_resmi = VALUES(id_dtks_resmi),
+        status_dtks = VALUES(status_dtks),
+        bansos_diterima_resmi = VALUES(bansos_diterima_resmi),
+        status_sinkronisasi = VALUES(status_sinkronisasi),
         daya_listrik = VALUES(daya_listrik),
         status_rumah = VALUES(status_rumah),
         sumber_air = VALUES(sumber_air),
@@ -110,6 +124,12 @@ class DesilRepository {
         bukti_kementerian_url = COALESCE(VALUES(bukti_kementerian_url), bukti_kementerian_url),
         nomor_referensi_bukti = VALUES(nomor_referensi_bukti),
         status_verifikasi = 'MENUNGGU_VERIFIKASI_KELURAHAN',
+        foto_rumah_depan_url = COALESCE(VALUES(foto_rumah_depan_url), foto_rumah_depan_url),
+        foto_rumah_dalam_url = COALESCE(VALUES(foto_rumah_dalam_url), foto_rumah_dalam_url),
+        foto_meteran_listrik_url = COALESCE(VALUES(foto_meteran_listrik_url), foto_meteran_listrik_url),
+        sptjm_warga_accepted = VALUES(sptjm_warga_accepted),
+        sptjm_warga_at = NOW(),
+        status_verifikasi = 'MENUNGGU_GROUND_CHECK_RT',
         diajukan_oleh_user_id = VALUES(diajukan_oleh_user_id),
         diajukan_oleh_role = VALUES(diajukan_oleh_role),
         tanggal_pengajuan = NOW()
@@ -118,6 +138,12 @@ class DesilRepository {
     await pool.execute(query, [
       no_kk,
       data.desil_usulan,
+      data.desil_resmi_pemerintah ? parseInt(data.desil_resmi_pemerintah, 10) : null,
+      data.id_dtks_kemensos || null,
+      data.id_dtks_resmi || data.id_dtks_kemensos || null,
+      data.status_dtks || 'BELUM_TERDAFTAR',
+      data.bansos_diterima_resmi || null,
+      data.status_sinkronisasi || 'MENUNGGU_GROUND_CHECK',
       data.daya_listrik || '900 VA',
       data.status_rumah || 'Milik Sendiri',
       data.sumber_air || 'PDAM/Leding',
@@ -130,11 +156,78 @@ class DesilRepository {
       data.id_dtks_kemensos || null,
       data.bukti_kementerian_url || null,
       data.nomor_referensi_bukti || null,
+      data.foto_rumah_depan_url || null,
+      data.foto_rumah_dalam_url || null,
+      data.foto_meteran_listrik_url || null,
+      data.sptjm_warga_accepted ? 1 : 0,
       userId || null,
       userRole || 'warga'
     ]);
 
     return this.findByNoKK(no_kk);
+  }
+
+  /**
+   * Rekam Hasil Ground Checking Lapangan oleh Verifikator RT/RW
+   */
+  async recordGroundCheckRT(id, data, verifikatorUser) {
+    const query = `
+      UPDATE desil_keluarga SET
+        status_verifikasi = 'TERVERIFIKASI_RT',
+        sptjm_verifikator_accepted = 1,
+        sptjm_verifikator_at = NOW(),
+        verifikator_rt_user_id = ?,
+        tanggal_ground_check = NOW(),
+        catatan_ground_check_rt = ?,
+        foto_rumah_depan_url = COALESCE(?, foto_rumah_depan_url),
+        foto_rumah_dalam_url = COALESCE(?, foto_rumah_dalam_url),
+        foto_meteran_listrik_url = COALESCE(?, foto_meteran_listrik_url)
+      WHERE id = ?
+    `;
+
+    await pool.execute(query, [
+      verifikatorUser.id,
+      data.catatan_ground_check_rt || 'Hasil verifikasi faktual lapangan RT/RW sesuai kondisi nyata.',
+      data.foto_rumah_depan_url || null,
+      data.foto_rumah_dalam_url || null,
+      data.foto_meteran_listrik_url || null,
+      id
+    ]);
+
+    return this.findById(id);
+  }
+
+  /**
+   * Rekonsiliasi & Koreksi Data Pembanding Resmi oleh Admin Kelurahan
+   */
+  async reconcileKelurahan(id, data, adminUser) {
+    const query = `
+      UPDATE desil_keluarga SET
+        desil_resmi_pemerintah = ?,
+        id_dtks_resmi = ?,
+        status_dtks = ?,
+        status_sinkronisasi = ?,
+        catatan_komparasi_kelurahan = ?,
+        desil_saat_ini = ?,
+        status_verifikasi = ?,
+        disahkan_oleh_user_id = ?,
+        tanggal_pengesahan = NOW()
+      WHERE id = ?
+    `;
+
+    await pool.execute(query, [
+      data.desil_resmi_pemerintah !== undefined && data.desil_resmi_pemerintah !== null ? parseInt(data.desil_resmi_pemerintah, 10) : null,
+      data.id_dtks_resmi || null,
+      data.status_dtks || 'TERDAFTAR_AKTIF',
+      data.status_sinkronisasi || 'SINKRON',
+      data.catatan_komparasi_kelurahan || 'Telah disinkronkan dengan basis data SIKS-NG Dinsos.',
+      data.desil_saat_ini ? parseInt(data.desil_saat_ini, 10) : null,
+      data.status_verifikasi || 'VERIFIED_KELURAHAN',
+      adminUser.id,
+      id
+    ]);
+
+    return this.findById(id);
   }
 
   /**

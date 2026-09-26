@@ -67,11 +67,31 @@ router.get('/stats', requireAuth, async (req, res) => {
   }
 });
 
-// PATCH /api/desil/:id/verify - Pengesahan Status Desil oleh Admin Kelurahan
-router.patch('/:id/verify', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin'), async (req, res) => {
+// PATCH /api/desil/:id/ground-check - Verifikasi Lapangan & Unggah Foto Fakta oleh RT/RW
+router.patch('/:id/ground-check', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'), async (req, res) => {
+  try {
+    const data = await desilService.recordGroundCheckRT(Number(req.params.id), req.body, req.session.user);
+    res.json({ success: true, message: 'Hasil ground checking RT/RW berhasil dicatat.', data });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// PATCH /api/desil/:id/reconcile - Meja Rekonsiliasi & Koreksi Data Pembanding Resmi Kelurahan
+router.patch('/:id/reconcile', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'lurah', 'admin'), async (req, res) => {
+  try {
+    const data = await desilService.reconcileKelurahan(Number(req.params.id), req.body, req.session.user);
+    res.json({ success: true, message: 'Data komparasi resmi kelurahan berhasil disinkronkan.', data });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// PATCH /api/desil/:id/verify - Pengesahan Status Desil oleh Admin Kelurahan / Lurah
+router.patch('/:id/verify', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'lurah', 'admin'), async (req, res) => {
   try {
     const { status, desilFinal, catatan } = req.body;
-    const data = await desilService.verifyDesil(req.params.id, { status, desilFinal, catatan }, req.session.user);
+    const data = await desilService.verifyDesil(Number(req.params.id), { status, desilFinal, catatan }, req.session.user);
     res.json({ success: true, message: `Status desil berhasil diperbarui menjadi ${status}.`, data });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

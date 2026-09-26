@@ -210,6 +210,105 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] CREATE bansos_pengajuan note:', e.message);
     }
 
+    // 4.1 Pastikan tabel desil_keluarga tersedia
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`desil_keluarga\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`no_kk\` VARCHAR(16) NOT NULL UNIQUE,
+          \`desil_saat_ini\` INT NULL,
+          \`desil_usulan\` INT NULL,
+          \`desil_resmi_pemerintah\` INT NULL,
+          \`id_dtks_kemensos\` VARCHAR(50) NULL,
+          \`id_dtks_resmi\` VARCHAR(50) NULL,
+          \`status_dtks\` VARCHAR(50) DEFAULT 'BELUM_TERDAFTAR',
+          \`bansos_diterima_resmi\` VARCHAR(255) NULL,
+          \`status_verifikasi\` VARCHAR(50) DEFAULT 'DRAFT_USULAN',
+          \`status_sinkronisasi\` VARCHAR(50) DEFAULT 'DRAFT',
+          \`daya_listrik\` VARCHAR(50) NULL DEFAULT '900 VA',
+          \`status_rumah\` VARCHAR(50) NULL DEFAULT 'Milik Sendiri',
+          \`sumber_air\` VARCHAR(50) NULL DEFAULT 'PDAM/Leding',
+          \`luas_lantai_kategori\` VARCHAR(50) NULL DEFAULT '8 - 14 m2',
+          \`bahan_bakar_memasak\` VARCHAR(50) NULL DEFAULT 'Gas 3kg',
+          \`kepemilikan_motor\` VARCHAR(50) NULL DEFAULT '1 unit',
+          \`kepemilikan_mobil\` TINYINT(1) DEFAULT 0,
+          \`ada_disabilitas_lansia_tunggal\` TINYINT(1) DEFAULT 0,
+          \`ada_anak_sekolah_pip\` TINYINT(1) DEFAULT 0,
+          \`bukti_kementerian_url\` VARCHAR(255) NULL,
+          \`nomor_referensi_bukti\` VARCHAR(100) NULL,
+          \`foto_rumah_depan_url\` VARCHAR(255) NULL,
+          \`foto_rumah_dalam_url\` VARCHAR(255) NULL,
+          \`foto_meteran_listrik_url\` VARCHAR(255) NULL,
+          \`sptjm_warga_accepted\` TINYINT(1) DEFAULT 0,
+          \`sptjm_warga_at\` DATETIME NULL,
+          \`sptjm_verifikator_accepted\` TINYINT(1) DEFAULT 0,
+          \`sptjm_verifikator_at\` DATETIME NULL,
+          \`verifikator_rt_user_id\` INT NULL,
+          \`tanggal_ground_check\` DATETIME NULL,
+          \`catatan_ground_check_rt\` TEXT NULL,
+          \`catatan_komparasi_kelurahan\` TEXT NULL,
+          \`catatan_kelurahan\` TEXT NULL,
+          \`diajukan_oleh_user_id\` INT NULL,
+          \`diajukan_oleh_role\` VARCHAR(50) DEFAULT 'warga',
+          \`tanggal_pengajuan\` DATETIME NULL,
+          \`disahkan_oleh_user_id\` INT NULL,
+          \`tanggal_pengesahan\` DATETIME NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_desil_no_kk\` (\`no_kk\`),
+          INDEX \`idx_desil_status\` (\`status_verifikasi\`),
+          INDEX \`idx_desil_sinkron\` (\`status_sinkronisasi\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE desil_keluarga note:', e.message);
+    }
+
+    // 4.2 Patch kolom baru pada tabel desil_keluarga
+    const desilCols = [
+      'desil_resmi_pemerintah INT NULL',
+      'id_dtks_resmi VARCHAR(50) NULL',
+      "status_dtks VARCHAR(50) DEFAULT 'BELUM_TERDAFTAR'",
+      'bansos_diterima_resmi VARCHAR(255) NULL',
+      "status_sinkronisasi VARCHAR(50) DEFAULT 'DRAFT'",
+      'sptjm_warga_accepted TINYINT(1) DEFAULT 0',
+      'sptjm_warga_at DATETIME NULL',
+      'sptjm_verifikator_accepted TINYINT(1) DEFAULT 0',
+      'sptjm_verifikator_at DATETIME NULL',
+      'foto_rumah_depan_url VARCHAR(255) NULL',
+      'foto_rumah_dalam_url VARCHAR(255) NULL',
+      'foto_meteran_listrik_url VARCHAR(255) NULL',
+      'catatan_ground_check_rt TEXT NULL',
+      'verifikator_rt_user_id INT NULL',
+      'tanggal_ground_check DATETIME NULL',
+      'catatan_komparasi_kelurahan TEXT NULL'
+    ];
+    for (const dCol of desilCols) {
+      try {
+        await connection.query(`ALTER TABLE desil_keluarga ADD COLUMN ${dCol}`);
+      } catch (e) {}
+    }
+
+    // 4.3 Patch kolom baru pada tabel bansos_pengajuan (Sumber Dana, Penyesuaian Kuota & Penjadwalan Tiket)
+    const bansosExtraCols = [
+      "sumber_dana VARCHAR(50) DEFAULT 'APBN_PUSAT'",
+      'nominal_awal DECIMAL(12,2) NULL',
+      'alasan_penyesuaian TEXT NULL',
+      'nomor_ba_penyesuaian VARCHAR(100) NULL',
+      'disetujui_penyesuaian_rw TINYINT(1) DEFAULT 0',
+      'disetujui_penyesuaian_rt TINYINT(1) DEFAULT 0',
+      'jadwal_pengambilan_tanggal DATE NULL',
+      'jadwal_pengambilan_waktu VARCHAR(100) NULL',
+      'lokasi_pengambilan VARCHAR(255) NULL',
+      'persyaratan_bawaan TEXT NULL',
+      'qr_ticket_code VARCHAR(100) NULL'
+    ];
+    for (const bCol of bansosExtraCols) {
+      try {
+        await connection.query(`ALTER TABLE bansos_pengajuan ADD COLUMN ${bCol}`);
+      } catch (e) {}
+    }
+
     // 5. Pastikan kolom jenis_surat dan jenis_dokumen serta kolom pendukung di dokumen_request tersedia
     const dokCols = [
       'jenis_surat VARCHAR(100) NULL',

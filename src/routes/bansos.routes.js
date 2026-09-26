@@ -130,5 +130,35 @@ router.get('/stats-penyelamatan', requireAuth, async (req, res) => {
   }
 });
 
+// PATCH /api/bansos/:id/adjust-quota - Penyesuaian kuota proporsional berbasis Muskel
+router.patch('/:id/adjust-quota', requireAuth, requireRole('admin_kelurahan', 'lurah', 'superadmin', 'admin'), async (req, res) => {
+  try {
+    const result = await bansosService.adjustQuota(Number(req.params.id), req.body, req.session.user);
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// PATCH /api/bansos/:id/schedule - Penjadwalan & Penerbitan Tiket Undangan Ber-QR
+router.patch('/:id/schedule', requireAuth, requireRole('admin_kelurahan', 'lurah', 'superadmin', 'admin'), async (req, res) => {
+  try {
+    const result = await bansosService.scheduleTicket(Number(req.params.id), req.body, req.session.user);
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/bansos/my-tickets - Undangan & Tiket Pengambilan Bantuan Resmi Digital untuk Warga
+router.get('/my-tickets', requireAuth, async (req, res) => {
+  try {
+    const tickets = await bansosService.getMyBansosTickets(req.session.user);
+    res.json({ success: true, data: tickets });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
 

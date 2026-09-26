@@ -118,6 +118,25 @@ export default function BansosPage() {
   const [isDrawing, setIsDrawing] = useState(false);
 
   // Propose Form State
+  // Sprint 4: Penyesuaian Kuota APBD & Penjadwalan Tiket QR
+  const [myTickets, setMyTickets] = useState([]);
+  const [showAdjustQuotaModal, setShowAdjustQuotaModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [adjustQuotaForm, setAdjustQuotaForm] = useState({
+    bansos_ids: [],
+    nominal_baru: '',
+    alasan_penyesuaian: '',
+    nomor_ba_penyesuaian: '',
+    disetujui_penyesuaian_rw: false,
+    disetujui_penyesuaian_rt: false
+  });
+  const [scheduleForm, setScheduleForm] = useState({
+    jadwal_pengambilan_tanggal: '',
+    jadwal_pengambilan_waktu: '09:00 - 12:00 WIB',
+    lokasi_pengambilan: 'Kantor Kelurahan Kebonjati, Jl. Kebonjati No. 12',
+    persyaratan_bawaan: 'KTP Asli, KK Asli, dan Tiket Pengambilan ini'
+  });
+
   const [proposeForm, setProposeForm] = useState({
     nik_penerima: '',
     no_kk: '',
@@ -188,12 +207,67 @@ export default function BansosPage() {
     }
   };
 
+  const fetchMyTickets = async () => {
+    try {
+      const res = await api.get('/bansos/my-tickets');
+      if (res.data?.success && res.data.data) {
+        setMyTickets(res.data.data);
+      }
+    } catch (err) {
+      console.warn('Gagal memuat tiket bansos warga:', err.message);
+    }
+  };
+
   useEffect(() => {
     fetchBansos();
+    fetchMyTickets();
     if (isOfficer) {
       fetchAuditList();
     }
   }, [search, filterJenis, filterRT]);
+
+  // Submit Penyesuaian Nominal Kuota APBD (BA Muskel)
+  const handleAdjustQuotaSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedBansos) return;
+    try {
+      setSubmittingAction(true);
+      setError('');
+      const res = await api.patch('/bansos/adjust-quota', {
+        ...adjustQuotaForm,
+        bansos_ids: [selectedBansos.id],
+        nominal_baru: Number(adjustQuotaForm.nominal_baru)
+      });
+      setSuccessMsg(res.message || 'Nominal kuota bantuan berhasil disesuaikan berbasis BA Muskel.');
+      setShowAdjustQuotaModal(false);
+      fetchBansos();
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } catch (err) {
+      setError(err.message || 'Gagal menyesuaikan kuota bantuan.');
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  // Submit Penjadwalan Pengambilan Bantuan & Tiket QR
+  const handleScheduleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedBansos) return;
+    try {
+      setSubmittingAction(true);
+      setError('');
+      const res = await api.patch(`/bansos/${selectedBansos.id}/schedule`, scheduleForm);
+      setSuccessMsg(res.message || 'Jadwal pengambilan dan tiket QR resmi berhasil diterbitkan.');
+      setShowScheduleModal(false);
+      fetchBansos();
+      fetchMyTickets();
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } catch (err) {
+      setError(err.message || 'Gagal menjadwalkan pengambilan bantuan.');
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
 
   // Submit Audit Sanggahan oleh RT/RW
   const handleAuditSubmit = async (e) => {
@@ -630,21 +704,49 @@ export default function BansosPage() {
           )}
 
           <button
-            onClick={() => setActiveTab('audit_disputes')}
+            onClick={() => setActiveTab('tickets')}
             className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
-              activeTab === 'audit_disputes'
-                ? 'bg-rose-600 text-white shadow-sm font-bold'
-                : 'text-rose-700 bg-rose-50/70 hover:bg-rose-100/70 border border-rose-200'
+              activeTab === 'tickets'
+                ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                : 'text-emerald-700 bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200'
             }`}
           >
-            <AlertTriangle size={15} />
-            <span>Review Sanggahan Bansos RT/RW ({auditList.length})</span>
+            <QrCode size={15} />
+            <span>Tiket Pengambilan ({myTickets.length})</span>
+          </button>
+        </div>
+      )}
+
+      {/* TABS (FOR NON-OFFICER / WARGA) */}
+      {!isOfficer && (
+        <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-x-auto p-1.5 gap-1.5 scrollbar-none mb-3">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center gap-2 transition-all ${
+              activeTab === 'all'
+                ? 'bg-primary text-on-primary shadow-sm'
+                : 'text-on-surface-variant hover:bg-surface-container-low'
+            }`}
+          >
+            <Gift size={15} />
+            <span>Daftar Bantuan Sosial</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('tickets')}
+            className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center gap-2 transition-all ${
+              activeTab === 'tickets'
+                ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
+            }`}
+          >
+            <QrCode size={15} />
+            <span>Tiket Undangan Pengambilan ({myTickets.length})</span>
           </button>
         </div>
       )}
 
       {/* FILTER & SEARCH BAR (REGULAR BANSOS) */}
-      {activeTab !== 'audit_disputes' && (
+      {activeTab !== 'audit_disputes' && activeTab !== 'tickets' && (
         <>
           <div className="flex flex-col sm:flex-row gap-3 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant">
             <div className="relative flex-1">
@@ -745,9 +847,32 @@ export default function BansosPage() {
                         <span className="inline-block px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                           {item.jenis_bansos}
                         </span>
+                        <div>
+                          {item.sumber_dana === 'APBN_PUSAT' ? (
+                            <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300">
+                              <ShieldCheck size={11} className="text-slate-600" /> APBN Pusat (Terkunci)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                              <Coins size={11} className="text-blue-600" /> APBD Kelurahan (Fleksibel Muskel)
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 text-right font-semibold whitespace-nowrap">
-                        Rp {Number(item.nominal_bantuan || 0).toLocaleString('id-ID')}
+                        {item.nominal_awal && Number(item.nominal_awal) !== Number(item.nominal_bantuan) ? (
+                          <div>
+                            <span className="line-through text-slate-400 text-xs mr-1.5">
+                              Rp {Number(item.nominal_awal).toLocaleString('id-ID')}
+                            </span>
+                            <span className="text-emerald-700 font-bold">
+                              Rp {Number(item.nominal_bantuan || 0).toLocaleString('id-ID')}
+                            </span>
+                            <div className="text-[10px] text-amber-700 font-medium">Penyesuaian Muskel</div>
+                          </div>
+                        ) : (
+                          <span>Rp {Number(item.nominal_bantuan || 0).toLocaleString('id-ID')}</span>
+                        )}
                       </td>
                       <td className="p-4 text-center whitespace-nowrap">
                         {renderStatusBadge(item)}
@@ -779,22 +904,63 @@ export default function BansosPage() {
                                 <X size={14} />
                               </button>
                             </div>
-                          ) : item.status === 'APPROVED' ? (
-                            <button
-                              onClick={() => openDisburseModal(item)}
-                              className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition-all mx-auto"
-                            >
-                              <Camera size={14} /> Salurkan
-                            </button>
-                          ) : item.status === 'DISBURSED' ? (
-                            <button
-                              onClick={() => openViewProofModal(item)}
-                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all mx-auto border border-slate-200"
-                            >
-                              <Eye size={13} /> Bukti Serah
-                            </button>
                           ) : (
-                            <span className="text-xs text-on-surface-variant italic">-</span>
+                            <div className="flex flex-col items-center gap-1.5">
+                              {item.status === 'APPROVED' && (
+                                <button
+                                  onClick={() => openDisburseModal(item)}
+                                  className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1 shadow-sm transition-all"
+                                >
+                                  <Camera size={13} /> Salurkan
+                                </button>
+                              )}
+                              {item.status === 'DISBURSED' && (
+                                <button
+                                  onClick={() => openViewProofModal(item)}
+                                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all border border-slate-200"
+                                >
+                                  <Eye size={13} /> Bukti Serah
+                                </button>
+                              )}
+                              {/* Tombol Penyesuaian Kuota APBD untuk Kelurahan */}
+                              {isKelurahan && item.sumber_dana !== 'APBN_PUSAT' && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedBansos(item);
+                                    setAdjustQuotaForm({
+                                      bansos_ids: [item.id],
+                                      nominal_baru: String(item.nominal_bantuan || ''),
+                                      alasan_penyesuaian: item.alasan_penyesuaian || '',
+                                      nomor_ba_penyesuaian: item.nomor_ba_penyesuaian || '',
+                                      disetujui_penyesuaian_rw: !!item.disetujui_penyesuaian_rw,
+                                      disetujui_penyesuaian_rt: !!item.disetujui_penyesuaian_rt
+                                    });
+                                    setShowAdjustQuotaModal(true);
+                                  }}
+                                  className="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded text-[11px] font-semibold transition-colors flex items-center gap-1"
+                                >
+                                  <Coins size={11} /> Ubah Kuota APBD
+                                </button>
+                              )}
+                              {/* Tombol Penjadwalan & Tiket QR */}
+                              {(isKelurahan || isRW) && ['APPROVED', 'APPROVED_KELURAHAN', 'DISBURSED'].includes(item.status) && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedBansos(item);
+                                    setScheduleForm({
+                                      jadwal_pengambilan_tanggal: item.jadwal_pengambilan_tanggal ? item.jadwal_pengambilan_tanggal.slice(0, 10) : '',
+                                      jadwal_pengambilan_waktu: item.jadwal_pengambilan_waktu || '09:00 - 12:00 WIB',
+                                      lokasi_pengambilan: item.lokasi_pengambilan || 'Kantor Kelurahan Kebonjati, Jl. Kebonjati No. 12',
+                                      persyaratan_bawaan: item.persyaratan_bawaan || 'KTP Asli, KK Asli, dan Tiket Pengambilan ini'
+                                    });
+                                    setShowScheduleModal(true);
+                                  }}
+                                  className="px-2 py-0.5 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-300 rounded text-[11px] font-semibold transition-colors flex items-center gap-1"
+                                >
+                                  <QrCode size={11} /> {item.jadwal_pengambilan_tanggal ? 'Edit Jadwal/QR' : 'Jadwal & QR'}
+                                </button>
+                              )}
+                            </div>
                           )}
                         </td>
                       )}
@@ -807,6 +973,106 @@ export default function BansosPage() {
           </div>
         </div>
       </>
+      )}
+
+      {/* ===================================================================== */}
+      {/* TIKET RESMI PENGAMBILAN BANTUAN BER-QR CODE (WARGA & PETUGAS)         */}
+      {/* ===================================================================== */}
+      {activeTab === 'tickets' && (
+        <div className="space-y-4">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-900 leading-relaxed flex items-start gap-3 shadow-sm">
+            <QrCode size={24} className="text-emerald-700 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm text-emerald-950 mb-0.5">Tiket Undangan Pengambilan Bantuan Resmi (Digital)</h4>
+              <p>
+                Bawa tiket ber-QR ini beserta KTP dan Kartu Keluarga (KK) asli saat datang ke meja pelayanan Kelurahan sesuai jadwal dan tempat pengambilan yang tertera di bawah ini.
+              </p>
+            </div>
+          </div>
+
+          {myTickets.length === 0 ? (
+            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-10 text-center text-slate-500 text-sm">
+              <QrCode size={36} className="mx-auto mb-2 text-slate-300" />
+              <p className="font-semibold text-slate-700">Belum ada tiket pengambilan bantuan aktif.</p>
+              <p className="text-xs text-slate-400 mt-1">Tiket QR akan otomatis terbit setelah usulan bantuan disahkan dan dijadwalkan oleh pihak Kelurahan.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {myTickets.map((t) => (
+                <div key={t.id} className="bg-white rounded-2xl border-2 border-emerald-400 shadow-md overflow-hidden relative">
+                  <div className="bg-gradient-to-r from-emerald-800 to-teal-800 text-white p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-semibold tracking-wider uppercase opacity-90">Bumi Warga - Jabar Pintar Digital</span>
+                      <span className="text-[11px] font-mono bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                        {t.qr_ticket_code || `BW-TKT-${t.id}`}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold mt-1.5">{t.jenis_bansos}</h3>
+                    <p className="text-xs text-emerald-100">
+                      Penerima: <strong>{t.nama_penerima}</strong> (NIK: {t.nik_penerima})
+                    </p>
+                  </div>
+
+                  <div className="p-4 space-y-3 text-xs">
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-slate-700">
+                          <Clock size={14} className="text-emerald-600" />
+                          <span className="font-bold text-slate-900">
+                            {t.jadwal_pengambilan_tanggal ? new Date(t.jadwal_pengambilan_tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Menunggu Penjadwalan'}
+                          </span>
+                        </div>
+                        <div className="text-slate-600 pl-5 font-medium">{t.jadwal_pengambilan_waktu || '09:00 - 12:00 WIB'}</div>
+                      </div>
+                      <div className="p-2 bg-white rounded-lg border border-slate-300 flex flex-col items-center justify-center shadow-inner">
+                        <QrCode size={52} className="text-slate-900" />
+                        <span className="text-[9px] font-mono mt-1 text-slate-600 font-bold">
+                          {t.qr_ticket_code ? t.qr_ticket_code.slice(0, 10) : 'VERIFIED'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 text-slate-700 pt-1">
+                      <div className="flex items-start gap-2">
+                        <MapPin size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="block text-[11px] text-slate-900">Lokasi / Tempat Pengambilan:</strong>
+                          <span>{t.lokasi_pengambilan || 'Kantor Kelurahan Kebonjati, Jl. Kebonjati No. 12'}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <FileCheck size={15} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="block text-[11px] text-slate-900">Persyaratan Wajib Bawa:</strong>
+                          <span>{t.persyaratan_bawaan || 'KTP Asli, KK Asli, dan Tiket Pengambilan ini'}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                        <span className="text-slate-500">Nominal Hak Bantuan:</span>
+                        <span className="text-emerald-700 font-bold text-base">
+                          Rp {Number(t.nominal_bantuan || 0).toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-between items-center border-t border-slate-100">
+                      <span className="text-[11px] text-slate-400 font-mono">Status: {t.status === 'DISBURSED' ? 'SUDAH DISALURKAN' : 'SIAP DIAMBIL'}</span>
+                      <button
+                        type="button"
+                        onClick={() => window.print()}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5 shadow-sm text-xs transition-all"
+                      >
+                        <Printer size={13} /> Cetak Undangan
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* ===================================================================== */}
@@ -1796,6 +2062,242 @@ export default function BansosPage() {
                 <Printer size={15} /> Cetak Berita Acara / PDF
               </button>
             </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL PENYESUAIAN KUOTA NOMINAL APBD (BA MUSKEL)                      */}
+      {/* ===================================================================== */}
+      {showAdjustQuotaModal && selectedBansos && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-slate-900"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-slate-200">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Coins className="text-amber-600" size={20} /> Penyesuaian Nilai Kuota Bansos APBD (BA Muskel)
+              </h3>
+              <button onClick={() => setShowAdjustQuotaModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed space-y-1">
+              <div className="font-bold flex items-center gap-1.5 text-amber-950">
+                <ShieldAlert size={15} className="text-amber-600" /> Regulasi Penyesuaian Kuota:
+              </div>
+              <p>
+                Bantuan <strong>APBN Pusat</strong> terkunci paten oleh regulasi kementerian. Penyesuaian nilai kuota hanya diperbolehkan untuk bantuan bersumber <strong>APBD Kelurahan / CSR Lokal</strong> guna pemerataan jumlah penerima manfaat yang disepakati melalui Berita Acara Musyawarah Kelurahan (Muskel) bersama RT dan RW.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-slate-500">Penerima:</span>
+                <p className="font-bold text-slate-800">{selectedBansos.nama_penerima}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">Program:</span>
+                <p className="font-bold text-slate-800">{selectedBansos.jenis_bansos}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">Nominal Semula:</span>
+                <p className="font-bold text-slate-800">Rp {Number(selectedBansos.nominal_awal || selectedBansos.nominal_bantuan || 0).toLocaleString('id-ID')}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">Sumber Anggaran:</span>
+                <p className="font-bold text-blue-700">{selectedBansos.sumber_dana || 'APBD_KELURAHAN'}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleAdjustQuotaSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nominal Disesuaikan Baru (Rp) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={adjustQuotaForm.nominal_baru}
+                  onChange={(e) => setAdjustQuotaForm({ ...adjustQuotaForm, nominal_baru: e.target.value })}
+                  placeholder="Contoh: 300000"
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-amber-500 font-bold text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nomor Berita Acara (BA) Muskel / SK Lurah *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={adjustQuotaForm.nomor_ba_penyesuaian}
+                  onChange={(e) => setAdjustQuotaForm({ ...adjustQuotaForm, nomor_ba_penyesuaian: e.target.value })}
+                  placeholder="Contoh: BA-MUSKEL/04/KBJ/2026"
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Alasan Penyesuaian Nilai Kuota *
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  value={adjustQuotaForm.alasan_penyesuaian}
+                  onChange={(e) => setAdjustQuotaForm({ ...adjustQuotaForm, alasan_penyesuaian: e.target.value })}
+                  placeholder="Contoh: Penyesuaian proporsional kuota dana kelurahan agar dapat dibagikan secara merata ke seluruh warga terdampak."
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              {/* Konfirmasi Persetujuan RT & RW */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <span className="text-[11px] font-bold text-slate-700 block">Persetujuan Musyawarah Kewilayahan:</span>
+                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={adjustQuotaForm.disetujui_penyesuaian_rw}
+                    onChange={(e) => setAdjustQuotaForm({ ...adjustQuotaForm, disetujui_penyesuaian_rw: e.target.checked })}
+                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+                  />
+                  <span>Telah disetujui oleh Pengurus RW setempat</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={adjustQuotaForm.disetujui_penyesuaian_rt}
+                    onChange={(e) => setAdjustQuotaForm({ ...adjustQuotaForm, disetujui_penyesuaian_rt: e.target.checked })}
+                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+                  />
+                  <span>Telah disetujui oleh Pengurus RT setempat</span>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setShowAdjustQuotaModal(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingAction}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-amber-600 text-white hover:bg-amber-700 shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {submittingAction ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                  Simpan Penyesuaian Kuota
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL PENJADWALAN PENGAMBILAN & TIKET QR                              */}
+      {/* ===================================================================== */}
+      {showScheduleModal && selectedBansos && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-slate-900"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-slate-200">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <QrCode className="text-purple-600" size={20} /> Penjadwalan & Penerbitan Tiket QR
+              </h3>
+              <button onClick={() => setShowScheduleModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 text-xs text-purple-900 leading-relaxed">
+              Penerima: <strong>{selectedBansos.nama_penerima}</strong> (NIK: {selectedBansos.nik_penerima}) &bull; Program: <strong>{selectedBansos.jenis_bansos}</strong>.
+              Tiket undangan ber-QR code akan langsung tampil di akun dashboard warga.
+            </div>
+
+            <form onSubmit={handleScheduleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Tanggal Pengambilan Bantuan *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={scheduleForm.jadwal_pengambilan_tanggal}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, jadwal_pengambilan_tanggal: e.target.value })}
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Waktu / Sesi Pengambilan *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={scheduleForm.jadwal_pengambilan_waktu}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, jadwal_pengambilan_waktu: e.target.value })}
+                  placeholder="Contoh: Sesi Pagi 09:00 - 11:30 WIB"
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Tempat / Meja Pengambilan *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={scheduleForm.lokasi_pengambilan}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, lokasi_pengambilan: e.target.value })}
+                  placeholder="Contoh: Aula Kantor Kelurahan Kebonjati, Jl. Kebonjati No. 12"
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Dokumen Persyaratan yang Wajib Dibawa Warga
+                </label>
+                <input
+                  type="text"
+                  value={scheduleForm.persyaratan_bawaan}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, persyaratan_bawaan: e.target.value })}
+                  placeholder="Contoh: KTP Asli, KK Asli, dan Tiket Pengambilan ini"
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleModal(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingAction}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-purple-600 text-white hover:bg-purple-700 shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {submittingAction ? <Loader2 size={14} className="animate-spin" /> : <QrCode size={14} />}
+                  Terbitkan Jadwal & Tiket QR
+                </button>
+              </div>
+            </form>
           </motion.div>
         </div>
       )}

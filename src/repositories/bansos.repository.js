@@ -19,6 +19,8 @@ class BansosRepository {
       jenis_bansos,
       alasan_pengajuan,
       nominal_bantuan = 0,
+      nominal_awal = null,
+      sumber_dana = 'APBN_PUSAT',
       status = 'PENDING_RT',
       approval_step = 'RT',
       rt,
@@ -30,8 +32,8 @@ class BansosRepository {
 
     const [result] = await pool.execute(
       `INSERT INTO bansos_pengajuan 
-       (nomor_pengajuan, no_kk, nik_penerima, nama_penerima, jenis_bansos, alasan_pengajuan, nominal_bantuan, status, approval_step, rt, rw, diajukan_oleh_user_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (nomor_pengajuan, no_kk, nik_penerima, nama_penerima, jenis_bansos, alasan_pengajuan, nominal_bantuan, nominal_awal, sumber_dana, status, approval_step, rt, rw, diajukan_oleh_user_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         noPengajuan,
         no_kk,
@@ -40,6 +42,8 @@ class BansosRepository {
         jenis_bansos,
         alasan_pengajuan,
         nominal_bantuan,
+        nominal_awal || nominal_bantuan,
+        sumber_dana,
         status,
         approval_step,
         rt,
@@ -53,6 +57,50 @@ class BansosRepository {
       nomor_pengajuan: noPengajuan,
       ...payload
     };
+  }
+
+  /**
+   * Penyesuaian kuota proporsional bansos APBD Kelurahan berbasis Muskel
+   */
+  async adjustQuota(id, data) {
+    const { nominal_bantuan, nominal_awal, alasan_penyesuaian, nomor_ba_penyesuaian, disetujui_penyesuaian_rw = 1, disetujui_penyesuaian_rt = 1 } = data;
+    await pool.execute(
+      `UPDATE bansos_pengajuan SET
+         nominal_bantuan = ?,
+         nominal_awal = COALESCE(nominal_awal, ?),
+         alasan_penyesuaian = ?,
+         nomor_ba_penyesuaian = ?,
+         disetujui_penyesuaian_rw = ?,
+         disetujui_penyesuaian_rt = ?
+       WHERE id = ?`,
+      [nominal_bantuan, nominal_awal, alasan_penyesuaian, nomor_ba_penyesuaian, disetujui_penyesuaian_rw, disetujui_penyesuaian_rt, id]
+    );
+    return this.findById(id);
+  }
+
+  /**
+   * Penjadwalan & Penerbitan Tiket Undangan Pengambilan Bantuan Ber-QR
+   */
+  async scheduleTicket(id, data) {
+    const qrCode = data.qr_ticket_code || `VERIF-BANSOS-${id}-${Date.now().toString(36).toUpperCase()}`;
+    await pool.execute(
+      `UPDATE bansos_pengajuan SET
+         jadwal_pengambilan_tanggal = ?,
+         jadwal_pengambilan_waktu = ?,
+         lokasi_pengambilan = ?,
+         persyaratan_bawaan = ?,
+         qr_ticket_code = ?
+       WHERE id = ?`,
+      [
+        data.jadwal_pengambilan_tanggal,
+        data.jadwal_pengambilan_waktu || '09:00 - 12:00 WIB',
+        data.lokasi_pengambilan || 'Kantor Kelurahan Kebonjati',
+        data.persyaratan_bawaan || '1. KTP Asli Penerima\n2. Kartu Keluarga (KK) Asli\n3. Tunjukkan QR Code Tiket ini',
+        qrCode,
+        id
+      ]
+    );
+    return this.findById(id);
   }
 
   /**
