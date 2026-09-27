@@ -1,10 +1,9 @@
-/**
+﻿/**
  * Service Worker: Bumi Warga — Community OS
  * Progressive Web App & Robust Offline-First Support
  */
 
-const CACHE_VERSION = 'bumi-warga-v4';
-const CACHE_VERSION = 'bumi-warga-v5';
+const CACHE_VERSION = 'bumi-warga-v6';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 
@@ -229,3 +228,4 @@ self.addEventListener('sync', (event) => {
     );
   }
 });
+

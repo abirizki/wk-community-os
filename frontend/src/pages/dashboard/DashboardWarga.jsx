@@ -43,6 +43,7 @@ import {
   ShieldCheck,
   HelpCircle,
   ExternalLink,
+  ChevronRight,
   Camera,
   Sparkles,
   Layers,
@@ -848,3 +849,4 @@ export default function DashboardWarga() {
     </div>
   );
 }
+
