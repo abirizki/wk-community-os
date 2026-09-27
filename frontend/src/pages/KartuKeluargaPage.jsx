@@ -1,4 +1,4 @@
-﻿/**
+/**
  * frontend/src/pages/KartuKeluargaPage.jsx
  * Blanko Otentik Kartu Keluarga Republik Indonesia (Kemendagri Standard)
  * Terintegrasi Super Apps Bumi Warga:

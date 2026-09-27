@@ -1,4 +1,4 @@
-﻿/**
+/**
  * frontend/src/components/KanayaAIAssistant.jsx
  * KANAYA (Kawan Layanan Warga) â€” Asisten AI Pintar Bumi Warga
  * Fitur:

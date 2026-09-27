@@ -385,6 +385,12 @@ async function autoPatchDatabase() {
     const wargaSocialCols = [
       "kategori_asuransi VARCHAR(100) NULL DEFAULT 'Tidak Memiliki Asuransi'",
       "nomor_asuransi VARCHAR(50) NULL",
+      "bpjs_kesehatan VARCHAR(50) NULL",
+      "bpjs_kesehatan_status VARCHAR(50) NULL DEFAULT 'Aktif'",
+      "bpjs_ketenagakerjaan VARCHAR(50) NULL",
+      "bpjs_ketenagakerjaan_status VARCHAR(50) NULL DEFAULT 'Non-PPU'",
+      "kip VARCHAR(50) NULL",
+      "kis VARCHAR(50) NULL",
       "bukti_bansos_url VARCHAR(255) NULL",
       "catatan_bansos_mandiri TEXT NULL",
       "pin_mandiri VARCHAR(255) NULL",
@@ -753,7 +759,11 @@ async function autoPatchDatabase() {
           pekerjaan: 'Karyawan Swasta',
           pendidikan: 'S1',
           goldar: 'O',
-          status: 'Tetap'
+          status: 'Tetap',
+          bpjs_kes: '0001234567891',
+          bpjs_tk: '21098765432',
+          kip: null,
+          kis: '0001234567891'
         },
         {
           nik: '3273014505880002',
@@ -768,7 +778,11 @@ async function autoPatchDatabase() {
           pekerjaan: 'Ibu Rumah Tangga',
           pendidikan: 'SMA/SMK',
           goldar: 'A',
-          status: 'Tetap'
+          status: 'Tetap',
+          bpjs_kes: '0001234567892',
+          bpjs_tk: null,
+          kip: null,
+          kis: '0001234567892'
         },
         {
           nik: '3273010505240001',
@@ -783,7 +797,11 @@ async function autoPatchDatabase() {
           pekerjaan: 'Belum/Tidak Bekerja',
           pendidikan: 'Belum Sekolah',
           goldar: 'O',
-          status: 'Tetap'
+          status: 'Tetap',
+          bpjs_kes: '0001234567893',
+          bpjs_tk: null,
+          kip: 'KIP-2024-00892',
+          kis: '0001234567893'
         },
         {
           nik: '3273010101550001',
@@ -798,21 +816,29 @@ async function autoPatchDatabase() {
           pekerjaan: 'Pensiunan',
           pendidikan: 'D3/Akademi',
           goldar: 'B',
-          status: 'Tetap'
+          status: 'Tetap',
+          bpjs_kes: '0001234567894',
+          bpjs_tk: null,
+          kip: null,
+          kis: '0001234567894'
         }
       ];
 
       for (const m of anggotaList) {
         await connection.execute(`
           INSERT INTO \`warga\` 
-            (\`nik\`, \`no_kk\`, \`nama\`, \`jenis_kelamin\`, \`tempat_lahir\`, \`tanggal_lahir\`, \`agama\`, \`status_perkawinan\`, \`status_hubungan_keluarga\`, \`pekerjaan\`, \`pendidikan_terakhir\`, \`golongan_darah\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`, \`status_kependudukan\`)
+            (\`nik\`, \`no_kk\`, \`nama\`, \`jenis_kelamin\`, \`tempat_lahir\`, \`tanggal_lahir\`, \`agama\`, \`status_perkawinan\`, \`status_hubungan_keluarga\`, \`pekerjaan\`, \`pendidikan_terakhir\`, \`golongan_darah\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`, \`status_kependudukan\`, \`bpjs_kesehatan\`, \`bpjs_ketenagakerjaan\`, \`kip\`, \`kis\`)
           VALUES 
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Jl. Kebonjati No. 12', '001', '001', 'Kebonjati', 'Andir', 'Kota Bandung', 'Jawa Barat', '40181', ?)
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Jl. Kebonjati No. 12', '001', '001', 'Kebonjati', 'Andir', 'Kota Bandung', 'Jawa Barat', '40181', ?, ?, ?, ?, ?)
           ON DUPLICATE KEY UPDATE 
             \`no_kk\` = VALUES(\`no_kk\`),
             \`status_hubungan_keluarga\` = VALUES(\`status_hubungan_keluarga\`),
-            \`pekerjaan\` = VALUES(\`pekerjaan\`);
-        `, [m.nik, m.no_kk, m.nama, m.jk, m.tempat, m.tgl, m.agama, m.kawin, m.hubungan, m.pekerjaan, m.pendidikan, m.goldar, m.status]);
+            \`pekerjaan\` = VALUES(\`pekerjaan\`),
+            \`bpjs_kesehatan\` = VALUES(\`bpjs_kesehatan\`),
+            \`bpjs_ketenagakerjaan\` = VALUES(\`bpjs_ketenagakerjaan\`),
+            \`kip\` = VALUES(\`kip\`),
+            \`kis\` = VALUES(\`kis\`);
+        `, [m.nik, m.no_kk, m.nama, m.jk, m.tempat, m.tgl, m.agama, m.kawin, m.hubungan, m.pekerjaan, m.pendidikan, m.goldar, m.status, m.bpjs_kes, m.bpjs_tk, m.kip, m.kis]);
       }
 
       // Hubungkan user Budi Santoso ke no_kk dan warga
