@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
@@ -32,6 +32,7 @@ import {
 import OfflineIndicator from '../components/OfflineIndicator';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
 import ForceChangePasswordModal from '../components/ForceChangePasswordModal';
+import KanayaAIAssistant from '../components/KanayaAIAssistant';
 
 export default function DashboardLayout() {
   const { user, logout, selectProfile } = useAuth();
@@ -715,6 +716,11 @@ export default function DashboardLayout() {
 
       {/* Force Change Password on First Login (BSSN Security Policy) */}
       <ForceChangePasswordModal />
+
+      {/* Kanaya AI Floating Assistant (Interactive Presence) */}
+      {(!user?.role || user?.role === 'warga' || user?.role === 'pengguna' || user?.role === 'user') && <KanayaAIAssistant user={user} />}
     </div>
   );
 }
+
+

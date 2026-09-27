@@ -3,7 +3,7 @@
  * Super App Citizen Experience Dashboard for Warga (Bumi Warga - Jabar Pintar Digital)
  * Features:
  * - Hero Section dengan Nama User, Identitas KK/NIK, Ringkasan Status & Direct Avatar Upload ðŸ“·
- * - AI Citizen Smart Briefing & Action Card
+ * - KANAYA AI &bull; Smart Citizen Briefing & Action Card
  * - Super Apps Quick Launcher (8 Fitur Utama Ber-badge)
  * - WorkflowStepper Pelacakan Surat Aktif Berjenjang
  * - Monitoring Buku KIA Balita & Kesehatan Lansia Terpadu
@@ -501,11 +501,11 @@ export default function DashboardWarga() {
       {/* ========================================================================= */}
       {/* 2. AI CITIZEN SMART BRIEFING & ACTION CARD                               */}
       {/* ========================================================================= */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50/50 to-white border border-blue-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-cyan-50/90 via-blue-50/60 to-white border-2 border-cyan-300 shadow-md relative overflow-hidden shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
         <div className="space-y-1.5 max-w-2xl">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
-              <Sparkles size={11} className="text-blue-700" /> AI Citizen Smart Briefing
+              <Sparkles size={11} className="text-blue-700" /> KANAYA AI &bull; Smart Citizen Briefing
             </span>
             <span className="text-[10px] text-slate-500 font-mono">Real-Time Update</span>
           </div>
@@ -849,4 +849,5 @@ export default function DashboardWarga() {
     </div>
   );
 }
+
 
