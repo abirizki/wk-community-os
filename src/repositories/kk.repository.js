@@ -36,7 +36,8 @@ class KkRepository {
     const [members] = await pool.execute(
       `SELECT id, nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir,
               agama, status_perkawinan, status_hubungan_keluarga, pekerjaan,
-              pendidikan_terakhir, golongan_darah, rt, rw, alamat, status_kependudukan, no_telepon
+              pendidikan_terakhir, golongan_darah, rt, rw, alamat, status_kependudukan, no_telepon,
+              bpjs_kesehatan, bpjs_kesehatan_status, bpjs_ketenagakerjaan, bpjs_ketenagakerjaan_status, kip, kis
        FROM warga
        WHERE no_kk = ? AND status_kependudukan != 'Meninggal'
        ORDER BY

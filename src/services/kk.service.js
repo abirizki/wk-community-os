@@ -94,7 +94,13 @@ class KkService {
               status_hubungan_keluarga: 'Kepala Keluarga',
               pekerjaan: 'Karyawan Swasta',
               pendidikan_terakhir: 'S1',
-              golongan_darah: 'O'
+              golongan_darah: 'O',
+              bpjs_kesehatan: '0001234567891 (PPU)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: '19028374610 (Tenaga Kerja)',
+              bpjs_ketenagakerjaan_status: 'Aktif',
+              kip: null,
+              kis: 'KIS-PPU-3273'
             },
             {
               id: 2,
@@ -107,7 +113,13 @@ class KkService {
               status_hubungan_keluarga: 'Istri',
               pekerjaan: 'Ibu Rumah Tangga',
               pendidikan_terakhir: 'SMA/SMK',
-              golongan_darah: 'A'
+              golongan_darah: 'A',
+              bpjs_kesehatan: '0001234567892 (PPU Tanggungan)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: null,
+              kis: 'KIS-PPU-3274'
             },
             {
               id: 3,
@@ -120,7 +132,13 @@ class KkService {
               status_hubungan_keluarga: 'Anak',
               pekerjaan: 'Belum/Tidak Bekerja',
               pendidikan_terakhir: 'Belum Sekolah',
-              golongan_darah: 'O'
+              golongan_darah: 'O',
+              bpjs_kesehatan: '0001234567893 (PPU Anak)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: 'KIP-2026-BDG-0812',
+              kis: 'KIS-PPU-3275'
             },
             {
               id: 4,
@@ -133,7 +151,13 @@ class KkService {
               status_hubungan_keluarga: 'Orang Tua / Mertua',
               pekerjaan: 'Pensiunan',
               pendidikan_terakhir: 'D3/Akademi',
-              golongan_darah: 'B'
+              golongan_darah: 'B',
+              bpjs_kesehatan: '0001234567894 (PBI-JK Daerah)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: 'Taspen-Pensiun-5501',
+              bpjs_ketenagakerjaan_status: 'Pensiun',
+              kip: null,
+              kis: 'KIS-PBI-3276'
             }
           ]
         };
