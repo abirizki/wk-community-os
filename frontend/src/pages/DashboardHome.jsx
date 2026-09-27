@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { Link, useNavigate } from 'react-router-dom';
@@ -64,7 +64,7 @@ export default function DashboardHome() {
   }
   // 4. Warga (Citizen Experience & Workflow Stepper)
   // 5. Warga (Citizen Experience & Workflow Stepper)
-  if (user?.role === 'warga') {
+  if (user?.role === 'warga' || user?.role === 'pengguna' || user?.role === 'user' || !user?.role) {
     return <DashboardWarga />;
   }
 
@@ -788,3 +788,4 @@ export default function DashboardHome() {
     </div>
   );
 }
+

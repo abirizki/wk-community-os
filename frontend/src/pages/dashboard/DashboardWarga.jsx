@@ -1,24 +1,22 @@
-/**
+﻿/**
  * frontend/src/pages/dashboard/DashboardWarga.jsx
- * Dedicated Citizen Experience Dashboard for Warga (Sprint 3)
- * Features: Personal AIBriefCard, ActionCenter, KPIGrid (4 metrics),
- * Interactive WorkflowStepper for active documents, and quick service actions.
- * Bumi Warga - Jabar Pintar Digital
+ * Super App Citizen Experience Dashboard for Warga (Bumi Warga - Jabar Pintar Digital)
+ * Features:
+ * - Hero Section dengan Nama User, Identitas KK/NIK, Ringkasan Status & Direct Avatar Upload ðŸ“·
+ * - AI Citizen Smart Briefing & Action Card
+ * - Super Apps Quick Launcher (8 Fitur Utama Ber-badge)
+ * - WorkflowStepper Pelacakan Surat Aktif Berjenjang
+ * - Monitoring Buku KIA Balita & Kesehatan Lansia Terpadu
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 import {
   DashboardShell,
   RoleHeader,
-  AIBriefCard,
-  KPIGrid,
-  KPICard,
   ActionCenter,
-  StatusBadge,
-  SLABadge,
   WorkflowStepper,
   KartuKIADigital,
   KartuLansiaDigital
@@ -44,50 +42,55 @@ import {
   Building2,
   ShieldCheck,
   HelpCircle,
-  ExternalLink
+  ExternalLink,
+  Camera,
+  Sparkles,
+  Layers,
+  MessageSquareWarning,
+  Coins,
+  QrCode,
+  MapPin,
+  Check,
+  UserCheck,
+  Award
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DashboardWarga() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   // Loading & State
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [aiBrief, setAiBrief] = useState(null);
-  const [loadingBrief, setLoadingBrief] = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarToast, setAvatarToast] = useState('');
 
-  // Citizen Data
+  // Citizen Data States
   const [documents, setDocuments] = useState([]);
   const [bansosData, setBansosData] = useState([]);
+  const [myTickets, setMyTickets] = useState([]);
+  const [familyDesil, setFamilyDesil] = useState(null);
   const [iuranStatus, setIuranStatus] = useState({ isPaid: true, label: 'Lunas', amount: 25000, month: 'Bulan Ini' });
-  const [posyanduSchedule, setPosyanduSchedule] = useState('Posyandu Melati RT 001 - Penimbangan Rutin');
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [familyBalita, setFamilyBalita] = useState([]);
   const [familyLansia, setFamilyLansia] = useState([]);
+  const [healthActiveTab, setHealthActiveTab] = useState('balita'); // 'balita' | 'lansia'
 
   // Load Citizen Dashboard Data
   const loadCitizenData = async () => {
     try {
       setRefreshing(true);
 
-      // 1. Personal Role Brief
-      setLoadingBrief(true);
-      api.get('/analytics/role-brief')
-        .then((res) => {
-          if (res.success) setAiBrief(res.data);
-        })
-        .catch((e) => console.warn('Warga brief warning:', e.message))
-        .finally(() => setLoadingBrief(false));
-
-      // 2. Parallel API Calls for Citizen Data
-      const [docRes, bansosRes, iuranRes, posyanduRes, lansiaRes] = await Promise.allSettled([
+      const [docRes, bansosRes, iuranRes, posyanduRes, lansiaRes, desilRes, ticketRes] = await Promise.allSettled([
         api.get('/dokumen/me'),
         api.get('/bansos'),
         api.get('/keuangan/iuran'),
         api.get('/posyandu/me'),
-        api.get('/posyandu/lansia/my')
+        api.get('/posyandu/lansia/my'),
+        api.get('/desil/my-family'),
+        api.get('/bansos/my-tickets')
       ]);
 
       // Handle Documents
@@ -102,6 +105,16 @@ export default function DashboardWarga() {
       // Handle Bansos
       if (bansosRes.status === 'fulfilled' && bansosRes.value?.success) {
         setBansosData(bansosRes.value.data || []);
+      }
+
+      // Handle Tickets QR
+      if (ticketRes.status === 'fulfilled' && ticketRes.value?.data?.data) {
+        setMyTickets(ticketRes.value.data.data || []);
+      }
+
+      // Handle Desil
+      if (desilRes.status === 'fulfilled' && desilRes.value?.data?.data) {
+        setFamilyDesil(desilRes.value.data.data);
       }
 
       // Handle Iuran RT
@@ -128,13 +141,12 @@ export default function DashboardWarga() {
       // Handle Posyandu Balita (Buku KIA Digital Keluarga)
       if (posyanduRes.status === 'fulfilled' && posyanduRes.value?.success && posyanduRes.value.data?.length > 0) {
         setFamilyBalita(posyanduRes.value.data);
-        setPosyanduSchedule(`Posyandu Melati RT ${user?.rt || '001'} - Penimbangan Rutin`);
       } else {
-        // Default Family Child Fallback (Untuk demo akun Budi Santoso & warga Kebonjati)
+        // Fallback Balita Budi Santoso
         setFamilyBalita([
           {
             nik_anak: '3273010505240001',
-            no_kk: '3273012001010001',
+            no_kk: user?.no_kk || '3273010101900001',
             nama_anak: 'Muhammad Al-Fatih',
             jenis_kelamin_anak: 'L',
             tanggal_lahir_anak: '2024-05-05',
@@ -143,7 +155,7 @@ export default function DashboardWarga() {
             rw: user?.rw || '001',
             nama_ibu: 'Siti Aminah',
             nama_ayah: user?.nama || 'Budi Santoso',
-            nama_posyandu: 'Posyandu Melati RW 001',
+            nama_posyandu: `Posyandu Melati RW ${user?.rw || '001'}`,
             umur_bulan: 28,
             latest_checkup: {
               tanggal: '2026-08-18',
@@ -204,7 +216,6 @@ export default function DashboardWarga() {
             ]
           }
         ]);
-        setPosyanduSchedule(`Posyandu Melati RT ${user?.rt || '001'} - Penimbangan Rutin`);
       }
 
       // Handle Posyandu Lansia Keluarga
@@ -248,14 +259,13 @@ export default function DashboardWarga() {
                 tensi_diastolik: 85,
                 gula_darah_sewaktu: 125,
                 skor_kemandirian_adl: 'Mandiri',
-                keluhan_utama: 'Tidak ada keluhan',
-                edukasi: 'Lanjutkan senam lansia dan pola makan sehat.'
+                keluhan_utama: 'Tidak ada keluhan berarti',
+                edukasi: 'Pertahankan aktivitas fisik jalan santai pagi.'
               }
             ]
           }
         ]);
       }
-
     } catch (err) {
       console.error('Error loading citizen data:', err);
     } finally {
@@ -266,146 +276,94 @@ export default function DashboardWarga() {
 
   useEffect(() => {
     loadCitizenData();
-  }, []);
+  }, [user]);
 
-  // Filter Active Documents (in progress) vs Completed
+  // Handler Upload Foto Profil Warga Langsung
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Mohon pilih berkas gambar (JPG, PNG, atau WEBP).');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran foto maksimal 2 MB.');
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      const reader = new FileReader();
+      reader.onload = async (uploadEvent) => {
+        const base64Data = uploadEvent.target?.result;
+        try {
+          const res = await api.post('/auth/update-avatar', { foto_url: base64Data });
+          if (res?.success) {
+            setUser((prev) => ({
+              ...prev,
+              avatar_url: base64Data,
+              foto_url: base64Data
+            }));
+            setAvatarToast('Foto profil berhasil diperbarui!');
+            setTimeout(() => setAvatarToast(''), 3500);
+          } else {
+            alert(res?.message || 'Gagal menyimpan foto profil.');
+          }
+        } catch (postErr) {
+          alert(postErr.message || 'Terjadi kesalahan saat mengunggah foto.');
+        } finally {
+          setUploadingAvatar(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error(err);
+      setUploadingAvatar(false);
+    }
+  };
+
+  // Dokumen Aktif
   const activeDocs = useMemo(() => {
-    return documents.filter((d) => !['APPROVED', 'REJECTED'].includes(d.status));
+    return documents.filter((d) => d.status !== 'REJECTED' && d.status !== 'CANCELLED');
   }, [documents]);
 
-  const returnedDocs = useMemo(() => {
-    return documents.filter((d) => ['RETURNED', 'REVISION'].includes(d.status));
-  }, [documents]);
+  const selectedDoc = documents.find((d) => d.id === selectedDocId) || activeDocs[0] || documents[0] || null;
 
-  const completedDocs = useMemo(() => {
-    return documents.filter((d) => d.status === 'APPROVED');
-  }, [documents]);
-
-  const activeBansos = useMemo(() => {
-    return bansosData.find((b) => b.status === 'APPROVED' || b.status === 'SIAP_AMBIL');
-  }, [bansosData]);
-
-  // Build ActionCenter items for Warga
-  const actionItems = useMemo(() => {
-    const items = [];
-
-    // 1. Berkas yang perlu revisi / dikembalikan
-    if (returnedDocs.length > 0) {
-      items.push({
-        id: 'action-revisi',
-        title: 'Berkas Surat Memerlukan Perbaikan',
-        description: `Terdapat ${returnedDocs.length} permohonan surat dikembalikan oleh pengurus wilayah untuk dilengkapi persyaratannya.`,
-        severity: 'critical',
-        icon: 'MessageSquareWarning',
-        count: returnedDocs.length,
-        primaryAction: {
-          label: 'Perbaiki Berkas',
-          path: '/dashboard/dokumen'
-        }
-      });
-    }
-
-    // 2. Paket bansos siap diambil
-    if (activeBansos) {
-      items.push({
-        id: 'action-bansos-ready',
-        title: 'Paket Bantuan Sosial Siap Disalurkan',
-        description: `Bantuan ${activeBansos.jenis_bansos || 'Sosial'} untuk keluarga Anda telah disetujui dan siap diambil/dicairkan.`,
-        severity: 'high',
-        icon: 'Gift',
-        count: 1,
-        primaryAction: {
-          label: 'Lihat Jadwal Bansos',
-          path: '/dashboard/bansos'
-        }
-      });
-    }
-
-    // 3. Pengingat iuran RT bulan ini
-    if (!iuranStatus.isPaid) {
-      items.push({
-        id: 'action-iuran',
-        title: `Iuran Kas RT (${iuranStatus.month}) Belum Lunas`,
-        description: `Nominal iuran kebersihan & keamanan sebesar Rp ${Number(iuranStatus.amount).toLocaleString('id-ID')}.`,
-        severity: 'medium',
-        icon: 'Wallet',
-        count: 1,
-        primaryAction: {
-          label: 'Konfirmasi Kas RT',
-          path: '/dashboard/keuangan'
-        }
-      });
-    }
-
-    // 4. Panduan pengajuan surat baru jika belum ada surat aktif
-    if (items.length === 0 && activeDocs.length === 0) {
-      items.push({
-        id: 'action-panduan',
-        title: 'Layanan Pengajuan Surat Mandiri',
-        description: 'Ajukan surat pengantar domisili, SKU, SKTM, atau pengantar SKCK tanpa antre di kantor RW/Kelurahan.',
-        severity: 'low',
-        icon: 'FileCheck',
-        primaryAction: {
-          label: 'Buat Permohonan',
-          path: '/dashboard/dokumen'
-        }
-      });
-    }
-
-    return items;
-  }, [returnedDocs, activeBansos, iuranStatus, activeDocs]);
-
-  // Helper to convert document state into WorkflowStepper step nodes
-  const buildDocumentSteps = (doc) => {
+  // Build Workflow Steps untuk dokumen terpilih
+  const getDocSteps = (doc) => {
     if (!doc) return [];
-
-    const isRejected = doc.status === 'REJECTED';
     const isApproved = doc.status === 'APPROVED';
+    const isRejected = doc.status === 'REJECTED';
+    const currentStep = doc.approval_step || 'RT';
 
     return [
       {
         key: 'SUBMIT',
-        label: 'Pengajuan Surat',
+        label: 'Pengajuan Mandiri',
         status: 'completed',
         timestamp: doc.created_at,
-        actor: doc.nama_pemohon || user?.nama || 'Pemohon'
+        actor: user?.nama || 'Pemohon'
       },
       {
         key: 'RT',
         label: 'Verifikasi RT',
-        status: (doc.rt_approved_at || ['RW', 'KELURAHAN', 'COMPLETED'].includes(doc.approval_step) || isApproved)
-          ? 'completed'
-          : doc.approval_step === 'RT' && isRejected
-          ? 'rejected'
-          : doc.approval_step === 'RT'
-          ? 'active'
-          : 'pending',
+        status: isApproved || currentStep === 'RW' || currentStep === 'KELURAHAN' ? 'completed' : currentStep === 'RT' && !isRejected ? 'current' : isRejected ? 'rejected' : 'pending',
         timestamp: doc.rt_approved_at || null,
-        actor: doc.rt ? `Ketua RT ${doc.rt}` : 'Ketua RT'
+        actor: `Ketua RT ${user?.rt || '001'}`
       },
       {
         key: 'RW',
-        label: 'Verifikasi RW',
-        status: (doc.rw_approved_at || ['KELURAHAN', 'COMPLETED'].includes(doc.approval_step) || isApproved)
-          ? 'completed'
-          : doc.approval_step === 'RW' && isRejected
-          ? 'rejected'
-          : doc.approval_step === 'RW'
-          ? 'active'
-          : 'pending',
+        label: 'Validasi RW',
+        status: isApproved || currentStep === 'KELURAHAN' ? 'completed' : currentStep === 'RW' && !isRejected ? 'current' : 'pending',
         timestamp: doc.rw_approved_at || null,
-        actor: doc.rw ? `Ketua RW ${doc.rw}` : 'Ketua RW'
+        actor: `Ketua RW ${user?.rw || '001'}`
       },
       {
         key: 'KELURAHAN',
-        label: 'Pengesahan Kelurahan',
-        status: (doc.kelurahan_approved_at || isApproved)
-          ? 'completed'
-          : doc.approval_step === 'KELURAHAN' && isRejected
-          ? 'rejected'
-          : doc.approval_step === 'KELURAHAN'
-          ? 'active'
-          : 'pending',
+        label: 'Pengesahan Lurah',
+        status: isApproved ? 'completed' : currentStep === 'KELURAHAN' && !isRejected ? 'current' : 'pending',
         timestamp: doc.kelurahan_approved_at || null,
         actor: 'Lurah Kebonjati (TTE)'
       },
@@ -419,361 +377,474 @@ export default function DashboardWarga() {
     ];
   };
 
-  const selectedDoc = documents.find((d) => d.id === selectedDocId) || activeDocs[0] || documents[0] || null;
+  const currentAvatarSrc = user?.avatar_url || user?.foto_url;
 
   return (
-    <DashboardShell
-      className="pb-20"
-      header={
-        <RoleHeader
-          role="warga"
-          userName={user?.nama || user?.username || 'Warga'}
-          scopeLabel={`RT ${user?.rt || '001'} / RW ${user?.rw || '001'}, Kelurahan Kebonjati`}
-          greeting="Portal Layanan Warga Mandiri"
-          onRefresh={loadCitizenData}
-          loading={refreshing}
-        />
-      }
-      briefCard={
-        <AIBriefCard
-          brief={aiBrief}
-          loading={loadingBrief}
-          onRetry={loadCitizenData}
-        />
-      }
-      kpiGrid={
-        <KPIGrid columns={4}>
-          <KPICard
-            label="Surat Aktif Diproses"
-            value={activeDocs.length}
-            unit="berkas"
-            icon={<FileText size={20} className="text-primary" />}
-            urgency={activeDocs.length > 0 ? 'high' : 'low'}
-            trend={activeDocs.length > 0 ? { direction: 'up', label: 'Sedang berjalan' } : null}
-            onClick={() => navigate('/dashboard/dokumen')}
-          />
-          <KPICard
-            label="Status Bansos Keluarga"
-            value={activeBansos ? activeBansos.jenis_bansos || 'Penerima Aktif' : 'Terdaftar DTKS'}
-            unit="bantuan"
-            icon={<Gift size={20} className="text-emerald-600" />}
-            urgency={activeBansos ? 'high' : 'low'}
-            trend={activeBansos ? { direction: 'flat', label: 'Siap diambil' } : null}
-            onClick={() => navigate('/dashboard/bansos')}
-          />
-          <KPICard
-            label="Status Iuran RT"
-            value={iuranStatus.label}
-            unit={iuranStatus.month}
-            icon={<Wallet size={20} className={iuranStatus.isPaid ? 'text-emerald-600' : 'text-amber-600'} />}
-            urgency={iuranStatus.isPaid ? 'low' : 'medium'}
-            trend={!iuranStatus.isPaid ? { direction: 'down', label: 'Perlu konfirmasi' } : null}
-            onClick={() => navigate('/dashboard/keuangan')}
-          />
-          <KPICard
-            label="Jadwal Posyandu Terdekat"
-            value="18 Sep"
-            unit="Mawar RT 001"
-            icon={<HeartPulse size={20} className="text-teal-600" />}
-            urgency="low"
-            trend={{ direction: 'flat', label: 'Penimbangan rutin' }}
-            onClick={() => navigate('/dashboard/posyandu')}
-          />
-        </KPIGrid>
-      }
-      actionCenter={
-        <ActionCenter
-          title="Pusat Tindakan & Informasi Penting Warga"
-          actions={actionItems}
-          maxItems={3}
-          onRefresh={loadCitizenData}
-          isRefreshing={refreshing}
-        />
-      }
-    >
-      {/* SECTION: Visual Progress Surat Aktif (WorkflowStepper) */}
-      <div className="mt-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-outline-variant">
-          <div>
-            <div className="flex items-center gap-2">
-              <Clock size={20} className="text-primary" />
-              <h3 className="text-lg font-bold text-on-surface">
-                Pelacak Tahapan Permohonan Surat (Workflow Progress)
-              </h3>
-            </div>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              Pantau posisi terkini berkas pengajuan surat Anda secara transparan dari RT hingga Kelurahan.
-            </p>
-          </div>
-
-          <Link
-            to="/dashboard/dokumen"
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg bg-primary hover:bg-primary/90 text-on-primary shadow-sm transition-all self-start sm:self-auto cursor-pointer"
+    <div className="max-w-7xl mx-auto space-y-6 pb-16">
+      {/* Toast Alert Avatar */}
+      <AnimatePresence>
+        {avatarToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-5 right-5 z-50 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold"
           >
-            <Plus size={16} />
-            <span>Ajukan Surat Baru</span>
-          </Link>
-        </div>
+            <CheckCircle2 size={16} />
+            <span>{avatarToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Jika belum ada surat sama sekali */}
-        {documents.length === 0 ? (
-          <div className="py-12 px-4 text-center rounded-2xl border border-dashed border-outline-variant bg-surface-container-lowest">
-            <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
-              <FileText size={28} />
-            </div>
-            <h4 className="text-sm font-bold text-on-surface">
-              Belum Ada Riwayat Permohonan Surat
-            </h4>
-            <p className="text-xs text-on-surface-variant max-w-sm mx-auto mt-1 mb-4">
-              Anda belum pernah mengajukan surat keterangan atau pengantar. Gunakan layanan mandiri ini untuk mengajukan kebutuhan dokumen Anda.
-            </p>
-            <Link
-              to="/dashboard/dokumen"
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-primary hover:bg-primary/90 text-on-primary shadow-sm"
-            >
-              <Plus size={16} />
-              <span>Mulai Pengajuan Surat Pertama</span>
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Daftar Berkas Surat Aktif dengan Tab Selector jika lebih dari 1 */}
-            {activeDocs.length > 1 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                {activeDocs.map((doc) => (
-                  <button
-                    key={doc.id}
-                    type="button"
-                    onClick={() => setSelectedDocId(doc.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                      selectedDoc?.id === doc.id
-                        ? 'bg-primary text-on-primary shadow-xs'
-                        : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
-                    }`}
-                  >
-                    {doc.jenis_dokumen || doc.jenis_surat || `Surat #${doc.id}`}
-                  </button>
-                ))}
-              </div>
-            )}
+      {/* ========================================================================= */}
+      {/* 1. HERO SECTION SUPER APP: PROFIL CITIZEN & DIRECT AVATAR UPLOADER       */}
+      {/* ========================================================================= */}
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-xl p-6 sm:p-8 border border-white/10">
+        {/* Glow ambient background */}
+        <div className="absolute -right-10 -bottom-10 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-10 -top-10 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Stepper Card Aktif */}
-            {selectedDoc && (
-              <div className="p-5 sm:p-6 rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-outline-variant/60">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">
-                        {selectedDoc.nomor_registrasi || `REG-${selectedDoc.id}`}
-                      </span>
-                      <StatusBadge status={selectedDoc.status} size="sm" />
-                    </div>
-                    <h4 className="text-base font-bold text-on-surface mt-1.5">
-                      {selectedDoc.jenis_dokumen || selectedDoc.jenis_surat || 'Surat Pengantar'}
-                    </h4>
-                    {selectedDoc.keperluan && (
-                      <p className="text-xs text-on-surface-variant mt-0.5 italic">
-                        Keperluan: "{selectedDoc.keperluan}"
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <SLABadge
-                      deadline={selectedDoc.sla_deadline}
-                      createdAt={selectedDoc.created_at}
-                      status={selectedDoc.status}
-                    />
-                    <Link
-                      to="/dashboard/dokumen"
-                      className="p-2 text-xs font-semibold rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface transition-colors inline-flex items-center gap-1"
-                    >
-                      <Eye size={14} />
-                      <span className="hidden sm:inline">Rincian</span>
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Interactive WorkflowStepper Component */}
-                <div className="py-3 px-1 sm:px-4">
-                  <WorkflowStepper
-                    steps={buildDocumentSteps(selectedDoc)}
-                    orientation="horizontal"
-                    size="md"
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          {/* Avatar & User Core Details */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-5">
+            {/* Avatar Upload Bubble */}
+            <div className="relative group shrink-0">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/10 border-2 border-white/30 backdrop-blur-md overflow-hidden flex items-center justify-center shadow-lg">
+                {currentAvatarSrc ? (
+                  <img
+                    src={currentAvatarSrc}
+                    alt={user?.nama || 'Foto Warga'}
+                    className="w-full h-full object-cover"
                   />
-                </div>
-
-                {/* Catatan Petugas jika ada revisi/penolakan */}
-                {selectedDoc.catatan_petugas && (
-                  <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
-                    <AlertCircle size={16} className="text-amber-700 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold">Catatan Petugas: </span>
-                      <span>{selectedDoc.catatan_petugas}</span>
-                    </div>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-2xl sm:text-3xl font-black">
+                    {user?.nama?.charAt(0) || 'W'}
                   </div>
                 )}
               </div>
-            )}
 
-            {/* Riwayat Surat yang Telah Selesai / Terbit */}
-            {completedDocs.length > 0 && (
-              <div className="pt-4 space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
-                  <CheckCircle2 size={14} className="text-emerald-600" />
-                  Surat Selesai & Siap Unduh ({completedDocs.length})
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {completedDocs.slice(0, 4).map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="p-3.5 rounded-xl border border-outline-variant/80 bg-surface-container-low/40 hover:bg-surface-container-low transition-colors flex items-center justify-between gap-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-on-surface truncate">
-                          {doc.jenis_dokumen || doc.jenis_surat}
-                        </p>
-                        <p className="text-[11px] font-mono text-on-surface-variant">
-                          {doc.nomor_registrasi || `REG-${doc.id}`}
-                        </p>
-                      </div>
-                      <Link
-                        to="/dashboard/dokumen"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs shrink-0 cursor-pointer"
-                      >
-                        <Download size={13} />
-                        <span>Unduh</span>
-                      </Link>
-                    </div>
-                  ))}
-                </div>
+              {/* Camera Trigger Badge */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="absolute -bottom-1 -right-1 p-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md transition-all active:scale-95 group-hover:scale-105"
+                title="Unggah / Ubah Foto Profil Warga"
+              >
+                {uploadingAvatar ? (
+                  <RefreshCw size={14} className="animate-spin" />
+                ) : (
+                  <Camera size={14} />
+                )}
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarFileChange}
+              />
+            </div>
+
+            {/* Nama & Kredensial Kependudukan */}
+            <div className="space-y-1.5 text-center sm:text-left">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/20 text-blue-200 border border-blue-400/30">
+                  Warga Terverifikasi Dukcapil
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  {familyDesil?.desil_resmi_pemerintah ? `Desil ${familyDesil.desil_resmi_pemerintah}` : 'DTSEN Aktif'}
+                </span>
+              </div>
+
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                {user?.nama || 'Budi Santoso'}
+              </h1>
+
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs text-blue-200/90 font-mono">
+                <span>NIK: <strong className="text-white font-bold">{user?.username || user?.nik || '3273010203850003'}</strong></span>
+                <span>&bull;</span>
+                <span>No. KK: <strong className="text-white font-bold">{user?.no_kk || '3273010101900001'}</strong></span>
+              </div>
+
+              <p className="text-[11px] text-blue-300/80 flex items-center justify-center sm:justify-start gap-1">
+                <MapPin size={12} />
+                <span>RT {user?.rt || '001'} / RW {user?.rw || '001'} &bull; Kelurahan Kebonjati, Andir, Kota Bandung</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Actions at Hero */}
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 shrink-0">
+            <button
+              onClick={() => navigate('/dashboard/dokumen')}
+              className="w-full sm:w-auto px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+            >
+              <Plus size={15} />
+              <span>Ajukan Permohonan Surat</span>
+            </button>
+
+            <button
+              onClick={loadCitizenData}
+              disabled={refreshing}
+              className="w-full sm:w-auto px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/20 transition-all flex items-center justify-center gap-2"
+            >
+              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+              <span>Segarkan Data</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. AI CITIZEN SMART BRIEFING & ACTION CARD                               */}
+      {/* ========================================================================= */}
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50/50 to-white border border-blue-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+        <div className="space-y-1.5 max-w-2xl">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
+              <Sparkles size={11} className="text-blue-700" /> AI Citizen Smart Briefing
+            </span>
+            <span className="text-[10px] text-slate-500 font-mono">Real-Time Update</span>
+          </div>
+          <h2 className="text-sm font-bold text-slate-900">
+            {myTickets.length > 0 
+              ? `Tiket Pengambilan Bantuan Sosial Anda Sudah Siap!` 
+              : activeDocs.length > 0 
+              ? `Surat ${activeDocs[0].jenis_dokumen || activeDocs[0].jenis_surat} sedang diverifikasi di tingkat ${activeDocs[0].approval_step || 'RT'}.` 
+              : `Seluruh data kependudukan dan jaring pengaman keluarga dalam status prima.`}
+          </h2>
+          <p className="text-[11px] text-slate-600">
+            {myTickets.length > 0 
+              ? `Undangan resmi bansos dapat dibawa ke Meja Penyaluran Kantor Kelurahan Kebonjati beserta KTP & KK Asli.`
+              : activeDocs.length > 0 
+              ? `Estimasi verifikasi surat berkisar 2-4 jam kerja sesuai SOP Pelayanan Prima Kebonjati.`
+              : `Gunakan tombol aplikasi mandiri di bawah untuk mengakses seluruh layanan administrasi kependudukan Anda.`}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {myTickets.length > 0 ? (
+            <Link
+              to="/dashboard/bansos"
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm transition-colors text-xs"
+            >
+              <QrCode size={14} />
+              <span>Lihat Tiket QR Bansos</span>
+            </Link>
+          ) : (
+            <Link
+              to="/dashboard/kk"
+              className="px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm transition-colors text-xs"
+            >
+              <FileCheck size={14} />
+              <span>Buka Kartu Keluarga</span>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 3. SUPER APPS QUICK LAUNCHER (8 FITUR UTAMA BER-BADGE NOTIFIKASI)        */}
+      {/* ========================================================================= */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+              Layanan Utama Mandiri Warga
+            </h2>
+          </div>
+          <span className="text-xs text-slate-500 font-medium">8 Fitur Terintegrasi</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* 1. Pengajuan Surat */}
+          <Link
+            to="/dashboard/dokumen"
+            className="p-4 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <FileText size={22} />
+              </div>
+              {activeDocs.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                  {activeDocs.length} Proses
+                </span>
+              )}
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Pengajuan Surat</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">SKU, SKTM, Kematian, Nikah</p>
+            </div>
+          </Link>
+
+          {/* 2. Bansos & Tiket QR */}
+          <Link
+            to="/dashboard/bansos"
+            className="p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Gift size={22} />
+              </div>
+              {myTickets.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
+                  Tiket QR Siap
+                </span>
+              )}
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Bansos & Tiket QR</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Jadwal & Meja Penyaluran</p>
+            </div>
+          </Link>
+
+          {/* 3. Desil & Cek Bansos */}
+          <Link
+            to="/dashboard/desil"
+            className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Sparkles size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800">
+                11 Indikator
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Data Desil DTSEN</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Cek Bansos & Ajuan Mandiri</p>
+            </div>
+          </Link>
+
+          {/* 4. Kartu Keluarga Digital */}
+          <Link
+            to="/dashboard/kk"
+            className="p-4 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Users size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                Resmi SIAK
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Kartu Keluarga Digital</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Blanko Kemendagri & NIK</p>
+            </div>
+          </Link>
+
+          {/* 5. Buku KIA Balita */}
+          <button
+            type="button"
+            onClick={() => {
+              setHealthActiveTab('balita');
+              const el = document.getElementById('section-kesehatan-keluarga');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="p-4 rounded-2xl bg-white hover:bg-pink-50/50 border border-slate-200 hover:border-pink-300 shadow-sm transition-all group flex flex-col justify-between space-y-3 text-left"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Baby size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-pink-100 text-pink-800">
+                KMS Digital
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Buku KIA Balita</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Grafik Timbang & Tumbuh</p>
+            </div>
+          </button>
+
+          {/* 6. Kesehatan Lansia */}
+          <button
+            type="button"
+            onClick={() => {
+              setHealthActiveTab('lansia');
+              const el = document.getElementById('section-kesehatan-keluarga');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="p-4 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200 hover:border-teal-300 shadow-sm transition-all group flex flex-col justify-between space-y-3 text-left"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <HeartPulse size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800">
+                Posbindu
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Kesehatan Lansia</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Pantauan Tensi & Gula Darah</p>
+            </div>
+          </button>
+
+          {/* 7. Kas & Iuran RT */}
+          <Link
+            to="/dashboard/keuangan"
+            className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Coins size={22} />
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                iuranStatus.isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+              }`}>
+                {iuranStatus.label}
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Kas & Iuran Warga</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Transparansi Keuangan RT</p>
+            </div>
+          </Link>
+
+          {/* 8. Lapor Pengaduan */}
+          <Link
+            to="/dashboard/pengaduan"
+            className="p-4 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200 hover:border-purple-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <MessageSquareWarning size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
+                Aspirasi
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Lapor Pengaduan</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Sampaikan Keluhan RT/RW</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 4. WORKFLOW STEPPER PELACAKAN DOKUMEN AKTIF                               */}
+      {/* ========================================================================= */}
+      {selectedDoc && (
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+            <div>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                Pelacakan Berkas Pengajuan Surat
+              </span>
+              <h3 className="text-sm font-extrabold text-slate-900">
+                {selectedDoc.jenis_dokumen || selectedDoc.jenis_surat || 'Surat Permohonan'} &bull; <span className="font-mono text-xs text-slate-600">{selectedDoc.nomor_surat || `ID #${selectedDoc.id}`}</span>
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                selectedDoc.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+              }`}>
+                {selectedDoc.status === 'APPROVED' ? 'Selesai / Terbit' : `Proses ${selectedDoc.approval_step || 'RT'}`}
+              </span>
+              <Link
+                to="/dashboard/dokumen"
+                className="text-xs font-bold text-blue-700 hover:text-blue-900 inline-flex items-center gap-1"
+              >
+                <span>Lihat Semua</span>
+                <ChevronRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Workflow Stepper */}
+          <WorkflowStepper steps={getDocSteps(selectedDoc)} />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. MONITORING TERPADU BUKU KIA BALITA & POSYANDU LANSIA KELUARGA          */}
+      {/* ========================================================================= */}
+      <div id="section-kesehatan-keluarga" className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 text-pink-800 mb-1">
+              <HeartPulse size={12} />
+              <span>Jaring Perlindungan Kesehatan Keluarga Terpadu</span>
+            </div>
+            <h2 className="text-base font-extrabold text-slate-900">
+              Buku KIA Balita & Pemantauan Kesehatan Lansia
+            </h2>
+            <p className="text-xs text-slate-500">
+              Rekam medis tumbuh kembang balita (KMS) & skrining berkala lansia di Posyandu Melati RW {user?.rw || '001'}.
+            </p>
+          </div>
+
+          {/* Switcher Tab */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+            <button
+              onClick={() => setHealthActiveTab('balita')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                healthActiveTab === 'balita'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Baby size={14} />
+              <span>Buku KIA Balita ({familyBalita.length})</span>
+            </button>
+            <button
+              onClick={() => setHealthActiveTab('lansia')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                healthActiveTab === 'lansia'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <HeartPulse size={14} />
+              <span>Posyandu Lansia ({familyLansia.length})</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Content Tab KIA Balita */}
+        {healthActiveTab === 'balita' && (
+          <div>
+            {familyBalita.length > 0 ? (
+              <div className="space-y-4">
+                {familyBalita.map((balita, bIdx) => (
+                  <KartuKIADigital key={bIdx} data={balita} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-500 text-xs">
+                Tidak ada data balita terdaftar pada Kartu Keluarga ini.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Content Tab Lansia */}
+        {healthActiveTab === 'lansia' && (
+          <div>
+            {familyLansia.length > 0 ? (
+              <div className="space-y-4">
+                {familyLansia.map((lansia, lIdx) => (
+                  <KartuLansiaDigital key={lIdx} data={lansia} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-500 text-xs">
+                Tidak ada data lansia terdaftar pada Kartu Keluarga ini.
               </div>
             )}
           </div>
         )}
       </div>
-
-      {/* Buku KIA Digital & Kartu Kesehatan Lansia Keluarga */}
-      {(familyBalita.length > 0 || familyLansia.length > 0) && (
-        <div className="mt-10 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse" />
-                <h3 className="text-lg font-bold text-on-surface">
-                  Buku KIA Digital & Kartu Sehat Keluarga
-                </h3>
-              </div>
-              <p className="text-xs text-on-surface-variant mt-1">
-                Catatan resmi tumbuh kembang balita (KMS) dan riwayat pemeriksaan kesehatan lansia dari kader Posyandu lingkungan Anda.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200/80 inline-flex items-center gap-1.5">
-                <Baby size={13} />
-                <span>{familyBalita.length} Balita</span>
-              </span>
-              {familyLansia.length > 0 && (
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 inline-flex items-center gap-1.5">
-                  <HeartPulse size={13} />
-                  <span>{familyLansia.length} Lansia</span>
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Kartu KIA Balita */}
-          {familyBalita.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-teal-800 flex items-center gap-1.5">
-                  <Baby size={15} className="text-teal-600" />
-                  Kartu Menuju Sehat (KMS) & Tumbuh Kembang Anak
-                </h4>
-              </div>
-              <div className="grid grid-cols-1 gap-5">
-                {familyBalita.map((balita, idx) => (
-                  <KartuKIADigital
-                    key={balita.nik_anak || balita.id || idx}
-                    data={balita}
-                    readOnly={true}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Kartu Pemantauan Lansia */}
-          {familyLansia.length > 0 && (
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
-                  <HeartPulse size={15} className="text-emerald-600" />
-                  Kartu Pemantauan Kesehatan Lansia Keluarga
-                </h4>
-              </div>
-              <div className="grid grid-cols-1 gap-5">
-                {familyLansia.map((lansia, idx) => (
-                  <KartuLansiaDigital
-                    key={lansia.nik || lansia.id || idx}
-                    data={lansia}
-                    readOnly={true}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Quick Access Card Grid */}
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Link
-          to="/dashboard/bansos"
-          className="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 transition-all group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center mb-3">
-            <Gift size={20} />
-          </div>
-          <h4 className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-            Cek Program Bansos
-          </h4>
-          <p className="text-xs text-on-surface-variant mt-1">
-            Pantau status verifikasi kelayakan bantuan sosial keluarga dan transparansi kuota lingkungan.
-          </p>
-        </Link>
-
-        <Link
-          to="/dashboard/profil"
-          className="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 transition-all group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center mb-3">
-            <Users size={20} />
-          </div>
-          <h4 className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-            Data Profil & BPJS Mandiri
-          </h4>
-          <p className="text-xs text-on-surface-variant mt-1">
-            Perbarui data kepesertaan jaminan kesehatan mandiri dan kelengkapan identitas keluarga.
-          </p>
-        </Link>
-
-        <Link
-          to="/dashboard/pengaduan"
-          className="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:border-primary/50 transition-all group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center mb-3">
-            <HelpCircle size={20} />
-          </div>
-          <h4 className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-            Pusat Pengaduan Warga
-          </h4>
-          <p className="text-xs text-on-surface-variant mt-1">
-            Sampaikan laporan kendala fasilitas umum, kebersihan, atau keamanan langsung ke aparatur wilayah.
-          </p>
-        </Link>
-      </div>
-    </DashboardShell>
+    </div>
   );
 }
-

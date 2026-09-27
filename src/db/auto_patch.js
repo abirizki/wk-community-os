@@ -698,6 +698,140 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] CREATE kelompok_rentan_rt note:', e.message);
     }
 
+    // 17. Tabel Kartu Keluarga & Auto-Seed KK Warga Resmi (Budi Santoso)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`kartu_keluarga\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`no_kk\` VARCHAR(16) NOT NULL UNIQUE,
+          \`kepala_keluarga\` VARCHAR(150) NOT NULL,
+          \`alamat\` TEXT NOT NULL,
+          \`rt\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
+          \`kecamatan\` VARCHAR(100) NOT NULL DEFAULT 'Andir',
+          \`kota\` VARCHAR(100) NOT NULL DEFAULT 'Bandung',
+          \`provinsi\` VARCHAR(100) NOT NULL DEFAULT 'Jawa Barat',
+          \`kode_pos\` VARCHAR(10) NOT NULL DEFAULT '40181',
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_kk_no\` (\`no_kk\`),
+          INDEX \`idx_kk_rt_rw\` (\`rw\`, \`rt\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      // Tambah kolom no_kk pada tabel users jika belum ada
+      try {
+        await connection.query("ALTER TABLE users ADD COLUMN no_kk VARCHAR(16) NULL");
+      } catch (e) {}
+
+      // Tambah KK Budi Santoso jika belum ada
+      await connection.execute(`
+        INSERT INTO \`kartu_keluarga\` 
+          (\`no_kk\`, \`kepala_keluarga\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`)
+        VALUES 
+          ('3273010101900001', 'Budi Santoso', 'Jl. Kebonjati No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Andir', 'Kota Bandung', 'Jawa Barat', '40181')
+        ON DUPLICATE KEY UPDATE 
+          \`kepala_keluarga\` = 'Budi Santoso',
+          \`alamat\` = 'Jl. Kebonjati No. 12 RT 001/RW 001',
+          \`rt\` = '001',
+          \`rw\` = '001';
+      `);
+
+      // Pastikan tabel warga berisi anggota KK Budi Santoso
+      const anggotaList = [
+        {
+          nik: '3273010203850003',
+          no_kk: '3273010101900001',
+          nama: 'Budi Santoso',
+          jk: 'L',
+          tempat: 'Bandung',
+          tgl: '1985-03-02',
+          agama: 'Islam',
+          kawin: 'Kawin',
+          hubungan: 'Kepala Keluarga',
+          pekerjaan: 'Karyawan Swasta',
+          pendidikan: 'S1',
+          goldar: 'O',
+          status: 'Tetap'
+        },
+        {
+          nik: '3273014505880002',
+          no_kk: '3273010101900001',
+          nama: 'Siti Aminah',
+          jk: 'P',
+          tempat: 'Bandung',
+          tgl: '1988-05-15',
+          agama: 'Islam',
+          kawin: 'Kawin',
+          hubungan: 'Istri',
+          pekerjaan: 'Ibu Rumah Tangga',
+          pendidikan: 'SMA/SMK',
+          goldar: 'A',
+          status: 'Tetap'
+        },
+        {
+          nik: '3273010505240001',
+          no_kk: '3273010101900001',
+          nama: 'Muhammad Al-Fatih',
+          jk: 'L',
+          tempat: 'Bandung',
+          tgl: '2024-05-05',
+          agama: 'Islam',
+          kawin: 'Belum Kawin',
+          hubungan: 'Anak',
+          pekerjaan: 'Belum/Tidak Bekerja',
+          pendidikan: 'Belum Sekolah',
+          goldar: 'O',
+          status: 'Tetap'
+        },
+        {
+          nik: '3273010101550001',
+          no_kk: '3273010101900001',
+          nama: 'H. Suherman',
+          jk: 'L',
+          tempat: 'Bandung',
+          tgl: '1955-01-01',
+          agama: 'Islam',
+          kawin: 'Kawin',
+          hubungan: 'Orang Tua / Mertua',
+          pekerjaan: 'Pensiunan',
+          pendidikan: 'D3/Akademi',
+          goldar: 'B',
+          status: 'Tetap'
+        }
+      ];
+
+      for (const m of anggotaList) {
+        await connection.execute(`
+          INSERT INTO \`warga\` 
+            (\`nik\`, \`no_kk\`, \`nama\`, \`jenis_kelamin\`, \`tempat_lahir\`, \`tanggal_lahir\`, \`agama\`, \`status_perkawinan\`, \`status_hubungan_keluarga\`, \`pekerjaan\`, \`pendidikan_terakhir\`, \`golongan_darah\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`, \`status_kependudukan\`)
+          VALUES 
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Jl. Kebonjati No. 12', '001', '001', 'Kebonjati', 'Andir', 'Kota Bandung', 'Jawa Barat', '40181', ?)
+          ON DUPLICATE KEY UPDATE 
+            \`no_kk\` = VALUES(\`no_kk\`),
+            \`status_hubungan_keluarga\` = VALUES(\`status_hubungan_keluarga\`),
+            \`pekerjaan\` = VALUES(\`pekerjaan\`);
+        `, [m.nik, m.no_kk, m.nama, m.jk, m.tempat, m.tgl, m.agama, m.kawin, m.hubungan, m.pekerjaan, m.pendidikan, m.goldar, m.status]);
+      }
+
+      // Hubungkan user Budi Santoso ke no_kk dan warga
+      await connection.query(`
+        UPDATE users u 
+        SET u.no_kk = '3273010101900001' 
+        WHERE u.username = '3273010203850003' OR u.nama LIKE '%Budi Santoso%'
+      `);
+
+      await connection.query(`
+        UPDATE warga w
+        JOIN users u ON (u.username = w.nik OR u.nama = w.nama)
+        SET w.user_id = u.id
+        WHERE w.nik = '3273010203850003'
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] kartu_keluarga auto-seed note:', e.message);
+    }
+
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');
   } catch (err) {
     console.warn('[AutoPatch] Catatan auto-patch database:', err.message);
