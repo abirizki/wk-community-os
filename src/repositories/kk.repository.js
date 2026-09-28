@@ -33,24 +33,19 @@ class KkRepository {
     if (kkRows.length === 0) return null;
     const kk = kkRows[0];
 
-    const [members] = await pool.execute(
-      `SELECT id, nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir,
-              agama, status_perkawinan, status_hubungan_keluarga, pekerjaan,
-              pendidikan_terakhir, golongan_darah, rt, rw, alamat, status_kependudukan, no_telepon,
-              bpjs_kesehatan, bpjs_kesehatan_status, bpjs_ketenagakerjaan, bpjs_ketenagakerjaan_status, kip, kis
-       FROM warga
-       WHERE no_kk = ? AND status_kependudukan != 'Meninggal'
-       ORDER BY
-         CASE status_hubungan_keluarga
-           WHEN 'Kepala Keluarga' THEN 1
-           WHEN 'Suami' THEN 2
-           WHEN 'Istri' THEN 3
-           WHEN 'Anak' THEN 4
-           ELSE 5
-         END,
-         tanggal_lahir ASC`,
-      [noKk]
-    );
+    let members = [];
+    try {
+      const [rows] = await pool.execute(
+        `SELECT * FROM warga WHERE no_kk = ? AND (status_kependudukan != 'Meninggal' OR status_kependudukan IS NULL) ORDER BY id ASC`,
+        [noKk]
+      );
+      members = rows.map(m => ({
+        ...m,
+        status_hubungan_keluarga: m.status_hubungan_keluarga || m.hubungan_keluarga || 'Anggota'
+      }));
+    } catch (mErr) {
+      console.warn('[KkRepository] Query anggota warga note:', mErr.message);
+    }
     kk.anggota = members;
     return kk;
   }

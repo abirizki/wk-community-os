@@ -118,9 +118,32 @@ async function autoPatchDatabase() {
       } catch (e) {}
     }
 
-    // 2. Pastikan tabel warga memiliki kolom user_id
+    // 2. Pastikan tabel warga memiliki kolom user_id, hubungan keluarga, dan jaminan sosial
+    const wargaColumns = [
+      'user_id INT NULL',
+      "status_hubungan_keluarga VARCHAR(50) NULL DEFAULT 'Anggota'",
+      "hubungan_keluarga VARCHAR(50) NULL DEFAULT 'Anggota'",
+      'bpjs_kesehatan VARCHAR(50) NULL',
+      "bpjs_kesehatan_status VARCHAR(50) NULL DEFAULT 'AKTIF'",
+      'bpjs_ketenagakerjaan VARCHAR(50) NULL',
+      "bpjs_ketenagakerjaan_status VARCHAR(50) NULL DEFAULT 'AKTIF'",
+      'kip VARCHAR(50) NULL',
+      'kis VARCHAR(50) NULL'
+    ];
+    for (const wCol of wargaColumns) {
+      try {
+        await connection.query(`ALTER TABLE warga ADD COLUMN ${wCol}`);
+      } catch (e) {}
+    }
+
+    // Sinkronisasi status_hubungan_keluarga dan hubungan_keluarga jika salah satunya kosong
     try {
-      await connection.query("ALTER TABLE warga ADD COLUMN user_id INT NULL");
+      await connection.query(`
+        UPDATE warga
+        SET status_hubungan_keluarga = COALESCE(status_hubungan_keluarga, hubungan_keluarga, 'Anggota'),
+            hubungan_keluarga = COALESCE(hubungan_keluarga, status_hubungan_keluarga, 'Anggota')
+        WHERE status_hubungan_keluarga IS NULL OR hubungan_keluarga IS NULL
+      `);
     } catch (e) {}
 
     // 3. Pastikan tabel posyandu_lansia dan posyandu_lansia_pemeriksaan ada
