@@ -1,14 +1,11 @@
-/**
+﻿/**
  * frontend/src/components/KanayaAIAssistant.jsx
- * KANAYA (Kawan Layanan Warga) â€” Asisten Cerdas Bumi Warga
- * Berbasis Budaya Kasundaan (Someah Hade ka Semoh) & SOP Pelayanan Publik Jabar Pintar Digital
+ * KANAYA (Kawan Layanan Warga) - Asisten AI Cerdas Bumi Warga
+ * Jabar Pintar Digital
  * 
- * Fitur:
- * - Tema Visual: Soft Blue & Putih Elegan dengan siluet motif Mega Mendung Pasundan
- * - Animasi Premium: Floating Glassmorphic Holographic Orb, Breathing Aura Ring & Smooth Transition
- * - SOP Lengkap Bumi Warga: SKU, SKTM, Pengantar Nikah N1-N4, Kelahiran/Kematian, 
- *   Sanggah 11 Indikator DTSEN, Bansos APBN vs Muskel, Posyandu KIA KMS & Lansia, Iuran RT QRIS
- * - Interactive Chatbot dengan Quick Chips, Natural Kasundaan Greetings, & AI Welfare Diagnostic
+ * Bahasa: Bahasa Indonesia Casual-Formal dengan sentuhan keramahan salam Pasundan (Sampurasun, Rampes, Hatur Nuhun)
+ * Tema: Soft Blue & Putih Elegan
+ * Bebas dari simbol/encoding rusak
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -36,79 +33,87 @@ import {
   Clock,
   Check,
   Coins,
-  Smile
+  Smile,
+  FileText
 } from 'lucide-react';
 
-// Basis Pengetahuan Resmi SOP Bumi Warga (Knowledge Base)
 const BUMI_WARGA_SOP_KNOWLEDGE = [
   {
     id: 'sku',
     title: 'Surat Keterangan Usaha (SKU)',
     category: 'Layanan Surat',
     keywords: ['sku', 'usaha', 'umkm', 'modal', 'bank', 'dagang', 'surat usaha'],
-    answer: 'Sampurasun! Kanggo ngadamel Surat Keterangan Usaha (SKU), ieu alur resmi SOP Bumi Warga:\n\n1. Buka menu **Layanan Surat** > Pilih **Surat Keterangan Usaha (SKU)**.\n2. Eusi formulir: Nami Usaha, Jenis Dagang/Jasa, Alamat Lokasi Usaha, & Lama Berdiri.\n3. Unggah foto tempat/produk usaha.\n4. Ajukan ka RT. Sistem bakal otomatis ngirim notifikasi ka Ketua RT & RW kanggo verifikasi digital (TTE QR-Code).\n5. Saatos disatujuan, surat tiasa langsung diunduh PDF resmi ber-QR Code SPBE.',
-    quickLink: '/surat'
+    answer: 'Sampurasun! Untuk membuat Surat Keterangan Usaha (SKU), berikut langkah mudahnya:\n\n1. Buka menu **Pengajuan Surat** > pilih **Surat Keterangan Usaha (SKU)**.\n2. Lengkapi formulir: Nama Usaha, Jenis Usaha/Dagang, Alamat Usaha, dan Lama Berdiri.\n3. Unggah foto tempat atau produk usaha Anda.\n4. Kirim pengajuan. Sistem akan otomatis meneruskan ke Ketua RT & RW untuk verifikasi digital (TTE QR-Code).\n5. Setelah disahkan oleh pihak Kelurahan, surat resmi ber-QR Code SPBE dapat langsung diunduh dan dicetak mandiri.',
+    quickLink: '/dashboard/dokumen'
   },
   {
     id: 'sktm',
     title: 'Surat Keterangan Tidak Mampu (SKTM)',
     category: 'Bansos & Layanan',
     keywords: ['sktm', 'tidak mampu', 'miskin', 'beasiswa', 'kip', 'pip', 'keringanan'],
-    answer: 'Wilujeng sumping! Pengajuan SKTM di Bumi Warga parantos terintegrasi sareng sistem DTSEN (Desil Kesejahteraan):\n\n1. Pilih jenis kaperluan: **Pendidikan (KIP/Kuliah)** atanapi **Kesehatan (Rujukan RS/BPJS PBI-JK)**.\n2. Data bakal otomatis dikomparasi sareng Desil KK anjeun (Desil 1-3 prioritas otomatis).\n3. Lampirkeun foto bumi (tampak payun & lebet) upami dipundut verifikasi lapangan.\n4. RT bakal ngalakukeun konfirmasi ground check sateuacan pengesahan Kelurahan.',
-    quickLink: '/surat'
+    answer: 'Wilujeng sumping! Pengajuan SKTM di Bumi Warga telah terintegrasi dengan data Desil Kesejahteraan DTSEN:\n\n1. Pilih keperluan surat: **Pendidikan (KIP / Beasiswa)** atau **Kesehatan (Rujukan RS / BPJS PBI-JK)**.\n2. Sistem otomatis memvalidasi tingkat desil keluarga Anda (Desil 1-3 menjadi prioritas otomatis).\n3. Lampirkan foto kondisi rumah jika diminta verifikasi lapangan.\n4. Ketua RT akan melakukan konfirmasi ground check sebelum pengesahan oleh pihak Kelurahan.',
+    quickLink: '/dashboard/dokumen'
   },
   {
     id: 'bansos',
-    title: 'Bansos APBN vs Bansos Muskel (Kelurahan)',
+    title: 'Perbedaan Bansos APBN vs Bansos Muskel',
     category: 'Bantuan Sosial',
     keywords: ['bansos', 'pkh', 'bpnt', 'blt', 'muskel', 'bantuan', 'dtks', 'desil'],
-    answer: 'Ieu bédana Bantuan Sosial di Bumi Warga supados henteu lepat paham:\n\nâ€¢ **Bansos APBN (Pusat)**: PKH, BPNT, & PBI-JK dumasar kana DTKS Kemensos RI & kuota nasional.\nâ€¢ **Bansos Muskel (Musyawarah Kelurahan)**: Bantuan darurat lokal kanggo warga rentan anu teu acan ka-cover Pusat.\nâ€¢ Di menu **Bansos Mandiri**, anjeun tiasa marios riwayat panarimaan sareng ngajukeun sanggahan anomali upami aya anu teu tepat sasaran.',
-    quickLink: '/bansos'
+    answer: 'Berikut perbedaan jenis Bantuan Sosial agar tidak keliru:\n\n- **Bansos APBN (Pusat)**: Seperti PKH, BPNT, dan PBI-JK yang bersumber dari DTKS Kemensos RI dengan kuota nasional.\n- **Bansos Muskel (Kelurahan)**: Bantuan darurat dari kelurahan untuk warga rentan yang belum tercover di tingkat pusat.\n- Di menu **Informasi Bantuan Sosial**, Anda dapat mengecek status bansos keluarga serta tiket QR pengambilan.',
+    quickLink: '/dashboard/bansos'
   },
   {
     id: 'sanggah',
     title: 'Sanggah Desil & Anomali 11 Indikator DTSEN',
     category: 'Kesejahteraan',
     keywords: ['sanggah', 'desil', 'dtsen', 'anomali', 'tidak layak', '11 indikator', 'salah sasaran'],
-    answer: 'Upami aya panarima bansos anu parantos mampu atanapi data Desil KK anjeun henteu saluyu:\n\n1. Buka menu **Audit Bansos & Desil**.\n2. Pilih tombol **Ajukan Sanggah / Usulan Koreksi**.\n3. Eusi 11 Indikator DTSEN: Daya Listrik, Sumber Cai, Status Bumi, Bahan Bakar, Aset Kandaraan, & Anggota Rentan.\n4. Unggah bukti foto KTP/KK & kondisi faktual.\n5. Berkas bakal direview dina Musyawarah RT/RW salajengna.',
-    quickLink: '/kk'
+    answer: 'Jika data Desil Kartu Keluarga Anda tidak sesuai kondisi ekonomi riil:\n\n1. Buka menu **Data Desil & Cek Bansos**.\n2. Klik tombol **Ajukan Sanggah / Usulan Koreksi**.\n3. Isi 11 Indikator Faktual: Daya Listrik, Sumber Air, Status Kepemilikan Rumah, Bahan Bakar Memasak, Aset Kendaraan, dan Anggota Rentan.\n4. Unggah foto bukti kondisi rumah Anda.\n5. Berkas akan diverifikasi oleh RT/RW dalam musyawarah terdekat.',
+    quickLink: '/dashboard/desil'
   },
   {
     id: 'posyandu',
-    title: 'Posyandu KIA KMS & Lansia',
-    category: 'Kesehatan Warga',
+    title: 'Posyandu KIA Balita & Lansia',
+    category: 'Kesehatan Keluarga',
     keywords: ['posyandu', 'balita', 'kms', 'kia', 'stunting', 'imunisasi', 'lansia', 'timbang'],
-    answer: 'Layanan Kaséhatan Posyandu di Bumi Warga nyadiakeun:\n\nâ€¢ **Kartu Balita Sehat (KMS Digital)**: Pantauan beurat awak, jangkungna, status stunting, & jadwal imunisasi rutin tiap sasih.\nâ€¢ **Posbindu Lansia**: Rekam médis tensi darah, gula darah, asam urat, & senam bugar warga sepuh.\nâ€¢ Sadaya anggota kulawarga di KK anu yuswana balita atanapi lansia otomatis kacatet dina buku kaséhatan digital.',
-    quickLink: '/kartu-sehat'
+    answer: 'Layanan Kesehatan Posyandu di Bumi Warga mencakup:\n\n- **Buku KIA Digital (KMS Balita)**: Pantau perkembangan berat badan, tinggi badan, deteksi risiko stunting, dan jadwal imunisasi bulanan.\n- **Posbindu Lansia**: Rekam medis tensi darah, gula darah, dan pemeriksaan kebugaran lansia.\n- Seluruh anggota KK yang berusia balita atau lansia otomatis terdata di modul kesehatan keluarga.',
+    quickLink: '/dashboard/posyandu'
   },
   {
     id: 'nikah',
-    title: 'Surat Pengantar Nikah (N1 - N4)',
+    title: 'Surat Pengantar Nikah (Model N1 - N4)',
     category: 'Kependudukan',
     keywords: ['nikah', 'kawin', 'n1', 'n2', 'n4', 'kua', 'pengantar nikah'],
-    answer: 'Kanggo ngurus Surat Pengantar Nikah (N1-N4) ka KUA/Disdukcapil:\n\n1. Siapkeun scan KTP Calon Penganten, KTP Sepuh/Wali, & KK.\n2. Pilih **Pengantar Nikah (Model N1)** dina menu Layanan Surat.\n3. Eusi data calon pasangan & tanggal akad anu direncanakeun.\n4. RT/RW bakal ngaluarkeun Surat Keterangan Asal-Usul & Kesiapan Administrasi.',
-    quickLink: '/surat'
+    answer: 'Untuk pengurusan Surat Pengantar Nikah (N1-N4) ke KUA atau Disdukcapil:\n\n1. Siapkan foto KTP calon pengantin, KTP orang tua/wali, dan Kartu Keluarga.\n2. Pilih **Surat Pengantar Nikah** pada menu Pengajuan Surat.\n3. Lengkapi identitas calon pasangan serta rencana tanggal dan lokasi akad.\n4. RT dan RW akan menerbitkan rekomendasi pengantar resmi secara digital.',
+    quickLink: '/dashboard/dokumen'
   },
   {
     id: 'iuran',
-    title: 'Iuran RT QRIS & Kas Lingkungan',
-    category: 'Keuangan Warga',
+    title: 'Iuran RT QRIS & Transparansi Kas',
+    category: 'Keuangan Lingkungan',
     keywords: ['iuran', 'kas', 'qris', 'bayar iuran', 'sampah', 'keamanan', 'pbb'],
-    answer: 'Transparansi Kas & Iuran di Bumi Warga:\n\nâ€¢ Unggal KK tiasa mayar iuran bulanan (kaamanan & kabersihan) nganggo **QRIS Standar** atanapi tunai ka Bendahara RT.\nâ€¢ Status bayar otomatis robah janten **LUNAS** sacara real-time.\nâ€¢ Warga tiasa ningali laporan Kas Masuk & Kas Keluar RT sacara kabuka dina tab Keuangan Lingkungan.',
-    quickLink: '/keuangan'
+    answer: 'Transparansi Kas dan Iuran di Bumi Warga:\n\n- Setiap KK dapat membayar iuran bulanan (keamanan dan kebersihan) melalui **QRIS Standar** atau tunai ke Bendahara RT.\n- Status bayar otomatis terupdate menjadi **Lunas** secara real-time.\n- Warga dapat memantau catatan Kas Masuk dan Keluar RT secara terbuka pada menu Transparansi Kas.',
+    quickLink: '/dashboard/keuangan'
+  },
+  {
+    id: 'kk',
+    title: 'Kartu Keluarga Digital & Jaminan Sosial',
+    category: 'Kependudukan',
+    keywords: ['kartu keluarga', 'kk', 'bpjs', 'kip', 'kis', 'nik', 'blanko'],
+    answer: 'Sampurasun! Kartu Keluarga Digital di Bumi Warga mengikuti format otentik Kemendagri RI:\n\n- Dilengkapi kop resmi Lambang Garuda Pancasila dan TTE QR-Code sah SPBE.\n- Terhubung jaminan sosial per jiwa: BPJS Kesehatan/KIS, BPJS Ketenagakerjaan, serta beasiswa KIP anak sekolah.\n- Dilengkapi AI Family Welfare Auditor untuk mendeteksi rasio beban ketergantungan dan status perlindungan keluarga.',
+    quickLink: '/dashboard/kk'
   }
 ];
 
 export default function KanayaAIAssistant({ user }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'sop' | 'audit'
+  const [activeTab, setActiveTab] = useState('chat');
   const [speechBubbleVisible, setSpeechBubbleVisible] = useState(true);
   const [messages, setMessages] = useState([
     {
       sender: 'kanaya',
-      text: 'Sampurasun! Wilujeng sumping. Simkuring **Kanaya**, asisten pinter Bumi Warga. Aya anu tiasa dibantos perkawis KK Digital, Bansos, atanapi SOP Pelayanan Surat dinten ieu?',
-      time: 'Ayeuna'
+      text: 'Sampurasun! Halo, saya **Kanaya**, asisten cerdas Bumi Warga. Ada yang bisa saya bantu seputar Kartu Keluarga Digital, Bantuan Sosial, atau SOP Pengajuan Surat hari ini?',
+      time: 'Baru saja'
     }
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -125,7 +130,6 @@ export default function KanayaAIAssistant({ user }) {
     }
   }, [messages, isOpen]);
 
-  // Sembunyikan bubble otomatis setelah beberapa saat
   useEffect(() => {
     const timer = setTimeout(() => {
       setSpeechBubbleVisible(false);
@@ -137,7 +141,6 @@ export default function KanayaAIAssistant({ user }) {
     const textToSend = customText || inputValue;
     if (!textToSend.trim()) return;
 
-    // Tambah pesan user
     const userMsg = {
       sender: 'user',
       text: textToSend,
@@ -148,10 +151,9 @@ export default function KanayaAIAssistant({ user }) {
     if (!customText) setInputValue('');
     setIsTyping(true);
 
-    // AI Matcher berbasis SOP Knowledge Base
     setTimeout(() => {
       const query = textToSend.toLowerCase();
-      let matchedSop = BUMI_WARGA_SOP_KNOWLEDGE.find(sop => 
+      const matchedSop = BUMI_WARGA_SOP_KNOWLEDGE.find(sop => 
         sop.keywords.some(k => query.includes(k)) || query.includes(sop.title.toLowerCase())
       );
 
@@ -162,11 +164,11 @@ export default function KanayaAIAssistant({ user }) {
         replyText = matchedSop.answer;
         actionLink = matchedSop.quickLink;
       } else if (query.includes('salam') || query.includes('halo') || query.includes('hai') || query.includes('sampurasun')) {
-        replyText = 'Rampes! Wilujeng tepang deui. Kanaya siap ngabantosan sagala urusan kependudukan, bansos, kas posyandu, dugi ka panyuratan di Bumi Warga.';
-      } else if (query.includes('terima kasih') || query.includes('nuhun')) {
-        replyText = 'Sami-sami! Hatur nuhun parantos nganggo aplikasi Bumi Warga. Mugia kulawarga salawasna sehat sareng walagri.';
+        replyText = 'Rampes! Senang bisa menyapa Anda kembali. Kanaya siap membantu urusan kependudukan, bansos, kas posyandu, hingga administrasi surat di Bumi Warga.';
+      } else if (query.includes('terima kasih') || query.includes('makasih') || query.includes('nuhun')) {
+        replyText = 'Sama-sama! Hatur nuhun telah memanfaatkan layanan digital Bumi Warga. Semoga urusan keluarga Anda selalu lancar dan berkah.';
       } else {
-        replyText = `Hatur nuhun kana patarosan anjeun. Perkawis "${textToSend}", Kanaya nyarankeun anjeun mariksa langsung panduan dina Tab SOP resmi atanapi ngahubungi Pengurus RT satempat.\n\nAnjeun oge tiasa milih topik populér di handap ieu:`;
+        replyText = `Terima kasih atas pertanyaannya. Terkait "${textToSend}", Anda dapat meninjau panduan resmi di Tab Ensiklopedia SOP atau langsung berkonsultasi dengan Pengurus RT setempat.\n\nAnda juga bisa memilih topik populer di bawah ini:`;
       }
 
       setMessages(prev => [
@@ -179,16 +181,15 @@ export default function KanayaAIAssistant({ user }) {
         }
       ]);
       setIsTyping(false);
-    }, 600);
+    }, 500);
   };
 
   const userName = user?.active_nama || user?.nama || 'Warga';
 
   return (
     <>
-      {/* 1. FLOATING AI ASSISTANT ORB (Pojok Kanan Bawah Layar) */}
+      {/* 1. FLOATING AI ASSISTANT ORB */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none print:hidden">
-        {/* Balon Bicara Interaktif Kanaya dengan Nuansa Pasundan */}
         <AnimatePresence>
           {speechBubbleVisible && !isOpen && (
             <motion.div
@@ -211,22 +212,19 @@ export default function KanayaAIAssistant({ user }) {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
                 </span>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">
-                  Kanaya AI Pasundan
+                  Kanaya AI Assistant
                 </span>
               </div>
               <p className="text-xs leading-relaxed text-slate-700">
-                Sampurasun, <strong>{userName}</strong>! Butuh bantosan mariksa KK, BPJS/KIP, atanapi SOP Surat? Klik abdi di dieu!
+                Sampurasun, <strong>{userName}</strong>! Butuh bantuan memeriksa KK Digital, BPJS, KIP, atau SOP pengajuan surat? Klik di sini untuk bertanya!
               </p>
               
-              {/* Panah Balon Bicara */}
               <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white border-b border-r border-sky-100 transform rotate-45"></div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Tombol Orb Holographic dengan Breathing Animation */}
         <div className="pointer-events-auto relative group">
-          {/* Subtle Outer Glow Rings */}
           <div className="absolute -inset-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 rounded-full blur-md opacity-40 group-hover:opacity-75 transition duration-500 animate-pulse"></div>
           
           <button
@@ -252,11 +250,10 @@ export default function KanayaAIAssistant({ user }) {
         </div>
       </div>
 
-      {/* 2. SLIDE-IN KANAYA AI MODAL / DRAWER (Soft Blue & Putih Elegan) */}
+      {/* 2. SLIDE-IN KANAYA AI PANEL */}
       <AnimatePresence>
         {isOpen && (
           <div className="fixed inset-0 z-50 overflow-hidden flex justify-end print:hidden">
-            {/* Backdrop dengan Blur Lembut */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -265,7 +262,6 @@ export default function KanayaAIAssistant({ user }) {
               className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity"
             />
 
-            {/* Slide-out Panel */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
@@ -273,15 +269,7 @@ export default function KanayaAIAssistant({ user }) {
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
               className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col z-50 border-l border-sky-100"
             >
-              {/* Header Kanaya: Nuansa Pasundan Soft Blue */}
               <div className="bg-gradient-to-r from-sky-600 via-blue-600 to-sky-700 text-white p-5 relative overflow-hidden flex-shrink-0">
-                {/* Background Pattern Lembut (Mega Mendung feel) */}
-                <div className="absolute inset-0 opacity-10 pointer-events-none">
-                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M0,50 Q25,20 50,50 T100,50 L100,100 L0,100 Z" fill="currentColor"></path>
-                  </svg>
-                </div>
-
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-inner">
@@ -291,10 +279,10 @@ export default function KanayaAIAssistant({ user }) {
                       <div className="flex items-center gap-2">
                         <h2 className="font-bold text-lg text-white tracking-wide">Kanaya AI</h2>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-400/25 border border-sky-300/40 text-sky-100">
-                          Sunda Pasundan
+                          Asisten Warga
                         </span>
                       </div>
-                      <p className="text-xs text-sky-100/90">Kawan Layanan & SOP Cerdas Bumi Warga</p>
+                      <p className="text-xs text-sky-100/90">Layanan & SOP Cerdas Bumi Warga</p>
                     </div>
                   </div>
                   
@@ -306,7 +294,6 @@ export default function KanayaAIAssistant({ user }) {
                   </button>
                 </div>
 
-                {/* Tab Navigation */}
                 <div className="flex gap-2 mt-4 pt-2 border-t border-sky-500/40">
                   <button
                     onClick={() => setActiveTab('chat')}
@@ -344,9 +331,7 @@ export default function KanayaAIAssistant({ user }) {
                 </div>
               </div>
 
-              {/* Body Content Tab */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/60">
-                {/* TAB 1: INTERACTIVE CHATBOT */}
                 {activeTab === 'chat' && (
                   <div className="flex flex-col h-full justify-between">
                     <div className="space-y-3.5">
@@ -365,7 +350,7 @@ export default function KanayaAIAssistant({ user }) {
                             {msg.sender === 'kanaya' && (
                               <div className="flex items-center gap-1.5 mb-1.5 text-sky-600 font-semibold text-[11px]">
                                 <Smile className="w-3 h-3 text-sky-500" />
-                                Kanaya Pasundan
+                                Kanaya AI
                               </div>
                             )}
                             <div className="whitespace-pre-line">{msg.text}</div>
@@ -400,40 +385,44 @@ export default function KanayaAIAssistant({ user }) {
                       <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Quick Question Chips */}
                     <div className="pt-3">
                       <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-sky-500" />
-                        Patarosan Populer (SOP Kasundaan):
+                        Pertanyaan Populer:
                       </div>
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         <button
-                          onClick={() => handleSendMessage('Kumaha carana ngadamel SKU (Surat Keterangan Usaha)?')}
+                          onClick={() => handleSendMessage('Bagaimana cara membuat Surat Keterangan Usaha (SKU)?')}
                           className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
                         >
-                          ðŸ“  Cara Buat SKU
+                          Cara Buat SKU
                         </button>
                         <button
-                          onClick={() => handleSendMessage('Naon wae syarat pengajuan SKTM pikeun beasiswa?')}
+                          onClick={() => handleSendMessage('Apa saja syarat pengajuan SKTM untuk beasiswa atau KIP?')}
                           className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
                         >
-                          ðŸŽ“ SKTM Beasiswa / KIP
+                          SKTM Beasiswa / KIP
                         </button>
                         <button
-                          onClick={() => handleSendMessage('Kumaha bédana Bansos APBN sareng Muskel?')}
+                          onClick={() => handleSendMessage('Apa perbedaan Bansos APBN dan Bansos Muskel Kelurahan?')}
                           className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
                         >
-                          ðŸŽ Bansos APBN vs Muskel
+                          Bansos APBN vs Muskel
                         </button>
                         <button
-                          onClick={() => handleSendMessage('Kumaha carana sanggah Desil DTSEN anu teu saluyu?')}
+                          onClick={() => handleSendMessage('Bagaimana cara mengajukan sanggah Desil DTSEN yang tidak sesuai?')}
                           className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
                         >
-                          âš–ï¸  Sanggah Desil DTSEN
+                          Sanggah Desil DTSEN
+                        </button>
+                        <button
+                          onClick={() => handleSendMessage('Bagaimana format resmi Kartu Keluarga Digital Kemendagri?')}
+                          className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
+                        >
+                          Format KK Digital & BPJS
                         </button>
                       </div>
 
-                      {/* Chat Input */}
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
@@ -445,7 +434,7 @@ export default function KanayaAIAssistant({ user }) {
                           type="text"
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
-                          placeholder="Taroskeun ka Kanaya perkawis layanan..."
+                          placeholder="Tanyakan ke Kanaya seputar layanan warga..."
                           className="flex-1 text-xs px-3 py-2 bg-transparent focus:outline-none text-slate-800 placeholder-slate-400"
                         />
                         <button
@@ -460,11 +449,10 @@ export default function KanayaAIAssistant({ user }) {
                   </div>
                 )}
 
-                {/* TAB 2: ENSIKLOPEDIA SOP BUMI WARGA */}
                 {activeTab === 'sop' && (
                   <div className="space-y-3">
                     <div className="p-3 bg-sky-50 border border-sky-200 rounded-xl text-xs text-sky-900 leading-relaxed">
-                      <strong>Standar Operasional Prosedur (SOP)</strong> resmi pelayanan publik di lingkungan RT/RW & Kelurahan. Sadaya surat parantos nganggo legalitas TTE QR-Code sah SPBE.
+                      <strong>Standar Operasional Prosedur (SOP)</strong> resmi pelayanan publik di lingkungan RT/RW dan Kelurahan. Semua surat telah menggunakan tanda tangan elektronik resmi (TTE QR-Code) sah SPBE.
                     </div>
 
                     {BUMI_WARGA_SOP_KNOWLEDGE.map((sop) => (
@@ -492,7 +480,6 @@ export default function KanayaAIAssistant({ user }) {
                   </div>
                 )}
 
-                {/* TAB 3: AUDIT BANSOS & KK */}
                 {activeTab === 'audit' && (
                   <div className="space-y-4">
                     <div className="bg-white p-4 rounded-xl border border-sky-100 shadow-sm">
@@ -500,10 +487,10 @@ export default function KanayaAIAssistant({ user }) {
                         <div className="p-1.5 rounded-lg bg-sky-100 text-sky-600">
                           <ShieldCheck className="w-4 h-4" />
                         </div>
-                        <h4 className="font-bold text-xs text-slate-900">Pamariksaan Kesejahteraan KK</h4>
+                        <h4 className="font-bold text-xs text-slate-900">Pemeriksaan Kesejahteraan Keluarga</h4>
                       </div>
                       <p className="text-[11px] text-slate-600 mb-3 leading-relaxed">
-                        Sistem AI Kanaya ngabantosan mariksa kelengkapan administrasi anggota keluarga kalebet status kepesertaan jaminan sosial.
+                        Sistem AI Kanaya membantu memeriksa kelengkapan data administrasi anggota keluarga termasuk status kepesertaan jaminan sosial dan pendidikan.
                       </p>
 
                       <div className="space-y-2 border-t border-slate-100 pt-3">
@@ -540,7 +527,7 @@ export default function KanayaAIAssistant({ user }) {
                       <div className="mt-4 pt-3 border-t border-slate-100">
                         <button
                           onClick={() => {
-                            navigate('/kk');
+                            navigate('/dashboard/kk');
                             setIsOpen(false);
                           }}
                           className="w-full py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center justify-center gap-1.5"
@@ -554,9 +541,8 @@ export default function KanayaAIAssistant({ user }) {
                 )}
               </div>
 
-              {/* Footer Panel */}
               <div className="p-3 bg-white border-t border-slate-200 text-center text-[10px] text-slate-400">
-                Kanaya AI Â· Jabar Pintar Digital Â· Bumi Warga Pasundan
+                Kanaya AI - Jabar Pintar Digital - Bumi Warga
               </div>
             </motion.div>
           </div>

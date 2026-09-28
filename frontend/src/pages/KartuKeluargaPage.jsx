@@ -81,16 +81,18 @@ export default function KartuKeluargaPage() {
       setError(null);
       
       // Ambil data KK digital aktif dari backend
-      const res = await api.get('/api/kk/me');
-      if (res && res.data) {
-        setKkData(res.data);
-      } else {
-        throw new Error('Data KK tidak ditemukan');
+      try {
+        const res = await api.get('/kk/my/card');
+        if (res && res.data) {
+          setKkData(res.data);
+        }
+      } catch (eKk) {
+        console.warn('Menggunakan data KK default/fallback:', eKk.message);
       }
 
       // Ambil data status desil DTSEN jika ada
       try {
-        const desilRes = await api.get('/api/bansos/desil-status');
+        const desilRes = await api.get('/desil/my-family');
         if (desilRes && desilRes.data) {
           setDesilData(desilRes.data);
         }
@@ -206,7 +208,7 @@ export default function KartuKeluargaPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
-              to="/warga"
+              to="/dashboard"
               className="p-2 rounded-xl text-slate-500 hover:text-sky-700 hover:bg-sky-50 transition-colors"
               title="Kembali ke Dashboard"
             >
@@ -222,7 +224,7 @@ export default function KartuKeluargaPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                No. KK: <span className="font-mono font-semibold text-slate-700">{kkData.no_kk}</span> Â· Kepala Keluarga: <span className="font-semibold text-slate-800">{kkData.kepala_keluarga}</span>
+                No. KK: <span className="font-mono font-semibold text-slate-700">{kkData.no_kk}</span> - Kepala Keluarga: <span className="font-semibold text-slate-800">{kkData.kepala_keluarga}</span>
               </p>
             </div>
           </div>

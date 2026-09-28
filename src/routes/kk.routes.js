@@ -11,7 +11,7 @@ const { requireAuth } = require('../middleware/auth.middleware');
 const router = express.Router();
 
 // GET /api/kk/my/card - Kartu Keluarga Digital untuk akun yang sedang login (Anti-IDOR)
-router.get('/my/card', requireAuth, async (req, res) => {
+router.get(['/my/card', '/me', '/my'], requireAuth, async (req, res) => {
   try {
     const card = await kkService.getMyFamilyCard(req.session.user);
     res.json({ success: true, data: card });
