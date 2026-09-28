@@ -7,87 +7,39 @@
 
 const pool = require('./pool');
 
+const STANDARD_PASSWORD_HASH = '$2b$10$hN5MqJELAnUdVw3eoFGBgObO9O5oF/eCGw3rLk6SJv/B4ZMJ7ev3q'; // BumiWarga@2026
+
 const STANDARD_ACCOUNTS = [
-  {
-    username: 'superadmin',
-    nama: 'Super Admin Sistem',
-    role: 'superadmin',
-    rt: null,
-    rw: null,
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIeh/sdJa5doIVSQ6HCNTS2TCPYrymUJAe' // Sukabumi@Diskominfo2026
-  },
-  {
-    username: 'walikota.sukabumi',
-    nama: 'Pimpinan Wilayah Kota',
-    role: 'walikota',
-    rt: null,
-    rw: null,
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIersh.QVMglQPygCV/A3BrDqIGu99Tje6' // Sukabumi@Juara2026
-  },
-  {
-    username: 'camat.cikole',
-    nama: 'Camat Wilayah',
-    role: 'camat',
-    rt: null,
-    rw: null,
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIeg2gqObX2E.F3bniHug6.1VEIVVzDrw2' // Cikole@Bisa2026
-  },
-  {
-    username: 'admin.kebonjati',
-    nama: 'Admin Pelayanan Kelurahan',
-    role: 'admin_kelurahan',
-    rt: null,
-    rw: null,
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIe2zHbxC.mlSHiyvKW1qZPKqEwyfeA7pG' // Kebonjati@Hebat2026
-  },
-  {
-    username: 'lurah.kebonjati',
-    nama: 'Lurah Kebonjati (TTE)',
-    role: 'lurah',
-    rt: null,
-    rw: null,
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIe8DvvnI6qwH5HS/THBUiLR4xMty8Fqb2' // Lurah@Kebonjati2026
-  },
-  {
-    username: 'rw01_kebonjati',
-    nama: 'Ketua RW 001',
-    role: 'ketua_rw',
-    rt: null,
-    rw: '001',
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIe0TQ0qNzLo4sPU1jd5.uOnjo.1wzESFS' // Warga01@Kbj2026
-  },
-  {
-    username: 'rt01_rw01_kbj',
-    nama: 'Ketua RT 001 RW 001',
-    role: 'ketua_rt',
-    rt: '001',
-    rw: '001',
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIeKPZ9EDxTF.S7uSCvnbVh96DiIVLMP1a' // Guyub01@Kbj2026
-  },
-  {
-    username: 'posyandu.melati_rw01',
-    nama: 'Kader Posyandu Melati',
-    role: 'kader_posyandu',
-    rt: null,
-    rw: '001',
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIe6yQHdYNKAuo2WrYVylxSIWxjMds6DJe' // Sehat01@Kbj2026
-  },
-  {
-    username: '3273010203850003',
-    nama: 'Budi Santoso',
-    role: 'warga',
-    rt: '001',
-    rw: '001',
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIeFikSbl7QyRSVM7/Loh1SWYQwh.CT8Si' // Warga@0003#2026
-  },
-  {
-    username: '3273014504900004',
-    nama: 'Siti Rahayu',
-    role: 'warga',
-    rt: '002',
-    rw: '001',
-    password_hash: '$2b$10$IcKfwN6NlAUUxUR81HebIeX8wRUAKQzltPFP/YXjDU5nwKeTBIrJa' // Warga@0004#2026
-  }
+  // 1. Eksekutif & Diskominfo
+  { username: 'superadmin', nama: 'Super Admin Diskominfo', role: 'superadmin', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'walikota.sukabumi', nama: 'H. Achmad Fahmi (Walikota)', role: 'walikota', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'camat.cikole', nama: 'Drs. H. Fajar Purnama (Camat Cikole)', role: 'camat', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
+
+  // 2. Kelurahan Kebonjati
+  { username: 'lurah.kebonjati', nama: 'Hendra Gunawan (Lurah Kebonjati)', role: 'lurah', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'admin.kebonjati', nama: 'Siti Rahmawati (Admin Kebonjati)', role: 'admin_kelurahan', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rw01_kebonjati', nama: 'H. Ahmad Sanusi (RW 01 Kebonjati)', role: 'ketua_rw', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt01_rw01_kbj', nama: 'Dadang Ruhiyat (RT 01 Kebonjati)', role: 'ketua_rt', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt02_rw01_kbj', nama: 'Cecep Solihin (RT 02 Kebonjati)', role: 'ketua_rt', rt: '002', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt03_rw01_kbj', nama: 'Agus Setiawan (RT 03 Kebonjati)', role: 'ketua_rt', rt: '003', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt04_rw01_kbj', nama: 'Dedi Mulyadi (RT 04 Kebonjati)', role: 'ketua_rt', rt: '004', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt05_rw01_kbj', nama: 'Eko Prasetyo (RT 05 Kebonjati)', role: 'ketua_rt', rt: '005', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'posyandu.melati_kbj', nama: 'Ny. Hj. Yayah Rokayah (Posyandu Melati)', role: 'kader_posyandu', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+
+  // 3. Kelurahan Cikole
+  { username: 'lurah.cikole', nama: 'Ir. H. Dian Ardiansyah (Lurah Cikole)', role: 'lurah', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'admin.cikole', nama: 'Rizky Pratama (Admin Cikole)', role: 'admin_kelurahan', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rw01_cikole', nama: 'H. Maman Suryaman (RW 01 Cikole)', role: 'ketua_rw', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt01_rw01_ckl', nama: 'Rahmat Hidayat (RT 01 Cikole)', role: 'ketua_rt', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt02_rw01_ckl', nama: 'Bambang Pamungkas (RT 02 Cikole)', role: 'ketua_rt', rt: '002', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt03_rw01_ckl', nama: 'Deden Suherman (RT 03 Cikole)', role: 'ketua_rt', rt: '003', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt04_rw01_ckl', nama: 'Wawan Kurniawan (RT 04 Cikole)', role: 'ketua_rt', rt: '004', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'rt05_rw01_ckl', nama: 'Gunawan Wibisono (RT 05 Cikole)', role: 'ketua_rt', rt: '005', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'posyandu.mawar_ckl', nama: 'Ny. Nunung Nurjanah (Posyandu Mawar)', role: 'kader_posyandu', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+
+  // 4. Akun Uji Coba Warga Resmi (Sukabumi)
+  { username: '3272030103810001', nama: 'Budi Santoso', role: 'warga', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: '3272030101900101', nama: 'Keluarga Budi Santoso (KK)', role: 'warga', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH }
 ];
 
 async function autoPatchDatabase() {
@@ -768,115 +720,31 @@ async function autoPatchDatabase() {
       `);
 
       // Pastikan tabel warga berisi anggota KK Budi Santoso
-      const anggotaList = [
-        {
-          nik: '3273010203850003',
-          no_kk: '3273010101900001',
-          nama: 'Budi Santoso',
-          jk: 'L',
-          tempat: 'Bandung',
-          tgl: '1985-03-02',
-          agama: 'Islam',
-          kawin: 'Kawin',
-          hubungan: 'Kepala Keluarga',
-          pekerjaan: 'Karyawan Swasta',
-          pendidikan: 'S1',
-          goldar: 'O',
-          status: 'Tetap',
-          bpjs_kes: '0001234567891',
-          bpjs_tk: '21098765432',
-          kip: null,
-          kis: '0001234567891'
-        },
-        {
-          nik: '3273014505880002',
-          no_kk: '3273010101900001',
-          nama: 'Siti Aminah',
-          jk: 'P',
-          tempat: 'Bandung',
-          tgl: '1988-05-15',
-          agama: 'Islam',
-          kawin: 'Kawin',
-          hubungan: 'Istri',
-          pekerjaan: 'Ibu Rumah Tangga',
-          pendidikan: 'SMA/SMK',
-          goldar: 'A',
-          status: 'Tetap',
-          bpjs_kes: '0001234567892',
-          bpjs_tk: null,
-          kip: null,
-          kis: '0001234567892'
-        },
-        {
-          nik: '3273010505240001',
-          no_kk: '3273010101900001',
-          nama: 'Muhammad Al-Fatih',
-          jk: 'L',
-          tempat: 'Bandung',
-          tgl: '2024-05-05',
-          agama: 'Islam',
-          kawin: 'Belum Kawin',
-          hubungan: 'Anak',
-          pekerjaan: 'Belum/Tidak Bekerja',
-          pendidikan: 'Belum Sekolah',
-          goldar: 'O',
-          status: 'Tetap',
-          bpjs_kes: '0001234567893',
-          bpjs_tk: null,
-          kip: 'KIP-2024-00892',
-          kis: '0001234567893'
-        },
-        {
-          nik: '3273010101550001',
-          no_kk: '3273010101900001',
-          nama: 'H. Suherman',
-          jk: 'L',
-          tempat: 'Bandung',
-          tgl: '1955-01-01',
-          agama: 'Islam',
-          kawin: 'Kawin',
-          hubungan: 'Orang Tua / Mertua',
-          pekerjaan: 'Pensiunan',
-          pendidikan: 'D3/Akademi',
-          goldar: 'B',
-          status: 'Tetap',
-          bpjs_kes: '0001234567894',
-          bpjs_tk: null,
-          kip: null,
-          kis: '0001234567894'
+      
+      // Master Seeder: Periksa apakah 200 warga telah terisi di database
+      try {
+        const [wCount] = await connection.query("SELECT COUNT(*) as count FROM warga WHERE nik = '3272030103810001'");
+        if (wCount[0].count === 0) {
+          const { seedFullProduction } = require(path.join(__dirname, '../../scripts/seed_full_production.js'));
+          await seedFullProduction(connection);
         }
-      ];
-
-      for (const m of anggotaList) {
-        await connection.execute(`
-          INSERT INTO \`warga\` 
-            (\`nik\`, \`no_kk\`, \`nama\`, \`jenis_kelamin\`, \`tempat_lahir\`, \`tanggal_lahir\`, \`agama\`, \`status_perkawinan\`, \`status_hubungan_keluarga\`, \`pekerjaan\`, \`pendidikan_terakhir\`, \`golongan_darah\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`, \`status_kependudukan\`, \`bpjs_kesehatan\`, \`bpjs_ketenagakerjaan\`, \`kip\`, \`kis\`)
-          VALUES 
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Jl. Kebonjati No. 12', '001', '001', 'Kebonjati', 'Andir', 'Kota Bandung', 'Jawa Barat', '40181', ?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE 
-            \`no_kk\` = VALUES(\`no_kk\`),
-            \`status_hubungan_keluarga\` = VALUES(\`status_hubungan_keluarga\`),
-            \`pekerjaan\` = VALUES(\`pekerjaan\`),
-            \`bpjs_kesehatan\` = VALUES(\`bpjs_kesehatan\`),
-            \`bpjs_ketenagakerjaan\` = VALUES(\`bpjs_ketenagakerjaan\`),
-            \`kip\` = VALUES(\`kip\`),
-            \`kis\` = VALUES(\`kis\`);
-        `, [m.nik, m.no_kk, m.nama, m.jk, m.tempat, m.tgl, m.agama, m.kawin, m.hubungan, m.pekerjaan, m.pendidikan, m.goldar, m.status, m.bpjs_kes, m.bpjs_tk, m.kip, m.kis]);
+      } catch (seedErr) {
+        console.warn('[AutoPatch] Master 200 warga seed note:', seedErr.message);
       }
 
-      // Hubungkan user Budi Santoso ke no_kk dan warga
-      await connection.query(`
-        UPDATE users u 
-        SET u.no_kk = '3273010101900001' 
-        WHERE u.username = '3273010203850003' OR u.nama LIKE '%Budi Santoso%'
-      `);
-
-      await connection.query(`
-        UPDATE warga w
-        JOIN users u ON (u.username = w.nik OR u.nama = w.nama)
-        SET w.user_id = u.id
-        WHERE w.nik = '3273010203850003'
-      `);
+      // Password Self-Healing: Pastikan seluruh akun menggunakan hash BumiWarga@2026 yang valid
+      try {
+        await connection.query(`
+          UPDATE users 
+          SET password_hash = '${STANDARD_PASSWORD_HASH}' 
+          WHERE password_hash LIKE '$2b$10$818lk%' 
+             OR password_hash LIKE '$2b$10$IcKfw%' 
+             OR password_hash IS NULL 
+             OR password_hash = ''
+        `);
+      } catch (passErr) {
+        console.warn('[AutoPatch] Password self-healing note:', passErr.message);
+      }
     } catch (e) {
       console.warn('[AutoPatch] kartu_keluarga auto-seed note:', e.message);
     }
