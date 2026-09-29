@@ -71,8 +71,9 @@ router.post('/login', async (req, res) => {
       // 1.A. Periksa apakah 16 digit adalah NIK anggota keluarga di tabel warga
       try {
         const [wRows] = await pool.execute(
-          `SELECT id, nik, no_kk, nama, tanggal_lahir, jenis_kelamin, status_hubungan_keluarga, 
-                  rt, rw, user_id, pin_mandiri 
+          `SELECT id, nik, no_kk, nama, tanggal_lahir, jenis_kelamin, 
+                  COALESCE(status_hubungan_keluarga, hubungan_keluarga, 'Anggota') AS status_hubungan_keluarga, 
+                  rt, rw, user_id 
            FROM warga WHERE nik = ? LIMIT 1`,
           [cleanUsername]
         );
@@ -81,7 +82,13 @@ router.post('/login', async (req, res) => {
           no_kk = identifiedWarga.no_kk;
         }
       } catch (wErr) {
-        console.warn('[Auth] Warga NIK lookup warning:', wErr.message);
+        try {
+          const [wFallback] = await pool.execute('SELECT * FROM warga WHERE nik = ? LIMIT 1', [cleanUsername]);
+          if (wFallback.length > 0) {
+            identifiedWarga = wFallback[0];
+            no_kk = identifiedWarga.no_kk;
+          }
+        } catch (fErr) {}
       }
 
       // 1.B. Jika bukan NIK warga, periksa apakah merupakan Nomor Kartu Keluarga (No KK)
@@ -100,8 +107,9 @@ router.post('/login', async (req, res) => {
         // Cari Kepala Keluarga atau anggota keluarga pertama dari KK ini di tabel warga
         try {
           const [kkWargaRows] = await pool.execute(
-            `SELECT id, nik, no_kk, nama, tanggal_lahir, jenis_kelamin, status_hubungan_keluarga, 
-                    rt, rw, user_id, pin_mandiri 
+            `SELECT id, nik, no_kk, nama, tanggal_lahir, jenis_kelamin, 
+                    COALESCE(status_hubungan_keluarga, hubungan_keluarga, 'Anggota') AS status_hubungan_keluarga, 
+                    rt, rw, user_id 
              FROM warga WHERE no_kk = ? 
              ORDER BY CASE status_hubungan_keluarga WHEN 'Kepala Keluarga' THEN 1 ELSE 2 END, id ASC 
              LIMIT 1`,
@@ -113,15 +121,23 @@ router.post('/login', async (req, res) => {
             isFamilyAccount = true;
           }
         } catch (kkWargaErr) {
-          console.warn('[Auth] Warga by KK lookup warning:', kkWargaErr.message);
+          try {
+            const [kkWFallback] = await pool.execute('SELECT * FROM warga WHERE no_kk = ? ORDER BY id ASC LIMIT 1', [cleanUsername]);
+            if (kkWFallback.length > 0) {
+              identifiedWarga = kkWFallback[0];
+              no_kk = identifiedWarga.no_kk;
+              isFamilyAccount = true;
+            }
+          } catch (fErr2) {}
         }
       }
     } else {
       // Periksa nomor telepon atau email jika bukan 16 digit
       try {
         const [wPhoneRows] = await pool.execute(
-          `SELECT id, nik, no_kk, nama, tanggal_lahir, jenis_kelamin, status_hubungan_keluarga, 
-                  rt, rw, user_id, pin_mandiri 
+          `SELECT id, nik, no_kk, nama, tanggal_lahir, jenis_kelamin, 
+                  COALESCE(status_hubungan_keluarga, hubungan_keluarga, 'Anggota') AS status_hubungan_keluarga, 
+                  rt, rw, user_id 
            FROM warga WHERE no_telepon = ? OR email = ? LIMIT 1`,
           [cleanUsername, cleanUsername]
         );
@@ -129,7 +145,15 @@ router.post('/login', async (req, res) => {
           identifiedWarga = wPhoneRows[0];
           no_kk = identifiedWarga.no_kk;
         }
-      } catch (pErr) {}
+      } catch (pErr) {
+        try {
+          const [wpFallback] = await pool.execute('SELECT * FROM warga WHERE no_telepon = ? OR email = ? LIMIT 1', [cleanUsername, cleanUsername]);
+          if (wpFallback.length > 0) {
+            identifiedWarga = wpFallback[0];
+            no_kk = identifiedWarga.no_kk;
+          }
+        } catch (fErr3) {}
+      }
     }
 
     // =========================================================================

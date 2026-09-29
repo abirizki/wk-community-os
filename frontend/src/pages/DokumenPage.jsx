@@ -187,7 +187,15 @@ export default function DokumenPage() {
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [prefillInfo, setPrefillInfo] = useState(null);
-  const [familyMembers, setFamilyMembers] = useState([]);
+  const [familyMembers, setFamilyMembers] = useState(user?.family_members || []);
+  const [loadingFamily, setLoadingFamily] = useState(false);
+
+  // Sinkronisasi data anggota keluarga jika user state terisi belakangan
+  useEffect(() => {
+    if (user?.family_members && Array.isArray(user.family_members) && user.family_members.length > 0) {
+      setFamilyMembers(prev => prev.length === 0 ? user.family_members : prev);
+    }
+  }, [user]);
 
   // Subjek Pemohon: 'self' atau NIK anggota keluarga dalam 1 KK
   const [subjekPemohon, setSubjekPemohon] = useState('self');
@@ -213,24 +221,50 @@ export default function DokumenPage() {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printDoc, setPrintDoc] = useState(null);
 
+  // Fungsi khusus pemuatan anggota keluarga 1 KK dengan fallback bertingkat
+  const loadFamilyMembers = async () => {
+    try {
+      setLoadingFamily(true);
+      // 1. Coba endpoint khusus /api/dokumen/family-members
+      const famRes = await api.get('/dokumen/family-members').catch(() => null);
+      if (famRes && famRes.data && Array.isArray(famRes.data) && famRes.data.length > 0) {
+        setFamilyMembers(famRes.data);
+        return;
+      }
+      
+      // 2. Coba endpoint /api/dokumen/prefill-data
+      const prefillRes = await api.get('/dokumen/prefill-data').catch(() => null);
+      if (prefillRes && prefillRes.data) {
+        setPrefillInfo(prefillRes.data);
+        if (prefillRes.data.familyMembers && Array.isArray(prefillRes.data.familyMembers) && prefillRes.data.familyMembers.length > 0) {
+          setFamilyMembers(prefillRes.data.familyMembers);
+          return;
+        }
+      }
+
+      // 3. Coba endpoint /api/kk/me
+      const kkRes = await api.get('/kk/me').catch(() => null);
+      if (kkRes && kkRes.data) {
+        const anggota = kkRes.data.anggota || kkRes.data.data?.anggota;
+        if (Array.isArray(anggota) && anggota.length > 0) {
+          setFamilyMembers(anggota);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Gagal memuat anggota keluarga:', e);
+    } finally {
+      setLoadingFamily(false);
+    }
+  };
+
   const fetchDokumen = async () => {
     try {
       setIsLoading(true);
       setError(null);
       const res = isOfficer ? await api.get('/dokumen') : await api.get('/dokumen/me');
       setData(res.data || []);
-
-      // Ambil status prefill AI & data anggota keluarga dalam 1 KK
-      api.get('/dokumen/prefill-data')
-        .then(res => {
-          if (res.data) {
-            setPrefillInfo(res.data);
-            if (res.data.familyMembers && Array.isArray(res.data.familyMembers)) {
-              setFamilyMembers(res.data.familyMembers);
-            }
-          }
-        })
-        .catch(() => {});
+      await loadFamilyMembers();
     } catch (err) {
       setError(err.message || 'Gagal mengambil data permohonan surat.');
     } finally {
@@ -241,6 +275,12 @@ export default function DokumenPage() {
   useEffect(() => {
     fetchDokumen();
   }, []);
+
+  useEffect(() => {
+    if (showModal && familyMembers.length === 0) {
+      loadFamilyMembers();
+    }
+  }, [showModal]);
 
   // Handle URL query parameters (?for_nik=...&action=new)
   useEffect(() => {
@@ -737,55 +777,81 @@ export default function DokumenPage() {
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               {/* 1. SELEKSI SUBJEK PEMOHON (DIRI SENDIRI VS ANGGOTA KELUARGA 1 KK) */}
               <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/70 space-y-2.5">
-                <label className="block text-xs font-bold text-on-surface flex items-center gap-1.5">
-                  <Users size={15} className="text-primary" />
-                  <span>Surat Ini Ditujukan Untuk Siapa? *</span>
-                </label>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSubjekPemohon('self')}
-                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
-                      subjekPemohon === 'self'
-                        ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
-                        : 'border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container'
-                    }`}
-                  >
-                    <User size={18} className="shrink-0" />
-                    <div>
-                      <div className="text-xs">Diri Sendiri</div>
-                      <div className="text-[11px] font-normal text-on-surface-variant font-mono">
-                        {prefillInfo?.profile?.nama || user?.nama || 'Saya'}
-                      </div>
-                    </div>
-                  </button>
-
-                  {familyMembers.length > 0 && (
-                    <div className="relative">
-                      <select
-                        value={subjekPemohon === 'self' ? '' : subjekPemohon}
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            setSubjekPemohon(e.target.value);
-                          }
-                        }}
-                        className={`w-full p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
-                          subjekPemohon !== 'self'
-                            ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
-                            : 'border-outline-variant bg-surface-container-lowest text-on-surface'
-                        }`}
-                      >
-                        <option value="">Pilih Anggota Keluarga (1 KK)...</option>
-                        {familyMembers.map((fam) => (
-                          <option key={fam.nik} value={fam.nik}>
-                            {fam.nama} ({fam.status_hubungan_keluarga || 'Anggota'} - NIK: {fam.nik})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                    <Users size={15} className="text-primary" />
+                    <span>Surat Ini Ditujukan Atas Nama Siapa? *</span>
+                  </label>
+                  {loadingFamily && (
+                    <span className="text-[10px] text-primary flex items-center gap-1">
+                      <Loader2 size={12} className="animate-spin" /> Memuat anggota KK...
+                    </span>
                   )}
                 </div>
+
+                {/* Dropdown Terpadu Subjek Pemohon */}
+                <div className="relative">
+                  <select
+                    value={subjekPemohon}
+                    onChange={(e) => setSubjekPemohon(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-primary/40 bg-surface-container-lowest text-xs font-semibold text-on-surface focus:ring-2 focus:ring-primary focus:outline-none cursor-pointer"
+                  >
+                    <option value="self">
+                      👤 Diri Sendiri — {prefillInfo?.profile?.nama || user?.nama || 'Pemohon'} ({prefillInfo?.profile?.nik || user?.active_nik || user?.username})
+                    </option>
+
+                    {familyMembers.length > 0 ? (
+                      <optgroup label="👨‍👩‍👧‍👦 Anggota Keluarga (1 Kartu Keluarga)">
+                        {familyMembers
+                          .filter(fam => fam.nik !== (prefillInfo?.profile?.nik || user?.active_nik || user?.username))
+                          .map((fam) => (
+                            <option key={fam.nik} value={fam.nik}>
+                              {fam.nama} — {fam.status_hubungan_keluarga || fam.hubungan_keluarga || 'Anggota'} (NIK: {fam.nik})
+                            </option>
+                          ))}
+                      </optgroup>
+                    ) : (
+                      <option disabled value="">
+                        (Sedang memuat atau tidak ada anggota lain dalam KK)
+                      </option>
+                    )}
+                  </select>
+                </div>
+
+                {/* Quick Toggle Pill Buttons jika ada anggota keluarga */}
+                {familyMembers.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setSubjekPemohon('self')}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                        subjekPemohon === 'self'
+                          ? 'bg-primary text-white shadow-xs'
+                          : 'bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-container-high'
+                      }`}
+                    >
+                      <User size={13} />
+                      <span>Diri Sendiri</span>
+                    </button>
+                    {familyMembers
+                      .filter(fam => fam.nik !== (prefillInfo?.profile?.nik || user?.active_nik || user?.username))
+                      .map((fam) => (
+                        <button
+                          key={fam.nik}
+                          type="button"
+                          onClick={() => setSubjekPemohon(fam.nik)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                            subjekPemohon === fam.nik
+                              ? 'bg-primary text-white shadow-xs'
+                              : 'bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-container-high'
+                          }`}
+                        >
+                          <span>{fam.nama.split(' ')[0]}</span>
+                          <span className="text-[10px] opacity-80">({fam.status_hubungan_keluarga || fam.hubungan_keluarga || 'Anggota'})</span>
+                        </button>
+                      ))}
+                  </div>
+                )}
 
                 {/* Subjek Terpilih Preview */}
                 <div className="p-2.5 bg-surface-container-lowest rounded-lg border border-outline-variant/60 flex items-center justify-between text-xs">
@@ -800,6 +866,32 @@ export default function DokumenPage() {
                     {selectedSubjectInfo.hubungan}
                   </span>
                 </div>
+
+                {/* Smart Contextual Recommendation Badges */}
+                {formData.jenis_dokumen.includes('Kelahiran') && (
+                  <div className="p-2 rounded-lg bg-blue-50/80 border border-blue-200 text-blue-900 text-[11px] flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-blue-600 shrink-0" />
+                    <span><strong>Saran:</strong> Pilih nama Bayi / Anak jika telah tercantum dalam KK, atau ajukan atas nama Orang Tua pemohon.</span>
+                  </div>
+                )}
+                {formData.jenis_dokumen.includes('Kematian') && (
+                  <div className="p-2 rounded-lg bg-amber-50/80 border border-amber-200 text-amber-900 text-[11px] flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-amber-600 shrink-0" />
+                    <span><strong>Saran:</strong> Pilih nama anggota keluarga yang telah berpulang dari daftar anggota keluarga di atas.</span>
+                  </div>
+                )}
+                {formData.jenis_dokumen.includes('Nikah') && (
+                  <div className="p-2 rounded-lg bg-pink-50/80 border border-pink-200 text-pink-900 text-[11px] flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-pink-600 shrink-0" />
+                    <span><strong>Saran:</strong> Pilih anggota keluarga yang akan melangsungkan pernikahan sebagai subjek surat pengantar.</span>
+                  </div>
+                )}
+                {formData.jenis_dokumen.includes('Tidak Mampu') && (
+                  <div className="p-2 rounded-lg bg-emerald-50/80 border border-emerald-200 text-emerald-900 text-[11px] flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-emerald-600 shrink-0" />
+                    <span><strong>Saran:</strong> SKTM untuk Beasiswa/KIP sekolah dapat diajukan atas nama Anak yang bersangkutan.</span>
+                  </div>
+                )}
               </div>
 
               {/* 2. JENIS SURAT & DESKRIPSI */}

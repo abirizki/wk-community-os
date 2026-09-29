@@ -35,14 +35,32 @@ class DokumenService {
     );
 
     // Ambil anggota keluarga dalam 1 KK yang sama
+    const pool = require('../db/pool');
+    const noKk = rawData?.warga?.no_kk || currentUser?.no_kk;
     let familyMembers = [];
-    if (rawData.warga.no_kk) {
+    if (noKk) {
       try {
         const userRepo = require('../repositories/user.repository');
-        familyMembers = await userRepo.findFamilyMembersByNoKK(rawData.warga.no_kk);
+        familyMembers = await userRepo.findFamilyMembersByNoKK(noKk);
       } catch (e) {
         console.warn('Error fetching familyMembers in getPrefillData:', e.message);
       }
+      if (!familyMembers || familyMembers.length === 0) {
+        try {
+          const [directRows] = await pool.execute(
+            `SELECT id, nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, 
+                    COALESCE(status_hubungan_keluarga, hubungan_keluarga, 'Anggota') AS status_hubungan_keluarga,
+                    rt, rw 
+             FROM warga WHERE no_kk = ? AND (status_kependudukan != 'Meninggal' OR status_kependudukan IS NULL)
+             ORDER BY id ASC`,
+            [noKk]
+          );
+          familyMembers = directRows;
+        } catch (e) {}
+      }
+    }
+    if ((!familyMembers || familyMembers.length === 0) && currentUser.family_members && currentUser.family_members.length > 0) {
+      familyMembers = currentUser.family_members;
     }
 
     return {

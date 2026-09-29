@@ -70,25 +70,42 @@ class UserRepository {
    * @returns {Promise<Array>}
    */
   async findFamilyMembersByNoKK(no_kk) {
-    const [rows] = await pool.execute(
-      `SELECT id, nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, 
-              agama, status_perkawinan, status_hubungan_keluarga, pekerjaan, 
-              pendidikan_terakhir, golongan_darah, rt, rw, status_kependudukan, no_telepon,
-              (pin_mandiri IS NOT NULL) AS has_pin_mandiri
-       FROM warga 
-       WHERE no_kk = ? AND status_kependudukan != 'Meninggal'
-       ORDER BY 
-         CASE status_hubungan_keluarga 
-           WHEN 'Kepala Keluarga' THEN 1 
-           WHEN 'Suami' THEN 2 
-           WHEN 'Istri' THEN 3 
-           WHEN 'Anak' THEN 4 
-           ELSE 5 
-         END, 
-         tanggal_lahir ASC`,
-      [no_kk]
-    );
-    return rows;
+    if (!no_kk) return [];
+    try {
+      const [rows] = await pool.execute(
+        `SELECT id, nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, 
+                agama, status_perkawinan, 
+                COALESCE(status_hubungan_keluarga, hubungan_keluarga, 'Anggota') AS status_hubungan_keluarga, 
+                pekerjaan, pendidikan_terakhir, golongan_darah, rt, rw, status_kependudukan, no_telepon
+         FROM warga 
+         WHERE no_kk = ? AND (status_kependudukan != 'Meninggal' OR status_kependudukan IS NULL)
+         ORDER BY 
+           CASE status_hubungan_keluarga 
+             WHEN 'Kepala Keluarga' THEN 1 
+             WHEN 'Suami' THEN 2 
+             WHEN 'Istri' THEN 3 
+             WHEN 'Anak' THEN 4 
+             ELSE 5 
+           END, 
+           tanggal_lahir ASC`,
+        [no_kk]
+      );
+      return rows;
+    } catch (err) {
+      try {
+        const [fallbackRows] = await pool.execute(
+          'SELECT * FROM warga WHERE no_kk = ? ORDER BY id ASC',
+          [no_kk]
+        );
+        return fallbackRows.map(r => ({
+          ...r,
+          status_hubungan_keluarga: r.status_hubungan_keluarga || r.hubungan_keluarga || 'Anggota'
+        }));
+      } catch (innerErr) {
+        console.warn('[userRepository.findFamilyMembersByNoKK] Error:', innerErr.message);
+        return [];
+      }
+    }
   }
 
   /**
