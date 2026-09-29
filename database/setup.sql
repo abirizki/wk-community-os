@@ -138,22 +138,44 @@ CREATE TABLE IF NOT EXISTS `posyandu` (
   CONSTRAINT `fk_posyandu_warga` FOREIGN KEY (`nik_warga`) REFERENCES `warga` (`nik`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 7. Tabel dokumen_request (Pengajuan Dokumen Kelurahan - Persiapan Modul Baru)
+-- 7. Tabel dokumen_request (Pengajuan Dokumen Kelurahan & Surat Warga)
 CREATE TABLE IF NOT EXISTS `dokumen_request` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `nomor_registrasi` VARCHAR(50) NOT NULL UNIQUE,
   `nik_pemohon` VARCHAR(16) NOT NULL,
-  `jenis_dokumen` ENUM('Surat Keterangan Domisili', 'Surat Pengantar KTP', 'Surat Keterangan Tidak Mampu', 'Surat Keterangan Usaha', 'Surat Keterangan Lahir', 'Surat Keterangan Meninggal', 'Lainnya') NOT NULL,
-  `keperluan` VARCHAR(255) NOT NULL,
-  `status` ENUM('DRAFT', 'SUBMITTED', 'VERIFYING', 'APPROVED', 'REJECTED', 'READY_PICKUP') NOT NULL DEFAULT 'SUBMITTED',
+  `diajukan_oleh_nik` VARCHAR(16) NULL,
+  `nama_subjek` VARCHAR(150) NULL,
+  `hubungan_keluarga` VARCHAR(50) NULL,
+  `jenis_surat` VARCHAR(150) NOT NULL,
+  `jenis_dokumen` VARCHAR(150) NOT NULL,
+  `keperluan` TEXT NOT NULL,
+  `status` VARCHAR(50) NOT NULL DEFAULT 'SUBMITTED',
+  `approval_step` VARCHAR(50) NOT NULL DEFAULT 'RT',
+  `rt` VARCHAR(5) NULL,
+  `rw` VARCHAR(5) NULL,
+  `data_tambahan` TEXT NULL,
+  `syarat_berkas` TEXT NULL,
+  `is_auto_filled_by_ai` TINYINT(1) NOT NULL DEFAULT 0,
+  `trigger_executed` TINYINT(1) NOT NULL DEFAULT 0,
+  `catatan_petugas` TEXT NULL,
   `catatan_admin` TEXT NULL,
+  `catatan_revisi` TEXT NULL,
+  `approved_by_rt` INT NULL,
+  `approved_by_rw` INT NULL,
+  `approved_by_kelurahan` INT NULL,
+  `file_url` VARCHAR(255) NULL,
   `file_hasil` VARCHAR(500) NULL,
-  `submitted_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `approved_at` TIMESTAMP NULL DEFAULT NULL,
+  `lampiran_ktp` VARCHAR(500) NULL,
+  `lampiran_kk` VARCHAR(500) NULL,
+  `rt_received_at` DATETIME NULL,
+  `sla_deadline` DATETIME NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_dokumen_pemohon` (`nik_pemohon`),
+  INDEX `idx_dokumen_diajukan` (`diajukan_oleh_nik`),
+  INDEX `idx_dokumen_step` (`approval_step`),
   INDEX `idx_dokumen_status` (`status`),
-  CONSTRAINT `fk_dokumen_warga` FOREIGN KEY (`nik_pemohon`) REFERENCES `warga` (`nik`) ON UPDATE CASCADE
+  INDEX `idx_dokumen_rt_rw` (`rt`, `rw`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

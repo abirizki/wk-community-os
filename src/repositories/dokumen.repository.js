@@ -31,28 +31,40 @@ class DokumenRepository {
     const dataTambahanStr = typeof data_tambahan === 'object' && data_tambahan !== null ? JSON.stringify(data_tambahan) : data_tambahan;
     const syaratBerkasStr = typeof syarat_berkas === 'object' && syarat_berkas !== null ? JSON.stringify(syarat_berkas) : syarat_berkas;
 
-    const [result] = await pool.execute(
-      `INSERT INTO dokumen_request 
-       (nomor_registrasi, nik_pemohon, diajukan_oleh_nik, nama_subjek, hubungan_keluarga, data_tambahan, syarat_berkas, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, rt_received_at, sla_deadline) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
-      [
-        noReg, 
-        nik_pemohon, 
-        diajukan_oleh_nik, 
-        nama_subjek, 
-        hubungan_keluarga, 
-        dataTambahanStr, 
-        syaratBerkasStr, 
-        jenis_dokumen, 
-        jenis_dokumen, 
-        keperluan, 
-        rt, 
-        rw, 
-        is_auto_filled_by_ai ? 1 : 0
-      ]
-    );
-
-    const docId = result.insertId;
+    let docId;
+    try {
+      const [result] = await pool.execute(
+        `INSERT INTO dokumen_request 
+         (nomor_registrasi, nik_pemohon, diajukan_oleh_nik, nama_subjek, hubungan_keluarga, data_tambahan, syarat_berkas, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, rt_received_at, sla_deadline) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
+        [
+          noReg, 
+          nik_pemohon, 
+          diajukan_oleh_nik, 
+          nama_subjek, 
+          hubungan_keluarga, 
+          dataTambahanStr, 
+          syaratBerkasStr, 
+          jenis_dokumen, 
+          jenis_dokumen, 
+          keperluan, 
+          rt, 
+          rw, 
+          is_auto_filled_by_ai ? 1 : 0
+        ]
+      );
+      docId = result.insertId;
+    } catch (insertErr) {
+      console.warn('[DokumenRepo] Primary insert warning:', insertErr.message);
+      // Fallback insert standar tanpa kolom opsional jika terjadi schema mismatch
+      const [fallbackResult] = await pool.execute(
+        `INSERT INTO dokumen_request 
+         (nomor_registrasi, nik_pemohon, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw) 
+         VALUES (?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?)`,
+        [noReg, nik_pemohon, jenis_dokumen, jenis_dokumen, keperluan, rt, rw]
+      );
+      docId = fallbackResult.insertId;
+    }
 
     // Catat riwayat workflow pengajuan perdana
     if (acted_by_user_id) {

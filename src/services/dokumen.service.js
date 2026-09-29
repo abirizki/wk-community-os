@@ -80,7 +80,7 @@ class DokumenService {
    * @returns {Promise<Object>}
    */
   async requestDokumen(payload, currentUser) {
-    const activeNik = currentUser.active_nik || currentUser.username;
+    let activeNik = currentUser.active_nik || currentUser.username;
     const { 
       jenis_dokumen, 
       keperluan, 
@@ -108,47 +108,100 @@ class DokumenService {
       throw err;
     }
 
-    // Ambil data domisili user pemohon
-    const userWarga = await wargaRepository.findByNik(activeNik);
+    // 1. Ambil data domisili user pemohon
+    let userWarga = await wargaRepository.findByNik(activeNik);
+    
+    // Jika activeNik adalah Nomor KK atau belum terdaftar langsung di NIK, cari via No KK
+    if (!userWarga && currentUser.no_kk) {
+      try {
+        const [wByKk] = await pool.execute(
+          'SELECT * FROM warga WHERE no_kk = ? ORDER BY CASE status_hubungan_keluarga WHEN "Kepala Keluarga" THEN 1 ELSE 2 END, id ASC LIMIT 1',
+          [currentUser.no_kk]
+        );
+        if (wByKk.length > 0) userWarga = wByKk[0];
+      } catch (e) {}
+    }
+    if (!userWarga && activeNik) {
+      try {
+        const [wByKkAlt] = await pool.execute(
+          'SELECT * FROM warga WHERE no_kk = ? ORDER BY CASE status_hubungan_keluarga WHEN "Kepala Keluarga" THEN 1 ELSE 2 END, id ASC LIMIT 1',
+          [activeNik]
+        );
+        if (wByKkAlt.length > 0) userWarga = wByKkAlt[0];
+      } catch (e) {}
+    }
 
-    // Tentukan subjek permohonan (Diri Sendiri atau Anggota Keluarga dalam 1 KK)
+    // Pastikan activeNik merujuk ke NIK riil pemohon
+    if (userWarga && userWarga.nik) {
+      activeNik = userWarga.nik;
+    }
+
+    // 2. Tentukan subjek permohonan (Diri Sendiri atau Anggota Keluarga dalam 1 KK)
     let targetNik = activeNik;
     let targetNama = userWarga?.nama || currentUser.nama || currentUser.username;
     let targetHubungan = userWarga?.status_hubungan_keluarga || 'Kepala Keluarga';
     let isDiajukanUntukKeluarga = false;
 
-    if (requestedNik && requestedNik !== activeNik) {
-      // Validasi bahwa requestedNik berada dalam 1 KK yang sama untuk role warga
+    // Normalisasi requestedNik: jika "self" atau Nomor KK, samakan dengan activeNik
+    let cleanRequestedNik = requestedNik;
+    if (cleanRequestedNik === 'self' || cleanRequestedNik === userWarga?.no_kk || cleanRequestedNik === currentUser.no_kk) {
+      cleanRequestedNik = activeNik;
+    }
+
+    if (cleanRequestedNik && cleanRequestedNik !== activeNik) {
+      // Validasi bahwa cleanRequestedNik berada dalam 1 KK yang sama untuk role warga
       if (currentUser.role === 'warga') {
-        if (!userWarga || !userWarga.no_kk) {
-          const err = new Error('Data Kartu Keluarga Anda tidak ditemukan untuk memverifikasi anggota keluarga.');
-          err.status = 403;
-          throw err;
-        }
+        const userNoKK = userWarga?.no_kk || currentUser.no_kk;
         const userRepo = require('../repositories/user.repository');
-        const family = await userRepo.findFamilyMembersByNoKK(userWarga.no_kk);
-        const member = family.find(f => f.nik === requestedNik);
-        if (!member) {
-          const err = new Error('Permohonan hanya dapat diajukan untuk diri sendiri atau anggota keluarga yang terdaftar dalam satu Kartu Keluarga (KK) yang sama.');
-          err.status = 403;
-          throw err;
+        let family = [];
+        if (userNoKK) {
+          try {
+            family = await userRepo.findFamilyMembersByNoKK(userNoKK);
+          } catch (e) {}
         }
-        targetNik = member.nik;
-        targetNama = member.nama;
-        targetHubungan = member.status_hubungan_keluarga;
-        isDiajukanUntukKeluarga = true;
+        if ((!family || family.length === 0) && currentUser.family_members && currentUser.family_members.length > 0) {
+          family = currentUser.family_members;
+        }
+
+        const member = family.find(f => f.nik === cleanRequestedNik);
+        if (member) {
+          targetNik = member.nik;
+          targetNama = member.nama;
+          targetHubungan = member.status_hubungan_keluarga || member.hubungan_keluarga || 'Anggota Keluarga';
+          isDiajukanUntukKeluarga = true;
+        } else {
+          // Cari langsung di tabel warga
+          const targetW = await wargaRepository.findByNik(cleanRequestedNik);
+          if (targetW && (!userNoKK || targetW.no_kk === userNoKK)) {
+            targetNik = targetW.nik;
+            targetNama = targetW.nama;
+            targetHubungan = targetW.status_hubungan_keluarga || targetW.hubungan_keluarga || 'Anggota Keluarga';
+            isDiajukanUntukKeluarga = true;
+          } else {
+            const err = new Error('Permohonan hanya dapat diajukan untuk diri sendiri atau anggota keluarga yang terdaftar dalam satu Kartu Keluarga (KK) yang sama.');
+            err.status = 403;
+            throw err;
+          }
+        }
       } else {
         // Petugas / Admin dapat mengajukan atas nama warga
-        const targetW = await wargaRepository.findByNik(requestedNik);
+        const targetW = await wargaRepository.findByNik(cleanRequestedNik);
         if (targetW) {
           targetNik = targetW.nik;
           targetNama = targetW.nama;
-          targetHubungan = targetW.status_hubungan_keluarga;
+          targetHubungan = targetW.status_hubungan_keluarga || 'Warga';
+          isDiajukanUntukKeluarga = true;
         }
       }
     }
 
-    const targetWarga = (targetNik === activeNik) ? userWarga : await wargaRepository.findByNik(targetNik);
+    // Pencegahan foreign key constraint fk_dokumen_warga: Pastikan targetNik ada di tabel warga
+    let targetWarga = await wargaRepository.findByNik(targetNik);
+    if (!targetWarga && userWarga && userWarga.nik) {
+      targetNik = userWarga.nik;
+      targetWarga = userWarga;
+    }
+
     const rt = targetWarga ? targetWarga.rt : (userWarga ? userWarga.rt : (currentUser.rt || '001'));
     const rw = targetWarga ? targetWarga.rw : (userWarga ? userWarga.rw : (currentUser.rw || '001'));
 

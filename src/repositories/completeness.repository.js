@@ -11,7 +11,7 @@ class CompletenessRepository {
    * Ambil data lengkap seorang warga beserta relasi KK, Desil, dan Posyandu
    */
   async getCitizenRawData(nik) {
-    const [wargaRows] = await pool.execute(
+    let [wargaRows] = await pool.execute(
       `SELECT w.*, 
               u.id AS user_account_id, u.status AS user_status, u.username AS user_username,
               kk.kepala_keluarga, kk.alamat AS alamat_kk,
@@ -24,7 +24,25 @@ class CompletenessRepository {
       [nik]
     );
 
-    if (wargaRows.length === 0) return null;
+    if (wargaRows.length === 0) {
+      // Fallback jika pemanggil mengirimkan nomor KK (bukan NIK)
+      const [wargaByKk] = await pool.execute(
+        `SELECT w.*, 
+                u.id AS user_account_id, u.status AS user_status, u.username AS user_username,
+                kk.kepala_keluarga, kk.alamat AS alamat_kk,
+                d.desil_saat_ini, d.desil_usulan, d.status_verifikasi AS desil_status_verifikasi
+         FROM warga w
+         LEFT JOIN users u ON (w.user_id = u.id OR u.username = w.nik OR u.username = w.no_kk)
+         LEFT JOIN kartu_keluarga kk ON w.no_kk = kk.no_kk
+         LEFT JOIN desil_keluarga d ON w.no_kk = d.no_kk
+         WHERE w.no_kk = ? 
+         ORDER BY CASE w.status_hubungan_keluarga WHEN 'Kepala Keluarga' THEN 1 ELSE 2 END, w.id ASC
+         LIMIT 1`,
+        [nik]
+      );
+      if (wargaByKk.length === 0) return null;
+      wargaRows = wargaByKk;
+    }
     const warga = wargaRows[0];
 
     // Cek rekam posyandu balita jika usia < 5 tahun
