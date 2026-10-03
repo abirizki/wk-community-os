@@ -22,6 +22,7 @@ import UserManagementPage from './pages/UserManagementPage';
 import PanduanOperasionalPage from './pages/PanduanOperasionalPage';
 import ProfilePage from './pages/ProfilePage';
 import KeuanganPage from './pages/KeuanganPage';
+import AparaturPage from './pages/AparaturPage';
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
             <Route path="pengaduan" element={<ComplaintPage />} />
             <Route path="profil" element={<ProfilePage />} />
             <Route path="panduan" element={<PanduanOperasionalPage />} />
+            <Route path="aparatur" element={<AparaturPage />} />
           </Route>
 
           {/* Fallback Route */}

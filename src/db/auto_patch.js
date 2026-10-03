@@ -802,6 +802,163 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] kartu_keluarga auto-seed note:', e.message);
     }
 
+    // 15. Tabel Direktori Aparatur Kelurahan, Mitra Keamanan (Babinsa/Bhabinkamtibmas), RT, RW, dan Posyandu
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`aparatur_kelurahan\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Cikole',
+          \`kecamatan\` VARCHAR(100) NOT NULL DEFAULT 'Cikole',
+          \`kota\` VARCHAR(100) NOT NULL DEFAULT 'Kota Sukabumi',
+          \`kategori\` ENUM('KELURAHAN', 'KEAMANAN', 'RW', 'RT', 'POSYANDU') NOT NULL,
+          \`jabatan\` VARCHAR(100) NOT NULL,
+          \`wilayah_rw\` VARCHAR(10) NULL,
+          \`wilayah_rt\` VARCHAR(10) NULL,
+          \`nama_posyandu\` VARCHAR(100) NULL,
+          \`nik_pejabat\` VARCHAR(16) NULL,
+          \`nama_pejabat\` VARCHAR(150) NOT NULL,
+          \`nip_nrp\` VARCHAR(50) NULL,
+          \`pangkat_golongan\` VARCHAR(50) NULL,
+          \`no_telp\` VARCHAR(30) NULL,
+          \`no_wa\` VARCHAR(30) NOT NULL,
+          \`email\` VARCHAR(100) NULL,
+          \`alamat_kantor\` VARCHAR(255) NULL,
+          \`jam_layanan\` VARCHAR(100) DEFAULT 'Senin - Jumat, 08.00 - 15.00 WIB',
+          \`foto_url\` VARCHAR(255) NULL,
+          \`is_active\` TINYINT(1) DEFAULT 1,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_aparatur_wilayah\` (\`kelurahan\`, \`wilayah_rw\`, \`wilayah_rt\`),
+          INDEX \`idx_aparatur_kategori\` (\`kategori\`),
+          INDEX \`idx_aparatur_nik\` (\`nik_pejabat\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      // Seeder Direktori Resmi Aparatur Kelurahan & Mitra Keamanan
+      const [apaRows] = await connection.query("SELECT COUNT(*) as count FROM aparatur_kelurahan");
+      if (apaRows[0].count === 0) {
+        const DEFAULT_APARATUR = [
+          // Kelurahan Cikole (Sukabumi)
+          {
+            kelurahan: 'Cikole', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
+            kategori: 'KELURAHAN', jabatan: 'Lurah Cikole', wilayah_rw: null, wilayah_rt: null,
+            nama_pejabat: 'Ir. H. Dian Ardiansyah', nip_nrp: '197405121998031002', pangkat_golongan: 'Pembina / IV-a',
+            no_telp: '0266-221133', no_wa: '081122334455', email: 'kelurahan.cikole@sukabumikota.go.id',
+            alamat_kantor: 'Jl. R. Syamsudin, S.H. No. 45, Cikole, Kota Sukabumi', jam_layanan: 'Senin - Jumat, 08.00 - 15.30 WIB'
+          },
+          {
+            kelurahan: 'Cikole', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
+            kategori: 'KELURAHAN', jabatan: 'Sekretaris Kelurahan', wilayah_rw: null, wilayah_rt: null,
+            nama_pejabat: 'Hj. Erna Susanti, S.STP', nip_nrp: '198203152006042001', pangkat_golongan: 'Penata Tk. I / III-d',
+            no_telp: '0266-221133', no_wa: '081234567801', email: 'seklur.cikole@sukabumikota.go.id',
+            alamat_kantor: 'Kantor Kelurahan Cikole Lantai 1', jam_layanan: 'Senin - Jumat, 08.00 - 15.30 WIB'
+          },
+          {
+            kelurahan: 'Cikole', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
+            kategori: 'KELURAHAN', jabatan: 'Kasi Pemerintahan & Pelayanan Publik', wilayah_rw: null, wilayah_rt: null,
+            nama_pejabat: 'Budi Rahmat, S.Sos', nip_nrp: '198506142010011012', pangkat_golongan: 'Penata / III-c',
+            no_telp: '0266-221133', no_wa: '081234567802', email: 'kasipem.cikole@sukabumikota.go.id',
+            alamat_kantor: 'Kantor Kelurahan Cikole Ruang Layanan Terpadu', jam_layanan: 'Senin - Jumat, 08.00 - 15.30 WIB'
+          },
+          {
+            kelurahan: 'Cikole', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
+            kategori: 'KEAMANAN', jabatan: 'Babinsa TNI AD', wilayah_rw: null, wilayah_rt: null,
+            nama_pejabat: 'Sertu Hendra Wijaya', nip_nrp: '31980245120876', pangkat_golongan: 'Sersan Satu (Koramil 0701/Cikole)',
+            no_telp: '0266-221100', no_wa: '081398765432', email: 'babinsa.cikole@tniad.mil.id',
+            alamat_kantor: 'Pos Koramil Cikole / Kelurahan Cikole', jam_layanan: 'Siaga 24 Jam'
+          },
+          {
+            kelurahan: 'Cikole', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
+            kategori: 'KEAMANAN', jabatan: 'Bhabinkamtibmas Polri', wilayah_rw: null, wilayah_rt: null,
+            nama_pejabat: 'Bripka Asep Kurniawan, S.H.', nip_nrp: '85061234', pangkat_golongan: 'Brigadir Polisi Kepala (Polsek Cikole)',
+            no_telp: '0266-221110', no_wa: '081287654321', email: 'bhabin.cikole@polri.go.id',
+            alamat_kantor: 'Pos Bhabinkamtibmas Kelurahan Cikole / Polsek Cikole', jam_layanan: 'Siaga 24 Jam'
+          },
+          {
+            kelurahan: 'Cikole', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
+            kategori: 'RW', jabatan: 'Ketua RW 001', wilayah_rw: '001', wilayah_rt: null,
+            nama_pejabat: 'H. Maman Suryaman', nip_nrp: null, pangkat_golongan: null,
+            no_telp: '081223344556', no_wa: '081223344556', email: null,
+            alamat_kantor: 'Balai Warga RW 001 Cikole', jam_layanan: 'Senin - Sabtu, 08.00 - 20.00 WIB'
+          },
+          {
+            kelurahan: 'Cikole', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
+            kategori: 'RT', jabatan: 'Ketua RT 001', wilayah_rw: '001', wilayah_rt: '001',
+            nama_pejabat: 'Rahmat Hidayat', nip_nrp: null, pangkat_golongan: null,
+            no_telp: '081334455667', no_wa: '081334455667', email: null,
+            alamat_kantor: 'Sekretariat RT 001/RW 001 Cikole', jam_layanan: 'Senin - Minggu, 08.00 - 21.00 WIB'
+          },
+          {
+            kelurahan: 'Cikole', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
+            kategori: 'POSYANDU', jabatan: 'Koordinator Kader Posyandu', wilayah_rw: '001', wilayah_rt: '001',
+            nama_posyandu: 'Posyandu Mawar RW 001', nama_pejabat: 'Ny. Nunung Nurjanah', nip_nrp: null, pangkat_golongan: null,
+            no_telp: '081556677889', no_wa: '081556677889', email: null,
+            alamat_kantor: 'Gedung Posyandu Mawar RW 001', jam_layanan: 'Jadwal Posyandu & Layanan Warga'
+          },
+
+          // Kelurahan Kebonjati (Bandung)
+          {
+            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kategori: 'KELURAHAN', jabatan: 'Lurah Kebonjati', wilayah_rw: null, wilayah_rt: null,
+            nama_pejabat: 'Hendra Gunawan, S.AP', nip_nrp: '197808202002121004', pangkat_golongan: 'Pembina / IV-a',
+            no_telp: '022-4201234', no_wa: '081199887766', email: 'kelurahan.kebonjati@bandung.go.id',
+            alamat_kantor: 'Jl. Kebonjati No. 100, Andir, Kota Bandung', jam_layanan: 'Senin - Jumat, 08.00 - 15.30 WIB'
+          },
+          {
+            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kategori: 'KEAMANAN', jabatan: 'Babinsa TNI AD', wilayah_rw: null, wilayah_rt: null,
+            nama_pejabat: 'Serma Dedi Supriadi', nip_nrp: '21950341250775', pangkat_golongan: 'Sersan Mayor (Koramil Andir)',
+            no_telp: '022-4205566', no_wa: '081322110099', email: 'babinsa.kebonjati@tniad.mil.id',
+            alamat_kantor: 'Pos Koramil Andir / Kelurahan Kebonjati', jam_layanan: 'Siaga 24 Jam'
+          },
+          {
+            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kategori: 'KEAMANAN', jabatan: 'Bhabinkamtibmas Polri', wilayah_rw: null, wilayah_rt: null,
+            nama_pejabat: 'Aipda Agus Maulana', nip_nrp: '82040987', pangkat_golongan: 'Ajun Inspektur Polisi Dua (Polsek Andir)',
+            no_telp: '022-4207788', no_wa: '081299001122', email: 'bhabin.kebonjati@polri.go.id',
+            alamat_kantor: 'Pos Bhabinkamtibmas Kelurahan Kebonjati', jam_layanan: 'Siaga 24 Jam'
+          },
+          {
+            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kategori: 'RW', jabatan: 'Ketua RW 001', wilayah_rw: '001', wilayah_rt: null,
+            nama_pejabat: 'H. Ahmad Sanusi', nip_nrp: null, pangkat_golongan: null,
+            no_telp: '081233445566', no_wa: '081233445566', email: null,
+            alamat_kantor: 'Balai Pertemuan RW 001 Kebonjati', jam_layanan: 'Senin - Sabtu, 08.00 - 20.00 WIB'
+          },
+          {
+            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kategori: 'RT', jabatan: 'Ketua RT 001', wilayah_rw: '001', wilayah_rt: '001',
+            nama_pejabat: 'Dadang Ruhiyat', nip_nrp: null, pangkat_golongan: null,
+            no_telp: '081344556677', no_wa: '081344556677', email: null,
+            alamat_kantor: 'Sekretariat RT 001/RW 001 Kebonjati', jam_layanan: 'Senin - Minggu, 08.00 - 21.00 WIB'
+          },
+          {
+            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kategori: 'POSYANDU', jabatan: 'Koordinator Kader Posyandu', wilayah_rw: '001', wilayah_rt: '001',
+            nama_posyandu: 'Posyandu Melati RW 001', nama_pejabat: 'Ny. Hj. Yayah Rokayah', nip_nrp: null, pangkat_golongan: null,
+            no_telp: '081234567890', no_wa: '081234567890', email: null,
+            alamat_kantor: 'Pos RW 001 Kebonjati', jam_layanan: 'Jadwal Posyandu & Layanan Warga'
+          }
+        ];
+
+        for (const item of DEFAULT_APARATUR) {
+          await connection.execute(`
+            INSERT INTO aparatur_kelurahan 
+              (kelurahan, kecamatan, kota, kategori, jabatan, wilayah_rw, wilayah_rt, nama_posyandu, 
+               nama_pejabat, nip_nrp, pangkat_golongan, no_telp, no_wa, email, alamat_kantor, jam_layanan, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+          `, [
+            item.kelurahan, item.kecamatan, item.kota, item.kategori, item.jabatan, item.wilayah_rw, item.wilayah_rt, item.nama_posyandu || null,
+            item.nama_pejabat, item.nip_nrp || null, item.pangkat_golongan || null, item.no_telp || null, item.no_wa, item.email || null,
+            item.alamat_kantor || null, item.jam_layanan || 'Senin - Jumat, 08.00 - 15.00 WIB'
+          ]);
+        }
+        console.log('[AutoPatch] Berhasil melakukan seed 14 data aparatur & mitra keamanan (Cikole & Kebonjati).');
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE aparatur_kelurahan note:', e.message);
+    }
+
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');
   } catch (err) {
     console.warn('[AutoPatch] Catatan auto-patch database:', err.message);
