@@ -20,62 +20,6 @@ router.get('/prefill-data', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/dokumen/family-members - Anggota keluarga 1 KK untuk selektor pengajuan surat
-router.get('/family-members', requireAuth, async (req, res) => {
-  try {
-    const currentUser = req.session.user;
-    let noKk = currentUser.no_kk;
-    const activeNik = currentUser.active_nik || currentUser.username;
-
-    if (!noKk && activeNik) {
-      try {
-        const pool = require('../db/pool');
-        const [wRows] = await pool.execute(
-          'SELECT no_kk FROM warga WHERE nik = ? OR no_kk = ? LIMIT 1',
-          [activeNik, activeNik]
-        );
-        if (wRows.length > 0 && wRows[0].no_kk) {
-          noKk = wRows[0].no_kk;
-        }
-      } catch (e) {}
-    }
-
-    let family = [];
-    if (noKk) {
-      try {
-        const userRepo = require('../repositories/user.repository');
-        family = await userRepo.findFamilyMembersByNoKK(noKk);
-      } catch (e) {}
-      if (!family || family.length === 0) {
-        try {
-          const pool = require('../db/pool');
-          const [directRows] = await pool.execute(
-            `SELECT id, nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, 
-                    COALESCE(status_hubungan_keluarga, hubungan_keluarga, 'Anggota') AS status_hubungan_keluarga, 
-                    rt, rw 
-             FROM warga WHERE no_kk = ? AND (status_kependudukan != 'Meninggal' OR status_kependudukan IS NULL)
-             ORDER BY id ASC`,
-            [noKk]
-          );
-          family = directRows;
-        } catch (e) {}
-      }
-    }
-
-    if ((!family || family.length === 0) && currentUser.family_members && currentUser.family_members.length > 0) {
-      family = currentUser.family_members;
-    }
-
-    res.json({
-      success: true,
-      no_kk: noKk,
-      data: family || []
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
 // POST /api/dokumen - Warga mengajukan permohonan surat baru
 router.post('/', requireAuth, async (req, res) => {
   try {

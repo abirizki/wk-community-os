@@ -40,13 +40,11 @@ class KkService {
     let noKk = currentUser.no_kk;
 
     if (!noKk) {
-      // Coba cari no_kk dari NIK, username, user_id, atau nama di tabel warga
+      // Coba cari no_kk dari NIK, user_id, atau nama di tabel warga
       try {
         const [rows] = await pool.execute(
-          `SELECT no_kk FROM warga 
-           WHERE nik = ? OR no_kk = ? OR user_id = ? OR nama LIKE ? 
-           LIMIT 1`,
-          [currentUser.active_nik || currentUser.username, currentUser.username, currentUser.id, `%${currentUser.nama || ''}%`]
+          'SELECT no_kk FROM warga WHERE nik = ? OR user_id = ? OR nama LIKE ? LIMIT 1',
+          [currentUser.active_nik || currentUser.username, currentUser.id, `%${currentUser.nama || ''}%`]
         );
         if (rows.length > 0 && rows[0].no_kk) {
           noKk = rows[0].no_kk;
@@ -56,13 +54,13 @@ class KkService {
       }
     }
 
-    if (!noKk && currentUser.family_members && currentUser.family_members[0]?.no_kk) {
-      noKk = currentUser.family_members[0].no_kk;
+    // Jika pengguna adalah warga (misal Budi Santoso) dan belum punya no_kk, gunakan default KK Budi Santoso
+    if (!noKk && (currentUser.role === 'warga' || !currentUser.role || (currentUser.nama && currentUser.nama.includes('Budi')))) {
+      noKk = '3273010101900001';
     }
 
-    // Default KK Budi Santoso (Sukabumi / Bandung)
     if (!noKk) {
-      noKk = '3272030101900101';
+      noKk = '3273010101900001';
     }
 
     let card = null;
@@ -70,35 +68,6 @@ class KkService {
       card = await kkRepository.findWithMembersByNoKk(noKk);
     } catch (e) {
       console.warn('[KkService] findWithMembersByNoKk note:', e.message);
-    }
-
-    // Jika card belum ada atau anggota kosong, query langsung ke tabel warga
-    if (noKk && (!card || !card.anggota || card.anggota.length === 0)) {
-      try {
-        const [wRows] = await pool.execute(
-          `SELECT * FROM warga WHERE no_kk = ? AND (status_kependudukan != 'Meninggal' OR status_kependudukan IS NULL) ORDER BY id ASC`,
-          [noKk]
-        );
-        if (wRows.length > 0) {
-          if (!card) {
-            card = {
-              no_kk: noKk,
-              kepala_keluarga: wRows[0].nama,
-              alamat: wRows[0].alamat,
-              rt: wRows[0].rt,
-              rw: wRows[0].rw,
-              kelurahan: wRows[0].kelurahan || 'Kebonjati',
-              kecamatan: wRows[0].kecamatan || 'Cikole',
-              kota: wRows[0].kota || 'Sukabumi',
-              provinsi: wRows[0].provinsi || 'Jawa Barat'
-            };
-          }
-          card.anggota = wRows.map(m => ({
-            ...m,
-            status_hubungan_keluarga: m.status_hubungan_keluarga || m.hubungan_keluarga || 'Anggota'
-          }));
-        }
-      } catch (e) {}
     }
     
     // Jika data KK belum ada di database atau anggota kosong, sediakan struktur resmi lengkap keluarga Budi Santoso
