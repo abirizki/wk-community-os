@@ -33,6 +33,7 @@ import OfflineIndicator from '../components/OfflineIndicator';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
 import ForceChangePasswordModal from '../components/ForceChangePasswordModal';
 import KanayaAIAssistant from '../components/KanayaAIAssistant';
+import PersonaSwitcher from '../components/PersonaSwitcher';
 
 export default function DashboardLayout() {
   const { user, logout, selectProfile } = useAuth();
@@ -441,8 +442,10 @@ export default function DashboardLayout() {
             )}
           </div>
 
-          {/* Top Right Notifications */}
+          {/* Top Right Actions & Persona Switcher */}
           <div className="flex items-center gap-2">
+            <PersonaSwitcher />
+
             <div className="relative">
               <button
                 onClick={() => {

@@ -95,6 +95,19 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => prev ? { ...prev, must_change_password: false } : null);
   }, []);
 
+  const switchPersona = useCallback(async (mode) => {
+    try {
+      const response = await api.post('/auth/switch-persona', { mode });
+      if (response.success && response.user) {
+        setUser(response.user);
+      }
+      return response;
+    } catch (e) {
+      console.error('Failed to switch persona:', e);
+      throw e;
+    }
+  }, []);
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -105,6 +118,7 @@ export const AuthProvider = ({ children }) => {
       loginSapawarga,
       logout,
       selectProfile,
+      switchPersona,
       markPasswordChanged
     }}>
       {children}

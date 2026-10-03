@@ -364,13 +364,56 @@ router.post('/login', async (req, res) => {
       activeHubungan = match.status_hubungan_keluarga;
     }
 
+    // Deteksi apakah NIK yang login memiliki jabatan resmi di aparatur_kelurahan
+    let officialRoleInfo = null;
+    try {
+      const [apaRows] = await pool.execute(
+        'SELECT * FROM aparatur_kelurahan WHERE nik_pejabat = ? AND is_active = 1 LIMIT 1',
+        [activeNik]
+      );
+      if (apaRows.length > 0) {
+        const apa = apaRows[0];
+        let mappedRole = 'warga';
+        if (apa.kategori === 'RW') mappedRole = 'ketua_rw';
+        else if (apa.kategori === 'RT') mappedRole = 'ketua_rt';
+        else if (apa.kategori === 'POSYANDU') mappedRole = 'kader_posyandu';
+        else if (apa.kategori === 'KELURAHAN' && (apa.jabatan || '').toLowerCase().includes('lurah')) mappedRole = 'lurah';
+        else if (apa.kategori === 'KELURAHAN') mappedRole = 'admin_kelurahan';
+
+        officialRoleInfo = {
+          has_official_role: true,
+          official_id: apa.id,
+          kategori: apa.kategori,
+          jabatan: apa.jabatan,
+          mapped_role: mappedRole,
+          wilayah_rw: apa.wilayah_rw,
+          wilayah_rt: apa.wilayah_rt,
+          kelurahan: apa.kelurahan,
+          kecamatan: apa.kecamatan,
+          kota: apa.kota,
+          nama_posyandu: apa.nama_posyandu
+        };
+      }
+    } catch (errApa) {
+      console.warn('[Auth] Error checking aparatur for NIK:', errApa.message);
+    }
+
+    // Tentukan initial role: jika memiliki jabatan resmi dan user role default warga, aktifkan mode jabatan
+    let assignedRole = user ? (user.role === 'admin' ? 'admin_kelurahan' : user.role) : 'warga';
+    if (officialRoleInfo && assignedRole === 'warga') {
+      assignedRole = officialRoleInfo.mapped_role;
+    }
+
     const userData = {
       id: user ? user.id : 0,
       username: user ? user.username : activeNik,
       nama: user ? user.nama : activeNama,
-      role: user ? (user.role === 'admin' ? 'admin_kelurahan' : user.role) : 'warga',
-      rt: (user && user.rt) || (identifiedWarga && identifiedWarga.rt) || (familyMembers[0] && familyMembers[0].rt) || null,
-      rw: (user && user.rw) || (identifiedWarga && identifiedWarga.rw) || (familyMembers[0] && familyMembers[0].rw) || null,
+      role: assignedRole,
+      rt: (officialRoleInfo && officialRoleInfo.wilayah_rt) || (user && user.rt) || (identifiedWarga && identifiedWarga.rt) || (familyMembers[0] && familyMembers[0].rt) || null,
+      rw: (officialRoleInfo && officialRoleInfo.wilayah_rw) || (user && user.rw) || (identifiedWarga && identifiedWarga.rw) || (familyMembers[0] && familyMembers[0].rw) || null,
+      kelurahan: (officialRoleInfo && officialRoleInfo.kelurahan) || (identifiedWarga && identifiedWarga.kelurahan) || 'Cikole',
+      kecamatan: (officialRoleInfo && officialRoleInfo.kecamatan) || 'Cikole',
+      kota: (officialRoleInfo && officialRoleInfo.kota) || 'Kota Sukabumi',
       no_kk,
       is_family_account: isFamilyAccount,
       active_nik: activeNik,
@@ -380,6 +423,9 @@ router.post('/login', async (req, res) => {
       logged_in_by_nama: identifiedWarga ? identifiedWarga.nama : (user ? user.nama : activeNama),
       login_method: loginMethod,
       family_members: familyMembers,
+      has_official_role: Boolean(officialRoleInfo),
+      official_role_info: officialRoleInfo,
+      active_persona: officialRoleInfo ? 'official' : 'citizen',
       must_change_password: Boolean(user && user.must_change_password),
       needs_profile_selection: Boolean(identifiedKK && familyMembers.length > 1)
     };
@@ -524,6 +570,55 @@ router.get('/family-members', async (req, res) => {
   } catch (error) {
     console.error('Fetch family members error:', error);
     return res.status(500).json({ success: false, message: 'Gagal memuat data keluarga' });
+  }
+});
+
+/**
+ * POST /api/auth/switch-persona
+ * Beralih instan antara Mode Pejabat (RT/RW/Posyandu) dan Mode Warga Mandiri
+ */
+router.post('/switch-persona', async (req, res) => {
+  try {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ success: false, message: 'Harap login terlebih dahulu.' });
+    }
+
+    const { mode } = req.body; // 'official' | 'citizen'
+    const user = req.session.user;
+
+    if (!user.has_official_role || !user.official_role_info) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Akun Anda tidak memiliki jabatan resmi aparatur di kelurahan.' 
+      });
+    }
+
+    if (mode === 'official') {
+      user.active_persona = 'official';
+      user.role = user.official_role_info.mapped_role;
+      if (user.official_role_info.wilayah_rw) user.rw = user.official_role_info.wilayah_rw;
+      if (user.official_role_info.wilayah_rt) user.rt = user.official_role_info.wilayah_rt;
+    } else if (mode === 'citizen') {
+      user.active_persona = 'citizen';
+      user.role = 'warga';
+    } else {
+      return res.status(400).json({ success: false, message: 'Mode persona tidak valid (pilih "official" atau "citizen").' });
+    }
+
+    req.session.user = user;
+    req.session.save((err) => {
+      if (err) console.warn('[Auth] Session save warn on switch-persona:', err.message);
+      return res.json({
+        success: true,
+        message: mode === 'official' 
+          ? `Beralih ke Mode Pejabat: ${user.official_role_info.jabatan}` 
+          : 'Beralih ke Mode Warga Mandiri',
+        user
+      });
+    });
+  } catch (error) {
+    console.error('[Auth] Switch persona error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Gagal beralih persona.' });
   }
 });
 
