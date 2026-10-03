@@ -21,7 +21,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Run database auto-patch on startup to ensure schema compatibility & standard accounts
-autoPatchDatabase().catch(err => console.warn('[AutoPatch] Startup warn:', err.message));
+if (process.env.NODE_ENV !== 'test') {
+  autoPatchDatabase().catch(err => console.warn('[AutoPatch] Startup warn:', err.message));
+}
 
 // Trust 1 level of proxy (Hostinger reverse proxy)
 app.set('trust proxy', 1);
@@ -88,9 +90,10 @@ app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 // SESSION CONFIGURATION (MySQL-Backed with MemoryStore Fallback)
 // ==========================================
 let sessionStore = undefined;
-try {
-  const MySQLStore = require('express-mysql-session')(session);
-  sessionStore = new MySQLStore({
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    const MySQLStore = require('express-mysql-session')(session);
+    sessionStore = new MySQLStore({
     clearExpired: true,
     checkExpirationInterval: 15 * 60 * 1000, // Bersihkan session expired setiap 15 menit
     expiration: 24 * 60 * 60 * 1000, // Session berlaku 24 jam
@@ -113,6 +116,7 @@ try {
 } catch (err) {
   console.warn('[SessionStore] MySQL session store unavailable, falling back to MemoryStore:', err.message);
   sessionStore = undefined;
+  }
 }
 
 const sessionConfig = {
@@ -164,6 +168,7 @@ app.use('/api/keuangan', require('./src/routes/keuangan.routes'));
 app.use('/api/rw', require('./src/routes/rw.routes'));
 app.use('/api/aparatur', require('./src/routes/aparatur.routes'));
 app.use('/api/ai/kanaya', require('./src/routes/kanaya.routes'));
+app.use('/api/scanner', require('./src/routes/scanner.routes'));
 
 // Pure MySQL REST Routes (No hardcoded mock data)
 console.log(`[Bumi Warga] API routes mounted cleanly. Connected to MySQL database.`);
@@ -224,6 +229,10 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`[WK Community OS] Monolith server is running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`[WK Community OS] Monolith server is running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

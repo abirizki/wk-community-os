@@ -37,7 +37,12 @@ const STANDARD_ACCOUNTS = [
   { username: 'rt05_rw01_ckl', nama: 'Gunawan Wibisono (RT 05 Cikole)', role: 'ketua_rt', rt: '005', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
   { username: 'posyandu.mawar_ckl', nama: 'Ny. Nunung Nurjanah (Posyandu Mawar)', role: 'kader_posyandu', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
 
-  // 4. Akun Uji Coba Warga Resmi (Sukabumi)
+  // 4. Akun Uji Coba Warga & Aparatur Resmi Kebonjati (Kecamatan Cikole, Kota Sukabumi)
+  { username: 'admin.kebonjati', nama: 'Admin Kelurahan Kebonjati', role: 'admin_kelurahan', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'lurah.kebonjati', nama: 'Drs. H. Maman Suryaman, M.Si (Lurah Kebonjati)', role: 'lurah', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
+  { username: '3272030101700001', nama: 'H. Ahmad Sanusi (Ketua RW 001 Kebonjati)', role: 'ketua_rw', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: '3272030101750002', nama: 'Dadang Ruhiyat (Ketua RT 001 Kebonjati)', role: 'ketua_rt', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: '3272030101800003', nama: 'Ny. Hj. Yayah Rokayah (Kader Posyandu Kebonjati)', role: 'kader_posyandu', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
   { username: '3272030103810001', nama: 'Budi Santoso', role: 'warga', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
   { username: '3272030101900101', nama: 'Keluarga Budi Santoso (KK)', role: 'warga', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH }
 ];
@@ -896,46 +901,46 @@ async function autoPatchDatabase() {
             alamat_kantor: 'Gedung Posyandu Mawar RW 001', jam_layanan: 'Jadwal Posyandu & Layanan Warga'
           },
 
-          // Kelurahan Kebonjati (Bandung)
+          // Kelurahan Kebonjati (Kecamatan Cikole, Kota Sukabumi)
           {
-            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
             kategori: 'KELURAHAN', jabatan: 'Lurah Kebonjati', wilayah_rw: null, wilayah_rt: null,
-            nama_pejabat: 'Hendra Gunawan, S.AP', nip_nrp: '197808202002121004', pangkat_golongan: 'Pembina / IV-a',
-            no_telp: '022-4201234', no_wa: '081199887766', email: 'kelurahan.kebonjati@bandung.go.id',
-            alamat_kantor: 'Jl. Kebonjati No. 100, Andir, Kota Bandung', jam_layanan: 'Senin - Jumat, 08.00 - 15.30 WIB'
+            nama_pejabat: 'Drs. H. Maman Suryaman, M.Si', nip_nrp: '197405121999031004', pangkat_golongan: 'Pembina / IV-a',
+            no_telp: '0266-221155', no_wa: '081122334466', email: 'kelurahan.kebonjati@sukabumikota.go.id',
+            alamat_kantor: 'Jl. Surya Kencana No. 42, Kebonjati, Cikole, Kota Sukabumi 43111', jam_layanan: 'Senin - Jumat, 08.00 - 15.30 WIB'
           },
           {
-            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
             kategori: 'KEAMANAN', jabatan: 'Babinsa TNI AD', wilayah_rw: null, wilayah_rt: null,
-            nama_pejabat: 'Serma Dedi Supriadi', nip_nrp: '21950341250775', pangkat_golongan: 'Sersan Mayor (Koramil Andir)',
-            no_telp: '022-4205566', no_wa: '081322110099', email: 'babinsa.kebonjati@tniad.mil.id',
-            alamat_kantor: 'Pos Koramil Andir / Kelurahan Kebonjati', jam_layanan: 'Siaga 24 Jam'
+            nama_pejabat: 'Serma Dedi Supriadi', nip_nrp: '21950341250775', pangkat_golongan: 'Sersan Mayor (Koramil 0701/Cikole)',
+            no_telp: '0266-221100', no_wa: '081322110099', email: 'babinsa.kebonjati@tniad.mil.id',
+            alamat_kantor: 'Pos Koramil 0701 Cikole / Kelurahan Kebonjati', jam_layanan: 'Siaga 24 Jam'
           },
           {
-            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
             kategori: 'KEAMANAN', jabatan: 'Bhabinkamtibmas Polri', wilayah_rw: null, wilayah_rt: null,
-            nama_pejabat: 'Aipda Agus Maulana', nip_nrp: '82040987', pangkat_golongan: 'Ajun Inspektur Polisi Dua (Polsek Andir)',
-            no_telp: '022-4207788', no_wa: '081299001122', email: 'bhabin.kebonjati@polri.go.id',
-            alamat_kantor: 'Pos Bhabinkamtibmas Kelurahan Kebonjati', jam_layanan: 'Siaga 24 Jam'
+            nama_pejabat: 'Aipda Agus Maulana', nip_nrp: '82040987', pangkat_golongan: 'Ajun Inspektur Polisi Dua (Polsek Cikole)',
+            no_telp: '0266-221110', no_wa: '081299001122', email: 'bhabin.kebonjati@polri.go.id',
+            alamat_kantor: 'Pos Bhabinkamtibmas Kelurahan Kebonjati / Polsek Cikole', jam_layanan: 'Siaga 24 Jam'
           },
           {
-            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
             kategori: 'RW', jabatan: 'Ketua RW 001', wilayah_rw: '001', wilayah_rt: null,
-            nama_pejabat: 'H. Ahmad Sanusi', nip_nrp: null, pangkat_golongan: null,
+            nama_pejabat: 'H. Ahmad Sanusi', nik_pejabat: '3272030101700001', nip_nrp: null, pangkat_golongan: null,
             no_telp: '081233445566', no_wa: '081233445566', email: null,
             alamat_kantor: 'Balai Pertemuan RW 001 Kebonjati', jam_layanan: 'Senin - Sabtu, 08.00 - 20.00 WIB'
           },
           {
-            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
             kategori: 'RT', jabatan: 'Ketua RT 001', wilayah_rw: '001', wilayah_rt: '001',
-            nama_pejabat: 'Dadang Ruhiyat', nip_nrp: null, pangkat_golongan: null,
+            nama_pejabat: 'Dadang Ruhiyat', nik_pejabat: '3272030101750002', nip_nrp: null, pangkat_golongan: null,
             no_telp: '081344556677', no_wa: '081344556677', email: null,
             alamat_kantor: 'Sekretariat RT 001/RW 001 Kebonjati', jam_layanan: 'Senin - Minggu, 08.00 - 21.00 WIB'
           },
           {
-            kelurahan: 'Kebonjati', kecamatan: 'Andir', kota: 'Kota Bandung',
+            kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
             kategori: 'POSYANDU', jabatan: 'Koordinator Kader Posyandu', wilayah_rw: '001', wilayah_rt: '001',
-            nama_posyandu: 'Posyandu Melati RW 001', nama_pejabat: 'Ny. Hj. Yayah Rokayah', nip_nrp: null, pangkat_golongan: null,
+            nama_posyandu: 'Posyandu Melati RW 001', nama_pejabat: 'Ny. Hj. Yayah Rokayah', nik_pejabat: '3272030101800003', nip_nrp: null, pangkat_golongan: null,
             no_telp: '081234567890', no_wa: '081234567890', email: null,
             alamat_kantor: 'Pos RW 001 Kebonjati', jam_layanan: 'Jadwal Posyandu & Layanan Warga'
           }

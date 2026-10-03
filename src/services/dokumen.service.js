@@ -461,10 +461,22 @@ class DokumenService {
     if (['admin_kelurahan', 'superadmin', 'admin', 'lurah'].includes(role)) {
       const triggerRan = await this.executeDemographyTrigger(doc);
 
+      const crypto = require('crypto');
+      const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+      const now = new Date();
+      const romanMonth = romanMonths[now.getMonth()];
+      const year = now.getFullYear();
+      const nomorSurat = `470/${id}/Ktr.Kbjt/${romanMonth}/${year}`;
+
+      const signatureData = `${nomorSurat}|${doc.nik_pemohon}|${doc.jenis_dokumen || doc.jenis_surat}|${now.toISOString()}|Kelurahan Kebonjati`;
+      const qrCodeHash = crypto.createHash('sha256').update(signatureData).digest('hex');
+
       await dokumenRepository.updateApproval(id, {
         status: 'APPROVED',
         approval_step: 'COMPLETED',
         approved_by_kelurahan: currentUser.id,
+        nomor_surat: nomorSurat,
+        qr_code_hash: qrCodeHash,
         catatan_petugas: catatan || 'Dokumen resmi disahkan oleh Kelurahan Kebonjati'
       });
 
@@ -472,7 +484,7 @@ class DokumenService {
       await notifikasiRepository.create({
         nik_target: doc.nik_pemohon,
         judul: 'Surat Resmi Telah Disahkan',
-        pesan: `Selamat! Permohonan ${doc.jenis_dokumen} Anda telah RESMI DISETUJUI dan disahkan oleh Kelurahan Kebonjati. Silakan unduh atau cetak dokumen Anda.`,
+        pesan: `Selamat! Permohonan ${doc.jenis_dokumen} Anda telah RESMI DISETUJUI dan disahkan oleh Kelurahan Kebonjati dengan Nomor Surat: ${nomorSurat}.`,
         tipe: 'success',
         link: '/dashboard/dokumen'
       });
@@ -486,8 +498,8 @@ class DokumenService {
             phone: warga.no_telepon,
             nama: warga.nama,
             jenis_surat: doc.jenis_dokumen,
-            nomor_surat: doc.nomor_registrasi || `470/${id}/KBJ/2026`,
-            qr_code_hash: doc.qr_code_hash
+            nomor_surat: nomorSurat,
+            qr_code_hash: qrCodeHash
           });
         }
       } catch (waErr) {
@@ -498,6 +510,8 @@ class DokumenService {
         success: true, 
         step: 'COMPLETED', 
         status: 'APPROVED', 
+        nomor_surat: nomorSurat,
+        qr_code_hash: qrCodeHash,
         trigger_executed: triggerRan,
         message: 'Surat telah resmi disahkan oleh Kelurahan Kebonjati dan trigger data demografi berhasil dieksekusi.' 
       };

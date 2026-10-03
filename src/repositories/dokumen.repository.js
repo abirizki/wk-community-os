@@ -299,6 +299,14 @@ class DokumenRepository {
       query += ', file_url = ?, file_hasil = ?';
       params.push(file_url, file_url);
     }
+    if (updateData.nomor_surat) {
+      query += ', nomor_surat = ?';
+      params.push(updateData.nomor_surat);
+    }
+    if (updateData.qr_code_hash) {
+      query += ', qr_code_hash = ?';
+      params.push(updateData.qr_code_hash);
+    }
 
     query += ' WHERE id = ?';
     params.push(id);
@@ -368,6 +376,35 @@ class DokumenRepository {
         total_approved: 0,
         total_rejected: 0
       };
+    }
+  }
+
+  /**
+   * Cari dokumen berdasarkan hash TTE atau nomor registrasi
+   */
+  async findByHash(hash) {
+    try {
+      const [rows] = await pool.execute(
+        `SELECT d.*, 
+                COALESCE(d.jenis_surat, d.jenis_dokumen, 'Surat') AS jenis_dokumen,
+                COALESCE(d.nama_subjek, w.nama, d.nik_pemohon) AS nama_pemohon,
+                w.no_kk,
+                w.alamat,
+                COALESCE(d.rt, w.rt) AS rt,
+                COALESCE(d.rw, w.rw) AS rw,
+                COALESCE(d.kelurahan, 'Kebonjati') AS kelurahan,
+                COALESCE(d.kecamatan, 'Cikole') AS kecamatan,
+                COALESCE(d.kota, 'Kota Sukabumi') AS kota
+         FROM dokumen_request d
+         LEFT JOIN warga w ON d.nik_pemohon = w.nik
+         WHERE d.qr_code_hash = ? OR d.nomor_registrasi = ? OR d.nomor_surat = ?
+         LIMIT 1`,
+        [hash, hash, hash]
+      );
+      return rows.length > 0 ? rows[0] : null;
+    } catch (e) {
+      console.warn('[DokumenRepo] findByHash error:', e.message);
+      return null;
     }
   }
 }

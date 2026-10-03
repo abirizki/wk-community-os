@@ -6,9 +6,49 @@
 
 const express = require('express');
 const dokumenService = require('../services/dokumen.service');
+const dokumenRepository = require('../repositories/dokumen.repository');
 const { requireAuth, requireRole } = require('../middleware/auth.middleware');
 
 const router = express.Router();
+
+// GET /api/dokumen/verify/:hash - Verifikasi Publik TTE QR Code Resmi (Tanpa Login)
+router.get('/verify/:hash', async (req, res) => {
+  try {
+    const hash = req.params.hash;
+    const doc = await dokumenRepository.findByHash(hash);
+    if (!doc) {
+      return res.status(404).json({
+        success: false,
+        valid: false,
+        message: 'Dokumen atau QR Code TTE tidak ditemukan dalam pangkalan data resmi Kelurahan Kebonjati.'
+      });
+    }
+
+    return res.json({
+      success: true,
+      valid: true,
+      dokumen: {
+        id: doc.id,
+        nomor_surat: doc.nomor_surat,
+        nomor_registrasi: doc.nomor_registrasi,
+        jenis_dokumen: doc.jenis_dokumen,
+        keperluan: doc.keperluan,
+        nik_pemohon: doc.nik_pemohon,
+        nama_pemohon: doc.nama_pemohon,
+        rt: doc.rt,
+        rw: doc.rw,
+        kelurahan: doc.kelurahan || 'Kebonjati',
+        kecamatan: doc.kecamatan || 'Cikole',
+        kota: doc.kota || 'Kota Sukabumi',
+        status: doc.status,
+        approved_at: doc.approved_at,
+        qr_code_hash: doc.qr_code_hash
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, valid: false, message: error.message });
+  }
+});
 
 // GET /api/dokumen/prefill-data - AI Auto-Fill Data Profil Warga
 router.get('/prefill-data', requireAuth, async (req, res) => {
@@ -141,6 +181,16 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
     res.json({ success: true, message: `Status diperbarui menjadi ${status}` });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/dokumen/:id/history - Riwayat jejak audit dokumen
+router.get('/:id/history', requireAuth, async (req, res) => {
+  try {
+    const history = await dokumenRepository.getWorkflowHistory(Number(req.params.id));
+    res.json({ success: true, data: history });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
