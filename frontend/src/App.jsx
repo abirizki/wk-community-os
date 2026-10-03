@@ -23,6 +23,8 @@ import PanduanOperasionalPage from './pages/PanduanOperasionalPage';
 import ProfilePage from './pages/ProfilePage';
 import KeuanganPage from './pages/KeuanganPage';
 import AparaturPage from './pages/AparaturPage';
+import VerifySuratPage from './pages/VerifySuratPage';
+import ScannerPage from './pages/ScannerPage';
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-surat/:hash" element={<VerifySuratPage />} />
+          <Route path="/verify/:hash" element={<VerifySuratPage />} />
 
           {/* Protected Routes */}
           <Route
@@ -45,6 +49,7 @@ function App() {
             <Route path="command-center" element={<CommandCenterPage />} />
             <Route path="integrasi" element={<IntegrasiPage />} />
             <Route path="whatsapp" element={<WhatsAppGatewayPage />} />
+            <Route path="scanner" element={<ScannerPage />} />
             <Route path="kk" element={<KartuKeluargaPage />} />
             <Route path="users" element={<UserManagementPage />} />
             <Route path="warga" element={<WargaList />} />
