@@ -26,7 +26,12 @@ import {
   Eye,
   FilePlus,
   HelpCircle,
-  ChevronDown
+  ChevronDown,
+  Upload,
+  Image,
+  FileUp,
+  ExternalLink,
+  RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -35,8 +40,8 @@ export const JENIS_SURAT_CONFIG = {
     label: 'Surat Keterangan Domisili',
     deskripsi: 'Menerangkan domisili tempat tinggal sah pemohon/anggota keluarga di lingkungan RT/RW Kelurahan Kebonjati.',
     syarat: [
-      'e-KTP Asli Pemohon / Subjek Surat',
-      'Kartu Keluarga (KK) Kelurahan Kebonjati',
+      'e-KTP Asli Pemohon / Subjek Surat (Tersimpan di Akun Digital)',
+      'Kartu Keluarga (KK) Resmi Kelurahan Kebonjati',
       'Kesesuaian alamat domisili faktual di lingkungan RT/RW setempat'
     ],
     fields: [
@@ -48,9 +53,9 @@ export const JENIS_SURAT_CONFIG = {
     label: 'Surat Keterangan Usaha (SKU)',
     deskripsi: 'Keterangan resmi legalitas operasional usaha mikro/kecil warga di wilayah kelurahan untuk perbankan / KUR.',
     syarat: [
-      'KTP & Kartu Keluarga (KK)',
-      'Foto Tempat / Aktivitas Kegiatan Usaha',
-      'Usaha berlokasi dan beroperasi di wilayah RT/RW setempat'
+      'KTP & Kartu Keluarga (KK) Digital',
+      'Foto Lampiran Tempat / Aktivitas Kegiatan Usaha',
+      'Verifikasi lokasi usaha aktif oleh Ketua RT/RW setempat'
     ],
     fields: [
       { name: 'nama_usaha', label: 'Nama Usaha / Merk Dagang', type: 'text', placeholder: 'Contoh: Toko Berkah Mandiri / Warung Nasi Bu Siti', required: true },
@@ -64,10 +69,10 @@ export const JENIS_SURAT_CONFIG = {
     label: 'Surat Keterangan Tidak Mampu (SKTM)',
     deskripsi: 'Keterangan keadaan sosial ekonomi keluarga untuk beasiswa anak (KIP), keringanan faskes, atau bantuan hukum.',
     syarat: [
-      'KTP & Kartu Keluarga (KK)',
-      'Surat Rekomendasi Faktual Pengurus RT/RW',
-      'Foto Tempat Tinggal Tampak Depan',
-      'Verifikasi Data Terpadu Kesejahteraan Sosial (DTKS / P3KE)'
+      'KTP & Kartu Keluarga (KK) Digital Resmi',
+      'Foto Kondisi Rumah Tempat Tinggal Tampak Depan',
+      'Verifikasi Data Terpadu Kesejahteraan Sosial (DTKS / P3KE)',
+      'Verifikasi kesesuaian data lapangan langsung oleh Pengurus RT/RW'
     ],
     fields: [
       { name: 'tujuan_sktm', label: 'Tujuan Penggunaan SKTM', type: 'select', options: ['Beasiswa / KIP Kuliah / Sekolah Anak', 'Keringanan Biaya Rumah Sakit / Faskes', 'Pendaftaran BPJS PBI Gratis', 'Bantuan Hukum / Pengadilan', 'Lainnya'], required: true },
@@ -79,10 +84,10 @@ export const JENIS_SURAT_CONFIG = {
     label: 'Surat Pengantar SKCK',
     deskripsi: 'Pengantar permohonan Surat Keterangan Catatan Kepolisian ke Polsek / Polres setempat.',
     syarat: [
-      'KTP & Kartu Keluarga (KK)',
+      'KTP & Kartu Keluarga (KK) Digital',
       'Akta Kelahiran / Ijazah Terakhir',
       'Pas Foto 4x6 Latar Merah',
-      'Pengantar Verifikasi RT/RW'
+      'Verifikasi Berkas & Catatan Warga oleh Pengurus RT/RW'
     ],
     fields: [
       { name: 'keperluan_skck', label: 'Keperluan Pembuatan SKCK', type: 'select', options: ['Melamar Pekerjaan Swasta / BUMN', 'Pendaftaran Seleksi CPNS / PPPK / TNI / POLRI', 'Melanjutkan Pendidikan / Universitas', 'Pencalonan Pengurus Lembaga / Organisasi', 'Pengurusan Visa / Luar Negeri', 'Lainnya'], required: true }
@@ -100,7 +105,7 @@ export const JENIS_SURAT_CONFIG = {
       { name: 'nama_almarhum', label: 'Nama Lengkap Almarhum/Almarhumah', type: 'text', placeholder: 'Nama sesuai KTP', required: true },
       { name: 'nik_almarhum', label: 'NIK Almarhum/Almarhumah', type: 'text', placeholder: '16 digit NIK almarhum', required: true },
       { name: 'tanggal_kematian', label: 'Hari & Tanggal Meninggal', type: 'date', required: true },
-      { name: 'tempat_kematian', label: 'Tempat Meninggal Dunia', type: 'text', placeholder: 'Contoh: Rumah Kediaman / RS Hasan Sadikin', required: true },
+      { name: 'tempat_kematian', label: 'Tempat Meninggal Dunia', type: 'text', placeholder: 'Contoh: Rumah Kediaman / RSUD R. Syamsudin Sukabumi', required: true },
       { name: 'penyebab_kematian', label: 'Penyebab Meninggal', type: 'select', options: ['Sakit Biasa', 'Usia Lanjut', 'Kecelakaan', 'Sakit Menular', 'Lainnya'], required: true }
     ]
   },
@@ -108,7 +113,7 @@ export const JENIS_SURAT_CONFIG = {
     label: 'Surat Keterangan Kelahiran',
     deskripsi: 'Pengantar pencatatan kelahiran anak untuk penerbitan Akta Kelahiran dan penambahan anggota Kartu Keluarga.',
     syarat: [
-      'KTP Ayah & KTP Ibu',
+      'KTP Ayah & KTP Ibu Digital',
       'Kartu Keluarga (KK) & Buku Nikah Orang Tua',
       'Surat Keterangan Lahir dari Bidan / Rumah Sakit'
     ],
@@ -116,7 +121,7 @@ export const JENIS_SURAT_CONFIG = {
       { name: 'nama_anak', label: 'Nama Lengkap Bayi / Anak', type: 'text', placeholder: 'Nama anak yang baru lahir', required: true },
       { name: 'jenis_kelamin_anak', label: 'Jenis Kelamin Anak', type: 'select', options: ['Laki-Laki', 'Perempuan'], required: true },
       { name: 'tanggal_lahir_anak', label: 'Tanggal Lahir Bayi', type: 'date', required: true },
-      { name: 'tempat_lahir_anak', label: 'Tempat Lahir', type: 'text', placeholder: 'Contoh: RS Hermina / Puskesmas / Rumah', required: true },
+      { name: 'tempat_lahir_anak', label: 'Tempat Lahir', type: 'text', placeholder: 'Contoh: RSUD R. Syamsudin / Puskesmas / Rumah', required: true },
       { name: 'anak_ke', label: 'Kelahiran Anak Ke-', type: 'number', placeholder: 'Contoh: 1, 2, 3...', required: true }
     ]
   },
@@ -124,9 +129,9 @@ export const JENIS_SURAT_CONFIG = {
     label: 'Surat Keterangan Belum Menikah',
     deskripsi: 'Menerangkan bahwa pemohon/anggota keluarga berstatus lajang dan belum pernah melangsungkan perkawinan sah.',
     syarat: [
-      'KTP & Kartu Keluarga (KK)',
+      'KTP & Kartu Keluarga (KK) Digital',
       'Surat Pernyataan Belum Pernah Menikah Bermaterai',
-      'Pengantar RT/RW'
+      'Verifikasi Status Perkawinan Digital oleh RT/RW'
     ],
     fields: [
       { name: 'keperluan_belum_nikah', label: 'Keperluan Pengajuan', type: 'select', options: ['Melamar Pekerjaan / Ikatan Dinas', 'Pengajuan Fasilitas KPR Bank', 'Persyaratan Beasiswa Pendidikan', 'Pendaftaran Seleksi CPNS / Kedinasan', 'Lainnya'], required: true }
@@ -136,7 +141,7 @@ export const JENIS_SURAT_CONFIG = {
     label: 'Surat Pengantar Nikah (N1-N4)',
     deskripsi: 'Formulir pengantar resmi kelurahan untuk pendaftaran akad pernikahan di Kantor Urusan Agama (KUA).',
     syarat: [
-      'KTP & KK Calon Mempelai',
+      'KTP & KK Calon Mempelai Digital',
       'Akta Kelahiran & Ijazah Terakhir',
       'Pas Foto 2x3 dan 4x6 Latar Biru',
       'Salinan KTP Orang Tua & KTP Calon Pasangan'
@@ -152,8 +157,8 @@ export const JENIS_SURAT_CONFIG = {
     label: 'Surat Keterangan Pindah Domisili',
     deskripsi: 'Pengantar penerbitan SKPWNI untuk kepindahan domisili warga antar-RT, RW, Kelurahan, atau Luar Kota.',
     syarat: [
-      'KTP Asli & Kartu Keluarga (KK) Asli',
-      'Surat Pengantar RT/RW Wilayah Asal',
+      'KTP Asli & Kartu Keluarga (KK) Digital Asli',
+      'Verifikasi Domisili Asal oleh Pengurus RT/RW',
       'Kesesuaian daftar anggota keluarga yang ikut pindah'
     ],
     fields: [
@@ -206,10 +211,17 @@ export default function DokumenPage() {
   const [dataTambahan, setDataTambahan] = useState({});
   const [syaratChecked, setSyaratChecked] = useState({});
 
-  // Action (Approval/Rejection) Modal State
+  // Lampiran Berkas Digital Resmi State
+  const [lampiranKtp, setLampiranKtp] = useState('');
+  const [lampiranKk, setLampiranKk] = useState('');
+  const [lampiranBerkas, setLampiranBerkas] = useState('');
+  const [namaLampiranBerkas, setNamaLampiranBerkas] = useState('');
+  const [previewZoomImage, setPreviewZoomImage] = useState(null);
+
+  // Action (Approval/Rejection/Revision) Modal State
   const [showActionModal, setShowActionModal] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
-  const [actionType, setActionType] = useState('APPROVE');
+  const [actionType, setActionType] = useState('APPROVE'); // 'APPROVE' | 'REVISION' | 'REJECT'
   const [actionNotes, setActionNotes] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
 
@@ -220,6 +232,22 @@ export default function DokumenPage() {
   // Print Preview Modal State
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printDoc, setPrintDoc] = useState(null);
+
+  // File Upload Reader Helper
+  const handleFileChange = (e, setter, nameSetter = null) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Ukuran berkas maksimal 5MB');
+      return;
+    }
+    if (nameSetter) nameSetter(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setter(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Fungsi khusus pemuatan anggota keluarga 1 KK dengan fallback bertingkat
   const loadFamilyMembers = async () => {
@@ -373,12 +401,15 @@ export default function DokumenPage() {
         nik_pemohon: targetNik,
         data_tambahan: dataTambahan,
         syarat_berkas: syaratChecked,
+        lampiran_ktp: lampiranKtp || prefillInfo?.profile?.foto_ktp_url || null,
+        lampiran_kk: lampiranKk || prefillInfo?.profile?.foto_kk_url || null,
+        lampiran_berkas: lampiranBerkas || null,
         is_auto_filled_by_ai: Boolean(prefillInfo?.eligible)
       });
 
       setSuccessMsg(
         subjekPemohon === 'self'
-          ? 'Permohonan surat berhasil diajukan dan masuk ke antrean verifikasi RT!'
+          ? 'Permohonan surat berhasil diajukan dengan kelengkapan berkas digital dan masuk ke antrean verifikasi RT!'
           : `Permohonan surat untuk anggota keluarga an. ${selectedSubjectInfo.nama} (${selectedSubjectInfo.hubungan}) berhasil diajukan!`
       );
 
@@ -388,6 +419,8 @@ export default function DokumenPage() {
       });
       setDataTambahan({});
       setSyaratChecked({});
+      setLampiranBerkas('');
+      setNamaLampiranBerkas('');
       setSubjekPemohon('self');
       setShowModal(false);
       
@@ -405,7 +438,7 @@ export default function DokumenPage() {
     }
   };
 
-  // Open Approval / Rejection Modal
+  // Open Approval / Rejection / Revision Modal
   const openActionModal = (doc, type) => {
     setSelectedDoc(doc);
     setActionType(type);
@@ -420,7 +453,9 @@ export default function DokumenPage() {
     try {
       setSubmittingAction(true);
       setError(null);
-      const endpoint = actionType === 'APPROVE' ? `/dokumen/${selectedDoc.id}/approve` : `/dokumen/${selectedDoc.id}/reject`;
+      const endpoint = actionType === 'APPROVE' 
+        ? `/dokumen/${selectedDoc.id}/approve` 
+        : (actionType === 'REVISION' ? `/dokumen/${selectedDoc.id}/revise` : `/dokumen/${selectedDoc.id}/reject`);
       const res = await api.patch(endpoint, { catatan: actionNotes });
       setSuccessMsg(res.message || 'Pembaruan status dokumen berhasil disimpan!');
       setShowActionModal(false);
@@ -460,6 +495,14 @@ export default function DokumenPage() {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
           <XCircle size={13} /> Ditolak
+        </span>
+      );
+    }
+
+    if (doc.status === 'REVISION') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <AlertCircle size={13} /> Perlu Perbaikan
         </span>
       );
     }
@@ -704,6 +747,13 @@ export default function DokumenPage() {
                                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer"
                               >
                                 <Check size={14} /> {isKelurahan ? 'Sahkan' : 'Setujui'}
+                              </button>
+                              <button
+                                onClick={() => openActionModal(doc, 'REVISION')}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors border border-amber-200 cursor-pointer"
+                                title="Kembalikan berkas ke warga untuk perbaikan"
+                              >
+                                <RotateCcw size={13} /> Revisi
                               </button>
                               <button
                                 onClick={() => openActionModal(doc, 'REJECT')}
@@ -994,7 +1044,184 @@ export default function DokumenPage() {
                 </div>
               )}
 
-              {/* 5. KEPERLUAN SURAT */}
+              {/* 5. UPLOAD LAMPIRAN BERKAS & DOKUMEN DIGITAL (KK, KTP, BERKAS PENDUKUNG) */}
+              <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                    <FileUp size={16} className="text-primary" />
+                    <span>Upload Lampiran Berkas Digital Resmi</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <ShieldCheck size={11} /> Auto-Sync KK Digital
+                  </span>
+                </div>
+                
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                  RT dan RW akan memverifikasi berkas digital di sistem <strong>tanpa memerlukan surat rekomendasi fisik</strong>. Berkas KTP dan KK yang diunggah otomatis tersimpan di data profil warga sebagai arsip KK Digital resmi.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  {/* UPLOAD KTP DIGITAL */}
+                  <div className="p-3 rounded-xl border border-outline-variant/70 bg-surface-container-lowest space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                        <Image size={14} className="text-blue-600" />
+                        <span>e-KTP Pemohon / Subjek</span>
+                      </span>
+                      {(lampiranKtp || prefillInfo?.profile?.foto_ktp_url) && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                          Tersimpan
+                        </span>
+                      )}
+                    </div>
+
+                    {(lampiranKtp || prefillInfo?.profile?.foto_ktp_url) ? (
+                      <div className="space-y-1.5">
+                        <div className="relative rounded-lg overflow-hidden border border-emerald-200 bg-emerald-50/50 p-2 flex items-center gap-2">
+                          <img 
+                            src={lampiranKtp || prefillInfo?.profile?.foto_ktp_url} 
+                            alt="e-KTP" 
+                            className="w-12 h-9 object-cover rounded cursor-pointer border border-emerald-300 hover:opacity-80 transition-opacity"
+                            onClick={() => setPreviewZoomImage(lampiranKtp || prefillInfo?.profile?.foto_ktp_url)}
+                          />
+                          <div className="text-[11px] flex-1 min-w-0">
+                            <span className="font-semibold text-emerald-900 block truncate">KTP Digital Terverifikasi</span>
+                            <span className="text-[10px] text-emerald-700">Klik gambar untuk pratinjau</span>
+                          </div>
+                        </div>
+                        <label className="text-[10px] text-primary hover:underline cursor-pointer block text-center font-medium">
+                          Ganti / Unggah KTP Baru
+                          <input 
+                            type="file" 
+                            accept="image/*,.pdf" 
+                            className="hidden" 
+                            onChange={(e) => handleFileChange(e, setLampiranKtp)} 
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="border-2 border-dashed border-outline-variant hover:border-primary rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer transition-colors text-center group">
+                          <Upload size={20} className="text-on-surface-variant group-hover:text-primary transition-colors mb-1" />
+                          <span className="text-[11px] font-semibold text-on-surface">Pilih Foto e-KTP</span>
+                          <span className="text-[10px] text-on-surface-variant">Format JPG/PNG/PDF (Maks 5MB)</span>
+                          <input 
+                            type="file" 
+                            accept="image/*,.pdf" 
+                            className="hidden" 
+                            onChange={(e) => handleFileChange(e, setLampiranKtp)} 
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* UPLOAD KK DIGITAL */}
+                  <div className="p-3 rounded-xl border border-outline-variant/70 bg-surface-container-lowest space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                        <FileText size={14} className="text-indigo-600" />
+                        <span>Kartu Keluarga (KK)</span>
+                      </span>
+                      {(lampiranKk || prefillInfo?.profile?.foto_kk_url) && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                          Tersimpan
+                        </span>
+                      )}
+                    </div>
+
+                    {(lampiranKk || prefillInfo?.profile?.foto_kk_url) ? (
+                      <div className="space-y-1.5">
+                        <div className="relative rounded-lg overflow-hidden border border-emerald-200 bg-emerald-50/50 p-2 flex items-center gap-2">
+                          <img 
+                            src={lampiranKk || prefillInfo?.profile?.foto_kk_url} 
+                            alt="Kartu Keluarga" 
+                            className="w-12 h-9 object-cover rounded cursor-pointer border border-emerald-300 hover:opacity-80 transition-opacity"
+                            onClick={() => setPreviewZoomImage(lampiranKk || prefillInfo?.profile?.foto_kk_url)}
+                          />
+                          <div className="text-[11px] flex-1 min-w-0">
+                            <span className="font-semibold text-emerald-900 block truncate">KK Digital Resmi</span>
+                            <span className="text-[10px] text-emerald-700">Klik gambar untuk pratinjau</span>
+                          </div>
+                        </div>
+                        <label className="text-[10px] text-primary hover:underline cursor-pointer block text-center font-medium">
+                          Ganti / Unggah KK Baru
+                          <input 
+                            type="file" 
+                            accept="image/*,.pdf" 
+                            className="hidden" 
+                            onChange={(e) => handleFileChange(e, setLampiranKk)} 
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="border-2 border-dashed border-outline-variant hover:border-primary rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer transition-colors text-center group">
+                          <Upload size={20} className="text-on-surface-variant group-hover:text-primary transition-colors mb-1" />
+                          <span className="text-[11px] font-semibold text-on-surface">Pilih Foto Kartu Keluarga</span>
+                          <span className="text-[10px] text-on-surface-variant">Format JPG/PNG/PDF (Maks 5MB)</span>
+                          <input 
+                            type="file" 
+                            accept="image/*,.pdf" 
+                            className="hidden" 
+                            onChange={(e) => handleFileChange(e, setLampiranKk)} 
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* UPLOAD BERKAS PENDUKUNG KHUSUS (SESUAI JENIS SURAT) */}
+                  <div className="sm:col-span-2 p-3 rounded-xl border border-outline-variant/70 bg-surface-container-lowest space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                        <Upload size={14} className="text-amber-600" />
+                        <span>Lampiran Berkas Pendukung Khusus (Opsional / Sesuai Jenis Surat)</span>
+                      </span>
+                      {lampiranBerkas && (
+                        <button
+                          type="button"
+                          onClick={() => { setLampiranBerkas(''); setNamaLampiranBerkas(''); }}
+                          className="text-[10px] text-rose-600 hover:underline"
+                        >
+                          Hapus
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-on-surface-variant">
+                      Contoh: Foto tempat usaha (SKU), Surat keterangan kematian/lahir dari RS, Foto rumah tampak depan (SKTM), dll.
+                    </p>
+
+                    {lampiranBerkas ? (
+                      <div className="flex items-center gap-3 p-2 bg-amber-50/70 border border-amber-200 rounded-lg">
+                        <img 
+                          src={lampiranBerkas} 
+                          alt="Berkas Pendukung" 
+                          className="w-12 h-10 object-cover rounded border border-amber-300 cursor-pointer hover:opacity-80"
+                          onClick={() => setPreviewZoomImage(lampiranBerkas)}
+                        />
+                        <div className="text-[11px] flex-1 truncate">
+                          <span className="font-semibold text-amber-900 block truncate">{namaLampiranBerkas || 'Berkas Pendukung Terlampir'}</span>
+                          <span className="text-[10px] text-amber-700">Tersedia untuk diverifikasi oleh RT/RW</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="border-2 border-dashed border-outline-variant hover:border-amber-500 rounded-xl p-2.5 flex items-center justify-center gap-2 cursor-pointer transition-colors text-center group">
+                        <Upload size={16} className="text-on-surface-variant group-hover:text-amber-600 transition-colors" />
+                        <span className="text-[11px] font-medium text-on-surface group-hover:text-amber-700">Unggah Berkas Pendukung Tambahan</span>
+                        <input 
+                          type="file" 
+                          accept="image/*,.pdf" 
+                          className="hidden" 
+                          onChange={(e) => handleFileChange(e, setLampiranBerkas, setNamaLampiranBerkas)} 
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 6. KEPERLUAN SURAT */}
               <div>
                 <label className="block text-xs font-bold text-on-surface mb-1">
                   Tujuan & Keperluan Surat Secara Rinci *
@@ -1097,6 +1324,102 @@ export default function DokumenPage() {
                 </div>
               </div>
 
+              {/* Lampiran Berkas Persyaratan & Dokumen Digital */}
+              <div className="p-3 bg-surface-container-low rounded-xl space-y-2">
+                <span className="font-bold text-on-surface block flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <FileUp size={14} className="text-primary" />
+                    <span>Lampiran Dokumen Digital Warga:</span>
+                  </span>
+                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    Verifikasi Digital SOP RT/RW
+                  </span>
+                </span>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+                  {/* KTP DIGITAL */}
+                  <div className="p-2 bg-surface-container-lowest rounded-lg border border-outline-variant/60 flex flex-col items-center text-center">
+                    <span className="text-[10px] font-bold text-on-surface block mb-1">e-KTP Digital</span>
+                    {detailDoc.lampiran_ktp ? (
+                      <div className="relative group w-full">
+                        <img 
+                          src={detailDoc.lampiran_ktp} 
+                          alt="e-KTP" 
+                          className="w-full h-16 object-cover rounded cursor-pointer border border-outline-variant group-hover:opacity-80 transition-opacity"
+                          onClick={() => setPreviewZoomImage(detailDoc.lampiran_ktp)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPreviewZoomImage(detailDoc.lampiran_ktp)}
+                          className="mt-1 text-[10px] text-primary flex items-center justify-center gap-0.5 w-full font-medium"
+                        >
+                          <Eye size={10} /> Perbesar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="h-16 w-full flex flex-col items-center justify-center bg-surface-container rounded text-[10px] text-on-surface-variant">
+                        <User size={18} className="opacity-40 mb-0.5" />
+                        <span>Data Terdaftar</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* KK DIGITAL */}
+                  <div className="p-2 bg-surface-container-lowest rounded-lg border border-outline-variant/60 flex flex-col items-center text-center">
+                    <span className="text-[10px] font-bold text-on-surface block mb-1">KK Digital Resmi</span>
+                    {detailDoc.lampiran_kk ? (
+                      <div className="relative group w-full">
+                        <img 
+                          src={detailDoc.lampiran_kk} 
+                          alt="Kartu Keluarga" 
+                          className="w-full h-16 object-cover rounded cursor-pointer border border-outline-variant group-hover:opacity-80 transition-opacity"
+                          onClick={() => setPreviewZoomImage(detailDoc.lampiran_kk)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPreviewZoomImage(detailDoc.lampiran_kk)}
+                          className="mt-1 text-[10px] text-primary flex items-center justify-center gap-0.5 w-full font-medium"
+                        >
+                          <Eye size={10} /> Perbesar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="h-16 w-full flex flex-col items-center justify-center bg-surface-container rounded text-[10px] text-on-surface-variant">
+                        <FileText size={18} className="opacity-40 mb-0.5" />
+                        <span>Data Terdaftar</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* BERKAS PENDUKUNG */}
+                  <div className="col-span-2 sm:col-span-1 p-2 bg-surface-container-lowest rounded-lg border border-outline-variant/60 flex flex-col items-center text-center">
+                    <span className="text-[10px] font-bold text-on-surface block mb-1">Berkas Pendukung</span>
+                    {detailDoc.lampiran_berkas ? (
+                      <div className="relative group w-full">
+                        <img 
+                          src={detailDoc.lampiran_berkas} 
+                          alt="Berkas Pendukung" 
+                          className="w-full h-16 object-cover rounded cursor-pointer border border-outline-variant group-hover:opacity-80 transition-opacity"
+                          onClick={() => setPreviewZoomImage(detailDoc.lampiran_berkas)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPreviewZoomImage(detailDoc.lampiran_berkas)}
+                          className="mt-1 text-[10px] text-amber-700 flex items-center justify-center gap-0.5 w-full font-medium"
+                        >
+                          <Eye size={10} /> Perbesar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="h-16 w-full flex flex-col items-center justify-center bg-surface-container rounded text-[10px] text-on-surface-variant">
+                        <Info size={16} className="opacity-40 mb-0.5" />
+                        <span>Tidak Dilampirkan</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Data Pendukung Khusus */}
               {detailDoc.data_tambahan && (
                 <div className="p-3 bg-surface-container-low rounded-xl space-y-2">
@@ -1118,16 +1441,52 @@ export default function DokumenPage() {
                 </div>
               )}
 
-              {/* Catatan Verifikasi */}
-              {detailDoc.catatan_admin && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900">
-                  <span className="font-bold block">Catatan Petugas:</span>
-                  <p className="mt-0.5">{detailDoc.catatan_admin}</p>
+              {/* Catatan Verifikasi / Revisi */}
+              {detailDoc.catatan_petugas && (
+                <div className={`p-3 rounded-xl border text-xs ${
+                  detailDoc.status === 'REVISION' 
+                    ? 'bg-amber-50 border-amber-300 text-amber-900' 
+                    : (detailDoc.status === 'REJECTED' ? 'bg-rose-50 border-rose-200 text-rose-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900')
+                }`}>
+                  <span className="font-bold block flex items-center gap-1.5">
+                    <Info size={14} />
+                    <span>Catatan Petugas Pemeriksa:</span>
+                  </span>
+                  <p className="mt-1 font-medium">{detailDoc.catatan_petugas}</p>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-outline-variant">
+            <div className="flex items-center justify-between pt-3 border-t border-outline-variant">
+              <div>
+                {/* Quick action buttons jika petugas yang memeriksa */}
+                {canAct && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => { setShowDetailModal(false); openActionModal(detailDoc, 'APPROVE'); }}
+                      className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <Check size={13} /> {isKelurahan ? 'Sahkan' : 'Setujui'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowDetailModal(false); openActionModal(detailDoc, 'REVISION'); }}
+                      className="px-2.5 py-1.5 bg-amber-50 border border-amber-300 text-amber-800 rounded-lg font-semibold hover:bg-amber-100 transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <RotateCcw size={13} /> Minta Revisi
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowDetailModal(false); openActionModal(detailDoc, 'REJECT'); }}
+                      className="px-2.5 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-semibold hover:bg-rose-100 transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <X size={13} /> Tolak
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={() => setShowDetailModal(false)}
@@ -1141,7 +1500,7 @@ export default function DokumenPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 2: VERIFIKASI / PENGESAHAN / PENOLAKAN OLEH PETUGAS                 */}
+      {/* MODAL 2: VERIFIKASI / PENGESAHAN / REVISI / PENOLAKAN OLEH PETUGAS        */}
       {/* ========================================================================= */}
       {showActionModal && selectedDoc && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
@@ -1152,12 +1511,13 @@ export default function DokumenPage() {
           >
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-outline-variant">
               <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
-                {actionType === 'APPROVE' ? (
-                  <CheckCircle2 className="text-emerald-600" size={20} />
-                ) : (
-                  <XCircle className="text-rose-600" size={20} />
-                )}
-                {actionType === 'APPROVE' ? (isKelurahan ? 'Pengesahan Surat Resmi' : 'Persetujuan Surat') : 'Tolak Permohonan Surat'}
+                {actionType === 'APPROVE' && <CheckCircle2 className="text-emerald-600" size={20} />}
+                {actionType === 'REVISION' && <RotateCcw className="text-amber-600" size={20} />}
+                {actionType === 'REJECT' && <XCircle className="text-rose-600" size={20} />}
+                
+                {actionType === 'APPROVE' 
+                  ? (isKelurahan ? 'Pengesahan Surat Resmi' : 'Persetujuan Surat')
+                  : (actionType === 'REVISION' ? 'Kembalikan untuk Perbaikan / Revisi' : 'Tolak Permohonan Surat')}
               </h2>
               <button onClick={() => setShowActionModal(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer">
                 <X size={20} />
@@ -1174,14 +1534,22 @@ export default function DokumenPage() {
             <form onSubmit={handleActionSubmit} className="space-y-3.5 text-sm">
               <div>
                 <label className="block font-semibold mb-1 text-xs text-on-surface">
-                  {actionType === 'APPROVE' ? 'Catatan Petugas (Opsional)' : 'Alasan Penolakan (Wajib)'}
+                  {actionType === 'APPROVE' 
+                    ? 'Catatan Petugas (Opsional)' 
+                    : (actionType === 'REVISION' ? 'Instruksi / Catatan Perbaikan untuk Warga *' : 'Alasan Penolakan (Wajib) *')}
                 </label>
                 <textarea
                   rows="3"
                   value={actionNotes}
                   onChange={(e) => setActionNotes(e.target.value)}
-                  required={actionType === 'REJECT'}
-                  placeholder={actionType === 'APPROVE' ? 'Berkas lengkap dan sesuai kriteria...' : 'Sebutkan kekurangan berkas/alasan penolakan...'}
+                  required={actionType === 'REJECT' || actionType === 'REVISION'}
+                  placeholder={
+                    actionType === 'APPROVE' 
+                      ? 'Berkas lengkap dan sesuai kriteria SOP...' 
+                      : (actionType === 'REVISION' 
+                          ? 'Contoh: Mohon unggah ulang foto KK yang lebih jelas / lampirkan foto tempat usaha...' 
+                          : 'Sebutkan kekurangan berkas/alasan penolakan...')
+                  }
                   className="w-full p-2.5 border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none text-xs bg-surface-container-low text-on-surface"
                 />
               </div>
@@ -1198,10 +1566,18 @@ export default function DokumenPage() {
                   type="submit"
                   disabled={submittingAction}
                   className={`px-5 py-2 rounded-xl font-semibold text-white transition-colors flex items-center gap-2 shadow-sm text-xs cursor-pointer disabled:opacity-50 ${
-                    actionType === 'APPROVE' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
+                    actionType === 'APPROVE' 
+                      ? 'bg-emerald-600 hover:bg-emerald-700' 
+                      : (actionType === 'REVISION' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-rose-600 hover:bg-rose-700')
                   }`}
                 >
-                  {submittingAction ? <Loader2 size={16} className="animate-spin" /> : (actionType === 'APPROVE' ? 'Konfirmasi Persetujuan' : 'Tolak Permohonan')}
+                  {submittingAction ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    actionType === 'APPROVE' 
+                      ? 'Konfirmasi Persetujuan' 
+                      : (actionType === 'REVISION' ? 'Kirim Catatan Perbaikan' : 'Tolak Permohonan')
+                  )}
                 </button>
               </div>
             </form>
@@ -1210,7 +1586,7 @@ export default function DokumenPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 3: PREVIEW CETAK SURAT RESMI                                        */}
+      {/* MODAL 3: PREVIEW CETAK SURAT RESMI (KOP RESMI KELURAHAN KEBONJATI SUKABUMI) */}
       {/* ========================================================================= */}
       {showPrintModal && printDoc && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
@@ -1219,12 +1595,12 @@ export default function DokumenPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-8 shadow-2xl my-8 border border-slate-300"
           >
-            {/* Kop Surat Kelurahan Kebonjati */}
+            {/* Kop Surat Kelurahan Kebonjati, Cikole, Kota Sukabumi */}
             <div className="text-center border-b-2 border-slate-900 pb-4 mb-6">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-700">Pemerintah Kota Bandung</h3>
-              <h2 className="text-lg font-extrabold uppercase tracking-wide">Kecamatan Andir &bull; Kelurahan Kebonjati</h2>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-700">Pemerintah Kota Sukabumi</h3>
+              <h2 className="text-lg font-extrabold uppercase tracking-wide">Kecamatan Cikole &bull; Kelurahan Kebonjati</h2>
               <p className="text-xs text-slate-600 mt-1">
-                Jl. Kebonjati No. 120, Kec. Andir, Kota Bandung, Jawa Barat 40181
+                Jl. Surya Kencana No. 42, Kebonjati, Kec. Cikole, Kota Sukabumi, Jawa Barat 43111
               </p>
             </div>
 
@@ -1234,14 +1610,14 @@ export default function DokumenPage() {
                 {printDoc.jenis_dokumen || printDoc.jenis_surat}
               </h4>
               <p className="text-xs font-mono text-slate-600 mt-1">
-                Nomor: {printDoc.nomor_registrasi || `500/REG-${printDoc.id}/KBJ/${new Date().getFullYear()}`}
+                Nomor: {printDoc.nomor_surat || printDoc.nomor_registrasi || `470/${printDoc.id}/Ktr.Kbjt-Ckl/${new Date().getFullYear()}`}
               </p>
             </div>
 
             {/* Isi Surat */}
             <div className="space-y-3 text-sm leading-relaxed text-slate-800">
               <p>
-                Yang bertanda tangan di bawah ini, Kepala Kelurahan Kebonjati, Kecamatan Andir, Kota Bandung, menerangkan dengan sebenarnya bahwa:
+                Yang bertanda tangan di bawah ini, Kepala Kelurahan Kebonjati, Kecamatan Cikole, Kota Sukabumi, menerangkan dengan sebenarnya bahwa:
               </p>
               <div className="pl-6 space-y-1.5 font-sans">
                 <div className="grid grid-cols-3">
@@ -1260,7 +1636,7 @@ export default function DokumenPage() {
                 )}
                 <div className="grid grid-cols-3">
                   <span className="text-slate-600">Alamat Domisili</span>
-                  <span className="col-span-2">: RT {printDoc.rt || '001'} / RW {printDoc.rw || '001'}, Kelurahan Kebonjati</span>
+                  <span className="col-span-2">: RT {printDoc.rt || '001'} / RW {printDoc.rw || '001'}, Kelurahan Kebonjati, Kec. Cikole</span>
                 </div>
                 <div className="grid grid-cols-3">
                   <span className="text-slate-600">Keperluan</span>
@@ -1268,7 +1644,7 @@ export default function DokumenPage() {
                 </div>
               </div>
               <p className="pt-2">
-                Surat keterangan ini diberikan atas permohonan yang bersangkutan setelah melalui verifikasi berjenjang oleh Pengurus RT dan RW setempat.
+                Surat keterangan ini diberikan atas permohonan yang bersangkutan setelah melalui verifikasi data dan berkas digital berjenjang oleh Pengurus RT dan RW setempat.
               </p>
             </div>
 
@@ -1286,19 +1662,19 @@ export default function DokumenPage() {
               </div>
 
               <div className="text-right text-xs">
-                <p>Bandung, {new Date().toLocaleDateString('id-ID', { dateStyle: 'long' })}</p>
+                <p>Sukabumi, {new Date().toLocaleDateString('id-ID', { dateStyle: 'long' })}</p>
                 <p className="font-bold mt-1">Lurah Kebonjati</p>
                 <div className="h-12 flex items-center justify-end">
                   <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                     [SIGNED DIGITALLY]
                   </span>
                 </div>
-                <p className="font-bold underline text-sm">H. Dedi Mulyadi, S.Sos., M.Si</p>
-                <p className="text-[10px] text-slate-500">NIP. 19780412 200501 1 008</p>
+                <p className="font-bold underline text-sm">Drs. H. Maman Suryaman, M.Si</p>
+                <p className="text-[10px] text-slate-500">NIP. 19740512 199903 1 004</p>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-6 mt-6 border-t border-slate-200">
+            <div className="flex justify-end gap-2 pt-6 mt-6 border-slate-200 border-t">
               <button
                 type="button"
                 onClick={() => setShowPrintModal(false)}
@@ -1315,6 +1691,31 @@ export default function DokumenPage() {
               </button>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 4: ZOOM PRATINJAU GAMBAR BERKAS DOKUMEN DIGITAL (KTP / KK / BERKAS) */}
+      {/* ========================================================================= */}
+      {previewZoomImage && (
+        <div 
+          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4 backdrop-blur-md"
+          onClick={() => setPreviewZoomImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh] bg-surface-container-lowest rounded-2xl overflow-hidden shadow-2xl p-2 border border-white/20">
+            <button
+              onClick={() => setPreviewZoomImage(null)}
+              className="absolute top-4 right-4 z-10 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 transition-colors cursor-pointer"
+              title="Tutup Pratinjau"
+            >
+              <X size={20} />
+            </button>
+            <img 
+              src={previewZoomImage} 
+              alt="Pratinjau Dokumen Digital" 
+              className="max-h-[85vh] w-auto max-w-full object-contain rounded-xl mx-auto" 
+            />
+          </div>
         </div>
       )}
     </div>

@@ -26,8 +26,7 @@ function requireAuth(req, res, next) {
   return res.status(401).json({ success: false, message: 'Unauthorized. Harap login terlebih dahulu.' });
 }
 
-function requireRole(...roles) {
-  const allowedRoles = Array.isArray(roles[0]) ? roles[0] : roles;
+function requireRole(allowedRoles = []) {
   return (req, res, next) => {
     if (!req.session || !req.session.user) {
       return res.status(401).json({ success: false, message: 'Unauthorized. Harap login terlebih dahulu.' });

@@ -13,12 +13,43 @@ class NotifikasiRepository {
    */
   async create(payload) {
     const { nik_target, judul, pesan, tipe = 'info', link = null } = payload;
-    const [result] = await pool.execute(
-      `INSERT INTO notifikasi (nik_target, judul, pesan, tipe, link) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [nik_target, judul, pesan, tipe, link]
-    );
-    return result;
+    if (!nik_target) return null;
+
+    try {
+      // 1. Verifikasi apakah nik_target ada di tabel warga untuk mencegah pelanggaran FK
+      let targetNik = String(nik_target).trim();
+      const [wCheck] = await pool.execute('SELECT nik FROM warga WHERE nik = ? LIMIT 1', [targetNik]);
+
+      if (wCheck.length === 0) {
+        // Fallback: Jika target adalah username dari akun users, cari NIK warga yang terafiliasi
+        try {
+          const [uWarga] = await pool.execute(
+            `SELECT w.nik FROM warga w 
+             JOIN users u ON (w.user_id = u.id OR w.nik = u.username) 
+             WHERE u.username = ? OR u.email = ? LIMIT 1`,
+            [targetNik, targetNik]
+          );
+          if (uWarga.length > 0) {
+            targetNik = uWarga[0].nik;
+          } else {
+            console.warn(`[NotifikasiRepo] Peringatan: NIK target '${targetNik}' tidak ditemukan di tabel warga. Notifikasi dilewati agar tidak memicu error FK.`);
+            return { skipped: true, reason: 'NIK target not in warga' };
+          }
+        } catch (subErr) {
+          return { skipped: true, reason: subErr.message };
+        }
+      }
+
+      const [result] = await pool.execute(
+        `INSERT INTO notifikasi (nik_target, judul, pesan, tipe, link) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [targetNik, judul, pesan, tipe, link]
+      );
+      return result;
+    } catch (err) {
+      console.warn('[NotifikasiRepo] Gagal membuat notifikasi (handled):', err.message);
+      return { skipped: true, error: err.message };
+    }
   }
 
   /**
