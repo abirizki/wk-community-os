@@ -179,6 +179,7 @@ export default function DokumenPage() {
   const isRW = user && ['ketua_rw', 'admin_rw'].includes(user.role);
   const isKelurahan = user && ['admin_kelurahan', 'superadmin', 'admin', 'lurah'].includes(user.role);
   const isOfficer = isRT || isRW || isKelurahan;
+  const isCitizen = !isOfficer || user?.role === 'warga';
 
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -229,6 +230,17 @@ export default function DokumenPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailDoc, setDetailDoc] = useState(null);
 
+  const canActOnDetail = useMemo(() => {
+    if (!detailDoc || !isOfficer) return false;
+    return Boolean(
+      (
+        (isRT && detailDoc.approval_step === 'RT') ||
+        (isRW && detailDoc.approval_step === 'RW') ||
+        (isKelurahan && detailDoc.approval_step === 'KELURAHAN')
+      ) && detailDoc.status !== 'REJECTED' && detailDoc.status !== 'APPROVED'
+    );
+  }, [detailDoc, isOfficer, isRT, isRW, isKelurahan]);
+
   // Print Preview Modal State
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printDoc, setPrintDoc] = useState(null);
@@ -255,9 +267,12 @@ export default function DokumenPage() {
       setLoadingFamily(true);
       // 1. Coba endpoint khusus /api/dokumen/family-members
       const famRes = await api.get('/dokumen/family-members').catch(() => null);
-      if (famRes && famRes.data && Array.isArray(famRes.data) && famRes.data.length > 0) {
-        setFamilyMembers(famRes.data);
-        return;
+      if (famRes) {
+        const membersList = Array.isArray(famRes) ? famRes : (Array.isArray(famRes?.data) ? famRes.data : null);
+        if (membersList && membersList.length > 0) {
+          setFamilyMembers(membersList);
+          return;
+        }
       }
       
       // 2. Coba endpoint /api/dokumen/prefill-data
@@ -472,6 +487,40 @@ export default function DokumenPage() {
   const handleOpenDetail = (doc) => {
     setDetailDoc(doc);
     setShowDetailModal(true);
+  };
+
+  // Buka form perbaikan untuk warga jika surat berstatus REVISION
+  const handleStartRevision = (doc) => {
+    setShowDetailModal(false);
+    setFormData({
+      jenis_dokumen: doc.jenis_dokumen || doc.jenis_surat || 'Surat Keterangan Domisili',
+      keperluan: doc.keperluan || ''
+    });
+    if (doc.data_tambahan) {
+      try {
+        const extra = typeof doc.data_tambahan === 'string' ? JSON.parse(doc.data_tambahan) : doc.data_tambahan;
+        setDataTambahan(extra || {});
+      } catch (e) {
+        setDataTambahan({});
+      }
+    }
+    if (doc.syarat_berkas) {
+      try {
+        const reqs = typeof doc.syarat_berkas === 'string' ? JSON.parse(doc.syarat_berkas) : doc.syarat_berkas;
+        setSyaratChecked(reqs || {});
+      } catch (e) {
+        setSyaratChecked({});
+      }
+    }
+    if (doc.lampiran_ktp) setLampiranKtp(doc.lampiran_ktp);
+    if (doc.lampiran_kk) setLampiranKk(doc.lampiran_kk);
+    if (doc.lampiran_berkas) setLampiranBerkas(doc.lampiran_berkas);
+    if (doc.diajukan_oleh_nik && doc.diajukan_oleh_nik !== doc.nik_pemohon) {
+      setSubjekPemohon(doc.nik_pemohon);
+    } else {
+      setSubjekPemohon('self');
+    }
+    setShowModal(true);
   };
 
   // Open Print Modal
@@ -1460,7 +1509,7 @@ export default function DokumenPage() {
             <div className="flex items-center justify-between pt-3 border-t border-outline-variant">
               <div>
                 {/* Quick action buttons jika petugas yang memeriksa */}
-                {canAct && (
+                {canActOnDetail && (
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
@@ -1484,6 +1533,17 @@ export default function DokumenPage() {
                       <X size={13} /> Tolak
                     </button>
                   </div>
+                )}
+
+                {/* Tombol khusus warga jika permohonan butuh perbaikan / revisi */}
+                {isCitizen && detailDoc?.status === 'REVISION' && (
+                  <button
+                    type="button"
+                    onClick={() => handleStartRevision(detailDoc)}
+                    className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold transition-colors text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <RotateCcw size={13} /> Perbaiki Permohonan Ini
+                  </button>
                 )}
               </div>
 

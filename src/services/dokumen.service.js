@@ -67,9 +67,7 @@ class DokumenService {
         rt: rawData.warga.rt,
         rw: rawData.warga.rw,
         no_telepon: rawData.warga.no_telepon,
-        email: rawData.warga.email,
-        foto_ktp_url: rawData.warga.foto_ktp_url || null,
-        foto_kk_url: rawData.warga.foto_kk_url || null
+        email: rawData.warga.email
       },
       familyMembers
     };
@@ -89,10 +87,7 @@ class DokumenService {
       is_auto_filled_by_ai,
       nik_pemohon: requestedNik,
       data_tambahan,
-      syarat_berkas,
-      lampiran_ktp,
-      lampiran_kk,
-      lampiran_berkas
+      syarat_berkas
     } = payload;
 
     if (!activeNik) {
@@ -210,27 +205,6 @@ class DokumenService {
     const rt = targetWarga ? targetWarga.rt : (userWarga ? userWarga.rt : (currentUser.rt || '001'));
     const rw = targetWarga ? targetWarga.rw : (userWarga ? userWarga.rw : (currentUser.rw || '001'));
 
-    // Simpan permanen KTP & KK Digital resmi ke data warga & kartu keluarga
-    try {
-      if (lampiran_ktp) {
-        await pool.execute('UPDATE warga SET foto_ktp_url = ? WHERE nik = ?', [lampiran_ktp, targetNik]);
-        if (activeNik !== targetNik) {
-          await pool.execute('UPDATE warga SET foto_ktp_url = COALESCE(foto_ktp_url, ?) WHERE nik = ?', [lampiran_ktp, activeNik]);
-        }
-      }
-      if (lampiran_kk) {
-        const noKk = targetWarga?.no_kk || userWarga?.no_kk || currentUser.no_kk;
-        if (noKk) {
-          await pool.execute('UPDATE kartu_keluarga SET foto_kk_url = ? WHERE no_kk = ?', [lampiran_kk, noKk]);
-          await pool.execute('UPDATE warga SET foto_kk_url = ? WHERE no_kk = ?', [lampiran_kk, noKk]);
-        } else {
-          await pool.execute('UPDATE warga SET foto_kk_url = ? WHERE nik = ?', [lampiran_kk, targetNik]);
-        }
-      }
-    } catch (syncErr) {
-      console.warn('[DokumenService] Auto-sync KK/KTP Digital note:', syncErr.message);
-    }
-
     const result = await dokumenRepository.create({
       nik_pemohon: targetNik,
       diajukan_oleh_nik: isDiajukanUntukKeluarga ? activeNik : null,
@@ -238,9 +212,6 @@ class DokumenService {
       hubungan_keluarga: targetHubungan,
       data_tambahan,
       syarat_berkas,
-      lampiran_ktp,
-      lampiran_kk,
-      lampiran_berkas,
       jenis_dokumen: jenis_dokumen.trim(),
       keperluan: keperluan.trim(),
       rt,
@@ -495,9 +466,9 @@ class DokumenService {
       const now = new Date();
       const romanMonth = romanMonths[now.getMonth()];
       const year = now.getFullYear();
-      const nomorSurat = `470/${id}/Ktr.Kbjt-Ckl/${romanMonth}/${year}`;
+      const nomorSurat = `470/${id}/Ktr.Kbjt/${romanMonth}/${year}`;
 
-      const signatureData = `${nomorSurat}|${doc.nik_pemohon}|${doc.jenis_dokumen || doc.jenis_surat}|${now.toISOString()}|Kelurahan Kebonjati, Cikole, Kota Sukabumi`;
+      const signatureData = `${nomorSurat}|${doc.nik_pemohon}|${doc.jenis_dokumen || doc.jenis_surat}|${now.toISOString()}|Kelurahan Kebonjati`;
       const qrCodeHash = crypto.createHash('sha256').update(signatureData).digest('hex');
 
       await dokumenRepository.updateApproval(id, {
@@ -510,17 +481,13 @@ class DokumenService {
       });
 
       // Notifikasi akhir ke warga
-      try {
-        await notifikasiRepository.create({
-          nik_target: doc.nik_pemohon,
-          judul: 'Surat Resmi Telah Disahkan',
-          pesan: `Selamat! Permohonan ${doc.jenis_dokumen} Anda telah RESMI DISETUJUI dan disahkan oleh Kelurahan Kebonjati dengan Nomor Surat: ${nomorSurat}.`,
-          tipe: 'success',
-          link: '/dashboard/dokumen'
-        });
-      } catch (e) {
-        console.warn('Gagal memicu notifikasi pengesahan dokumen:', e.message);
-      }
+      await notifikasiRepository.create({
+        nik_target: doc.nik_pemohon,
+        judul: 'Surat Resmi Telah Disahkan',
+        pesan: `Selamat! Permohonan ${doc.jenis_dokumen} Anda telah RESMI DISETUJUI dan disahkan oleh Kelurahan Kebonjati dengan Nomor Surat: ${nomorSurat}.`,
+        tipe: 'success',
+        link: '/dashboard/dokumen'
+      });
 
       // Notifikasi WhatsApp otomatis ke warga
       try {
@@ -573,17 +540,13 @@ class DokumenService {
     });
 
     // Notifikasi penolakan ke warga
-    try {
-      await notifikasiRepository.create({
-        nik_target: doc.nik_pemohon,
-        judul: 'Permohonan Surat Ditolak',
-        pesan: `Permohonan ${doc.jenis_dokumen} Anda tidak dapat diproses. Alasan: ${alasan}`,
-        tipe: 'error',
-        link: '/dashboard/dokumen'
-      });
-    } catch (e) {
-      console.warn('Gagal memicu notifikasi penolakan dokumen:', e.message);
-    }
+    await notifikasiRepository.create({
+      nik_target: doc.nik_pemohon,
+      judul: 'Permohonan Surat Ditolak',
+      pesan: `Permohonan ${doc.jenis_dokumen} Anda tidak dapat diproses. Alasan: ${alasan}`,
+      tipe: 'error',
+      link: '/dashboard/dokumen'
+    });
 
     return {
       success: true,
@@ -627,17 +590,13 @@ class DokumenService {
       notes: catatan.trim()
     });
 
-    try {
-      await notifikasiRepository.create({
-        nik_target: doc.nik_pemohon,
-        judul: 'Permohonan Surat Perlu Perbaikan',
-        pesan: `Permohonan ${doc.jenis_dokumen} Anda membutuhkan perbaikan berkas: "${catatan.trim()}". Silakan perbaiki melalui aplikasi.`,
-        tipe: 'warning',
-        link: '/dashboard/dokumen'
-      });
-    } catch (e) {
-      console.warn('Gagal memicu notifikasi revisi dokumen:', e.message);
-    }
+    await notifikasiRepository.create({
+      nik_target: doc.nik_pemohon,
+      judul: 'Permohonan Surat Perlu Perbaikan',
+      pesan: `Permohonan ${doc.jenis_dokumen} Anda membutuhkan perbaikan berkas: "${catatan.trim()}". Silakan perbaiki melalui aplikasi.`,
+      tipe: 'warning',
+      link: '/dashboard/dokumen'
+    });
 
     return {
       success: true,

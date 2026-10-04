@@ -97,10 +97,9 @@ CREATE TABLE `kartu_keluarga` (
   `rt` VARCHAR(5) NOT NULL,
   `rw` VARCHAR(5) NOT NULL,
   `kelurahan` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
-  `kecamatan` VARCHAR(100) NOT NULL DEFAULT 'Cikole',
-  `kota` VARCHAR(100) NOT NULL DEFAULT 'Kota Sukabumi',
+  `kecamatan` VARCHAR(100) NOT NULL DEFAULT 'Andir',
+  `kota` VARCHAR(100) NOT NULL DEFAULT 'Bandung',
   `provinsi` VARCHAR(100) NOT NULL DEFAULT 'Jawa Barat',
-  `foto_kk_url` VARCHAR(500) NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_kk_rt_rw` (`rt`, `rw`)
@@ -120,24 +119,22 @@ CREATE TABLE `warga` (
   `tanggal_lahir` DATE NOT NULL,
   `agama` ENUM('Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu', 'Lainnya') NOT NULL DEFAULT 'Islam',
   `status_perkawinan` ENUM('Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati') NOT NULL DEFAULT 'Belum Kawin',
-  `status_hubungan_keluarga` VARCHAR(50) NOT NULL DEFAULT 'Anggota',
+  `status_hubungan_keluarga` ENUM('Kepala Keluarga', 'Suami', 'Istri', 'Anak', 'Menantu', 'Cucu', 'Orang Tua', 'Mertua', 'Famili Lain', 'Lainnya') NOT NULL DEFAULT 'Anak',
   `pekerjaan` VARCHAR(100) DEFAULT NULL,
-  `pendidikan_terakhir` VARCHAR(50) DEFAULT 'SMA/SMK',
-  `golongan_darah` VARCHAR(10) DEFAULT 'Tidak Tahu',
+  `pendidikan_terakhir` ENUM('Tidak/Belum Sekolah', 'SD', 'SMP', 'SMA/SMK', 'D3', 'S1', 'S2', 'S3') DEFAULT 'SMA/SMK',
+  `golongan_darah` ENUM('A', 'B', 'AB', 'O', 'Tidak Tahu') DEFAULT 'Tidak Tahu',
   `alamat` TEXT NOT NULL,
   `rt` VARCHAR(5) NOT NULL,
   `rw` VARCHAR(5) NOT NULL,
   `kelurahan` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
-  `kecamatan` VARCHAR(100) NOT NULL DEFAULT 'Cikole',
-  `kota` VARCHAR(100) NOT NULL DEFAULT 'Kota Sukabumi',
+  `kecamatan` VARCHAR(100) NOT NULL DEFAULT 'Andir',
+  `kota` VARCHAR(100) NOT NULL DEFAULT 'Bandung',
   `provinsi` VARCHAR(100) NOT NULL DEFAULT 'Jawa Barat',
-  `kode_pos` VARCHAR(10) DEFAULT '43111',
+  `kode_pos` VARCHAR(10) DEFAULT '40181',
   `no_telepon` VARCHAR(20) DEFAULT NULL,
   `email` VARCHAR(100) DEFAULT NULL,
-  `status_kependudukan` VARCHAR(50) NOT NULL DEFAULT 'Tetap',
+  `status_kependudukan` ENUM('Tetap', 'Sementara', 'Pindah', 'Meninggal') NOT NULL DEFAULT 'Tetap',
   `foto_url` VARCHAR(255) DEFAULT NULL,
-  `foto_ktp_url` VARCHAR(500) NULL,
-  `foto_kk_url` VARCHAR(500) NULL,
   `skor_kelengkapan` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Persentase kelengkapan profil 0-100%',
   `rincian_kelengkapan` JSON NULL COMMENT 'Cache rincian 4 pilar dan missing fields',
   `terakhir_dihitung_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -261,52 +258,28 @@ CREATE TABLE `posyandu_lansia_pemeriksaan` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------
--- 8. TABEL: dokumen_request (Pelayanan Surat Kelurahan & Berkas Digital)
+-- 8. TABEL: dokumen_request (Pelayanan Surat Kelurahan)
 -- -----------------------------------------------------------------------
 CREATE TABLE `dokumen_request` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `nomor_registrasi` VARCHAR(50) NOT NULL UNIQUE,
   `nik_pemohon` VARCHAR(16) NOT NULL,
-  `diajukan_oleh_nik` VARCHAR(16) NULL,
-  `nama_subjek` VARCHAR(150) NULL,
-  `hubungan_keluarga` VARCHAR(50) NULL,
-  `jenis_dokumen` VARCHAR(150) NOT NULL,
-  `jenis_surat` VARCHAR(150) NOT NULL,
+  `jenis_surat` VARCHAR(100) NOT NULL,
   `keperluan` TEXT NOT NULL,
-  `status` VARCHAR(50) NOT NULL DEFAULT 'SUBMITTED',
-  `approval_step` VARCHAR(50) NOT NULL DEFAULT 'RT',
-  `rt` VARCHAR(5) NULL,
-  `rw` VARCHAR(5) NULL,
-  `data_tambahan` TEXT NULL,
-  `syarat_berkas` TEXT NULL,
-  `lampiran_ktp` VARCHAR(500) NULL,
-  `lampiran_kk` VARCHAR(500) NULL,
-  `lampiran_berkas` TEXT NULL,
-  `nomor_surat` VARCHAR(100) NULL,
-  `qr_code_hash` VARCHAR(255) NULL,
+  `status` ENUM('SUBMITTED', 'VERIFYING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'SUBMITTED',
+  `approval_step` ENUM('RT', 'RW', 'KELURAHAN', 'COMPLETED') NOT NULL DEFAULT 'RT',
   `catatan_petugas` TEXT NULL,
-  `catatan_admin` TEXT NULL,
-  `catatan_revisi` TEXT NULL,
   `approved_by_rt` INT NULL,
   `approved_by_rw` INT NULL,
   `approved_by_kelurahan` INT NULL,
   `trigger_executed` TINYINT(1) NOT NULL DEFAULT 0,
-  `is_auto_filled_by_ai` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_auto_filled_by_ai` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika permohonan surat diisi via AI auto-fill',
   `file_url` VARCHAR(255) NULL,
-  `file_hasil` VARCHAR(500) NULL,
-  `rt_received_at` DATETIME NULL,
-  `rt_processed_at` DATETIME NULL,
-  `rw_received_at` DATETIME NULL,
-  `rw_processed_at` DATETIME NULL,
-  `kelurahan_received_at` DATETIME NULL,
-  `approved_at` DATETIME NULL,
-  `sla_deadline` DATETIME NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_dokumen_pemohon` (`nik_pemohon`),
   INDEX `idx_dokumen_status` (`status`),
-  INDEX `idx_dokumen_step` (`approval_step`),
-  INDEX `idx_dokumen_rt_rw` (`rt`, `rw`)
+  CONSTRAINT `fk_dokumen_warga` FOREIGN KEY (`nik_pemohon`) REFERENCES `warga` (`nik`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------
@@ -314,15 +287,16 @@ CREATE TABLE `dokumen_request` (
 -- -----------------------------------------------------------------------
 CREATE TABLE `notifikasi` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `nik_target` VARCHAR(50) NOT NULL,
+  `nik_target` VARCHAR(16) NOT NULL,
   `judul` VARCHAR(255) NOT NULL,
   `pesan` TEXT NOT NULL,
-  `tipe` VARCHAR(50) NOT NULL DEFAULT 'info',
+  `tipe` ENUM('info', 'success', 'warning', 'error') NOT NULL DEFAULT 'info',
   `is_read` TINYINT(1) NOT NULL DEFAULT 0,
   `link` VARCHAR(255) NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX `idx_notifikasi_target` (`nik_target`),
-  INDEX `idx_notifikasi_read` (`is_read`)
+  INDEX `idx_notifikasi_read` (`is_read`),
+  CONSTRAINT `fk_notifikasi_warga` FOREIGN KEY (`nik_target`) REFERENCES `warga` (`nik`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------

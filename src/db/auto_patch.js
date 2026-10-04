@@ -85,9 +85,7 @@ async function autoPatchDatabase() {
       'bpjs_ketenagakerjaan VARCHAR(50) NULL',
       "bpjs_ketenagakerjaan_status VARCHAR(50) NULL DEFAULT 'AKTIF'",
       'kip VARCHAR(50) NULL',
-      'kis VARCHAR(50) NULL',
-      'foto_ktp_url VARCHAR(500) NULL',
-      'foto_kk_url VARCHAR(500) NULL'
+      'kis VARCHAR(50) NULL'
     ];
     for (const wCol of wargaColumns) {
       try {
@@ -362,23 +360,13 @@ async function autoPatchDatabase() {
       'catatan_revisi TEXT NULL',
       'lampiran_ktp VARCHAR(500) NULL',
       'lampiran_kk VARCHAR(500) NULL',
-      'lampiran_berkas TEXT NULL',
-      'nomor_surat VARCHAR(100) NULL',
-      'qr_code_hash VARCHAR(255) NULL',
       'rt VARCHAR(5) NULL',
       'rw VARCHAR(5) NULL',
       'diajukan_oleh_nik VARCHAR(16) NULL',
       'nama_subjek VARCHAR(150) NULL',
       'hubungan_keluarga VARCHAR(50) NULL',
       'data_tambahan TEXT NULL',
-      'syarat_berkas TEXT NULL',
-      'rt_received_at DATETIME NULL',
-      'rt_processed_at DATETIME NULL',
-      'rw_received_at DATETIME NULL',
-      'rw_processed_at DATETIME NULL',
-      'kelurahan_received_at DATETIME NULL',
-      'approved_at DATETIME NULL',
-      'sla_deadline DATETIME NULL'
+      'syarat_berkas TEXT NULL'
     ];
     for (const def of dokCols) {
       try {
@@ -774,11 +762,6 @@ async function autoPatchDatabase() {
       // Tambah kolom no_kk pada tabel users jika belum ada
       try {
         await connection.query("ALTER TABLE users ADD COLUMN no_kk VARCHAR(16) NULL");
-      } catch (e) {}
-
-      // Tambah kolom foto_kk_url pada tabel kartu_keluarga jika belum ada
-      try {
-        await connection.query("ALTER TABLE kartu_keluarga ADD COLUMN foto_kk_url VARCHAR(500) NULL");
       } catch (e) {}
 
       // Tambah KK Budi Santoso jika belum ada

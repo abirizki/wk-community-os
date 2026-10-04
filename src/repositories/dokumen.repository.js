@@ -24,23 +24,19 @@ class DokumenRepository {
       nama_subjek = null,
       hubungan_keluarga = null,
       data_tambahan = null,
-      syarat_berkas = null,
-      lampiran_ktp = null,
-      lampiran_kk = null,
-      lampiran_berkas = null
+      syarat_berkas = null
     } = payload;
 
     const noReg = nomor_registrasi || `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const dataTambahanStr = typeof data_tambahan === 'object' && data_tambahan !== null ? JSON.stringify(data_tambahan) : data_tambahan;
     const syaratBerkasStr = typeof syarat_berkas === 'object' && syarat_berkas !== null ? JSON.stringify(syarat_berkas) : syarat_berkas;
-    const lampiranBerkasStr = typeof lampiran_berkas === 'object' && lampiran_berkas !== null ? JSON.stringify(lampiran_berkas) : lampiran_berkas;
 
     let docId;
     try {
       const [result] = await pool.execute(
         `INSERT INTO dokumen_request 
-         (nomor_registrasi, nik_pemohon, diajukan_oleh_nik, nama_subjek, hubungan_keluarga, data_tambahan, syarat_berkas, lampiran_ktp, lampiran_kk, lampiran_berkas, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, rt_received_at, sla_deadline) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
+         (nomor_registrasi, nik_pemohon, diajukan_oleh_nik, nama_subjek, hubungan_keluarga, data_tambahan, syarat_berkas, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, rt_received_at, sla_deadline) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
         [
           noReg, 
           nik_pemohon, 
@@ -48,10 +44,7 @@ class DokumenRepository {
           nama_subjek, 
           hubungan_keluarga, 
           dataTambahanStr, 
-          syaratBerkasStr,
-          lampiran_ktp,
-          lampiran_kk,
-          lampiranBerkasStr,
+          syaratBerkasStr, 
           jenis_dokumen, 
           jenis_dokumen, 
           keperluan, 
@@ -318,39 +311,7 @@ class DokumenRepository {
     query += ' WHERE id = ?';
     params.push(id);
 
-    let result;
-    try {
-      [result] = await pool.execute(query, params);
-    } catch (dbErr) {
-      console.warn('[DokumenRepo] updateApproval initial execution error:', dbErr.message);
-      
-      // Auto-heal jika kolom belum ada di database remote (misal: nomor_surat, qr_code_hash, timestamps)
-      if (dbErr.code === 'ER_BAD_FIELD_ERROR' || (dbErr.message && dbErr.message.includes('Unknown column'))) {
-        try {
-          if (updateData.nomor_surat && dbErr.message.includes('nomor_surat')) {
-            await pool.query('ALTER TABLE dokumen_request ADD COLUMN nomor_surat VARCHAR(100) NULL');
-          }
-          if (updateData.qr_code_hash && dbErr.message.includes('qr_code_hash')) {
-            await pool.query('ALTER TABLE dokumen_request ADD COLUMN qr_code_hash VARCHAR(255) NULL');
-          }
-          if (dbErr.message.includes('rt_processed_at') || dbErr.message.includes('approved_at')) {
-            await pool.query('ALTER TABLE dokumen_request ADD COLUMN rt_processed_at DATETIME NULL, ADD COLUMN rw_received_at DATETIME NULL, ADD COLUMN rw_processed_at DATETIME NULL, ADD COLUMN kelurahan_received_at DATETIME NULL, ADD COLUMN approved_at DATETIME NULL');
-          }
-          // Retry query awal setelah auto-add column
-          [result] = await pool.execute(query, params);
-        } catch (retryErr) {
-          console.warn('[DokumenRepo] Retry after alter table failed, running minimal safe update:', retryErr.message);
-          // Fallback update esensial: hanya kolom pokok yang terjamin selalu ada di skema awal
-          const [fallbackRes] = await pool.execute(
-            'UPDATE dokumen_request SET status = ?, approval_step = ?, catatan_petugas = COALESCE(?, catatan_petugas) WHERE id = ?',
-            [status, approval_step, catatan_petugas, id]
-          );
-          result = fallbackRes;
-        }
-      } else {
-        throw dbErr;
-      }
-    }
+    const [result] = await pool.execute(query, params);
 
     // Catat audit trail ke dokumen_workflow_history
     if (acted_by_user_id && acted_by_role) {

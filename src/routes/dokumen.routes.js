@@ -60,6 +60,29 @@ router.get('/prefill-data', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/dokumen/family-members - Anggota keluarga 1 KK untuk pemohon surat
+router.get('/family-members', requireAuth, async (req, res) => {
+  try {
+    const userRepository = require('../repositories/user.repository');
+    const activeNik = req.session.user?.active_nik || req.session.user?.username;
+    let noKK = req.session.user?.no_kk;
+
+    if (!noKK && activeNik) {
+      const warga = await userRepository.findWargaByNik(activeNik);
+      if (warga) noKK = warga.no_kk;
+    }
+
+    if (!noKK) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const members = await userRepository.findFamilyMembersByNoKK(noKK);
+    res.json({ success: true, data: members || [] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // POST /api/dokumen - Warga mengajukan permohonan surat baru
 router.post('/', requireAuth, async (req, res) => {
   try {
