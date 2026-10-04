@@ -32,6 +32,7 @@ import {
   FileUp,
   ExternalLink,
   RotateCcw
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AssistedSubmissionModal from '../components/AssistedSubmissionModal';
 
