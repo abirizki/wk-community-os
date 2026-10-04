@@ -120,7 +120,8 @@ export default function DashboardLayout() {
         { name: 'Register Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={19} /> },
         { name: 'Pengelolaan Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Rekonsiliasi Desil & DTKS', path: '/dashboard/desil', icon: <Layers size={19} /> },
-        { name: 'Rekonsiliasi PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
+        { name: 'Rekonsiliasi PBB & DHKP', path: '/dashboard/pbb', icon: <FileText size={19} /> },
+        { name: 'Peta Fasilitas & Analitik', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
         { name: 'Buku Kas & Keuangan', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Gerbang Pesan WhatsApp', path: '/dashboard/whatsapp', icon: <MessageSquare size={19} /> },
         { name: 'Panduan SOP Operasional', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -130,9 +131,12 @@ export default function DashboardLayout() {
     if (isRW) {
       return [
         { name: 'Meja Kerja RW', path: '/dashboard', icon: <Home size={19} /> },
-        { name: 'Buku Warga & KK RW', path: '/dashboard/warga', icon: <Users size={19} /> },
+        { name: 'Dashboard Data Analitik', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
+        { name: 'Pengesahan & Surat RW', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+        { name: 'Kartu Keluarga Digital', path: '/dashboard/kk', icon: <Users size={19} /> },
         { name: 'Bantuan Sosial RW', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Verifikasi Desil RW', path: '/dashboard/desil', icon: <Layers size={19} /> },
+        { name: 'Monitoring PBB Wilayah', path: '/dashboard/pbb', icon: <FileText size={19} /> },
         { name: 'Kas & Keuangan RW', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Aduan Lingkungan RW', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP RW', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -142,9 +146,12 @@ export default function DashboardLayout() {
     if (isRT) {
       return [
         { name: 'Meja Kerja RT', path: '/dashboard', icon: <Home size={19} /> },
-        { name: 'Buku Warga & KK RT', path: '/dashboard/warga', icon: <Users size={19} /> },
+        { name: 'Dashboard Data Analitik', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
+        { name: 'Verifikasi Surat & KK', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+        { name: 'Kartu Keluarga Digital', path: '/dashboard/kk', icon: <Users size={19} /> },
         { name: 'Bantuan Sosial RT', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Ground Check Desil RT', path: '/dashboard/desil', icon: <Layers size={19} /> },
+        { name: 'Monitoring PBB Wilayah', path: '/dashboard/pbb', icon: <FileText size={19} /> },
         { name: 'Kas & Iuran Warga', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Aduan Lingkungan RT', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP RT', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -170,6 +177,7 @@ export default function DashboardLayout() {
       { name: 'Informasi Bantuan Sosial', path: '/dashboard/bansos', icon: <Gift size={19} /> },
       { name: 'Data Desil & Cek Bansos', path: '/dashboard/desil', icon: <Layers size={19} /> },
       { name: 'Kesehatan Keluarga & Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
+      { name: 'Fasilitas & Daya Dukung', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
       { name: 'Transparansi Kas & Iuran', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
       { name: 'Informasi Tagihan PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
       { name: 'Lapor Pengaduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },

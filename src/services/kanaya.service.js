@@ -1,18 +1,21 @@
 /**
  * src/services/kanaya.service.js
- * Kanaya AI Context-Aware Reasoning Engine (Sprint 3)
+ * Kanaya AI Context-Aware Reasoning Engine V2
  * Bumi Warga - Jabar Pintar Digital
+ * Elevated Reasoning: PBB, Regional Facilities, Decision Support, & Aparatur
  */
 
 const aparaturRepository = require('../repositories/aparatur.repository');
 const wargaRepository = require('../repositories/warga.repository');
 const dokumenRepository = require('../repositories/dokumen.repository');
+const pbbRepository = require('../repositories/pbb.repository');
+const fasilitasRepository = require('../repositories/fasilitas.repository');
 
 class KanayaService {
   async processQuery({ message, user }) {
     const rawMsg = (message || '').trim().toLowerCase();
     
-    // Injeksi konteks warga dari sesi aktif
+    // Injeksi konteks warga & hak akses dari sesi
     let wargaInfo = null;
     let aparaturList = [];
     const activeNik = user?.active_nik || user?.username;
@@ -23,169 +26,240 @@ class KanayaService {
       } catch (e) {}
     }
 
-    const kelurahanName = wargaInfo?.kelurahan || user?.kelurahan || 'Kebonjati';
-
     try {
-      aparaturList = await aparaturRepository.list({ kelurahan: kelurahanName });
-      if (!aparaturList || aparaturList.length === 0) {
-        aparaturList = await aparaturRepository.list({ kelurahan: null });
-      }
-    } catch (e) {
-      aparaturList = [];
-    }
+      aparaturList = await aparaturRepository.list({ kelurahan: 'Kebonjati' });
+    } catch (e) {}
 
+    const isAparatur = ['superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rw', 'ketua_rt'].includes(user?.role);
     const lurah = aparaturList.find(a => a.jabatan && a.jabatan.toLowerCase().includes('lurah'));
     const babinsa = aparaturList.find(a => a.kategori === 'KEAMANAN' && a.jabatan.toLowerCase().includes('babinsa'));
-    const bhabin = aparaturList.find(a => (a.kategori === 'KEAMANAN' || (a.jabatan && a.jabatan.toLowerCase().includes('bhabin'))));
-    
-    const userRw = wargaInfo?.rw || user?.rw;
-    const userRt = wargaInfo?.rt || user?.rt;
-    const ketuaRw = (userRw ? aparaturList.find(a => a.kategori === 'RW' && (a.wilayah_rw == userRw || a.wilayah_rw == String(userRw).padStart(3, '0'))) : null) || aparaturList.find(a => a.kategori === 'RW');
-    const ketuaRt = (userRt ? aparaturList.find(a => a.kategori === 'RT' && (a.wilayah_rt == userRt || a.wilayah_rt == String(userRt).padStart(3, '0'))) : null) || aparaturList.find(a => a.kategori === 'RT');
+    const bhabin = aparaturList.find(a => a.kategori === 'KEAMANAN' && a.jabatan.toLowerCase().includes('bhabin'));
+    const ketuaRw = aparaturList.find(a => a.kategori === 'RW');
+    const ketuaRt = aparaturList.find(a => a.kategori === 'RT');
     const posyandu = aparaturList.find(a => a.kategori === 'POSYANDU');
 
     let reply = '';
     const actionChips = [];
 
-    // 1. Khusus Pertanyaan Babinsa / TNI AD
-    if (rawMsg.includes('babinsa') || rawMsg.includes('tni')) {
-      const babinsaNama = babinsa ? babinsa.nama_pejabat : 'Serma Dedi Supriadi';
-      const babinsaKontak = babinsa ? (babinsa.no_wa || babinsa.no_telp || '0813-2211-0099') : '0813-2211-0099';
-      const babinsaPangkat = babinsa?.pangkat_golongan || 'Sersan Mayor (Koramil 0701/Cikole)';
-      const babinsaAlamat = babinsa?.alamat_kantor || 'Pos Koramil 0701 Cikole / Kelurahan Kebonjati';
-      const babinsaJam = babinsa?.jam_layanan || 'Siaga 24 Jam';
+    // Helper format rupiah
+    const formatIDR = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(n) || 0);
 
-      reply = `Sampurasun${wargaInfo?.nama ? ` Bpk/Ibu ${wargaInfo.nama}` : ''}! Berdasarkan wilayah binaan Kelurahan ${kelurahanName}, Kota Sukabumi:\n\n` +
-        `🎖️ **Babinsa Pembina Kelurahan (TNI AD)**:\n` +
-        `• **Nama Pejabat**: **${babinsaNama}**\n` +
-        `• **Pangkat / Satuan**: ${babinsaPangkat}\n` +
-        `• **Nomor Telepon / WhatsApp**: **${babinsaKontak}**\n` +
-        `• **Jam Layanan**: ${babinsaJam}\n` +
-        `• **Pos Siaga**: ${babinsaAlamat}\n\n` +
-        (bhabin ? `👮 **Mitra Sinergi Kamtibmas (Bhabinkamtibmas Polri)**:\n• **${bhabin.nama_pejabat}** (${bhabin.no_wa || bhabin.no_telp || '0812-9900-1122'})\n\n` : '') +
-        `Aya perkawis kaamanan lingkungan atanapi konsultasi kamtibmas anu tiasa dibantos?`;
+    // =========================================================================
+    // 1. PENALARAN PBB (PAJAK BUMI DAN BANGUNAN)
+    // =========================================================================
+    if (
+      rawMsg.includes('pbb') || 
+      rawMsg.includes('pajak') || 
+      rawMsg.includes('sppt') || 
+      rawMsg.includes('dhkp') || 
+      rawMsg.includes('tagihan tanah') || 
+      rawMsg.includes('bayar pbb')
+    ) {
+      // Jika user adalah RT / RW yang bertanya tentang realisasi wilayah
+      if (isAparatur && (rawMsg.includes('realisasi') || rawMsg.includes('wilayah') || rawMsg.includes('rt') || rawMsg.includes('rw') || rawMsg.includes('kepatuhan'))) {
+        try {
+          const stats = await pbbRepository.getStats({ rw: user?.rw || '001', rt: user?.rt || null }, 2026);
+          const s = stats.summary;
+          reply = `Sampurasun Bpk/Ibu Pengurus! Berikut ringkasan realisasi PBB-P2 Wilayah Kelurahan Kebonjati Tahun 2026:\n\n` +
+            `• **Target Ketetapan**: ${formatIDR(s.total_target_nominal)} (${s.total_objek_pajak} objek)\n` +
+            `• **Realisasi Penerimaan**: ${formatIDR(s.total_lunas_nominal)} (**${s.persentase_realisasi}%**)\n` +
+            `• **Objek Lunas**: ${s.total_lunas_count} NOP\n` +
+            `• **Piutang Belum Lunas**: ${formatIDR(s.total_terutang_nominal)} (${s.total_terutang_count} wajib pajak)\n\n` +
+            `💡 **Saran Kanaya**: Pengurus dapat mengirimkan pengingat santun melalui WhatsApp langsung dari menu Monitoring PBB Wilayah tanpa mempermalukan warga demi akselerasi PAD Kota Sukabumi.`;
 
-      if (babinsaKontak) {
-        const waNum = babinsaKontak.replace(/[^0-9]/g, '').replace(/^0/, '62');
-        actionChips.push({
-          label: `Hubungi Babinsa (${babinsaNama})`,
-          type: 'whatsapp',
-          url: `https://wa.me/${waNum}?text=${encodeURIComponent('Sampurasun Bpk Babinsa, saya warga ingin konsultasi situasi kamtibmas.')}`
-        });
+          actionChips.push({
+            label: 'Monitoring PBB Wilayah',
+            type: 'navigate',
+            url: '/dashboard/pbb'
+          });
+          return { reply, action_chips: actionChips };
+        } catch (e) {}
       }
-      if (bhabin && (bhabin.no_wa || bhabin.no_telp)) {
-        const bhabinNum = (bhabin.no_wa || bhabin.no_telp).replace(/[^0-9]/g, '').replace(/^0/, '62');
-        actionChips.push({
-          label: `Hubungi Bhabinkamtibmas`,
-          type: 'whatsapp',
-          url: `https://wa.me/${bhabinNum}?text=${encodeURIComponent('Sampurasun Bpk Bhabinkamtibmas, saya warga ingin melapor situasi kamtibmas.')}`
-        });
-      }
-      actionChips.push({
-        label: 'Direktori Aparatur Lengkap',
-        type: 'navigate',
-        url: '/dashboard/aparatur'
-      });
 
-      return { reply, action_chips: actionChips };
+      // Pertanyaan tagihan PBB pribadi / warga
+      try {
+        const myPbb = activeNik ? await pbbRepository.findByNik(activeNik) : [];
+        if (myPbb.length > 0) {
+          const latest = myPbb[0];
+          const isLunas = latest.status_pembayaran === 'PAID';
+          reply = `Sampurasun ${wargaInfo ? wargaInfo.nama : 'Bpk/Ibu'}!\n\nBerikut data ketetapan PBB-P2 Anda:\n` +
+            `• **Nomor Objek Pajak (NOP)**: \`${latest.nop}\`\n` +
+            `• **Tahun Pajak**: ${latest.tahun}\n` +
+            `• **Alamat Objek**: ${latest.alamat_objek_pajak || 'Kebonjati'}\n` +
+            `• **Nominal Pokok**: ${formatIDR(latest.nominal)}\n` +
+            `• **Status**: ${isLunas ? '✅ **SUDAH LUNAS**' : '⏳ **BELUM BAYAR (MENUNGGAK)**'}\n` +
+            `• **Jatuh Tempo**: ${new Date(latest.tanggal_jatuh_tempo).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}\n\n` +
+            (isLunas 
+              ? `Hatur nuhun atas kepatuhan pajak Anda! Dokumen E-SPPT digital resmi dan bukti setor dapat langsung diunduh.`
+              : `Pembayaran dapat dilakukan praktis via aplikasi Bumi Warga (QRIS Dinamis / Virtual Account BJB), Indomaret/Alfamart, atau loket kelurahan.`);
+
+          actionChips.push({
+            label: 'Buka E-SPPT Digital',
+            type: 'navigate',
+            url: '/dashboard/pbb'
+          });
+          return { reply, action_chips: actionChips };
+        } else {
+          reply = `Sampurasun! Saat ini belum ditemukan data tagihan PBB yang terhubung dengan NIK Anda untuk tahun 2026. Anda dapat memantau E-SPPT digital atau berkonsultasi dengan operator di loket Kelurahan Kebonjati.`;
+          actionChips.push({
+            label: 'Layanan PBB Terpadu',
+            type: 'navigate',
+            url: '/dashboard/pbb'
+          });
+          return { reply, action_chips: actionChips };
+        }
+      } catch (err) {}
     }
 
-    // 2. Khusus Pertanyaan Bhabinkamtibmas / Polsek / Polisi
-    if (rawMsg.includes('bhabin') || rawMsg.includes('polsek') || rawMsg.includes('polri') || rawMsg.includes('polisi') || rawMsg.includes('kamtibmas')) {
-      const bhabinNama = bhabin ? bhabin.nama_pejabat : 'Aipda Agus Maulana';
-      const bhabinKontak = bhabin ? (bhabin.no_wa || bhabin.no_telp || '0812-9900-1122') : '0812-9900-1122';
-      const bhabinPangkat = bhabin?.pangkat_golongan || 'Ajun Inspektur Polisi Dua (Polsek Cikole)';
+    // =========================================================================
+    // 2. PENALARAN FASILITAS KESEHATAN, PUSKESMAS, DOKTER & BIDAN
+    // =========================================================================
+    if (
+      rawMsg.includes('puskesmas') || 
+      rawMsg.includes('bidan') || 
+      rawMsg.includes('dokter') || 
+      rawMsg.includes('faskes') || 
+      rawMsg.includes('klinik') || 
+      rawMsg.includes('obat') || 
+      rawMsg.includes('apotek') || 
+      rawMsg.includes('darurat medis')
+    ) {
+      try {
+        const faskesList = await fasilitasRepository.getKesehatanInventory({ rw: user?.rw || '001' });
+        const puskesmas = faskesList.find(f => f.jenis_faskes === 'Puskesmas');
+        const bidan = faskesList.find(f => f.jenis_faskes.includes('Bidan'));
+        const apotek = faskesList.find(f => f.jenis_faskes === 'Apotek');
 
-      reply = `Sampurasun${wargaInfo?.nama ? ` Bpk/Ibu ${wargaInfo.nama}` : ''}! Berdasarkan wilayah hukum Kelurahan ${kelurahanName}, Kota Sukabumi:\n\n` +
-        `👮 **Bhabinkamtibmas Polri (Mitra Kamtibmas)**:\n` +
-        `• **Nama Pejabat**: **${bhabinNama}**\n` +
-        `• **Pangkat / Satuan**: ${bhabinPangkat}\n` +
-        `• **Nomor Telepon / WhatsApp**: **${bhabinKontak}**\n` +
-        `• **Jam Layanan**: ${bhabin?.jam_layanan || 'Siaga 24 Jam'}\n` +
-        `• **Pos Siaga**: ${bhabin?.alamat_kantor || 'Pos Bhabinkamtibmas / Polsek Cikole'}\n\n` +
-        (babinsa ? `🎖️ **Mitra Tiga Pilar (Babinsa TNI AD)**:\n• **${babinsa.nama_pejabat}** (${babinsa.no_wa || babinsa.no_telp || '0813-2211-0099'})\n\n` : '') +
-        `Aya perkawis kamtibmas atanapi laporan situasi anu tiasa Kanaya bantos?`;
+        reply = `Berikut rujukan fasilitas pelayanan kesehatan resmi terdekat di wilayah Kelurahan Kebonjati:\n\n` +
+          `1. **${puskesmas ? puskesmas.nama_faskes : 'Puskesmas Kebonjati (Induk)'}**\n` +
+          `   • Alamat: ${puskesmas ? puskesmas.alamat : 'Jl. Surya Kencana No. 55'}\n` +
+          `   • Layanan: Siaga IGD 24 Jam, Rawat Inap (${puskesmas ? puskesmas.kapasitas_tempat_tidur : 10} bed), Dokter Umum & KIA\n` +
+          `   • Kontak: ${puskesmas ? puskesmas.no_kontak : '0266-224488'}\n\n` +
+          `2. **${bidan ? bidan.nama_faskes : 'Praktik Bidan Mandiri Hj. Siti Hasanah, S.Tr.Keb'}**\n` +
+          `   • Layanan: Persalinan 24 Jam, Imunisasi Balita, KB Mandiri\n` +
+          `   • Alamat: ${bidan ? bidan.alamat : 'Gang Melati I No. 8 RT 001/RW 001'}\n` +
+          `   • Kontak: ${bidan ? bidan.no_kontak : '081234889900'}\n\n` +
+          `3. **${apotek ? apotek.nama_faskes : 'Apotek Kimia Farma Kebonjati'}** (Buka 24 Jam)\n` +
+          `   • Alamat: ${apotek ? apotek.alamat : 'Jl. Surya Kencana No. 70'}\n\n` +
+          `🚨 Dalam kondisi kegawatdaruratan, silakan hubungi **Emergency Call 112 Kota Sukabumi** atau ambulans puskesmas.`;
 
-      if (bhabinKontak) {
-        const waNum = bhabinKontak.replace(/[^0-9]/g, '').replace(/^0/, '62');
+        if (bidan && bidan.no_kontak) {
+          actionChips.push({
+            label: 'Hubungi Bidan Siaga',
+            type: 'whatsapp',
+            url: `https://wa.me/${bidan.no_kontak.replace(/^0/, '62')}?text=${encodeURIComponent('Sampurasun Ibu Bidan, saya warga Kebonjati ingin konsultasi kesehatan.')}`
+          });
+        }
         actionChips.push({
-          label: `Hubungi Bhabinkamtibmas`,
-          type: 'whatsapp',
-          url: `https://wa.me/${waNum}?text=${encodeURIComponent('Sampurasun Bpk Bhabinkamtibmas, saya warga ingin melapor situasi kamtibmas.')}`
+          label: 'Peta Fasilitas & Daya Dukung',
+          type: 'navigate',
+          url: '/dashboard/daya-dukung'
         });
-      }
-      if (babinsa && (babinsa.no_wa || babinsa.no_telp)) {
-        const babinsaNum = (babinsa.no_wa || babinsa.no_telp).replace(/[^0-9]/g, '').replace(/^0/, '62');
-        actionChips.push({
-          label: `Hubungi Babinsa`,
-          type: 'whatsapp',
-          url: `https://wa.me/${babinsaNum}?text=${encodeURIComponent('Sampurasun Bpk Babinsa, saya warga ingin konsultasi situasi kamtibmas.')}`
-        });
-      }
-      actionChips.push({
-        label: 'Direktori Aparatur Lengkap',
-        type: 'navigate',
-        url: '/dashboard/aparatur'
-      });
 
-      return { reply, action_chips: actionChips };
+        return { reply, action_chips: actionChips };
+      } catch (err) {}
     }
 
-    // 3. Kontak Darurat / Kebakaran / Ambulans / 112
-    if (rawMsg.includes('darurat') || rawMsg.includes('ambulance') || rawMsg.includes('ambulans') || rawMsg.includes('damkar') || rawMsg.includes('kebakaran') || rawMsg.includes('112')) {
-      reply = `🚨 **Kontak Darurat & Layanan Cepat Wilayah Sukabumi**:\n\n` +
-        `• **Call Center Darurat Bebas Pulsa**: **112** (Siaga 24 Jam)\n` +
-        `• **Polsek Cikole (Polres Sukabumi Kota)**: (0266) 221110 / 110\n` +
-        `• **Damkar & Penyelamatan Kota Sukabumi**: (0266) 222113\n` +
-        `• **Ambulans / PMI Kota Sukabumi**: (0266) 225118 / 119\n` +
-        `• **Babinsa TNI AD**: ${babinsa ? babinsa.nama_pejabat : 'Serma Dedi Supriadi'} (${babinsa ? (babinsa.no_wa || babinsa.no_telp) : '0813-2211-0099'})\n` +
-        `• **Bhabinkamtibmas Polri**: ${bhabin ? bhabin.nama_pejabat : 'Aipda Agus Maulana'} (${bhabin ? (bhabin.no_wa || bhabin.no_telp) : '0812-9900-1122'})\n\n` +
-        `Segera hubungi nomor di atas jika terjadi keadaan darurat, musibah, atau situasi medis mendesak!`;
+    // =========================================================================
+    // 3. PENALARAN TEMPAT IBADAH & TITIK EVAKUASI BENCANA
+    // =========================================================================
+    if (
+      rawMsg.includes('masjid') || 
+      rawMsg.includes('mushola') || 
+      rawMsg.includes('gereja') || 
+      rawMsg.includes('ibadah') || 
+      rawMsg.includes('dkm') || 
+      rawMsg.includes('evakuasi') || 
+      rawMsg.includes('bencana') || 
+      rawMsg.includes('gempa')
+    ) {
+      try {
+        const ibadahList = await fasilitasRepository.getKeagamaanInventory({ rw: user?.rw || '001' });
+        const masjid = ibadahList.find(i => i.jenis_tempat_ibadah === 'Masjid');
+        const evakuasi = ibadahList.filter(i => i.titik_evakuasi_bencana === 1);
 
-      actionChips.push({
-        label: 'Hubungi Babinsa (Darurat)',
-        type: 'whatsapp',
-        url: `https://wa.me/${(babinsa ? (babinsa.no_wa || '081322110099') : '081322110099').replace(/[^0-9]/g, '').replace(/^0/, '62')}?text=${encodeURIComponent('DARURAT: Mohon bantuan Babinsa di lingkungan kami.')}`
-      });
-      actionChips.push({
-        label: 'Hubungi Bhabinkamtibmas (Darurat)',
-        type: 'whatsapp',
-        url: `https://wa.me/${(bhabin ? (bhabin.no_wa || '081299001122') : '081299001122').replace(/[^0-9]/g, '').replace(/^0/, '62')}?text=${encodeURIComponent('DARURAT: Mohon bantuan Bhabinkamtibmas di lingkungan kami.')}`
-      });
+        reply = `Berikut informasi tempat ibadah dan titik evakuasi darurat di wilayah Kelurahan Kebonjati:\n\n` +
+          `🕌 **${masjid ? masjid.nama_tempat_ibadah : "Masjid Jami' Al-Ikhlas"}**\n` +
+          `• Alamat: ${masjid ? masjid.alamat : 'Jl. Kebonjati No. 45'}\n` +
+          `• Kapasitas: ${masjid ? masjid.daya_tampung_jamaah : 350} Jamaah (Status: ${masjid ? masjid.status_tanah : 'Wakaf'})\n` +
+          `• Pengurus DKM: ${masjid ? masjid.nama_pengurus_dkm : 'H. Ahmad Syukri'} (${masjid ? masjid.no_kontak_pengurus : '081298765432'})\n\n` +
+          `🛡️ **Titik Evakuasi Bencana Terverifikasi**:\n` +
+          evakuasi.map(e => `• **${e.nama_tempat_ibadah}** (${e.alamat}) - Kapasitas ${e.daya_tampung_jamaah} jiwa`).join('\n') +
+          `\n\nTitik evakuasi dilengkapi akses logistik terbuka dan titik kumpul aman dari reruntuhan.`;
 
-      return { reply, action_chips: actionChips };
+        actionChips.push({
+          label: 'Direktori Tempat Ibadah & Evakuasi',
+          type: 'navigate',
+          url: '/dashboard/daya-dukung'
+        });
+
+        return { reply, action_chips: actionChips };
+      } catch (err) {}
     }
 
-    // 4. Struktur Aparatur / Pejabat / Lurah / RT / RW Umum
+    // =========================================================================
+    // 4. PENALARAN PENDIDIKAN & ZONASI PPDB
+    // =========================================================================
+    if (
+      rawMsg.includes('sekolah') || 
+      rawMsg.includes('sd') || 
+      rawMsg.includes('smp') || 
+      rawMsg.includes('sma') || 
+      rawMsg.includes('ppdb') || 
+      rawMsg.includes('zonasi') || 
+      rawMsg.includes('kursi baru')
+    ) {
+      try {
+        const eduList = await fasilitasRepository.getPendidikanInventory({ rw: user?.rw || '001' });
+        reply = `Berikut data fasilitas pendidikan dan kuota kursi zonasi PPDB terdekat di Kelurahan Kebonjati:\n\n` +
+          eduList.slice(0, 4).map(s => 
+            `• **${s.nama_sekolah}** (${s.jenjang} - ${s.status_sekolah})\n` +
+            `  Akreditasi: **${s.akreditasi}** | Kuota Kursi Baru: **${s.daya_tampung_kursi_baru} murid** | Total Murid: ${s.total_kapasitas_murid}`
+          ).join('\n\n') +
+          `\n\n📊 Untuk informasi rasio anak usia sekolah vs daya tampung kursi zonasi, silakan cek dashboard analitik daya dukung.`;
+
+        actionChips.push({
+          label: 'Analisis Zonasi PPDB',
+          type: 'navigate',
+          url: '/dashboard/daya-dukung'
+        });
+        return { reply, action_chips: actionChips };
+      } catch (err) {}
+    }
+
+    // =========================================================================
+    // 5. PENALARAN APARATUR, LURAH, BABINSA, BHABINKAMTIBMAS, RT/RW
+    // =========================================================================
     if (
       rawMsg.includes('lurah') || 
       rawMsg.includes('struktur') || 
       rawMsg.includes('pejabat') || 
-      rawMsg.includes('aparatur') ||
+      rawMsg.includes('babinsa') || 
+      rawMsg.includes('bhabin') || 
       rawMsg.includes('rt') || 
       rawMsg.includes('rw')
     ) {
-      reply = `Sampurasun! Wilujeng sumping di Kelurahan ${kelurahanName}, Kecamatan Cikole, Kota Sukabumi.\n\nBerikut struktur aparatur dan kontak resmi wilayah kami:\n` +
-        `• **Lurah ${kelurahanName}**: ${lurah ? lurah.nama_pejabat : 'Drs. H. Maman Suryaman, M.Si'}\n` +
-        `• **Babinsa TNI AD**: ${babinsa ? babinsa.nama_pejabat : 'Serma Dedi Supriadi'} (${babinsa ? (babinsa.no_wa || babinsa.no_telp) : '081322110099'})\n` +
-        `• **Bhabinkamtibmas Polri**: ${bhabin ? bhabin.nama_pejabat : 'Aipda Agus Maulana'} (${bhabin ? (bhabin.no_wa || bhabin.no_telp) : '081299001122'})\n` +
-        `• **Ketua RW ${userRw || '001'}**: ${ketuaRw ? ketuaRw.nama_pejabat : 'H. Ahmad Sanusi'} (${ketuaRw ? (ketuaRw.no_wa || ketuaRw.no_telp) : '081233445566'})\n` +
-        `• **Ketua RT ${userRt || '001'}**: ${ketuaRt ? ketuaRt.nama_pejabat : 'Dadang Ruhiyat'} (${ketuaRt ? (ketuaRt.no_wa || ketuaRt.no_telp) : '081344556677'})\n` +
-        (posyandu ? `• **Kader Posyandu**: ${posyandu.nama_pejabat} (${posyandu.nama_posyandu || 'Posyandu Melati'})\n\n` : '\n') +
-        `Aya anu tiasa Kanaya bantos deui perkawis pelayanan administrasi atanapi bantuan sosial?`;
+      reply = `Sampurasun! Wilujeng sumping di Kelurahan Kebonjati, Kecamatan Cikole, Kota Sukabumi.\n\nBerikut struktur aparatur dan kontak resmi wilayah kami:\n` +
+        `• **Lurah Kebonjati**: ${lurah ? lurah.nama_pejabat : 'Drs. H. Maman Suryaman, M.Si'}\n` +
+        `• **Babinsa TNI AD**: ${babinsa ? babinsa.nama_pejabat : 'Serma Dedi Supriadi'} (${babinsa ? babinsa.no_wa : '081322110099'})\n` +
+        `• **Bhabinkamtibmas Polri**: ${bhabin ? bhabin.nama_pejabat : 'Aipda Agus Maulana'} (${bhabin ? bhabin.no_wa : '081299001122'})\n` +
+        `• **Ketua RW 001**: ${ketuaRw ? ketuaRw.nama_pejabat : 'H. Ahmad Sanusi'} (${ketuaRw ? ketuaRw.no_wa : '081233445566'})\n` +
+        `• **Ketua RT 001**: ${ketuaRt ? ketuaRt.nama_pejabat : 'Dadang Ruhiyat'} (${ketuaRt ? ketuaRt.no_wa : '081344556677'})\n` +
+        `• **Kader Posyandu Melati**: ${posyandu ? posyandu.nama_pejabat : 'Ny. Hj. Yayah Rokayah'}\n\n` +
+        `Aya anu tiasa Kanaya bantos deui perkawis pelayanan administrasi, PBB, atanapi bantuan sosial?`;
 
-      if (babinsa && (babinsa.no_wa || babinsa.no_telp)) {
+      if (babinsa && babinsa.no_wa) {
         actionChips.push({
           label: `Hubungi Babinsa (${babinsa.nama_pejabat})`,
           type: 'whatsapp',
-          url: `https://wa.me/${(babinsa.no_wa || babinsa.no_telp).replace(/[^0-9]/g, '').replace(/^0/, '62')}?text=${encodeURIComponent('Sampurasun Bpk Babinsa, saya warga ingin konsultasi.')}`
+          url: `https://wa.me/${babinsa.no_wa.replace(/^0/, '62')}?text=${encodeURIComponent('Sampurasun Bpk Babinsa Kebonjati, saya warga ingin konsultasi kamtibmas.')}`
         });
       }
-      if (bhabin && (bhabin.no_wa || bhabin.no_telp)) {
+      if (bhabin && bhabin.no_wa) {
         actionChips.push({
           label: `Hubungi Bhabinkamtibmas`,
           type: 'whatsapp',
-          url: `https://wa.me/${(bhabin.no_wa || bhabin.no_telp).replace(/[^0-9]/g, '').replace(/^0/, '62')}?text=${encodeURIComponent('Sampurasun Bpk Bhabinkamtibmas, saya warga ingin konsultasi.')}`
+          url: `https://wa.me/${bhabin.no_wa.replace(/^0/, '62')}?text=${encodeURIComponent('Sampurasun Bpk Bhabinkamtibmas Kebonjati, saya warga ingin melapor situasi lingkungan.')}`
         });
       }
       actionChips.push({
@@ -197,7 +271,9 @@ class KanayaService {
       return { reply, action_chips: actionChips };
     }
 
-    // 5. Pertanyaan seputar Pengajuan Surat / Dokumen / Domisili / SKU / SKTM
+    // =========================================================================
+    // 6. PENALARAN SURAT & DOKUMEN DIGITAL (TTE / QR BSrE)
+    // =========================================================================
     if (
       rawMsg.includes('surat') || 
       rawMsg.includes('domisili') || 
@@ -205,12 +281,12 @@ class KanayaService {
       rawMsg.includes('sktm') || 
       rawMsg.includes('pengantar')
     ) {
-      reply = `Untuk pengajuan surat di Kelurahan ${kelurahanName}, alur pelayanan kini sepenuhnya **paperless & digital**:\n\n` +
+      reply = `Untuk pengajuan surat di Kelurahan Kebonjati, alur pelayanan kini sepenuhnya **paperless & digital**:\n\n` +
         `1. Warga mengajukan surat secara online (bisa untuk diri sendiri atau anggota keluarga dalam 1 KK).\n` +
-        `2. Ketua RT memverifikasi rekomendasi secara digital melalui aplikasi.\n` +
+        `2. Ketua RT memverifikasi rekomendasi secara digital melalui aplikasi (cukup verifikasi data inputan tanpa perlu scan surat fisik lagi).\n` +
         `3. Ketua RW memvalidasi berkas secara digital.\n` +
-        `4. Kelurahan ${kelurahanName} mengesahkan dan menerbitkan Nomor Surat Resmi dengan **Tanda Tangan Elektronik (TTE) QR Code** sah SPBE.\n` +
-        `5. Warga langsung dapat mengunduh atau mencetak dokumen sah tanpa perlu antre di kantor kelurahan!`;
+        `4. Kelurahan Kebonjati mengesahkan dan menerbitkan Nomor Surat Resmi dengan **Tanda Tangan Elektronik (TTE) QR Code** tersertifikasi BSrE.\n` +
+        `5. Warga langsung dapat mengunduh atau mencetak dokumen sah dari rumah tanpa antre!`;
 
       actionChips.push({
         label: 'Ajukan Surat Mandiri',
@@ -218,27 +294,37 @@ class KanayaService {
         url: '/dashboard/dokumen?action=new'
       });
       actionChips.push({
-        label: 'Lihat Riwayat Dokumen',
+        label: 'Scanner QR Terpadu',
         type: 'navigate',
-        url: '/dashboard/dokumen'
+        url: '/dashboard/scanner'
       });
 
       return { reply, action_chips: actionChips };
     }
 
-    // 6. Default Response Ramah Pasundan
-    reply = `Sampurasun! Kanaya siap ngabantos wargi sadayana di Kelurahan ${kelurahanName}, Kecamatan Cikole, Kota Sukabumi.\n\n` +
-      `Wargi tiasa naroskeun perkawis kontak aparat kelurahan (Lurah, Babinsa, Bhabinkamtibmas, RT/RW), alur pengajuan surat online, bantuan sosial, jadwal Posyandu, atanapi kontak darurat. Aya naon anu tiasa dibantos dinten ieu?`;
+    // Default Response Ramah Pasundan & Super App Guide
+    reply = `Sampurasun! Kanaya siap ngabantos wargi sadayana di Kelurahan Kebonjati, Kecamatan Cikole, Kota Sukabumi.\n\n` +
+      `Wargi tiasa naroskeun perkawis:\n` +
+      `• **PBB & E-SPPT Digital** (cek tagihan, jatuh tempo, cara bayar QRIS)\n` +
+      `• **Fasilitas Wilayah** (Puskesmas, Bidan siaga 24 jam, sekolah PPDB, masjid titik evakuasi)\n` +
+      `• **Kontak Aparatur** (Lurah, Babinsa TNI AD, Bhabinkamtibmas Polri, Ketua RT/RW)\n` +
+      `• **Layanan Surat Online** (Domisili, SKU, SKTM dengan TTE QR resmi)\n\n` +
+      `Aya naon anu tiasa dibantos dinten ieu?`;
 
     actionChips.push({
-      label: 'Direktori Aparatur & Keamanan',
+      label: 'Cek Tagihan PBB',
       type: 'navigate',
-      url: '/dashboard/aparatur'
+      url: '/dashboard/pbb'
     });
     actionChips.push({
-      label: 'Layanan Surat Digital',
+      label: 'Fasilitas & Daya Dukung',
       type: 'navigate',
-      url: '/dashboard/dokumen'
+      url: '/dashboard/daya-dukung'
+    });
+    actionChips.push({
+      label: 'Direktori Aparatur',
+      type: 'navigate',
+      url: '/dashboard/aparatur'
     });
 
     return { reply, action_chips: actionChips };

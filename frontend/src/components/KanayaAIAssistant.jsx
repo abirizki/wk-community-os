@@ -11,7 +11,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../utils/api';
 import {
   Sparkles,
   X,
@@ -26,8 +25,6 @@ import {
   HelpCircle,
   Layers,
   MessageSquare,
-  MessageCircle,
-  Phone,
   Bot,
   Send,
   BookOpen,
@@ -41,30 +38,6 @@ import {
 } from 'lucide-react';
 
 const BUMI_WARGA_SOP_KNOWLEDGE = [
-  {
-    id: 'babinsa',
-    title: 'Babinsa TNI AD & Keamanan Wilayah',
-    category: 'Keamanan Lingkungan',
-    keywords: ['babinsa', 'tni', 'koramil', 'keamanan', 'tentara', 'babinsa saya'],
-    answer: '🎖️ **Babinsa Pembina Kelurahan (TNI AD)**:\n\n- Bertugas mendampingi keamanan, ketertiban, dan pembinaan teritorial masyarakat bersama pengurus RT/RW.\n- Babinsa siap melayani koordinasi kamtibmas dan penanganan situasi darurat 24 jam.\n- Anda dapat menghubungi Babinsa melalui menu Direktori Aparatur atau langsung via chat WhatsApp resmi.',
-    quickLink: '/dashboard/aparatur'
-  },
-  {
-    id: 'bhabin',
-    title: 'Bhabinkamtibmas Polri (Kamtibmas)',
-    category: 'Keamanan Lingkungan',
-    keywords: ['bhabin', 'bhabinkamtibmas', 'polsek', 'polri', 'polisi', 'kamtibmas'],
-    answer: '👮 **Bhabinkamtibmas Polri (Mitra Kamtibmas Kelurahan)**:\n\n- Bertugas memelihara ketertiban masyarakat, mediasi musyawarah warga, dan pengayoman lingkungan.\n- Siaga 24 jam bersinergi dalam Tiga Pilar Kelurahan.\n- Kontak resmi dan nomor darurat dapat diakses melalui menu Direktori Aparatur.',
-    quickLink: '/dashboard/aparatur'
-  },
-  {
-    id: 'darurat',
-    title: 'Nomor Darurat & Layanan Cepat Sukabumi',
-    category: 'Layanan Darurat',
-    keywords: ['darurat', '112', 'ambulans', 'damkar', 'kebakaran', 'polsek', 'nomor darurat', 'emergency'],
-    answer: '🚨 **Kontak Darurat Resmi Kota Sukabumi**:\n\n- **Call Center Terpadu**: **112** (Siaga 24 Jam, Bebas Pulsa)\n- **Polsek Cikole**: (0266) 221110 / 110\n- **Damkar & Penyelamatan**: (0266) 222113\n- **PMI / Ambulans Medis**: (0266) 225118 / 119\n- Hubungi nomor ini segera saat terjadi musibah atau insiden mendesak.',
-    quickLink: '/dashboard/aparatur'
-  },
   {
     id: 'sku',
     title: 'Surat Keterangan Usaha (SKU)',
@@ -164,7 +137,7 @@ export default function KanayaAIAssistant({ user }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSendMessage = async (customText = null) => {
+  const handleSendMessage = (customText = null) => {
     const textToSend = customText || inputValue;
     if (!textToSend.trim()) return;
 
@@ -178,27 +151,6 @@ export default function KanayaAIAssistant({ user }) {
     if (!customText) setInputValue('');
     setIsTyping(true);
 
-    try {
-      // 1. Coba panggil reasoning engine backend Kanaya AI
-      const res = await api.post('/ai/kanaya/chat', { message: textToSend });
-      if (res && res.success && res.reply) {
-        setMessages(prev => [
-          ...prev,
-          {
-            sender: 'kanaya',
-            text: res.reply,
-            actionChips: res.action_chips || [],
-            time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-          }
-        ]);
-        setIsTyping(false);
-        return;
-      }
-    } catch (apiErr) {
-      console.warn('[Kanaya AI] Fallback to client knowledge engine:', apiErr);
-    }
-
-    // 2. Client-side resilience fallback jika backend tidak merespons
     setTimeout(() => {
       const query = textToSend.toLowerCase();
       const matchedSop = BUMI_WARGA_SOP_KNOWLEDGE.find(sop => 
@@ -207,7 +159,6 @@ export default function KanayaAIAssistant({ user }) {
 
       let replyText = '';
       let actionLink = null;
-      let actionChips = [];
 
       if (matchedSop) {
         replyText = matchedSop.answer;
@@ -226,12 +177,11 @@ export default function KanayaAIAssistant({ user }) {
           sender: 'kanaya',
           text: replyText,
           actionLink: actionLink,
-          actionChips: actionChips,
           time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
         }
       ]);
       setIsTyping(false);
-    }, 400);
+    }, 500);
   };
 
   const userName = user?.active_nama || user?.nama || 'Warga';
@@ -416,40 +366,6 @@ export default function KanayaAIAssistant({ user }) {
                                 <ChevronRight className="w-3.5 h-3.5" />
                               </button>
                             )}
-
-                            {/* Action Chips Interaktif (WhatsApp & Navigasi) */}
-                            {msg.actionChips && msg.actionChips.length > 0 && (
-                              <div className="mt-2.5 pt-2 border-t border-sky-100 flex flex-col gap-1.5">
-                                {msg.actionChips.map((chip, cIdx) => (
-                                  chip.type === 'whatsapp' ? (
-                                    <a
-                                      key={cIdx}
-                                      href={chip.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors cursor-pointer text-center"
-                                    >
-                                      <MessageCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                      <span>{chip.label}</span>
-                                    </a>
-                                  ) : (
-                                    <button
-                                      key={cIdx}
-                                      type="button"
-                                      onClick={() => {
-                                        navigate(chip.url);
-                                        setIsOpen(false);
-                                      }}
-                                      className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 px-3 py-1.5 rounded-lg border border-sky-200 transition-colors cursor-pointer text-center"
-                                    >
-                                      <span>{chip.label}</span>
-                                      <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-                                    </button>
-                                  )
-                                ))}
-                              </div>
-                            )}
-
                             <div className={`text-[9px] mt-1 text-right ${msg.sender === 'user' ? 'text-sky-200' : 'text-slate-400'}`}>
                               {msg.time}
                             </div>
@@ -475,24 +391,6 @@ export default function KanayaAIAssistant({ user }) {
                         Pertanyaan Populer:
                       </div>
                       <div className="flex flex-wrap gap-1.5 mb-3">
-                        <button
-                          onClick={() => handleSendMessage('Siapa Babinsa saya dan nomor teleponnya?')}
-                          className="text-[11px] bg-sky-50 border border-sky-300 hover:bg-sky-100 text-sky-900 font-semibold px-2.5 py-1 rounded-full transition-colors"
-                        >
-                          🎖️ Babinsa & Kontak WA
-                        </button>
-                        <button
-                          onClick={() => handleSendMessage('Siapa Bhabinkamtibmas dan bagaimana nomor kontaknya?')}
-                          className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
-                        >
-                          👮 Bhabinkamtibmas Polri
-                        </button>
-                        <button
-                          onClick={() => handleSendMessage('Berapa nomor kontak darurat Sukabumi?')}
-                          className="text-[11px] bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-800 px-2.5 py-1 rounded-full transition-colors"
-                        >
-                          🚨 Kontak Darurat 112
-                        </button>
                         <button
                           onClick={() => handleSendMessage('Bagaimana cara membuat Surat Keterangan Usaha (SKU)?')}
                           className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"

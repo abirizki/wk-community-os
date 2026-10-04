@@ -39,6 +39,7 @@ export default function DayaDukungPage() {
   const [kesehatanData, setKesehatanData] = useState({ inventory: [], analysis: null });
   const [usahaData, setUsahaData] = useState({ inventory: [], analysis: null });
   const [sanitasiData, setSanitasiData] = useState(null);
+  const [keagamaanData, setKeagamaanData] = useState([]);
 
   // Filter & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,6 +49,7 @@ export default function DayaDukungPage() {
   const [showSchoolModal, setShowSchoolModal] = useState(false);
   const [showHealthModal, setShowHealthModal] = useState(false);
   const [showBizModal, setShowBizModal] = useState(false);
+  const [showIbadahModal, setShowIbadahModal] = useState(false);
 
   // Form States
   const [schoolForm, setSchoolForm] = useState({
@@ -91,16 +93,32 @@ export default function DayaDukungPage() {
     deskripsi_produk: ''
   });
 
+  const [ibadahForm, setIbadahForm] = useState({
+    nama_tempat_ibadah: '',
+    jenis_agama: 'Islam',
+    jenis_tempat_ibadah: 'Masjid',
+    alamat: '',
+    rt: user?.rt || '001',
+    rw: user?.rw || '001',
+    daya_tampung_jamaah: 250,
+    status_tanah: 'Wakaf',
+    apakah_beririsan: 0,
+    nama_pengurus_dkm: '',
+    no_kontak_pengurus: '',
+    titik_evakuasi_bencana: 1
+  });
+
   const fetchAllData = async () => {
     setLoading(true);
     setError('');
     try {
-      const [sumRes, eduRes, healthRes, bizRes, sanRes] = await Promise.allSettled([
+      const [sumRes, eduRes, healthRes, bizRes, sanRes, ibadahRes] = await Promise.allSettled([
         api.get('/fasilitas/summary'),
         api.get('/fasilitas/pendidikan'),
         api.get('/fasilitas/kesehatan'),
         api.get('/fasilitas/usaha'),
-        api.get('/fasilitas/sanitasi')
+        api.get('/fasilitas/sanitasi'),
+        api.get('/fasilitas/keagamaan')
       ]);
 
       if (sumRes.status === 'fulfilled' && sumRes.value?.data?.data) {
@@ -117,6 +135,9 @@ export default function DayaDukungPage() {
       }
       if (sanRes.status === 'fulfilled' && sanRes.value?.data?.data) {
         setSanitasiData(sanRes.value.data.data);
+      }
+      if (ibadahRes.status === 'fulfilled' && ibadahRes.value?.data?.data) {
+        setKeagamaanData(ibadahRes.value.data.data);
       }
     } catch (err) {
       setError(err.message || 'Gagal memuat data daya dukung wilayah');
@@ -154,6 +175,17 @@ export default function DayaDukungPage() {
       fetchAllData();
     } catch (err) {
       alert('Gagal mendaftar faskes: ' + err.message);
+    }
+  };
+
+  const handleCreateIbadah = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/fasilitas/keagamaan', ibadahForm);
+      setShowIbadahModal(false);
+      fetchAllData();
+    } catch (err) {
+      alert('Gagal mendaftarkan tempat ibadah: ' + err.message);
     }
   };
 
@@ -326,6 +358,18 @@ export default function DayaDukungPage() {
         >
           <Droplets size={18} />
           <span>Sanitasi & Korelasi Stunting</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('keagamaan')}
+          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+            activeTab === 'keagamaan'
+              ? 'bg-surface text-primary shadow-xs border border-outline-variant/60'
+              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface/50'
+          }`}
+        >
+          <Building2 size={18} />
+          <span>Tempat Ibadah & Evakuasi ({keagamaanData.length})</span>
         </button>
       </div>
 
@@ -949,6 +993,129 @@ export default function DayaDukungPage() {
       )}
 
       {/* =================================================================== */}
+      {/* TAB 5: SEKTOR TEMPAT IBADAH & TITIK EVAKUASI BENCANA */}
+      {/* =================================================================== */}
+      {activeTab === 'keagamaan' && (
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-on-surface">Tempat Ibadah & Titik Evakuasi Bencana</h2>
+              <p className="text-xs text-on-surface-variant mt-0.5">
+                Direktori tempat ibadah, kapasitas daya tampung jamaah, pengurus DKM, dan lokasi evakuasi darurat lintas wilayah.
+              </p>
+            </div>
+
+            {['superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw'].includes(user?.role) && (
+              <button
+                onClick={() => setShowIbadahModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs shadow-xs hover:bg-primary/90 transition"
+              >
+                <Plus size={16} />
+                <span>Daftarkan Tempat Ibadah</span>
+              </button>
+            )}
+          </div>
+
+          {/* KPI Tempat Ibadah */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-surface rounded-2xl p-4 border border-outline-variant/60 shadow-xs">
+              <span className="text-xs font-medium text-on-surface-variant">Total Tempat Ibadah</span>
+              <div className="text-2xl font-black text-on-surface mt-1">{keagamaanData.length} Fasilitas</div>
+            </div>
+            <div className="bg-surface rounded-2xl p-4 border border-outline-variant/60 shadow-xs">
+              <span className="text-xs font-medium text-on-surface-variant">Kapasitas Total Jamaah</span>
+              <div className="text-2xl font-black text-emerald-600 mt-1">
+                {keagamaanData.reduce((acc, curr) => acc + (Number(curr.daya_tampung_jamaah) || 0), 0)} Jiwa
+              </div>
+            </div>
+            <div className="bg-surface rounded-2xl p-4 border border-outline-variant/60 shadow-xs">
+              <span className="text-xs font-medium text-on-surface-variant">Masjid & Musholla</span>
+              <div className="text-2xl font-black text-blue-600 mt-1">
+                {keagamaanData.filter(i => (i.jenis_tempat_ibadah || '').toLowerCase().includes('masjid') || (i.jenis_tempat_ibadah || '').toLowerCase().includes('mushol')).length}
+              </div>
+            </div>
+            <div className="bg-surface rounded-2xl p-4 border border-outline-variant/60 shadow-xs">
+              <span className="text-xs font-medium text-on-surface-variant">Titik Evakuasi Bencana</span>
+              <div className="text-2xl font-black text-purple-600 mt-1">
+                {keagamaanData.filter(i => i.titik_evakuasi_bencana === 1 || i.titik_evakuasi_bencana === true).length} Lokasi
+              </div>
+            </div>
+          </div>
+
+          {/* Grid Fasilitas Ibadah */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {keagamaanData.map((item) => (
+              <div
+                key={item.id}
+                className="bg-surface rounded-2xl p-5 border border-outline-variant/60 shadow-xs hover:shadow-md transition flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-primary-container text-on-primary-container">
+                      {item.jenis_tempat_ibadah || 'Tempat Ibadah'}
+                    </span>
+                    {item.titik_evakuasi_bencana ? (
+                      <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                        <CheckCircle2 size={12} /> Titik Evakuasi
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <h3 className="font-bold text-base text-on-surface line-clamp-1">{item.nama_tempat_ibadah}</h3>
+                  <p className="text-xs text-on-surface-variant mt-1 flex items-center gap-1.5">
+                    <MapPin size={13} className="text-primary flex-shrink-0" />
+                    <span>{item.alamat || `RT ${item.rt}/RW ${item.rw}`}</span>
+                  </p>
+
+                  <div className="mt-3.5 pt-3 border-t border-outline-variant/40 space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-on-surface-variant">Wilayah:</span>
+                      <span className="font-semibold text-on-surface">RT {item.rt} / RW {item.rw}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-on-surface-variant">Daya Tampung:</span>
+                      <span className="font-bold text-emerald-600">{item.daya_tampung_jamaah || 100} Jamaah</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-on-surface-variant">Status Tanah:</span>
+                      <span className="font-medium text-on-surface">{item.status_tanah || 'Wakaf'}</span>
+                    </div>
+                    {item.nama_pengurus_dkm && (
+                      <div className="flex justify-between">
+                        <span className="text-on-surface-variant">Pengurus DKM:</span>
+                        <span className="font-medium text-on-surface">{item.nama_pengurus_dkm}</span>
+                      </div>
+                    )}
+                    {item.apakah_beririsan ? (
+                      <div className="mt-1">
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                          Beririsan Lintas RT/RW
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                {item.no_kontak_pengurus && (
+                  <div className="mt-4 pt-3 border-t border-outline-variant/40">
+                    <a
+                      href={`https://wa.me/${item.no_kontak_pengurus.replace(/^0/, '62').replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-surface-container-high hover:bg-surface-container-highest rounded-xl text-xs font-bold text-on-surface transition"
+                    >
+                      <Phone size={13} className="text-emerald-600" />
+                      <span>Kontak Pengurus</span>
+                    </a>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
       {/* MODAL: TAMBAH SEKOLAH */}
       {/* =================================================================== */}
       {showSchoolModal && (
@@ -1302,6 +1469,121 @@ export default function DayaDukungPage() {
                   className="px-4 py-2 rounded-xl bg-primary text-on-primary font-bold shadow-xs"
                 >
                   Daftarkan Usaha
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* MODAL: DAFTAR TEMPAT IBADAH */}
+      {/* =================================================================== */}
+      {showIbadahModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-surface rounded-3xl p-6 max-w-lg w-full border border-outline-variant shadow-xl">
+            <h3 className="text-lg font-bold text-on-surface mb-4">Pendaftaran Tempat Ibadah</h3>
+            <form onSubmit={handleCreateIbadah} className="space-y-3.5 text-xs">
+              <div>
+                <label className="font-semibold block mb-1">Nama Tempat Ibadah</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Masjid Jami' Al-Ikhlas"
+                  value={ibadahForm.nama_tempat_ibadah}
+                  onChange={(e) => setIbadahForm({ ...ibadahForm, nama_tempat_ibadah: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold block mb-1">Jenis Tempat Ibadah</label>
+                  <select
+                    value={ibadahForm.jenis_tempat_ibadah}
+                    onChange={(e) => setIbadahForm({ ...ibadahForm, jenis_tempat_ibadah: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
+                  >
+                    <option value="Masjid">Masjid Jami'</option>
+                    <option value="Musholla">Musholla</option>
+                    <option value="Gereja">Gereja</option>
+                    <option value="Vihara">Vihara</option>
+                    <option value="Pura">Pura</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">Daya Tampung Jamaah</label>
+                  <input
+                    type="number"
+                    min="10"
+                    value={ibadahForm.daya_tampung_jamaah}
+                    onChange={(e) => setIbadahForm({ ...ibadahForm, daya_tampung_jamaah: parseInt(e.target.value) || 0 })}
+                    className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-semibold block mb-1">Alamat Lengkap</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Jl. Surya Kencana No..."
+                  value={ibadahForm.alamat}
+                  onChange={(e) => setIbadahForm({ ...ibadahForm, alamat: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold block mb-1">Nama Pengurus DKM</label>
+                  <input
+                    type="text"
+                    placeholder="Nama Ketua DKM"
+                    value={ibadahForm.nama_pengurus_dkm}
+                    onChange={(e) => setIbadahForm({ ...ibadahForm, nama_pengurus_dkm: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">Kontak Pengurus (No. HP/WA)</label>
+                  <input
+                    type="text"
+                    placeholder="0812..."
+                    value={ibadahForm.no_kontak_pengurus}
+                    onChange={(e) => setIbadahForm({ ...ibadahForm, no_kontak_pengurus: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="evakuasiCheck"
+                  checked={ibadahForm.titik_evakuasi_bencana === 1}
+                  onChange={(e) => setIbadahForm({ ...ibadahForm, titik_evakuasi_bencana: e.target.checked ? 1 : 0 })}
+                  className="rounded border-outline-variant text-primary"
+                />
+                <label htmlFor="evakuasiCheck" className="text-xs text-on-surface cursor-pointer">
+                  Fasilitas ini dapat digunakan sebagai Titik Evakuasi Darurat Bencana
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowIbadahModal(false)}
+                  className="px-4 py-2 rounded-xl border border-outline-variant font-semibold"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-primary text-on-primary font-bold shadow-xs"
+                >
+                  Daftarkan Tempat Ibadah
                 </button>
               </div>
             </form>
