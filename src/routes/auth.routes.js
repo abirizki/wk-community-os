@@ -398,6 +398,29 @@ router.post('/login', async (req, res) => {
       console.warn('[Auth] Error checking aparatur for NIK:', errApa.message);
     }
 
+    // Jika akun memiliki peran jabatan struktural tapi belum terdaftar di aparatur_kelurahan, bentuk info jabatan dinamis
+    if (!officialRoleInfo && user && ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'kader_posyandu'].includes(user.role)) {
+      let titleJabatan = 'Aparatur Wilayah';
+      if (user.role === 'ketua_rt') titleJabatan = `Ketua RT ${user.rt || '001'}`;
+      else if (user.role === 'ketua_rw') titleJabatan = `Ketua RW ${user.rw || '001'}`;
+      else if (user.role === 'kader_posyandu') titleJabatan = 'Kader Posyandu';
+      else if (user.role === 'lurah') titleJabatan = 'Lurah Kebonjati';
+      else if (user.role === 'admin_kelurahan') titleJabatan = 'Admin Kelurahan';
+
+      officialRoleInfo = {
+        has_official_role: true,
+        official_id: user.id,
+        kategori: user.role === 'ketua_rt' ? 'RT' : user.role === 'ketua_rw' ? 'RW' : 'KELURAHAN',
+        jabatan: titleJabatan,
+        mapped_role: user.role,
+        wilayah_rw: user.rw || '001',
+        wilayah_rt: user.rt || (user.role === 'ketua_rt' ? '001' : null),
+        kelurahan: user.kelurahan || 'Kebonjati',
+        kecamatan: user.kecamatan || 'Cikole',
+        kota: user.kota || 'Kota Sukabumi'
+      };
+    }
+
     // Tentukan initial role: jika memiliki jabatan resmi dan user role default warga, aktifkan mode jabatan
     let assignedRole = user ? (user.role === 'admin' ? 'admin_kelurahan' : user.role) : 'warga';
     if (officialRoleInfo && assignedRole === 'warga') {
@@ -574,8 +597,186 @@ router.get('/family-members', async (req, res) => {
 });
 
 /**
+ * Helper verifikasi PIN Jabatan 6-digit untuk Aparatur/RT/RW
+ */
+async function verifyUserPin(userId, inputPin) {
+  if (!inputPin) return false;
+  const cleanPin = String(inputPin).trim();
+  
+  if (userId) {
+    try {
+      const [rows] = await pool.execute('SELECT pin_jabatan FROM users WHERE id = ? LIMIT 1', [userId]);
+      if (rows.length > 0 && rows[0].pin_jabatan) {
+        return await bcrypt.compare(cleanPin, rows[0].pin_jabatan);
+      }
+    } catch (e) {
+      console.warn('[Auth] Pin query error:', e.message);
+    }
+  }
+
+  // Fallback default PIN untuk akun kepengurusan jika belum diubah: 123456
+  return cleanPin === '123456';
+}
+
+/**
+ * GET /api/auth/pin-status
+ * Status proteksi PIN Jabatan untuk Meja Kerja
+ */
+router.get('/pin-status', (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ success: false, message: 'Sesi tidak aktif' });
+  }
+
+  const user = req.session.user;
+  const unlockedAt = req.session.pin_unlocked_at;
+  const isUnlocked = Boolean(unlockedAt && (Date.now() - unlockedAt < 30 * 60 * 1000));
+  const remainingSeconds = isUnlocked ? Math.max(0, Math.floor((30 * 60 * 1000 - (Date.now() - unlockedAt)) / 1000)) : 0;
+
+  return res.json({
+    success: true,
+    has_official_role: Boolean(user.has_official_role),
+    active_persona: user.active_persona || 'citizen',
+    is_unlocked: isUnlocked,
+    remaining_seconds: remainingSeconds
+  });
+});
+
+/**
+ * POST /api/auth/verify-pin
+ * Verifikasi 6-Digit PIN Jabatan untuk membuka Meja Kerja RT/RW
+ */
+router.post('/verify-pin', async (req, res) => {
+  try {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ success: false, message: 'Harap login terlebih dahulu.' });
+    }
+
+    const { pin } = req.body;
+    if (!pin) {
+      return res.status(400).json({ success: false, message: 'PIN Jabatan wajib diisi.' });
+    }
+
+    const user = req.session.user;
+    const isValid = await verifyUserPin(user.id, pin);
+
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: 'PIN Jabatan salah. Silakan coba kembali.' });
+    }
+
+    // Beri akses tidak terkunci selama 30 menit
+    req.session.pin_unlocked_at = Date.now();
+    
+    // Jika user memiliki jabatan resmi, aktifkan mode jabatan
+    if (user.has_official_role && user.official_role_info) {
+      user.active_persona = 'official';
+      user.role = user.official_role_info.mapped_role;
+      if (user.official_role_info.wilayah_rw) user.rw = user.official_role_info.wilayah_rw;
+      if (user.official_role_info.wilayah_rt) user.rt = user.official_role_info.wilayah_rt;
+      req.session.user = user;
+    }
+
+    req.session.save((err) => {
+      if (err) console.warn('[Auth] Session save warn on verify-pin:', err.message);
+      return res.json({
+        success: true,
+        message: 'PIN Jabatan terverifikasi. Meja Kerja resmi dibuka.',
+        user: req.session.user,
+        expires_in_minutes: 30
+      });
+    });
+  } catch (error) {
+    console.error('[Auth] Verify PIN error:', error);
+    return res.status(500).json({ success: false, message: 'Gagal memverifikasi PIN.' });
+  }
+});
+
+/**
+ * POST /api/auth/set-pin
+ * Mengubah atau mengatur PIN Jabatan 6-digit
+ */
+router.post('/set-pin', async (req, res) => {
+  try {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ success: false, message: 'Harap login terlebih dahulu.' });
+    }
+
+    const { current_pin, new_pin, confirm_pin } = req.body;
+    const user = req.session.user;
+
+    if (!new_pin || !confirm_pin) {
+      return res.status(400).json({ success: false, message: 'PIN baru dan konfirmasi PIN wajib diisi.' });
+    }
+
+    if (new_pin !== confirm_pin) {
+      return res.status(400).json({ success: false, message: 'Konfirmasi PIN tidak cocok.' });
+    }
+
+    if (!/^\d{6}$/.test(String(new_pin).trim())) {
+      return res.status(400).json({ success: false, message: 'PIN Jabatan harus terdiri tepat dari 6 digit angka.' });
+    }
+
+    // Verifikasi PIN saat ini (kecuali jika belum pernah diatur)
+    if (current_pin) {
+      const isValid = await verifyUserPin(user.id, current_pin);
+      if (!isValid) {
+        return res.status(400).json({ success: false, message: 'PIN saat ini tidak cocok.' });
+      }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const pinHash = await bcrypt.hash(String(new_pin).trim(), salt);
+
+    if (user.id) {
+      await pool.execute(
+        'UPDATE users SET pin_jabatan = ?, pin_updated_at = NOW() WHERE id = ?',
+        [pinHash, user.id]
+      );
+    }
+
+    req.session.pin_unlocked_at = Date.now();
+
+    return res.json({
+      success: true,
+      message: 'PIN Jabatan 6-digit berhasil diperbarui.'
+    });
+  } catch (error) {
+    console.error('[Auth] Set PIN error:', error);
+    return res.status(500).json({ success: false, message: 'Gagal mengatur PIN Jabatan.' });
+  }
+});
+
+/**
+ * POST /api/auth/lock-pin
+ * Kunci instan Meja Kerja (kembali ke Mode Warga Mandiri untuk perlindungan privasi keluarga)
+ */
+router.post('/lock-pin', (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ success: false, message: 'Harap login terlebih dahulu.' });
+  }
+
+  req.session.pin_unlocked_at = null;
+  const user = req.session.user;
+
+  if (user.has_official_role) {
+    user.active_persona = 'citizen';
+    user.role = 'warga';
+    req.session.user = user;
+  }
+
+  req.session.save((err) => {
+    if (err) console.warn('[Auth] Session save warn on lock-pin:', err.message);
+    return res.json({
+      success: true,
+      message: 'Meja Kerja Jabatan berhasil dikunci. Anda kini berada dalam Mode Warga Mandiri.',
+      user: req.session.user
+    });
+  });
+});
+
+/**
  * POST /api/auth/switch-persona
  * Beralih instan antara Mode Pejabat (RT/RW/Posyandu) dan Mode Warga Mandiri
+ * Proteksi PIN 6-digit jika beralih ke Mode Pejabat
  */
 router.post('/switch-persona', async (req, res) => {
   try {
@@ -583,7 +784,7 @@ router.post('/switch-persona', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Harap login terlebih dahulu.' });
     }
 
-    const { mode } = req.body; // 'official' | 'citizen'
+    const { mode, pin } = req.body; // 'official' | 'citizen'
     const user = req.session.user;
 
     if (!user.has_official_role || !user.official_role_info) {
@@ -594,6 +795,29 @@ router.post('/switch-persona', async (req, res) => {
     }
 
     if (mode === 'official') {
+      // Periksa apakah sesi Meja Kerja sudah tidak terkunci dalam 30 menit terakhir
+      const isUnlocked = req.session.pin_unlocked_at && (Date.now() - req.session.pin_unlocked_at < 30 * 60 * 1000);
+
+      if (!isUnlocked) {
+        if (!pin) {
+          return res.status(403).json({
+            success: false,
+            require_pin: true,
+            message: 'Masukkan PIN Jabatan 6-digit untuk membuka Meja Kerja.'
+          });
+        }
+
+        const isValid = await verifyUserPin(user.id, pin);
+        if (!isValid) {
+          return res.status(400).json({
+            success: false,
+            message: 'PIN Jabatan tidak cocok. Akses Meja Kerja ditolak.'
+          });
+        }
+
+        req.session.pin_unlocked_at = Date.now();
+      }
+
       user.active_persona = 'official';
       user.role = user.official_role_info.mapped_role;
       if (user.official_role_info.wilayah_rw) user.rw = user.official_role_info.wilayah_rw;
@@ -601,6 +825,7 @@ router.post('/switch-persona', async (req, res) => {
     } else if (mode === 'citizen') {
       user.active_persona = 'citizen';
       user.role = 'warga';
+      req.session.pin_unlocked_at = null; // Kunci kembali meja kerja saat keluar
     } else {
       return res.status(400).json({ success: false, message: 'Mode persona tidak valid (pilih "official" atau "citizen").' });
     }
@@ -611,7 +836,7 @@ router.post('/switch-persona', async (req, res) => {
       return res.json({
         success: true,
         message: mode === 'official' 
-          ? `Beralih ke Mode Pejabat: ${user.official_role_info.jabatan}` 
+          ? `Beralih ke Meja Kerja Jabatan: ${user.official_role_info.jabatan}` 
           : 'Beralih ke Mode Warga Mandiri',
         user
       });

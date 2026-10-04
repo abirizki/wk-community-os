@@ -205,6 +205,29 @@ class DokumenService {
     const rt = targetWarga ? targetWarga.rt : (userWarga ? userWarga.rt : (currentUser.rt || '001'));
     const rw = targetWarga ? targetWarga.rw : (userWarga ? userWarga.rw : (currentUser.rw || '001'));
 
+    // Deteksi Layanan Dampingan Warga (Oleh RT atau RW)
+    const isAssisted = Boolean(payload.is_assisted_submission || (currentUser.role !== 'warga' && isDiajukanUntukKeluarga && cleanRequestedNik !== activeNik));
+    let initialStatus = 'SUBMITTED';
+    let initialStep = 'RT';
+    let approvedByRt = null;
+    let approvedByRw = null;
+    let catatanPetugas = null;
+
+    if (isAssisted) {
+      if (currentUser.role === 'ketua_rt') {
+        initialStatus = 'VERIFYING';
+        initialStep = 'RW';
+        approvedByRt = currentUser.id;
+        catatanPetugas = 'Diajukan & diverifikasi langsung oleh Ketua RT (Loket Dampingan Warga Tanpa Gadget/Lansia)';
+      } else if (currentUser.role === 'ketua_rw' || currentUser.role === 'admin_rw') {
+        initialStatus = 'VERIFYING';
+        initialStep = 'KELURAHAN';
+        approvedByRt = currentUser.id;
+        approvedByRw = currentUser.id;
+        catatanPetugas = 'Diajukan & diverifikasi langsung oleh Ketua RW (Loket Dampingan Warga Tanpa Gadget/Lansia)';
+      }
+    }
+
     const result = await dokumenRepository.create({
       nik_pemohon: targetNik,
       diajukan_oleh_nik: isDiajukanUntukKeluarga ? activeNik : null,
@@ -217,17 +240,26 @@ class DokumenService {
       rt,
       rw,
       is_auto_filled_by_ai: Boolean(is_auto_filled_by_ai),
-      acted_by_user_id: currentUser.id
+      acted_by_user_id: currentUser.id,
+      is_assisted_submission: isAssisted ? 1 : 0,
+      assisted_by_user_id: isAssisted ? currentUser.id : null,
+      status: initialStatus,
+      approval_step: initialStep,
+      approved_by_rt: approvedByRt,
+      approved_by_rw: approvedByRw,
+      catatan_petugas: catatanPetugas
     });
 
     // Kirim notifikasi konfirmasi ke pemohon
     try {
       await notifikasiRepository.create({
-        nik_target: activeNik,
-        judul: 'Permohonan Surat Diajukan',
-        pesan: isDiajukanUntukKeluarga 
-          ? `Permohonan ${jenis_dokumen} untuk anggota keluarga an. ${targetNama} (${targetHubungan}) berhasil diajukan dan sedang menunggu verifikasi Ketua RT ${rt}.`
-          : `Permohonan ${jenis_dokumen} berhasil diajukan dan sedang menunggu verifikasi Ketua RT ${rt}.`,
+        nik_target: targetNik,
+        judul: isAssisted ? 'Permohonan Dampingan Diajukan' : 'Permohonan Surat Diajukan',
+        pesan: isAssisted 
+          ? `Permohonan ${jenis_dokumen} telah diajukan melalui Loket Dampingan oleh aparatur dan langsung diteruskan ke tahap ${initialStep}.`
+          : (isDiajukanUntukKeluarga 
+            ? `Permohonan ${jenis_dokumen} untuk anggota keluarga an. ${targetNama} (${targetHubungan}) berhasil diajukan dan sedang menunggu verifikasi Ketua RT ${rt}.`
+            : `Permohonan ${jenis_dokumen} berhasil diajukan dan sedang menunggu verifikasi Ketua RT ${rt}.`),
         tipe: 'info',
         link: '/dashboard/dokumen'
       });
@@ -243,7 +275,9 @@ class DokumenService {
       diajukan_oleh_nik: isDiajukanUntukKeluarga ? activeNik : null,
       hubungan_keluarga: targetHubungan,
       ...payload,
-      status: 'SUBMITTED',
+      status: initialStatus,
+      approval_step: initialStep,
+      is_assisted_submission: isAssisted,
       created_at: new Date()
     };
   }
@@ -518,6 +552,86 @@ class DokumenService {
     }
 
     throw new Error('Peran Anda tidak memiliki wewenang untuk menyetujui dokumen ini.');
+  }
+
+  /**
+   * Protokol Kedaruratan: Bypass Verifikasi RT oleh Ketua RW
+   * Digunakan saat Ketua RT berhalangan (sakit/bepergian) dan berkas bersifat darurat (ICU, Kematian, Bansos Darurat)
+   */
+  async emergencyBypassRT(id, currentUser, emergencyReason, pin = null) {
+    const { role } = currentUser;
+    if (!['ketua_rw', 'admin_rw', 'superadmin', 'admin'].includes(role)) {
+      const err = new Error('Hanya Ketua RW yang memiliki wewenang untuk melakukan bypass darurat tingkat RT.');
+      err.status = 403;
+      throw err;
+    }
+
+    if (!emergencyReason || emergencyReason.trim().length < 5) {
+      const err = new Error('Alasan kedaruratan wajib diisi minimal 5 karakter untuk keperluan audit akuntabilitas publik.');
+      err.status = 400;
+      throw err;
+    }
+
+    const doc = await dokumenRepository.findById(id);
+    if (!doc) {
+      const err = new Error('Dokumen tidak ditemukan.');
+      err.status = 404;
+      throw err;
+    }
+
+    if (doc.status === 'APPROVED' || doc.status === 'REJECTED') {
+      throw new Error('Dokumen ini sudah selesai diproses dan tidak dapat di-bypass.');
+    }
+
+    if (doc.approval_step !== 'RT') {
+      throw new Error(`Dokumen ini saat ini berada pada tahap ${doc.approval_step}, bukan tahap RT.`);
+    }
+
+    // Pastikan RW sesuai dengan wilayah pemohon (kecuali superadmin)
+    if (role !== 'superadmin' && currentUser.rw && doc.rw && String(currentUser.rw).padStart(3, '0') !== String(doc.rw).padStart(3, '0')) {
+      const err = new Error(`Anda hanya berwenang membypass dokumen di RW ${currentUser.rw}. Dokumen ini berada di RW ${doc.rw}.`);
+      err.status = 403;
+      throw err;
+    }
+
+    const noteBypass = `[BYPASS DARURAT RW ${currentUser.rw || doc.rw}] ${emergencyReason.trim()}`;
+
+    await dokumenRepository.updateApproval(id, {
+      status: 'VERIFYING',
+      approval_step: 'KELURAHAN',
+      approved_by_rt: currentUser.id,
+      approved_by_rw: currentUser.id,
+      catatan_petugas: noteBypass,
+      is_emergency_bypass: 1,
+      emergency_reason: emergencyReason.trim(),
+      bypassed_by_user_id: currentUser.id,
+      from_step: 'RT',
+      acted_by_user_id: currentUser.id,
+      acted_by_role: 'ketua_rw',
+      action: 'EMERGENCY_BYPASS',
+      notes: noteBypass
+    });
+
+    // Kirim notifikasi penting ke warga pemohon
+    try {
+      await notifikasiRepository.create({
+        nik_target: doc.nik_pemohon,
+        judul: 'Pemberitahuan: Jalur Kedaruratan RW Diaktifkan',
+        pesan: `Permohonan surat ${doc.jenis_dokumen} Anda telah diverifikasi secara darurat oleh Ketua RW ${doc.rw} (Alasan: ${emergencyReason}) dan telah diteruskan langsung ke Kelurahan.`,
+        tipe: 'warning',
+        link: '/dashboard/dokumen'
+      });
+    } catch (e) {
+      console.warn('Gagal notifikasi bypass darurat:', e.message);
+    }
+
+    return {
+      success: true,
+      step: 'KELURAHAN',
+      status: 'VERIFYING',
+      is_emergency_bypass: true,
+      message: `Protokol bypass darurat berhasil dieksekusi. Berkas diteruskan langsung ke Kelurahan Kebonjati.`
+    };
   }
 
   /**

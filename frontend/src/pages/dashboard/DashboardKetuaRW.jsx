@@ -53,9 +53,13 @@ import {
   Layers,
   Send,
   BedDouble,
-  GraduationCap
+  GraduationCap,
+  Zap,
+  HeartHandshake
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AssistedSubmissionModal from '../../components/AssistedSubmissionModal';
+import EmergencyBypassModal from '../../components/EmergencyBypassModal';
 
 export default function DashboardKetuaRW() {
   const { user } = useAuth();
@@ -74,8 +78,12 @@ export default function DashboardKetuaRW() {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // 1. Antrean Dokumen Terusan RT
+  // 1. Antrean Dokumen Terusan RT & Emergency RT Queue
   const [dokumenList, setDokumenList] = useState([]);
+  const [pendingRtDocs, setPendingRtDocs] = useState([]);
+  const [suratSubView, setSuratSubView] = useState('ready_rw'); // 'ready_rw' | 'emergency_rt'
+  const [showAssistedModal, setShowAssistedModal] = useState(false);
+  const [bypassDoc, setBypassDoc] = useState(null);
   const [docSearch, setDocSearch] = useState('');
   const [agingSort, setAgingSort] = useState('oldest'); // 'oldest' (SLA first) | 'newest'
 
@@ -120,10 +128,15 @@ export default function DashboardKetuaRW() {
     setIsLoading(true);
     setError(null);
     try {
-      // 1. Antrean Dokumen RW
-      const docRes = await api.get('/dokumen?approval_step=RW');
+      // 1. Antrean Dokumen RW & Dokumen yang masih di tingkat RT (untuk protokol bypass darurat)
+      const [docRes, rtDocRes] = await Promise.all([
+        api.get('/dokumen?approval_step=RW').catch(() => ({ data: [] })),
+        api.get('/dokumen?approval_step=RT').catch(() => ({ data: [] }))
+      ]);
       const docs = docRes?.data || [];
+      const rtDocs = rtDocRes?.data || [];
       setDokumenList(Array.isArray(docs) ? docs : []);
+      setPendingRtDocs(Array.isArray(rtDocs) ? rtDocs : []);
 
       // 2. Rekap Antar-RT (Scorecard) & KPI RW
       const [rekapRes, kpiRes] = await Promise.all([
@@ -177,9 +190,11 @@ export default function DashboardKetuaRW() {
     return Array.from(set).sort();
   }, [scorecardData, dokumenList]);
 
-  // Filtered Dokumen List
+  // Filtered Dokumen List (Mendukung Antrean Terusan RW & Antrean Darurat RT)
+  const activeDocSource = suratSubView === 'emergency_rt' ? pendingRtDocs : dokumenList;
+
   const filteredDokumen = useMemo(() => {
-    return dokumenList.filter(doc => {
+    return activeDocSource.filter(doc => {
       const matchRT = selectedRT === 'all' || doc.rt === selectedRT;
       const q = docSearch.toLowerCase();
       const matchSearch = !q || 
@@ -193,7 +208,7 @@ export default function DashboardKetuaRW() {
       const dateB = new Date(b.created_at || b.tanggal_pengajuan || 0);
       return agingSort === 'oldest' ? dateA - dateB : dateB - dateA;
     });
-  }, [dokumenList, selectedRT, docSearch, agingSort]);
+  }, [activeDocSource, selectedRT, docSearch, agingSort]);
 
   // Hitung SLA (SOP RW: 4 jam kerja)
   const calculateSLA = (createdAt) => {
@@ -461,6 +476,42 @@ export default function DashboardKetuaRW() {
         <div className="space-y-4">
           {/* Controls Bar: Multi-RT Pill Switcher & Search */}
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            {/* Sub-view Switcher & Loket Dampingan */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSuratSubView('ready_rw')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    suratSubView === 'ready_rw'
+                      ? 'bg-emerald-700 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Siap Verifikasi RW ({dokumenList.length})
+                </button>
+                <button
+                  onClick={() => setSuratSubView('emergency_rt')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    suratSubView === 'emergency_rt'
+                      ? 'bg-rose-600 text-white shadow-sm'
+                      : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+                  }`}
+                >
+                  <Zap size={13} className="text-amber-300" />
+                  <span>Antrean di RT / Jalur Darurat ({pendingRtDocs.length})</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowAssistedModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
+              >
+                <HeartHandshake size={14} />
+                <span>+ Loket Dampingan Warga</span>
+              </button>
+            </div>
+
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               {/* Multi-RT Pills */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
@@ -566,6 +617,21 @@ export default function DashboardKetuaRW() {
                           <span className="px-2 py-0.5 rounded-md text-xs font-mono font-medium bg-slate-100 text-slate-700">
                             {doc.nomor_registrasi || `REQ-#${doc.id}`}
                           </span>
+
+                          {/* Dampingan & Bypass Badges */}
+                          {Boolean(doc.is_assisted_submission) && (
+                            <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200 inline-flex items-center gap-1">
+                              <HeartHandshake className="w-3 h-3 text-purple-600" />
+                              <span>Loket Dampingan</span>
+                            </span>
+                          )}
+                          {Boolean(doc.is_emergency_bypass) && (
+                            <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 inline-flex items-center gap-1">
+                              <Zap className="w-3 h-3 text-rose-600" />
+                              <span>Bypass Darurat RW</span>
+                            </span>
+                          )}
+
                           {/* SLA Badge */}
                           <span className={`px-2 py-0.5 rounded-md text-xs font-mono font-semibold inline-flex items-center gap-1 ${
                             sla.expired 
@@ -604,7 +670,7 @@ export default function DashboardKetuaRW() {
 
                         <div className="flex items-center gap-2 text-xs text-slate-400">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Telah disetujui Ketua RT {doc.rt}</span>
+                          <span>{suratSubView === 'emergency_rt' ? 'Menunggu verifikasi RT (dapat di-bypass jika darurat)' : `Telah disetujui Ketua RT ${doc.rt}`}</span>
                           <span>•</span>
                           <span>{new Date(doc.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
@@ -621,33 +687,46 @@ export default function DashboardKetuaRW() {
                         </button>
 
                         <div className="flex items-center gap-1.5 w-full lg:w-auto">
-                          <button
-                            onClick={() => handleApprove(doc.id)}
-                            disabled={isProcessingDoc}
-                            className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-sm disabled:opacity-50"
-                            title="Setujui & Teruskan ke Loket Kelurahan"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                            <span>Setujui (RW)</span>
-                          </button>
+                          {suratSubView === 'emergency_rt' ? (
+                            <button
+                              onClick={() => setBypassDoc(doc)}
+                              className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition-all shadow-sm active:scale-95 whitespace-nowrap"
+                              title="Bypass verifikasi RT karena kondisi darurat mendesak"
+                            >
+                              <Zap className="w-3.5 h-3.5 text-amber-300" />
+                              <span>Bypass Darurat (Lewati RT)</span>
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleApprove(doc.id)}
+                                disabled={isProcessingDoc}
+                                className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-sm disabled:opacity-50"
+                                title="Setujui & Teruskan ke Loket Kelurahan"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>Setujui (RW)</span>
+                              </button>
 
-                          <button
-                            onClick={() => setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' })}
-                            disabled={isProcessingDoc}
-                            className="p-2 rounded-lg text-amber-700 hover:bg-amber-50 border border-amber-200 transition-colors"
-                            title="Kembalikan untuk Perbaikan"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                          </button>
+                              <button
+                                onClick={() => setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' })}
+                                disabled={isProcessingDoc}
+                                className="p-2 rounded-lg text-amber-700 hover:bg-amber-50 border border-amber-200 transition-colors"
+                                title="Kembalikan untuk Perbaikan"
+                              >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                              </button>
 
-                          <button
-                            onClick={() => setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' })}
-                            disabled={isProcessingDoc}
-                            className="p-2 rounded-lg text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors"
-                            title="Tolak Permohonan"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
+                              <button
+                                onClick={() => setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' })}
+                                disabled={isProcessingDoc}
+                                className="p-2 rounded-lg text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors"
+                                title="Tolak Permohonan"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1511,6 +1590,31 @@ export default function DashboardKetuaRW() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Modal Loket Dampingan Warga */}
+      <AssistedSubmissionModal
+        isOpen={showAssistedModal}
+        onClose={() => setShowAssistedModal(false)}
+        onSuccess={() => {
+          setSuccessMsg('Surat dampingan warga berhasil diajukan dan diverifikasi hingga tingkat RW!');
+          setTimeout(() => setSuccessMsg(''), 4000);
+          fetchData();
+        }}
+        currentRole="ketua_rw"
+        rw={rwNomor}
+      />
+
+      {/* Modal Protokol Kedaruratan Bypass RT */}
+      <EmergencyBypassModal
+        isOpen={Boolean(bypassDoc)}
+        onClose={() => setBypassDoc(null)}
+        onSuccess={() => {
+          setSuccessMsg('Protokol kedaruratan berhasil dieksekusi. Berkas diteruskan langsung ke Kelurahan!');
+          setTimeout(() => setSuccessMsg(''), 4000);
+          fetchData();
+        }}
+        doc={bypassDoc}
+      />
     </div>
   );
 }

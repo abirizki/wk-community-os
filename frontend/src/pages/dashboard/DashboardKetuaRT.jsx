@@ -66,6 +66,7 @@ import {
   Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AssistedSubmissionModal from '../../components/AssistedSubmissionModal';
 
 export default function DashboardKetuaRT() {
   const { user } = useAuth();
@@ -97,6 +98,7 @@ export default function DashboardKetuaRT() {
   const [processingId, setProcessingId] = useState(null);
 
   // Modal Aksi SOP (Revisi & Tolak)
+  const [showAssistedModal, setShowAssistedModal] = useState(false);
   const [actionModal, setActionModal] = useState({
     isOpen: false,
     type: '', // 'REVISE' | 'REJECT'
@@ -767,6 +769,16 @@ export default function DashboardKetuaRT() {
                 <span>
                   {sortBy === 'aging_desc' ? 'Paling Lama Diajukan' : 'Paling Baru Diajukan'}
                 </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAssistedModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
+                title="Bantu warga yang kesulitan internet / lansia untuk mengajukan surat"
+              >
+                <Plus size={14} />
+                <span>+ Loket Dampingan Warga</span>
               </button>
 
               <button
@@ -1842,6 +1854,20 @@ export default function DashboardKetuaRT() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Modal Loket Dampingan Warga */}
+      <AssistedSubmissionModal
+        isOpen={showAssistedModal}
+        onClose={() => setShowAssistedModal(false)}
+        onSuccess={() => {
+          setActionSuccessToast('Surat dampingan warga berhasil diajukan dan diverifikasi!');
+          setTimeout(() => setActionSuccessToast(''), 4000);
+          loadRTData();
+        }}
+        currentRole="ketua_rt"
+        rt={rtNomor}
+        rw={rwNomor}
+      />
     </DashboardShell>
   );
 }

@@ -58,4 +58,69 @@ router.get('/role-brief', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/analytics/demografi - Analisis Demografi Visual (Piramida, Profesi, Agama, & Matriks RT)
+router.get('/demografi', requireAuth, async (req, res) => {
+  try {
+    const analyticsRepo = require('../repositories/analytics.repository');
+    const user = req.session.user;
+    const scope = {};
+
+    if (user.role === 'ketua_rt') {
+      scope.rt = user.rt;
+      scope.rw = user.rw;
+    } else if (user.role === 'ketua_rw' || user.role === 'admin_rw') {
+      scope.rw = user.rw;
+      if (req.query.rt && req.query.rt !== 'all') scope.rt = req.query.rt;
+    } else {
+      if (req.query.rw && req.query.rw !== 'all') scope.rw = req.query.rw;
+      if (req.query.rt && req.query.rt !== 'all') scope.rt = req.query.rt;
+    }
+
+    const data = await analyticsRepo.getDetailedDemographics(scope);
+    res.json({
+      success: true,
+      scope,
+      data
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Gagal memuat analisis demografi'
+    });
+  }
+});
+
+// GET /api/analytics/dokumen - Visualisasi Pengajuan Surat: Tren Deret Waktu & Kategori
+router.get('/dokumen', requireAuth, async (req, res) => {
+  try {
+    const analyticsRepo = require('../repositories/analytics.repository');
+    const user = req.session.user;
+    const scope = {};
+    const period = req.query.period || '30d';
+
+    if (user.role === 'ketua_rt') {
+      scope.rt = user.rt;
+      scope.rw = user.rw;
+    } else if (user.role === 'ketua_rw' || user.role === 'admin_rw') {
+      scope.rw = user.rw;
+      if (req.query.rt && req.query.rt !== 'all') scope.rt = req.query.rt;
+    } else {
+      if (req.query.rw && req.query.rw !== 'all') scope.rw = req.query.rw;
+      if (req.query.rt && req.query.rt !== 'all') scope.rt = req.query.rt;
+    }
+
+    const data = await analyticsRepo.getDocumentTimeSeriesAnalytics(scope, period);
+    res.json({
+      success: true,
+      scope,
+      data
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Gagal memuat visualisasi analitik surat'
+    });
+  }
+});
+
 module.exports = router;

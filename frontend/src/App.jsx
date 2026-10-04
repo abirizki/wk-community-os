@@ -25,6 +25,7 @@ import KeuanganPage from './pages/KeuanganPage';
 import AparaturPage from './pages/AparaturPage';
 import VerifySuratPage from './pages/VerifySuratPage';
 import ScannerPage from './pages/ScannerPage';
+import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
             <Route path="desil" element={<DesilPage />} />
             <Route path="data-maturity" element={<DataMaturityPage />} />
             <Route path="daya-dukung" element={<DayaDukungPage />} />
+            <Route path="analitik" element={<AnalyticsDashboardPage />} />
             <Route path="pbb" element={<PBBPage />} />
             <Route path="keuangan" element={<KeuanganPage />} />
             <Route path="posyandu" element={<PosyanduPage />} />

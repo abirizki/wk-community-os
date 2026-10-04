@@ -6,8 +6,10 @@
  */
 
 const pool = require('./pool');
+const bcrypt = require('bcryptjs');
 
 const STANDARD_PASSWORD_HASH = '$2b$10$hN5MqJELAnUdVw3eoFGBgObO9O5oF/eCGw3rLk6SJv/B4ZMJ7ev3q'; // BumiWarga@2026
+const DEFAULT_PIN_HASH = bcrypt.hashSync('123456', 10); // Default PIN: 123456
 
 const STANDARD_ACCOUNTS = [
   // 1. Eksekutif & Diskominfo
@@ -62,18 +64,30 @@ async function autoPatchDatabase() {
       await connection.query("ALTER TABLE users MODIFY COLUMN username VARCHAR(50) NOT NULL");
     } catch (e) {}
 
-    const userColumns = ['rt', 'rw', 'last_login_at', 'must_change_password', 'kode_kecamatan', 'kode_kelurahan'];
+    const userColumns = ['rt', 'rw', 'last_login_at', 'must_change_password', 'kode_kecamatan', 'kode_kelurahan', 'pin_jabatan', 'pin_updated_at'];
     for (const col of userColumns) {
       try {
         if (col === 'last_login_at') {
           await connection.query("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP NULL DEFAULT NULL");
         } else if (col === 'must_change_password') {
           await connection.query("ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) DEFAULT 0");
+        } else if (col === 'pin_jabatan') {
+          await connection.query("ALTER TABLE users ADD COLUMN pin_jabatan VARCHAR(255) NULL");
+        } else if (col === 'pin_updated_at') {
+          await connection.query("ALTER TABLE users ADD COLUMN pin_updated_at TIMESTAMP NULL DEFAULT NULL");
         } else {
           await connection.query(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(50) NULL`);
         }
       } catch (e) {}
     }
+
+    // Default PIN Jabatan Seeder untuk akun kepengurusan
+    try {
+      await connection.query(
+        "UPDATE users SET pin_jabatan = ? WHERE pin_jabatan IS NULL AND role IN ('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin')",
+        [DEFAULT_PIN_HASH]
+      );
+    } catch (e) {}
 
     // 2. Pastikan tabel warga memiliki kolom user_id, hubungan keluarga, dan jaminan sosial
     const wargaColumns = [
@@ -366,7 +380,12 @@ async function autoPatchDatabase() {
       'nama_subjek VARCHAR(150) NULL',
       'hubungan_keluarga VARCHAR(50) NULL',
       'data_tambahan TEXT NULL',
-      'syarat_berkas TEXT NULL'
+      'syarat_berkas TEXT NULL',
+      'is_emergency_bypass TINYINT(1) DEFAULT 0',
+      'emergency_reason TEXT NULL',
+      'bypassed_by_user_id INT NULL',
+      'is_assisted_submission TINYINT(1) DEFAULT 0',
+      'assisted_by_user_id INT NULL'
     ];
     for (const def of dokCols) {
       try {
@@ -962,400 +981,6 @@ async function autoPatchDatabase() {
       }
     } catch (e) {
       console.warn('[AutoPatch] CREATE aparatur_kelurahan note:', e.message);
-    }
-
-    // 18. Tabel PBB (Pajak Bumi dan Bangunan) - Penambahan Kolom dan Seeder Komprehensif
-    try {
-      await connection.query(`
-        CREATE TABLE IF NOT EXISTS \`pbb\` (
-          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
-          \`nop\` VARCHAR(30) NOT NULL,
-          \`nik_warga\` VARCHAR(32) NOT NULL,
-          \`nama_wajib_pajak\` VARCHAR(150) NULL,
-          \`alamat_objek_pajak\` VARCHAR(255) NULL,
-          \`rt\` VARCHAR(5) NOT NULL DEFAULT '001',
-          \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
-          \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
-          \`kecamatan\` VARCHAR(100) NOT NULL DEFAULT 'Cikole',
-          \`kota\` VARCHAR(100) NOT NULL DEFAULT 'Kota Sukabumi',
-          \`tahun\` INT NOT NULL,
-          \`njop_bumi\` DECIMAL(15,2) NOT NULL DEFAULT 0,
-          \`njop_bangunan\` DECIMAL(15,2) NOT NULL DEFAULT 0,
-          \`luas_bumi\` INT NOT NULL DEFAULT 0,
-          \`luas_bangunan\` INT NOT NULL DEFAULT 0,
-          \`nominal\` DECIMAL(15,2) NOT NULL DEFAULT 0,
-          \`denda\` DECIMAL(15,2) NOT NULL DEFAULT 0,
-          \`status_pembayaran\` VARCHAR(20) NOT NULL DEFAULT 'UNPAID',
-          \`tanggal_jatuh_tempo\` DATE NOT NULL,
-          \`tanggal_bayar\` DATETIME NULL,
-          \`metode_bayar\` VARCHAR(50) NULL,
-          \`bukti_bayar_url\` VARCHAR(255) NULL,
-          \`nomor_transaksi_bank\` VARCHAR(100) NULL,
-          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          UNIQUE KEY \`unique_nop_tahun\` (\`nop\`, \`tahun\`),
-          INDEX \`idx_pbb_nik\` (\`nik_warga\`),
-          INDEX \`idx_pbb_rt_rw\` (\`rw\`, \`rt\`, \`status_pembayaran\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-      `);
-
-      const pbbCols = [
-        "nama_wajib_pajak VARCHAR(150) NULL",
-        "alamat_objek_pajak VARCHAR(255) NULL",
-        "rt VARCHAR(5) NOT NULL DEFAULT '001'",
-        "rw VARCHAR(5) NOT NULL DEFAULT '001'",
-        "kelurahan VARCHAR(100) NOT NULL DEFAULT 'Kebonjati'",
-        "kecamatan VARCHAR(100) NOT NULL DEFAULT 'Cikole'",
-        "kota VARCHAR(100) NOT NULL DEFAULT 'Kota Sukabumi'",
-        "njop_bumi DECIMAL(15,2) NOT NULL DEFAULT 0",
-        "njop_bangunan DECIMAL(15,2) NOT NULL DEFAULT 0",
-        "luas_bumi INT NOT NULL DEFAULT 0",
-        "luas_bangunan INT NOT NULL DEFAULT 0",
-        "denda DECIMAL(15,2) NOT NULL DEFAULT 0",
-        "tanggal_bayar DATETIME NULL",
-        "metode_bayar VARCHAR(50) NULL",
-        "bukti_bayar_url VARCHAR(255) NULL",
-        "nomor_transaksi_bank VARCHAR(100) NULL"
-      ];
-      for (const colDef of pbbCols) {
-        try {
-          await connection.query(`ALTER TABLE pbb ADD COLUMN ${colDef}`);
-        } catch (e) {}
-      }
-
-      // Seeder Objek PBB jika data masih kosong / minim
-      const [pbbCount] = await connection.query("SELECT COUNT(*) as count FROM pbb");
-      if (pbbCount[0].count < 5) {
-        const DEFAULT_PBB = [
-          {
-            nop: '32.72.030.001.001-0012.0',
-            nik_warga: '3272030103810001',
-            nama_wajib_pajak: 'Budi Santoso',
-            alamat_objek_pajak: 'Jl. Kebonjati No. 12 RT 001/RW 001',
-            rt: '001', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2026, luas_bumi: 120, luas_bangunan: 90, njop_bumi: 180000000, njop_bangunan: 135000000,
-            nominal: 315000, denda: 0, status_pembayaran: 'PAID',
-            tanggal_jatuh_tempo: '2026-09-30', tanggal_bayar: '2026-03-15 10:20:00',
-            metode_bayar: 'QRIS Dinamis', nomor_transaksi_bank: 'BJB-QR-20260315-9921'
-          },
-          {
-            nop: '32.72.030.001.001-0012.0',
-            nik_warga: '3272030103810001',
-            nama_wajib_pajak: 'Budi Santoso',
-            alamat_objek_pajak: 'Jl. Kebonjati No. 12 RT 001/RW 001',
-            rt: '001', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2025, luas_bumi: 120, luas_bangunan: 90, njop_bumi: 168000000, njop_bangunan: 126000000,
-            nominal: 294000, denda: 0, status_pembayaran: 'PAID',
-            tanggal_jatuh_tempo: '2025-09-30', tanggal_bayar: '2025-06-12 14:10:00',
-            metode_bayar: 'Bank BJB Virtual Account', nomor_transaksi_bank: 'BJB-VA-20250612-8812'
-          },
-          {
-            nop: '32.72.030.001.001-0015.0',
-            nik_warga: '3272030101750002',
-            nama_wajib_pajak: 'Dadang Ruhiyat (Ketua RT 01)',
-            alamat_objek_pajak: 'Jl. Surya Kencana Gang Melati No. 4 RT 001/RW 001',
-            rt: '001', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2026, luas_bumi: 150, luas_bangunan: 110, njop_bumi: 225000000, njop_bangunan: 165000000,
-            nominal: 390000, denda: 0, status_pembayaran: 'PAID',
-            tanggal_jatuh_tempo: '2026-09-30', tanggal_bayar: '2026-02-20 09:15:00',
-            metode_bayar: 'Bank BJB Virtual Account', nomor_transaksi_bank: 'BJB-VA-20260220-4412'
-          },
-          {
-            nop: '32.72.030.001.001-0021.0',
-            nik_warga: '3272030101700001',
-            nama_wajib_pajak: 'H. Ahmad Sanusi (Ketua RW 01)',
-            alamat_objek_pajak: 'Jl. Surya Kencana No. 88 RT 001/RW 001',
-            rt: '001', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2026, luas_bumi: 250, luas_bangunan: 180, njop_bumi: 450000000, njop_bangunan: 320000000,
-            nominal: 770000, denda: 0, status_pembayaran: 'PAID',
-            tanggal_jatuh_tempo: '2026-09-30', tanggal_bayar: '2026-01-18 11:45:00',
-            metode_bayar: 'Bank BJB Teller', nomor_transaksi_bank: 'BJB-TL-20260118-0091'
-          },
-          {
-            nop: '32.72.030.001.001-0033.0',
-            nik_warga: '3272030104850005',
-            nama_wajib_pajak: 'Cecep Kurniawan',
-            alamat_objek_pajak: 'Gang Melati I No. 14 RT 001/RW 001',
-            rt: '001', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2026, luas_bumi: 80, luas_bangunan: 60, njop_bumi: 120000000, njop_bangunan: 90000000,
-            nominal: 210000, denda: 0, status_pembayaran: 'UNPAID',
-            tanggal_jatuh_tempo: '2026-09-30', tanggal_bayar: null,
-            metode_bayar: null, nomor_transaksi_bank: null
-          },
-          {
-            nop: '32.72.030.001.002-0008.0',
-            nik_warga: '3272030105900008',
-            nama_wajib_pajak: 'Siti Rohayati',
-            alamat_objek_pajak: 'Jl. Dahlia No. 5 RT 002/RW 001',
-            rt: '002', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2026, luas_bumi: 100, luas_bangunan: 70, njop_bumi: 150000000, njop_bangunan: 105000000,
-            nominal: 255000, denda: 0, status_pembayaran: 'UNPAID',
-            tanggal_jatuh_tempo: '2026-09-30', tanggal_bayar: null,
-            metode_bayar: null, nomor_transaksi_bank: null
-          },
-          {
-            nop: '32.72.030.001.002-0015.0',
-            nik_warga: '3272030106880012',
-            nama_wajib_pajak: 'Asep Saepulloh',
-            alamat_objek_pajak: 'Gang Dahlia II No. 9 RT 002/RW 001',
-            rt: '002', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2026, luas_bumi: 95, luas_bangunan: 65, njop_bumi: 142500000, njop_bangunan: 97500000,
-            nominal: 240000, denda: 0, status_pembayaran: 'PAID',
-            tanggal_jatuh_tempo: '2026-09-30', tanggal_bayar: '2026-04-05 13:30:00',
-            metode_bayar: 'QRIS Dinamis', nomor_transaksi_bank: 'BJB-QR-20260405-1102'
-          },
-          {
-            nop: '32.72.030.001.003-0004.0',
-            nik_warga: '3272030107770001',
-            nama_wajib_pajak: 'Iwan Setiawan',
-            alamat_objek_pajak: 'Jl. Kenanga Timur No. 2 RT 003/RW 001',
-            rt: '003', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2026, luas_bumi: 130, luas_bangunan: 100, njop_bumi: 195000000, njop_bangunan: 150000000,
-            nominal: 345000, denda: 0, status_pembayaran: 'UNPAID',
-            tanggal_jatuh_tempo: '2026-09-30', tanggal_bayar: null,
-            metode_bayar: null, nomor_transaksi_bank: null
-          },
-          {
-            nop: '32.72.030.001.004-0011.0',
-            nik_warga: '3272030108820003',
-            nama_wajib_pajak: 'Enjang Sutisna',
-            alamat_objek_pajak: 'Jl. Anggrek Barat No. 7 RT 004/RW 001',
-            rt: '004', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2026, luas_bumi: 110, luas_bangunan: 80, njop_bumi: 165000000, njop_bangunan: 120000000,
-            nominal: 285000, denda: 0, status_pembayaran: 'PAID',
-            tanggal_jatuh_tempo: '2026-09-30', tanggal_bayar: '2026-03-28 16:40:00',
-            metode_bayar: 'Bank BJB Virtual Account', nomor_transaksi_bank: 'BJB-VA-20260328-7719'
-          },
-          {
-            nop: '32.72.030.001.005-0019.0',
-            nik_warga: '3272030109910006',
-            nama_wajib_pajak: 'Ridwan Kamiludin',
-            alamat_objek_pajak: 'Gang Mawar Putih No. 12 RT 005/RW 001',
-            rt: '005', rw: '001', kelurahan: 'Kebonjati', kecamatan: 'Cikole', kota: 'Kota Sukabumi',
-            tahun: 2026, luas_bumi: 85, luas_bangunan: 60, njop_bumi: 127500000, njop_bangunan: 90000000,
-            nominal: 217500, denda: 0, status_pembayaran: 'UNPAID',
-            tanggal_jatuh_tempo: '2026-09-30', tanggal_bayar: null,
-            metode_bayar: null, nomor_transaksi_bank: null
-          }
-        ];
-
-        for (const p of DEFAULT_PBB) {
-          await connection.execute(`
-            INSERT INTO pbb 
-              (nop, nik_warga, nama_wajib_pajak, alamat_objek_pajak, rt, rw, kelurahan, kecamatan, kota, tahun,
-               luas_bumi, luas_bangunan, njop_bumi, njop_bangunan, nominal, denda, status_pembayaran,
-               tanggal_jatuh_tempo, tanggal_bayar, metode_bayar, nomor_transaksi_bank)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-              nama_wajib_pajak = VALUES(nama_wajib_pajak),
-              alamat_objek_pajak = VALUES(alamat_objek_pajak),
-              rt = VALUES(rt),
-              rw = VALUES(rw),
-              nominal = VALUES(nominal),
-              status_pembayaran = VALUES(status_pembayaran)
-          `, [
-            p.nop, p.nik_warga, p.nama_wajib_pajak, p.alamat_objek_pajak, p.rt, p.rw, p.kelurahan, p.kecamatan, p.kota, p.tahun,
-            p.luas_bumi, p.luas_bangunan, p.njop_bumi, p.njop_bangunan, p.nominal, p.denda, p.status_pembayaran,
-            p.tanggal_jatuh_tempo, p.tanggal_bayar, p.metode_bayar, p.nomor_transaksi_bank
-          ]);
-        }
-        console.log('[AutoPatch] Berhasil melakukan seed 10 data PBB acuan Kelurahan Kebonjati.');
-      }
-    } catch (e) {
-      console.warn('[AutoPatch] CREATE/PATCH pbb note:', e.message);
-    }
-
-    // 19. Fasilitas Kesehatan & Pendidikan Lengkap Sesuai Lapangan
-    try {
-      await connection.query(`
-        CREATE TABLE IF NOT EXISTS \`fasilitas_kesehatan\` (
-          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
-          \`nama_faskes\` VARCHAR(150) NOT NULL,
-          \`jenis_faskes\` VARCHAR(50) NOT NULL,
-          \`kategori_pengelola\` VARCHAR(50) NOT NULL DEFAULT 'Pemerintah',
-          \`alamat\` TEXT NOT NULL,
-          \`rt\` VARCHAR(5) NOT NULL DEFAULT '001',
-          \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
-          \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
-          \`kecamatan\` VARCHAR(100) NOT NULL DEFAULT 'Cikole',
-          \`kota\` VARCHAR(100) NOT NULL DEFAULT 'Kota Sukabumi',
-          \`koordinat_lat_lng\` VARCHAR(50) NULL,
-          \`jumlah_dokter\` INT NOT NULL DEFAULT 1,
-          \`jumlah_bidan\` INT NOT NULL DEFAULT 1,
-          \`jumlah_perawat\` INT NOT NULL DEFAULT 2,
-          \`jumlah_ahli_gizi\` INT NOT NULL DEFAULT 0,
-          \`kapasitas_tempat_tidur\` INT NOT NULL DEFAULT 0,
-          \`layanan_igd_24jam\` TINYINT(1) NOT NULL DEFAULT 0,
-          \`jam_operasional\` VARCHAR(100) NOT NULL DEFAULT '08:00 - 15:30 WIB',
-          \`no_kontak\` VARCHAR(30) NULL,
-          \`penanggung_jawab\` VARCHAR(150) NULL,
-          \`status_verifikasi\` VARCHAR(50) NOT NULL DEFAULT 'TERVERIFIKASI',
-          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          INDEX \`idx_faskes_rt_rw\` (\`rw\`, \`rt\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-      `);
-
-      const [faskesCount] = await connection.query("SELECT COUNT(*) as count FROM fasilitas_kesehatan");
-      if (faskesCount[0].count < 3) {
-        const DEFAULT_FASKES = [
-          {
-            nama_faskes: 'Puskesmas Kebonjati (Puskesmas Induk)',
-            jenis_faskes: 'Puskesmas',
-            kategori_pengelola: 'Pemerintah',
-            alamat: 'Jl. Surya Kencana No. 55, Kebonjati',
-            rt: '001', rw: '001', jumlah_dokter: 4, jumlah_bidan: 6, jumlah_perawat: 8, jumlah_ahli_gizi: 2,
-            kapasitas_tempat_tidur: 10, layanan_igd_24jam: 1, jam_operasional: 'Siaga 24 Jam (IGD) / Rawat Jalan 08:00-15:00',
-            no_kontak: '0266-224488', penanggung_jawab: 'dr. Hj. Nurul Komariah'
-          },
-          {
-            nama_faskes: 'Praktik Bidan Mandiri Hj. Siti Hasanah, S.Tr.Keb',
-            jenis_faskes: 'Praktik Mandiri Bidan',
-            kategori_pengelola: 'Swasta / Mandiri',
-            alamat: 'Gang Melati I No. 8 RT 001/RW 001',
-            rt: '001', rw: '001', jumlah_dokter: 0, jumlah_bidan: 2, jumlah_perawat: 1, jumlah_ahli_gizi: 0,
-            kapasitas_tempat_tidur: 2, layanan_igd_24jam: 1, jam_operasional: 'Siaga Persalinan 24 Jam',
-            no_kontak: '081234889900', penanggung_jawab: 'Bdn. Siti Hasanah, S.Tr.Keb'
-          },
-          {
-            nama_faskes: 'Klinik Pratama Sehat Bersama',
-            jenis_faskes: 'Klinik Pratama',
-            kategori_pengelola: 'Swasta',
-            alamat: 'Jl. R. Syamsudin No. 20 RT 002/RW 001',
-            rt: '002', rw: '001', jumlah_dokter: 2, jumlah_bidan: 1, jumlah_perawat: 3, jumlah_ahli_gizi: 0,
-            kapasitas_tempat_tidur: 4, layanan_igd_24jam: 0, jam_operasional: '08:00 - 21:00 WIB',
-            no_kontak: '0266-228811', penanggung_jawab: 'dr. Bambang Irawan'
-          },
-          {
-            nama_faskes: 'Apotek Kimia Farma Kebonjati',
-            jenis_faskes: 'Apotek',
-            kategori_pengelola: 'BUMN / Swasta',
-            alamat: 'Jl. Surya Kencana No. 70 RT 001/RW 001',
-            rt: '001', rw: '001', jumlah_dokter: 1, jumlah_bidan: 0, jumlah_perawat: 1, jumlah_ahli_gizi: 0,
-            kapasitas_tempat_tidur: 0, layanan_igd_24jam: 1, jam_operasional: 'Buka 24 Jam',
-            no_kontak: '0266-229900', penanggung_jawab: 'apt. Maya Safitri, S.Farm'
-          },
-          {
-            nama_faskes: 'Posyandu Melati RW 001',
-            jenis_faskes: 'Posyandu',
-            kategori_pengelola: 'Swadaya Masyarakat',
-            alamat: 'Balai RW 001 Kebonjati',
-            rt: '001', rw: '001', jumlah_dokter: 0, jumlah_bidan: 1, jumlah_perawat: 1, jumlah_ahli_gizi: 1,
-            kapasitas_tempat_tidur: 0, layanan_igd_24jam: 0, jam_operasional: 'Setiap Hari Rabu Ke-2, 08:30-12:00 WIB',
-            no_kontak: '081234567890', penanggung_jawab: 'Ny. Hj. Yayah Rokayah'
-          }
-        ];
-
-        for (const f of DEFAULT_FASKES) {
-          await connection.execute(`
-            INSERT INTO fasilitas_kesehatan 
-              (nama_faskes, jenis_faskes, kategori_pengelola, alamat, rt, rw, jumlah_dokter, jumlah_bidan,
-               jumlah_perawat, jumlah_ahli_gizi, kapasitas_tempat_tidur, layanan_igd_24jam, jam_operasional,
-               no_kontak, penanggung_jawab, status_verifikasi)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'TERVERIFIKASI')
-          `, [
-            f.nama_faskes, f.jenis_faskes, f.kategori_pengelola, f.alamat, f.rt, f.rw, f.jumlah_dokter, f.jumlah_bidan,
-            f.jumlah_perawat, f.jumlah_ahli_gizi, f.kapasitas_tempat_tidur, f.layanan_igd_24jam, f.jam_operasional,
-            f.no_kontak, f.penanggung_jawab
-          ]);
-        }
-      }
-    } catch (e) {
-      console.warn('[AutoPatch] CREATE/SEED fasilitas_kesehatan note:', e.message);
-    }
-
-    try {
-      await connection.query(`
-        CREATE TABLE IF NOT EXISTS \`fasilitas_pendidikan\` (
-          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
-          \`nama_sekolah\` VARCHAR(150) NOT NULL,
-          \`npsn\` VARCHAR(20) NULL,
-          \`jenjang\` VARCHAR(50) NOT NULL,
-          \`status_sekolah\` ENUM('Negeri', 'Swasta') NOT NULL DEFAULT 'Negeri',
-          \`alamat\` TEXT NOT NULL,
-          \`rt\` VARCHAR(5) NOT NULL DEFAULT '001',
-          \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
-          \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
-          \`kecamatan\` VARCHAR(100) NOT NULL DEFAULT 'Cikole',
-          \`kota\` VARCHAR(100) NOT NULL DEFAULT 'Kota Sukabumi',
-          \`koordinat_lat_lng\` VARCHAR(50) NULL,
-          \`daya_tampung_kursi_baru\` INT NOT NULL DEFAULT 60,
-          \`total_kapasitas_murid\` INT NOT NULL DEFAULT 240,
-          \`jumlah_rombel\` INT NOT NULL DEFAULT 6,
-          \`akreditasi\` VARCHAR(10) NOT NULL DEFAULT 'A',
-          \`no_telepon\` VARCHAR(30) NULL,
-          \`kepala_sekolah\` VARCHAR(150) NULL,
-          \`status_verifikasi\` VARCHAR(50) NOT NULL DEFAULT 'TERVERIFIKASI',
-          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          INDEX \`idx_sekolah_rt_rw\` (\`rw\`, \`rt\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-      `);
-
-      const [eduCount] = await connection.query("SELECT COUNT(*) as count FROM fasilitas_pendidikan");
-      if (eduCount[0].count < 3) {
-        const DEFAULT_EDU = [
-          {
-            nama_sekolah: 'SD Negeri Kebonjati 01',
-            npsn: '20221001',
-            jenjang: 'SD',
-            status_sekolah: 'Negeri',
-            alamat: 'Jl. Surya Kencana No. 32 RT 001/RW 001',
-            rt: '001', rw: '001', daya_tampung_kursi_baru: 64, total_kapasitas_murid: 380, jumlah_rombel: 12,
-            akreditasi: 'A', no_telepon: '0266-221234', kepala_sekolah: 'Drs. H. Mulyadi, M.Pd'
-          },
-          {
-            nama_sekolah: 'SD Negeri Kebonjati 02',
-            npsn: '20221002',
-            jenjang: 'SD',
-            status_sekolah: 'Negeri',
-            alamat: 'Jl. Surya Kencana No. 34 RT 001/RW 001',
-            rt: '001', rw: '001', daya_tampung_kursi_baru: 56, total_kapasitas_murid: 320, jumlah_rombel: 10,
-            akreditasi: 'A', no_telepon: '0266-221235', kepala_sekolah: 'Hj. Nenden Suhartini, S.Pd'
-          },
-          {
-            nama_sekolah: 'SMP Negeri 1 Cikole (Zonasi Kebonjati)',
-            npsn: '20222011',
-            jenjang: 'SMP',
-            status_sekolah: 'Negeri',
-            alamat: 'Jl. R. Syamsudin, S.H. No. 15',
-            rt: '001', rw: '001', daya_tampung_kursi_baru: 288, total_kapasitas_murid: 860, jumlah_rombel: 27,
-            akreditasi: 'A', no_telepon: '0266-221550', kepala_sekolah: 'H. Asep Saepudin, M.M'
-          },
-          {
-            nama_sekolah: 'SMP Islam Terpadu Al-Hikmah',
-            npsn: '20222099',
-            jenjang: 'SMP',
-            status_sekolah: 'Swasta',
-            alamat: 'Jl. Dahlia No. 10 RT 002/RW 001',
-            rt: '002', rw: '001', daya_tampung_kursi_baru: 96, total_kapasitas_murid: 280, jumlah_rombel: 9,
-            akreditasi: 'B', no_telepon: '0266-223344', kepala_sekolah: 'Ust. Ridwan Firdaus, Lc'
-          },
-          {
-            nama_sekolah: 'PAUD / TK Pertiwi Kebonjati',
-            npsn: '69881023',
-            jenjang: 'PAUD',
-            status_sekolah: 'Swasta',
-            alamat: 'Jl. Melati No. 2 RT 001/RW 001',
-            rt: '001', rw: '001', daya_tampung_kursi_baru: 40, total_kapasitas_murid: 80, jumlah_rombel: 4,
-            akreditasi: 'A', no_telepon: '081223399001', kepala_sekolah: 'Ibu Ratna Dewi, S.Pd'
-          }
-        ];
-
-        for (const e of DEFAULT_EDU) {
-          await connection.execute(`
-            INSERT INTO fasilitas_pendidikan 
-              (nama_sekolah, npsn, jenjang, status_sekolah, alamat, rt, rw, daya_tampung_kursi_baru,
-               total_kapasitas_murid, jumlah_rombel, akreditasi, no_telepon, kepala_sekolah, status_verifikasi)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'TERVERIFIKASI')
-          `, [
-            e.nama_sekolah, e.npsn, e.jenjang, e.status_sekolah, e.alamat, e.rt, e.rw, e.daya_tampung_kursi_baru,
-            e.total_kapasitas_murid, e.jumlah_rombel, e.akreditasi, e.no_telepon, e.kepala_sekolah
-          ]);
-        }
-      }
-    } catch (e) {
-      console.warn('[AutoPatch] CREATE/SEED fasilitas_pendidikan note:', e.message);
     }
 
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');
