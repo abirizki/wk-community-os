@@ -101,6 +101,46 @@ const BUMI_WARGA_SOP_KNOWLEDGE = [
     keywords: ['kartu keluarga', 'kk', 'bpjs', 'kip', 'kis', 'nik', 'blanko'],
     answer: 'Sampurasun! Kartu Keluarga Digital di Bumi Warga mengikuti format otentik Kemendagri RI:\n\n- Dilengkapi kop resmi Lambang Garuda Pancasila dan TTE QR-Code sah SPBE.\n- Terhubung jaminan sosial per jiwa: BPJS Kesehatan/KIS, BPJS Ketenagakerjaan, serta beasiswa KIP anak sekolah.\n- Dilengkapi AI Family Welfare Auditor untuk mendeteksi rasio beban ketergantungan dan status perlindungan keluarga.',
     quickLink: '/dashboard/kk'
+  },
+  {
+    id: 'verifikasi_surat',
+    title: 'SOP Verifikasi Surat RT/RW & SLA',
+    category: 'Tata Kelola Jabatan',
+    keywords: ['verifikasi', 'setujui surat', 'tolak surat', 'revisi surat', 'sla', 'tinjau berkas'],
+    answer: 'Panduan Verifikasi Surat untuk Pengurus RT/RW:\n\n1. Buka Meja Kerja > Tab **Antrean Surat Warga**.\n2. Periksa kelengkapan berkas: identitas pemohon, kesesuaian NIK, dan dokumen pendukung.\n3. Opsi Keputusan: **Setujui** (langsung diteruskan berjenjang), **Minta Revisi** (sertakan catatan perbaikan), atau **Tolak** (apabila syarat tidak terpenuhi).\n4. Batas SLA Pelayanan Prima Kelurahan Kebonjati adalah **4 jam kerja** sejak diajukan.',
+    quickLink: '/dashboard/rt'
+  },
+  {
+    id: 'loket_dampingan',
+    title: 'Loket Dampingan Warga Gaptek & Offline',
+    category: 'Tata Kelola Jabatan',
+    keywords: ['dampingan', 'loket dampingan', 'gaptek', 'offline', 'bantu warga', 'wakilkan'],
+    answer: 'Fasilitas Loket Dampingan Surat untuk Warga Rentan / Tanpa Smartphone:\n\n1. Klik tombol **+ Loket Dampingan Warga** pada Meja Kerja Anda.\n2. Masukkan NIK warga yang dibantu â€” data nama & KK akan terisi otomatis.\n3. Pilih jenis surat yang dibutuhkan dan unggah berkas fisik bila ada.\n4. **Otorisasi Instan**: Jika diajukan Ketua RT, otomatis terverifikasi RT (langsung ke RW). Jika diajukan Ketua RW, otomatis terverifikasi RT & RW (langsung ke Kelurahan).',
+    quickLink: '/dashboard/dokumen'
+  },
+  {
+    id: 'bypass_darurat',
+    title: 'Protokol Bypass Verifikasi Darurat RW',
+    category: 'Tata Kelola Jabatan',
+    keywords: ['bypass', 'darurat', 'jalur darurat', 'rt sakit', 'bypass rw'],
+    answer: 'Ketentuan Penggunaan Jalur Darurat RW (*Emergency Bypass*):\n\n- Digunakan khusus saat Ketua RT sedang sakit keras, dinas luar kota, atau berhalangan mendesak demi melayani kebutuhan krusial warga (misal: rujukan RS darurat, beasiswa batas waktu).\n- Masuk ke Dashboard RW > Tab **Antrean di RT / Jalur Darurat** > Klik **Bypass RW (Darurat)**.\n- Masukkan PIN Pejabat 6 Digit dan pilih alasan resmi untuk menjaga transparansi audit trail.',
+    quickLink: '/dashboard/rw'
+  },
+  {
+    id: 'pbb_wilayah',
+    title: 'Monitoring Kepatuhan PBB & e-SPPT',
+    category: 'Keuangan Lingkungan',
+    keywords: ['pbb', 'sppt', 'pajak', 'kepatuhan pbb', 'tunggakan pbb'],
+    answer: 'Pengawasan Pajak Bumi & Bangunan (PBB) Kewilayahan:\n\n- Akses menu **Monitoring PBB** pada bilah samping atau dashboard analitik.\n- Anda dapat memantau persentase realisasi pembayaran PBB per RT (RT 001 - RT 005).\n- Warga yang belum lunas dapat diidentifikasi untuk sosialisasi e-SPPT dan kanal pembayaran digital.',
+    quickLink: '/dashboard/pbb'
+  },
+  {
+    id: 'analitik_wilayah',
+    title: 'Dashboard Data Analitik & Looker Power BI',
+    category: 'Analitik & Keputusan',
+    keywords: ['analitik', 'power bi', 'looker', 'piramida', 'heatmap', 'demografi', 'statistik'],
+    answer: 'Dashboard Data Analitik menyajikan visualisasi data eksekutif setara Power BI & Looker Studio:\n\n- **Piramida Penduduk Interaktif**: Distribusi usia dan gender per kohort.\n- **Heatmap Spasial Wilayah (RT 001 - RT 005)**: Kepadatan penduduk, sebaran desil 1-2, dan kepatuhan PBB.\n- **Analitik Layanan Surat**: Tren time-series volume pengajuan dan SLA kecepatan verifikasi.\n- Buka menu **Dashboard Data Analitik** untuk eksplorasi drill-down lengkap.',
+    quickLink: '/dashboard/analitik'
   }
 ];
 
@@ -109,10 +149,18 @@ export default function KanayaAIAssistant({ user }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
   const [speechBubbleVisible, setSpeechBubbleVisible] = useState(true);
+
+  const isOfficial = user?.active_persona === 'official' || ['ketua_rt', 'ketua_rw', 'admin_rt', 'admin_rw', 'lurah', 'seklur'].includes(user?.role);
+  const roleLabel = user?.role === 'ketua_rt' ? `Ketua RT ${user?.rt || '001'}` : user?.role === 'ketua_rw' ? `Ketua RW ${user?.rw || '001'}` : (user?.role_label || 'Pejabat');
+
+  const defaultGreeting = isOfficial 
+    ? `Sampurasun Pak/Bu ${user?.nama || roleLabel}! Saya **Kanaya**, Copilot Tata Kelola Wilayah Anda. Siap membantu asistensi verifikasi surat, pengawasan kepatuhan PBB, analisis demografi piramida, hingga pendampingan warga rentan di RW ${user?.rw || '001'}.`
+    : 'Sampurasun! Halo, saya **Kanaya**, asisten cerdas Bumi Warga. Ada yang bisa saya bantu seputar Kartu Keluarga Digital, Bantuan Sosial, atau SOP Pengajuan Surat hari ini?';
+
   const [messages, setMessages] = useState([
     {
       sender: 'kanaya',
-      text: 'Sampurasun! Halo, saya **Kanaya**, asisten cerdas Bumi Warga. Ada yang bisa saya bantu seputar Kartu Keluarga Digital, Bantuan Sosial, atau SOP Pengajuan Surat hari ini?',
+      text: defaultGreeting,
       time: 'Baru saja'
     }
   ]);
@@ -388,39 +436,76 @@ export default function KanayaAIAssistant({ user }) {
                     <div className="pt-3">
                       <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-sky-500" />
-                        Pertanyaan Populer:
+                        {isOfficial ? 'Pintasan Tugas Pejabat RT/RW:' : 'Pertanyaan Populer Warga:'}
                       </div>
                       <div className="flex flex-wrap gap-1.5 mb-3">
-                        <button
-                          onClick={() => handleSendMessage('Bagaimana cara membuat Surat Keterangan Usaha (SKU)?')}
-                          className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
-                        >
-                          Cara Buat SKU
-                        </button>
-                        <button
-                          onClick={() => handleSendMessage('Apa saja syarat pengajuan SKTM untuk beasiswa atau KIP?')}
-                          className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
-                        >
-                          SKTM Beasiswa / KIP
-                        </button>
-                        <button
-                          onClick={() => handleSendMessage('Apa perbedaan Bansos APBN dan Bansos Muskel Kelurahan?')}
-                          className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
-                        >
-                          Bansos APBN vs Muskel
-                        </button>
-                        <button
-                          onClick={() => handleSendMessage('Bagaimana cara mengajukan sanggah Desil DTSEN yang tidak sesuai?')}
-                          className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
-                        >
-                          Sanggah Desil DTSEN
-                        </button>
-                        <button
-                          onClick={() => handleSendMessage('Bagaimana format resmi Kartu Keluarga Digital Kemendagri?')}
-                          className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
-                        >
-                          Format KK Digital & BPJS
-                        </button>
+                        {isOfficial ? (
+                          <>
+                            <button
+                              onClick={() => handleSendMessage('Bagaimana SOP verifikasi surat warga dan batas waktu SLA?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors font-medium"
+                            >
+                              âš¡ SOP Verifikasi & SLA
+                            </button>
+                            <button
+                              onClick={() => handleSendMessage('Bagaimana cara menggunakan Loket Dampingan Warga gaptek?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors font-medium"
+                            >
+                              âœï¸ Loket Dampingan Warga
+                            </button>
+                            <button
+                              onClick={() => handleSendMessage('Kapan Ketua RW boleh menggunakan Bypass Verifikasi Darurat?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors font-medium"
+                            >
+                              ðŸš¨ Bypass Darurat RW
+                            </button>
+                            <button
+                              onClick={() => handleSendMessage('Bagaimana cara monitoring kepatuhan pembayaran PBB warga?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors font-medium"
+                            >
+                              ðŸ’° Monitoring PBB RT/RW
+                            </button>
+                            <button
+                              onClick={() => handleSendMessage('Apa saja fitur yang ada di Dashboard Data Analitik Power BI / Looker?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors font-medium"
+                            >
+                              ðŸ“Š Dashboard Analitik
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleSendMessage('Bagaimana cara membuat Surat Keterangan Usaha (SKU)?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
+                            >
+                              Cara Buat SKU
+                            </button>
+                            <button
+                              onClick={() => handleSendMessage('Apa saja syarat pengajuan SKTM untuk beasiswa atau KIP?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
+                            >
+                              SKTM Beasiswa / KIP
+                            </button>
+                            <button
+                              onClick={() => handleSendMessage('Apa perbedaan Bansos APBN dan Bansos Muskel Kelurahan?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
+                            >
+                              Bansos APBN vs Muskel
+                            </button>
+                            <button
+                              onClick={() => handleSendMessage('Bagaimana cara mengajukan sanggah Desil DTSEN yang tidak sesuai?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
+                            >
+                              Sanggah Desil DTSEN
+                            </button>
+                            <button
+                              onClick={() => handleSendMessage('Bagaimana format resmi Kartu Keluarga Digital Kemendagri?')}
+                              className="text-[11px] bg-white border border-sky-200 hover:bg-sky-50 text-sky-800 px-2.5 py-1 rounded-full transition-colors"
+                            >
+                              Format KK Digital & BPJS
+                            </button>
+                          </>
+                        )}
                       </div>
 
                       <form

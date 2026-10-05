@@ -34,7 +34,6 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import AssistedSubmissionModal from '../components/AssistedSubmissionModal';
 
 export const JENIS_SURAT_CONFIG = {
   'Surat Keterangan Domisili': {
@@ -230,7 +229,6 @@ export default function DokumenPage() {
   // Detail / Inspection Modal State
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailDoc, setDetailDoc] = useState(null);
-  const [showAssistedModal, setShowAssistedModal] = useState(false);
 
   const canActOnDetail = useMemo(() => {
     if (!detailDoc || !isOfficer) return false;
@@ -604,22 +602,13 @@ export default function DokumenPage() {
           </p>
         </div>
 
-        {isOfficer ? (
-          <button
-            onClick={() => setShowAssistedModal(true)}
-            className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
-            title="Bantu warga yang kesulitan smartphone/internet"
-          >
-            <Plus size={18} />
-            <span>+ Loket Dampingan Warga</span>
-          </button>
-        ) : (
+        {!isOfficer && (
           <button
             onClick={() => {
               setSubjekPemohon('self');
               setShowModal(true);
             }}
-            className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 cursor-pointer"
           >
             <Plus size={18} />
             <span>Ajukan Surat Baru</span>
@@ -1789,19 +1778,6 @@ export default function DokumenPage() {
           </div>
         </div>
       )}
-
-      {/* Modal Loket Dampingan Warga */}
-      <AssistedSubmissionModal
-        isOpen={showAssistedModal}
-        onClose={() => setShowAssistedModal(false)}
-        onSuccess={() => {
-          setSuccessMsg('Surat dampingan warga berhasil diajukan!');
-          fetchDokumen();
-        }}
-        currentRole={user?.role}
-        rt={user?.rt || '001'}
-        rw={user?.rw || '001'}
-      />
     </div>
   );
 }

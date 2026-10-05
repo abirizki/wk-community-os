@@ -24,14 +24,7 @@ class DokumenRepository {
       nama_subjek = null,
       hubungan_keluarga = null,
       data_tambahan = null,
-      syarat_berkas = null,
-      is_assisted_submission = 0,
-      assisted_by_user_id = null,
-      status = 'SUBMITTED',
-      approval_step = 'RT',
-      approved_by_rt = null,
-      approved_by_rw = null,
-      catatan_petugas = null
+      syarat_berkas = null
     } = payload;
 
     const noReg = nomor_registrasi || `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -42,8 +35,8 @@ class DokumenRepository {
     try {
       const [result] = await pool.execute(
         `INSERT INTO dokumen_request 
-         (nomor_registrasi, nik_pemohon, diajukan_oleh_nik, nama_subjek, hubungan_keluarga, data_tambahan, syarat_berkas, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, is_assisted_submission, assisted_by_user_id, approved_by_rt, approved_by_rw, catatan_petugas, rt_received_at, sla_deadline) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
+         (nomor_registrasi, nik_pemohon, diajukan_oleh_nik, nama_subjek, hubungan_keluarga, data_tambahan, syarat_berkas, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, rt_received_at, sla_deadline) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
         [
           noReg, 
           nik_pemohon, 
@@ -55,16 +48,9 @@ class DokumenRepository {
           jenis_dokumen, 
           jenis_dokumen, 
           keperluan, 
-          status,
-          approval_step,
           rt, 
           rw, 
-          is_auto_filled_by_ai ? 1 : 0,
-          is_assisted_submission ? 1 : 0,
-          assisted_by_user_id || null,
-          approved_by_rt || null,
-          approved_by_rw || null,
-          catatan_petugas || null
+          is_auto_filled_by_ai ? 1 : 0
         ]
       );
       docId = result.insertId;
@@ -74,8 +60,8 @@ class DokumenRepository {
       const [fallbackResult] = await pool.execute(
         `INSERT INTO dokumen_request 
          (nomor_registrasi, nik_pemohon, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [noReg, nik_pemohon, jenis_dokumen, jenis_dokumen, keperluan, status, approval_step, rt, rw]
+         VALUES (?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?)`,
+        [noReg, nik_pemohon, jenis_dokumen, jenis_dokumen, keperluan, rt, rw]
       );
       docId = fallbackResult.insertId;
     }
@@ -85,13 +71,11 @@ class DokumenRepository {
       await this.recordWorkflowHistory({
         dokumen_request_id: docId,
         from_step: null,
-        to_step: approval_step,
+        to_step: 'RT',
         acted_by_user_id,
-        acted_by_role: is_assisted_submission ? (approved_by_rw ? 'ketua_rw' : 'ketua_rt') : 'warga',
-        action: is_assisted_submission ? 'ASSISTED_SUBMIT' : 'SUBMIT',
-        notes: is_assisted_submission 
-          ? `Pengajuan & verifikasi langsung via Loket Dampingan Warga (${jenis_dokumen}).`
-          : `Pengajuan surat ${jenis_dokumen} oleh pemohon.`
+        acted_by_role: 'warga',
+        action: 'SUBMIT',
+        notes: `Pengajuan surat ${jenis_dokumen} oleh pemohon.`
       }).catch(err => console.warn('[WorkflowHistory] Note on create:', err.message));
     }
 
@@ -322,11 +306,6 @@ class DokumenRepository {
     if (updateData.qr_code_hash) {
       query += ', qr_code_hash = ?';
       params.push(updateData.qr_code_hash);
-    }
-
-    if (updateData.is_emergency_bypass !== undefined && updateData.is_emergency_bypass !== null) {
-      query += ', is_emergency_bypass = ?, emergency_reason = ?, bypassed_by_user_id = ?';
-      params.push(updateData.is_emergency_bypass ? 1 : 0, updateData.emergency_reason || null, updateData.bypassed_by_user_id || null);
     }
 
     query += ' WHERE id = ?';

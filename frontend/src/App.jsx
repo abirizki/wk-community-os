@@ -12,6 +12,7 @@ import BansosPage from './pages/BansosPage';
 import DesilPage from './pages/DesilPage';
 import DataMaturityPage from './pages/DataMaturityPage';
 import DayaDukungPage from './pages/DayaDukungPage';
+import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 import CommandCenterPage from './pages/CommandCenterPage';
 import IntegrasiPage from './pages/IntegrasiPage';
 import WhatsAppGatewayPage from './pages/WhatsAppGatewayPage';
@@ -25,7 +26,6 @@ import KeuanganPage from './pages/KeuanganPage';
 import AparaturPage from './pages/AparaturPage';
 import VerifySuratPage from './pages/VerifySuratPage';
 import ScannerPage from './pages/ScannerPage';
-import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 
 function App() {
   return (

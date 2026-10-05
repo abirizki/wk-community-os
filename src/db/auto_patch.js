@@ -6,10 +6,8 @@
  */
 
 const pool = require('./pool');
-const bcrypt = require('bcryptjs');
 
 const STANDARD_PASSWORD_HASH = '$2b$10$hN5MqJELAnUdVw3eoFGBgObO9O5oF/eCGw3rLk6SJv/B4ZMJ7ev3q'; // BumiWarga@2026
-const DEFAULT_PIN_HASH = bcrypt.hashSync('123456', 10); // Default PIN: 123456
 
 const STANDARD_ACCOUNTS = [
   // 1. Eksekutif & Diskominfo
@@ -64,30 +62,18 @@ async function autoPatchDatabase() {
       await connection.query("ALTER TABLE users MODIFY COLUMN username VARCHAR(50) NOT NULL");
     } catch (e) {}
 
-    const userColumns = ['rt', 'rw', 'last_login_at', 'must_change_password', 'kode_kecamatan', 'kode_kelurahan', 'pin_jabatan', 'pin_updated_at'];
+    const userColumns = ['rt', 'rw', 'last_login_at', 'must_change_password', 'kode_kecamatan', 'kode_kelurahan'];
     for (const col of userColumns) {
       try {
         if (col === 'last_login_at') {
           await connection.query("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP NULL DEFAULT NULL");
         } else if (col === 'must_change_password') {
           await connection.query("ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) DEFAULT 0");
-        } else if (col === 'pin_jabatan') {
-          await connection.query("ALTER TABLE users ADD COLUMN pin_jabatan VARCHAR(255) NULL");
-        } else if (col === 'pin_updated_at') {
-          await connection.query("ALTER TABLE users ADD COLUMN pin_updated_at TIMESTAMP NULL DEFAULT NULL");
         } else {
           await connection.query(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(50) NULL`);
         }
       } catch (e) {}
     }
-
-    // Default PIN Jabatan Seeder untuk akun kepengurusan
-    try {
-      await connection.query(
-        "UPDATE users SET pin_jabatan = ? WHERE pin_jabatan IS NULL AND role IN ('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin')",
-        [DEFAULT_PIN_HASH]
-      );
-    } catch (e) {}
 
     // 2. Pastikan tabel warga memiliki kolom user_id, hubungan keluarga, dan jaminan sosial
     const wargaColumns = [
@@ -380,12 +366,7 @@ async function autoPatchDatabase() {
       'nama_subjek VARCHAR(150) NULL',
       'hubungan_keluarga VARCHAR(50) NULL',
       'data_tambahan TEXT NULL',
-      'syarat_berkas TEXT NULL',
-      'is_emergency_bypass TINYINT(1) DEFAULT 0',
-      'emergency_reason TEXT NULL',
-      'bypassed_by_user_id INT NULL',
-      'is_assisted_submission TINYINT(1) DEFAULT 0',
-      'assisted_by_user_id INT NULL'
+      'syarat_berkas TEXT NULL'
     ];
     for (const def of dokCols) {
       try {

@@ -141,17 +141,6 @@ router.patch('/:id/approve', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'a
   }
 });
 
-// POST /api/dokumen/:id/emergency-bypass - Protokol Kedaruratan: Bypass Verifikasi RT oleh RW
-router.post('/:id/emergency-bypass', requireAuth, requireRole('ketua_rw', 'admin_rw', 'superadmin', 'admin'), async (req, res) => {
-  try {
-    const { emergency_reason, pin } = req.body;
-    const result = await dokumenService.emergencyBypassRT(Number(req.params.id), req.session.user, emergency_reason, pin);
-    res.json(result);
-  } catch (error) {
-    res.status(error.status || 500).json({ success: false, message: error.message });
-  }
-});
-
 // POST /api/dokumen/batch-approve - Pengesahan TTE Massal (QuickSignTray Lurah / Kelurahan)
 router.post('/batch-approve', requireAuth, requireRole('admin_kelurahan', 'superadmin', 'admin', 'lurah'), async (req, res) => {
   try {

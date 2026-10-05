@@ -13,7 +13,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 import {
@@ -54,16 +54,18 @@ import {
   Send,
   BedDouble,
   GraduationCap,
-  Zap,
-  HeartHandshake
+  BarChart3,
+  FilePlus,
+  QrCode
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AssistedSubmissionModal from '../../components/AssistedSubmissionModal';
-import EmergencyBypassModal from '../../components/EmergencyBypassModal';
 
 export default function DashboardKetuaRW() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showAssistedModal, setShowAssistedModal] = useState(false);
 
   // Active Tab: 'surat' (default) | 'scorecard' | 'fasilitas' | 'rentan'
   const activeTab = searchParams.get('tab') || 'surat';
@@ -78,12 +80,8 @@ export default function DashboardKetuaRW() {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // 1. Antrean Dokumen Terusan RT & Emergency RT Queue
+  // 1. Antrean Dokumen Terusan RT
   const [dokumenList, setDokumenList] = useState([]);
-  const [pendingRtDocs, setPendingRtDocs] = useState([]);
-  const [suratSubView, setSuratSubView] = useState('ready_rw'); // 'ready_rw' | 'emergency_rt'
-  const [showAssistedModal, setShowAssistedModal] = useState(false);
-  const [bypassDoc, setBypassDoc] = useState(null);
   const [docSearch, setDocSearch] = useState('');
   const [agingSort, setAgingSort] = useState('oldest'); // 'oldest' (SLA first) | 'newest'
 
@@ -128,15 +126,10 @@ export default function DashboardKetuaRW() {
     setIsLoading(true);
     setError(null);
     try {
-      // 1. Antrean Dokumen RW & Dokumen yang masih di tingkat RT (untuk protokol bypass darurat)
-      const [docRes, rtDocRes] = await Promise.all([
-        api.get('/dokumen?approval_step=RW').catch(() => ({ data: [] })),
-        api.get('/dokumen?approval_step=RT').catch(() => ({ data: [] }))
-      ]);
+      // 1. Antrean Dokumen RW
+      const docRes = await api.get('/dokumen?approval_step=RW');
       const docs = docRes?.data || [];
-      const rtDocs = rtDocRes?.data || [];
       setDokumenList(Array.isArray(docs) ? docs : []);
-      setPendingRtDocs(Array.isArray(rtDocs) ? rtDocs : []);
 
       // 2. Rekap Antar-RT (Scorecard) & KPI RW
       const [rekapRes, kpiRes] = await Promise.all([
@@ -190,11 +183,9 @@ export default function DashboardKetuaRW() {
     return Array.from(set).sort();
   }, [scorecardData, dokumenList]);
 
-  // Filtered Dokumen List (Mendukung Antrean Terusan RW & Antrean Darurat RT)
-  const activeDocSource = suratSubView === 'emergency_rt' ? pendingRtDocs : dokumenList;
-
+  // Filtered Dokumen List
   const filteredDokumen = useMemo(() => {
-    return activeDocSource.filter(doc => {
+    return dokumenList.filter(doc => {
       const matchRT = selectedRT === 'all' || doc.rt === selectedRT;
       const q = docSearch.toLowerCase();
       const matchSearch = !q || 
@@ -208,7 +199,7 @@ export default function DashboardKetuaRW() {
       const dateB = new Date(b.created_at || b.tanggal_pengajuan || 0);
       return agingSort === 'oldest' ? dateA - dateB : dateB - dateA;
     });
-  }, [activeDocSource, selectedRT, docSearch, agingSort]);
+  }, [dokumenList, selectedRT, docSearch, agingSort]);
 
   // Hitung SLA (SOP RW: 4 jam kerja)
   const calculateSLA = (createdAt) => {
@@ -405,6 +396,231 @@ export default function DashboardKetuaRW() {
         )}
       </AnimatePresence>
 
+      {/* ========================================================================= */}
+      {/* 1. KANAYA AI &bull; COPILOT MEJA KERJA RW (SMART GOVERNANCE BRIEFING)     */}
+      {/* ========================================================================= */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 border border-emerald-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1.5 max-w-2xl">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+              <Sparkles size={11} className="text-emerald-700" /> KANAYA AI &bull; Copilot Kepemimpinan RW
+            </span>
+            <span className="text-[10px] text-slate-500 font-mono">Mengayomi RT 001 - RT 005</span>
+          </div>
+          <h2 className="text-sm font-bold text-slate-900">
+            {dokumenList.length > 0 
+              ? `Terdapat ${dokumenList.length} surat rekomendasi terusan RT yang siap disahkan Ketua RW.` 
+              : `Antrean terusan RT tertib terkendali. Kepatuhan PBB gabungan 5 RT tercatat 86.8%.`}
+          </h2>
+          <p className="text-[11px] text-slate-600">
+            {dokumenList.length > 0
+              ? `Periksa kelengkapan berkas warga atau gunakan fitur "Bypass Darurat RW" jika ada surat yang terhenti di tingkat RT dalam keadaan darurat medis/krusial.`
+              : `Gunakan jalan pintas di bawah untuk memantau radar scorecard antar-RT, fasilitas bersama, dan dashboard analitik.`}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setShowAssistedModal(true)}
+            className="px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm transition-colors text-xs cursor-pointer"
+          >
+            <FilePlus size={14} />
+            <span>+ Loket Dampingan</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('surat')}
+            className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm transition-colors text-xs cursor-pointer"
+          >
+            <FileCheck size={14} />
+            <span>Validasi Surat</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. SUPER APPS QUICK LAUNCHER (8 PINTASAN UTAMA MEJA KERJA RW)             */}
+      {/* ========================================================================= */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+              Pintasan Cepat Meja Kerja RW (Super Apps Hub)
+            </h2>
+          </div>
+          <span className="text-xs text-slate-500 font-medium">8 Layanan Koordinasi</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* 1. Antrean Terusan RT */}
+          <div
+            onClick={() => setActiveTab('surat')}
+            className={`p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border shadow-sm transition-all group flex flex-col justify-between space-y-3 cursor-pointer ${
+              activeTab === 'surat' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:border-emerald-300'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <FileCheck size={22} />
+              </div>
+              {dokumenList.length > 0 ? (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                  {dokumenList.length} Berkas
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                  Nihil
+                </span>
+              )}
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Validasi Terusan RT</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Tier-2 Verifikasi Surat</p>
+            </div>
+          </div>
+
+          {/* 2. Loket Dampingan Warga */}
+          <div
+            onClick={() => setShowAssistedModal(true)}
+            className="p-4 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 shadow-sm transition-all group flex flex-col justify-between space-y-3 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <FilePlus size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800">
+                Auto RT+RW
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Loket Dampingan</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Bantu Warga Offline</p>
+            </div>
+          </div>
+
+          {/* 3. Dashboard Data Analitik */}
+          <Link
+            to="/dashboard/analitik"
+            className="p-4 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <BarChart3 size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800">
+                Power BI &bull; Looker
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Dashboard Analitik</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Piramida & Heatmap 5 RT</p>
+            </div>
+          </Link>
+
+          {/* 4. Monitoring Pajak PBB */}
+          <Link
+            to="/dashboard/pbb"
+            className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Wallet size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                86.8% Gabungan
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Monitoring PBB</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">e-SPPT & Kepatuhan Pajak</p>
+            </div>
+          </Link>
+
+          {/* 5. Radar Scorecard Antar-RT */}
+          <div
+            onClick={() => setActiveTab('scorecard')}
+            className={`p-4 rounded-2xl bg-white hover:bg-teal-50/50 border shadow-sm transition-all group flex flex-col justify-between space-y-3 cursor-pointer ${
+              activeTab === 'scorecard' ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-slate-200 hover:border-teal-300'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Layers size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800">
+                5 RT Terdata
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Scorecard Antar-RT</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Evaluasi & Komparasi RT</p>
+            </div>
+          </div>
+
+          {/* 6. Daya Dukung Wilayah */}
+          <Link
+            to="/dashboard/daya-dukung"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Building2 size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800">
+                Aset Bersama
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Daya Dukung Wilayah</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Balai RW, TPS & Ibadah</p>
+            </div>
+          </Link>
+
+          {/* 7. Bansos & Ekuitas Perlindungan */}
+          <div
+            onClick={() => setActiveTab('rentan')}
+            className={`p-4 rounded-2xl bg-white hover:bg-purple-50/50 border shadow-sm transition-all group flex flex-col justify-between space-y-3 cursor-pointer ${
+              activeTab === 'rentan' ? 'border-purple-500 ring-2 ring-purple-500/20' : 'border-slate-200 hover:border-purple-300'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <HeartPulse size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
+                Ekuitas Bansos
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Perlindungan Sosial</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Cegah Ketimpangan RT</p>
+            </div>
+          </div>
+
+          {/* 8. Konsultasi Kanaya AI */}
+          <div
+            onClick={() => {
+              const kanayaBtn = document.querySelector('button[title*="Kanaya"]');
+              if (kanayaBtn) kanayaBtn.click();
+            }}
+            className="p-4 rounded-2xl bg-white hover:bg-cyan-50/50 border border-slate-200 hover:border-cyan-300 shadow-sm transition-all group flex flex-col justify-between space-y-3 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Sparkles size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-100 text-cyan-800">
+                Online Copilot
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Konsultasi Kanaya AI</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Copilot Kepemimpinan RW</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 2. Sub-Tabs Navigasi Meja Kerja RW */}
       <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-1">
         <button
@@ -476,42 +692,6 @@ export default function DashboardKetuaRW() {
         <div className="space-y-4">
           {/* Controls Bar: Multi-RT Pill Switcher & Search */}
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-            {/* Sub-view Switcher & Loket Dampingan */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setSuratSubView('ready_rw')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    suratSubView === 'ready_rw'
-                      ? 'bg-emerald-700 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Siap Verifikasi RW ({dokumenList.length})
-                </button>
-                <button
-                  onClick={() => setSuratSubView('emergency_rt')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    suratSubView === 'emergency_rt'
-                      ? 'bg-rose-600 text-white shadow-sm'
-                      : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
-                  }`}
-                >
-                  <Zap size={13} className="text-amber-300" />
-                  <span>Antrean di RT / Jalur Darurat ({pendingRtDocs.length})</span>
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowAssistedModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
-              >
-                <HeartHandshake size={14} />
-                <span>+ Loket Dampingan Warga</span>
-              </button>
-            </div>
-
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               {/* Multi-RT Pills */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
@@ -617,21 +797,6 @@ export default function DashboardKetuaRW() {
                           <span className="px-2 py-0.5 rounded-md text-xs font-mono font-medium bg-slate-100 text-slate-700">
                             {doc.nomor_registrasi || `REQ-#${doc.id}`}
                           </span>
-
-                          {/* Dampingan & Bypass Badges */}
-                          {Boolean(doc.is_assisted_submission) && (
-                            <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200 inline-flex items-center gap-1">
-                              <HeartHandshake className="w-3 h-3 text-purple-600" />
-                              <span>Loket Dampingan</span>
-                            </span>
-                          )}
-                          {Boolean(doc.is_emergency_bypass) && (
-                            <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 inline-flex items-center gap-1">
-                              <Zap className="w-3 h-3 text-rose-600" />
-                              <span>Bypass Darurat RW</span>
-                            </span>
-                          )}
-
                           {/* SLA Badge */}
                           <span className={`px-2 py-0.5 rounded-md text-xs font-mono font-semibold inline-flex items-center gap-1 ${
                             sla.expired 
@@ -670,7 +835,7 @@ export default function DashboardKetuaRW() {
 
                         <div className="flex items-center gap-2 text-xs text-slate-400">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>{suratSubView === 'emergency_rt' ? 'Menunggu verifikasi RT (dapat di-bypass jika darurat)' : `Telah disetujui Ketua RT ${doc.rt}`}</span>
+                          <span>Telah disetujui Ketua RT {doc.rt}</span>
                           <span>•</span>
                           <span>{new Date(doc.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
@@ -687,46 +852,33 @@ export default function DashboardKetuaRW() {
                         </button>
 
                         <div className="flex items-center gap-1.5 w-full lg:w-auto">
-                          {suratSubView === 'emergency_rt' ? (
-                            <button
-                              onClick={() => setBypassDoc(doc)}
-                              className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition-all shadow-sm active:scale-95 whitespace-nowrap"
-                              title="Bypass verifikasi RT karena kondisi darurat mendesak"
-                            >
-                              <Zap className="w-3.5 h-3.5 text-amber-300" />
-                              <span>Bypass Darurat (Lewati RT)</span>
-                            </button>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => handleApprove(doc.id)}
-                                disabled={isProcessingDoc}
-                                className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-sm disabled:opacity-50"
-                                title="Setujui & Teruskan ke Loket Kelurahan"
-                              >
-                                <Check className="w-3.5 h-3.5" />
-                                <span>Setujui (RW)</span>
-                              </button>
+                          <button
+                            onClick={() => handleApprove(doc.id)}
+                            disabled={isProcessingDoc}
+                            className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-sm disabled:opacity-50"
+                            title="Setujui & Teruskan ke Loket Kelurahan"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Setujui (RW)</span>
+                          </button>
 
-                              <button
-                                onClick={() => setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' })}
-                                disabled={isProcessingDoc}
-                                className="p-2 rounded-lg text-amber-700 hover:bg-amber-50 border border-amber-200 transition-colors"
-                                title="Kembalikan untuk Perbaikan"
-                              >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                              </button>
+                          <button
+                            onClick={() => setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' })}
+                            disabled={isProcessingDoc}
+                            className="p-2 rounded-lg text-amber-700 hover:bg-amber-50 border border-amber-200 transition-colors"
+                            title="Kembalikan untuk Perbaikan"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </button>
 
-                              <button
-                                onClick={() => setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' })}
-                                disabled={isProcessingDoc}
-                                className="p-2 rounded-lg text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors"
-                                title="Tolak Permohonan"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </>
-                          )}
+                          <button
+                            onClick={() => setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' })}
+                            disabled={isProcessingDoc}
+                            className="p-2 rounded-lg text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors"
+                            title="Tolak Permohonan"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1591,29 +1743,15 @@ export default function DashboardKetuaRW() {
         )}
       </AnimatePresence>
 
-      {/* Modal Loket Dampingan Warga */}
+      {/* Modal Loket Dampingan Warga (Offline/Gaptek) */}
       <AssistedSubmissionModal
         isOpen={showAssistedModal}
         onClose={() => setShowAssistedModal(false)}
         onSuccess={() => {
-          setSuccessMsg('Surat dampingan warga berhasil diajukan dan diverifikasi hingga tingkat RW!');
-          setTimeout(() => setSuccessMsg(''), 4000);
+          setSuccessMsg('Permohonan dampingan warga berhasil diajukan dan langsung disahkan RT & RW.');
           fetchData();
         }}
-        currentRole="ketua_rw"
-        rw={rwNomor}
-      />
-
-      {/* Modal Protokol Kedaruratan Bypass RT */}
-      <EmergencyBypassModal
-        isOpen={Boolean(bypassDoc)}
-        onClose={() => setBypassDoc(null)}
-        onSuccess={() => {
-          setSuccessMsg('Protokol kedaruratan berhasil dieksekusi. Berkas diteruskan langsung ke Kelurahan!');
-          setTimeout(() => setSuccessMsg(''), 4000);
-          fetchData();
-        }}
-        doc={bypassDoc}
+        officialRole="ketua_rw"
       />
     </div>
   );
