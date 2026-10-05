@@ -66,6 +66,7 @@ import {
   Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AuthorizationPinModal from '../../components/AuthorizationPinModal';
 
 export default function DashboardKetuaRT() {
   const { user } = useAuth();
@@ -102,6 +103,14 @@ export default function DashboardKetuaRT() {
     type: '', // 'REVISE' | 'REJECT'
     doc: null,
     reason: ''
+  });
+
+  // PIN Otorisasi Pejabat RT (6-Digit Security Gate)
+  const [pinModal, setPinModal] = useState({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: null
   });
 
   // Tab 2: Fasilitas & Hunian Sewa
@@ -320,11 +329,7 @@ export default function DashboardKetuaRT() {
   // ===========================================================================
   // SOP ACTIONS (SETUJUI, REVISI, TOLAK)
   // ===========================================================================
-  const handleQuickApprove = async (docId, docTitle) => {
-    if (!window.confirm(`Setujui permohonan surat "${docTitle}" dan teruskan ke Ketua RW?`)) {
-      return;
-    }
-
+  const executeApprove = async (docId, docTitle) => {
     try {
       setProcessingId(docId);
       const res = await api.patch(`/dokumen/${docId}/approve`, {
@@ -345,6 +350,15 @@ export default function DashboardKetuaRT() {
     } finally {
       setProcessingId(null);
     }
+  };
+
+  const handleQuickApprove = (docId, docTitle) => {
+    setPinModal({
+      isOpen: true,
+      title: 'Otorisasi Pengesahan Surat Pengantar RT',
+      description: `Masukkan 6-digit PIN Otorisasi Ketua RT untuk menyetujui surat "${docTitle}" dan membubuhkan TTE digital.`,
+      onConfirm: () => executeApprove(docId, docTitle)
+    });
   };
 
   const handleSOPAction = async () => {
@@ -652,6 +666,272 @@ export default function DashboardKetuaRT() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 0. Persona Mode Switcher (Single Identity, Dual Role) */}
+      <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white shadow-md border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 text-emerald-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-400 text-emerald-950">
+                Mode Pejabat Aktif
+              </span>
+              <span className="text-xs text-emerald-200/80 font-mono">RT {rtNomor} / RW {rwNomor}</span>
+            </div>
+            <h2 className="text-sm sm:text-base font-bold text-white mt-0.5">
+              Meja Kerja Otoritas Ketua RT
+            </h2>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-emerald-200/70 hidden md:inline">Perlu urus surat/KK pribadi?</span>
+          <Link
+            to="/dashboard/warga"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+          >
+            <Home className="w-4 h-4 text-emerald-300" />
+            <span>Buka Layanan Mandiri Warga Saya</span>
+            <ArrowRight className="w-3.5 h-3.5 opacity-70" />
+          </Link>
+        </div>
+      </div>
+
+      {/* 1. Hero Section: KANAYA AI Strategic Briefing Card */}
+      <div className="mb-6 rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-emerald-950 text-white p-5 sm:p-6 border border-emerald-500/20 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-900/40">
+                <Sparkles className="w-5 h-5 text-slate-950" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-extrabold tracking-wider uppercase text-emerald-300">
+                    KANAYA Strategic Governance Copilot
+                  </span>
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                </div>
+                <p className="text-[11px] text-emerald-100/70">Ringkasan AI Meja Kerja RT</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+              <p className="text-xs sm:text-sm text-slate-100 leading-relaxed font-sans">
+                {aiBrief?.executive_summary || `Selamat bertugas, Ketua RT ${rtNomor}. Saat ini terdapat ${pendingDocs.length} berkas permohonan warga yang menanti verifikasi Anda. Kolektivitas iuran mencapai ${iuranSummary.persentase}, dan tercatat ${kelompokRentanList.length} jiwa warga rentan dalam pemantauan bansos.`}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-emerald-200 font-mono">
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <span>SLA Target: 4 Jam</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-emerald-200 font-mono">
+                <Heart className="w-3.5 h-3.5 text-rose-400" />
+                <span>{kelompokRentanList.length} Jiwa Rentan</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-emerald-200 font-mono">
+                <Wallet className="w-3.5 h-3.5 text-teal-400" />
+                <span>Iuran: {iuranSummary.sudah_bayar}/{iuranSummary.total_kk} KK</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0">
+            <Link
+              to="/dashboard/kanaya"
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Konsultasi AI KANAYA</span>
+            </Link>
+            <button
+              type="button"
+              onClick={loadRTData}
+              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>Perbarui Data Realtime</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Super Apps Bento Quick Launcher (8 Flutter-Style Grid Shortcuts) */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-700">
+              Pintasan Meja Kerja Super Apps
+            </h3>
+          </div>
+          <span className="text-[11px] text-slate-400 font-mono">8 Layanan Cepat</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* 1. Verifikasi Surat (TTE) */}
+          <button
+            type="button"
+            onClick={() => handleTabChange('surat')}
+            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <FileCheck className="w-5 h-5" />
+              </div>
+              {pendingDocs.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-100 text-rose-700 animate-pulse">
+                  {pendingDocs.length} antrean
+                </span>
+              )}
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Verifikasi Surat & TTE</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">SOP 3-Aksi & SLA</p>
+            </div>
+          </button>
+
+          {/* 2. Loket Dampingan Warga */}
+          <Link
+            to="/dashboard/surat?mode=dampingan"
+            className="p-3.5 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <CheckSquare className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-teal-100 text-teal-800">
+                Offline
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-teal-700">Loket Dampingan</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Bantu warga lansia/gaptek</p>
+            </div>
+          </Link>
+
+          {/* 3. Buku Warga & KK */}
+          <Link
+            to="/dashboard/warga-lingkungan"
+            className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Users className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-100 text-blue-800 font-mono">
+                RT {rtNomor}
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700">Buku Warga & KK</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Direktori terproteksi PDP</p>
+            </div>
+          </Link>
+
+          {/* 4. Kas & Iuran RT */}
+          <Link
+            to="/dashboard/keuangan"
+            className="p-3.5 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200/80 hover:border-amber-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Wallet className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold font-mono text-amber-700">
+                {iuranSummary.persentase}
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-amber-700">Kas & Iuran RT</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Monitoring setoran warga</p>
+            </div>
+          </Link>
+
+          {/* 5. Pajak PBB RT */}
+          <Link
+            to="/dashboard/pbb"
+            className="p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200/80 hover:border-indigo-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Landmark className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-indigo-100 text-indigo-800">
+                SPPT
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-indigo-700">Monitoring PBB</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Kolektivitas pajak bumi</p>
+            </div>
+          </Link>
+
+          {/* 6. Radar Kelompok Rentan */}
+          <button
+            type="button"
+            onClick={() => handleTabChange('rentan')}
+            className="p-3.5 rounded-2xl bg-white hover:bg-rose-50/50 border border-slate-200/80 hover:border-rose-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Heart className="w-5 h-5" />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-100 text-rose-700">
+                {kelompokRentanList.length} jiwa
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-rose-700">Radar Rentan & Bansos</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Yatim & Lansia Sebatang</p>
+            </div>
+          </button>
+
+          {/* 7. Dashboard Analitik Looker / Power BI */}
+          <Link
+            to="/dashboard/analitik"
+            className="p-3.5 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Layers className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-100 text-purple-800">
+                Looker BI
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-700">Dashboard Analitik</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Visualisasi data Power BI</p>
+            </div>
+          </Link>
+
+          {/* 8. Tanya KANAYA Copilot */}
+          <Link
+            to="/dashboard/kanaya"
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-900 to-emerald-950 text-white hover:from-slate-800 hover:to-emerald-900 border border-emerald-500/30 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-400 text-emerald-950">
+                AI Copilot
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-emerald-200">Tanya KANAYA</h4>
+              <p className="text-[10px] text-slate-300 mt-0.5">Asisten regulasi RT/RW</p>
+            </div>
+          </Link>
+        </div>
+      </div>
 
       {/* Sub-Tabs Navigasi Meja Kerja RT */}
       <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-1.5 shadow-2xs flex flex-wrap items-center gap-1.5 mb-6">
@@ -1842,6 +2122,18 @@ export default function DashboardKetuaRT() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* PIN Otorisasi Pejabat RT (6-Digit Security BottomSheet) */}
+      <AuthorizationPinModal
+        isOpen={pinModal.isOpen}
+        onClose={() => setPinModal({ isOpen: false, title: '', description: '', onConfirm: null })}
+        onSuccess={() => {
+          if (pinModal.onConfirm) pinModal.onConfirm();
+        }}
+        actionTitle={pinModal.title}
+        actionDescription={pinModal.description}
+        officerRole="Ketua RT"
+      />
     </DashboardShell>
   );
 }

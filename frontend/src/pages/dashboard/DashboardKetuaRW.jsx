@@ -13,7 +13,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 import {
@@ -38,6 +38,7 @@ import {
   Home,
   MapPin,
   HeartPulse,
+  Heart,
   Landmark,
   Plus,
   Search,
@@ -56,6 +57,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AuthorizationPinModal from '../../components/AuthorizationPinModal';
 
 export default function DashboardKetuaRW() {
   const { user } = useAuth();
@@ -73,6 +75,14 @@ export default function DashboardKetuaRW() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
+
+  // PIN Otorisasi Pejabat RW (6-Digit Security Gate)
+  const [pinModal, setPinModal] = useState({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: null
+  });
 
   // 1. Antrean Dokumen Terusan RT
   const [dokumenList, setDokumenList] = useState([]);
@@ -220,8 +230,7 @@ export default function DashboardKetuaRW() {
     return sameNikDocs.length > 0 ? sameNikDocs.length : null;
   };
 
-  // Eksekusi Persetujuan RW (Tier-2 Approval)
-  const handleApprove = async (docId) => {
+  const executeApproveRW = async (docId) => {
     setIsProcessingDoc(true);
     try {
       const res = await api.patch(`/dokumen/${docId}/approve`, {
@@ -239,6 +248,16 @@ export default function DashboardKetuaRW() {
     } finally {
       setIsProcessingDoc(false);
     }
+  };
+
+  // Eksekusi Persetujuan RW (Tier-2 Approval with PIN Otorisasi)
+  const handleApprove = (docId, docTitle = 'Permohonan Surat') => {
+    setPinModal({
+      isOpen: true,
+      title: 'Otorisasi Pengesahan Berjenjang RW',
+      description: `Masukkan 6-digit PIN Otorisasi Ketua RW untuk menyetujui "${docTitle}" dan meneruskannya ke Kelurahan.`,
+      onConfirm: () => executeApproveRW(docId)
+    });
   };
 
   // Eksekusi SOP Revisi & Penolakan
@@ -389,6 +408,272 @@ export default function DashboardKetuaRW() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 0. Persona Mode Switcher (Single Identity, Dual Role) */}
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white shadow-md border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 text-emerald-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-400 text-emerald-950">
+                Mode Pejabat Aktif
+              </span>
+              <span className="text-xs text-emerald-200/80 font-mono">Wilayah RW {rwNomor}</span>
+            </div>
+            <h2 className="text-sm sm:text-base font-bold text-white mt-0.5">
+              Meja Kerja Otoritas Ketua RW
+            </h2>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-emerald-200/70 hidden md:inline">Perlu urus surat/KK keluarga sendiri?</span>
+          <Link
+            to="/dashboard/warga"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+          >
+            <Home className="w-4 h-4 text-emerald-300" />
+            <span>Buka Layanan Mandiri Warga Saya</span>
+            <ArrowRight className="w-3.5 h-3.5 opacity-70" />
+          </Link>
+        </div>
+      </div>
+
+      {/* 1. Hero Section: KANAYA AI Strategic Briefing Card RW */}
+      <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-emerald-950 text-white p-5 sm:p-6 border border-emerald-500/20 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-900/40">
+                <Sparkles className="w-5 h-5 text-slate-950" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-extrabold tracking-wider uppercase text-emerald-300">
+                    KANAYA Strategic Governance Copilot (Tingkat RW)
+                  </span>
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                </div>
+                <p className="text-[11px] text-emerald-100/70">Koordinasi & Evaluasi Kebijakan Lintas-RT</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+              <p className="text-xs sm:text-sm text-slate-100 leading-relaxed font-sans">
+                {`Komando Wilayah RW ${rwNomor}: Menanungi ${scorecardData.length || 3} RT dengan ${dokumenList.length} berkas terusan RT yang siap disahkan. Terdapat ${kelompokRentanList.length} kelompok rentan dan kepatuhan administrasi antrean rata-rata berada pada tingkat optimal.`}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-emerald-200 font-mono">
+                <FileCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span>{dokumenList.length} Berkas Terusan</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-emerald-200 font-mono">
+                <Heart className="w-3.5 h-3.5 text-rose-400" />
+                <span>{kelompokRentanList.length} Jiwa Rentan RW</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-emerald-200 font-mono">
+                <Building2 className="w-3.5 h-3.5 text-teal-400" />
+                <span>{fasilitasKeagamaan.length} Fasilitas Bersama</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0">
+            <Link
+              to="/dashboard/kanaya"
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Konsultasi AI KANAYA RW</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => { setRefreshing(true); fetchData(); }}
+              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>Perbarui Data Realtime</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Super Apps Bento Quick Launcher RW (8 Flutter-Style Grid Shortcuts) */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-700">
+              Pintasan Meja Kerja Super Apps RW
+            </h3>
+          </div>
+          <span className="text-[11px] text-slate-400 font-mono">8 Layanan Cepat</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* 1. Validasi Terusan RT */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('surat')}
+            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <FileCheck className="w-5 h-5" />
+              </div>
+              {dokumenList.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-100 text-amber-800">
+                  {dokumenList.length} terusan
+                </span>
+              )}
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Validasi Terusan RT</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">TTE Pengesahan RW</p>
+            </div>
+          </button>
+
+          {/* 2. Loket Dampingan RW */}
+          <Link
+            to="/dashboard/surat?mode=dampingan"
+            className="p-3.5 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Check className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-teal-100 text-teal-800">
+                Offline
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-teal-700">Loket Dampingan RW</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Asistensi surat langsung</p>
+            </div>
+          </Link>
+
+          {/* 3. Buku Warga & KK RW */}
+          <Link
+            to="/dashboard/warga-lingkungan"
+            className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Users className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-100 text-blue-800 font-mono">
+                RW {rwNomor}
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700">Buku Warga Lintas-RT</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Direktori terproteksi PDP</p>
+            </div>
+          </Link>
+
+          {/* 4. Kas Gabungan RW */}
+          <Link
+            to="/dashboard/keuangan"
+            className="p-3.5 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200/80 hover:border-amber-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Wallet className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-800">
+                Rekap
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-amber-700">Kas Gabungan RW</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Monitoring iuran antar-RT</p>
+            </div>
+          </Link>
+
+          {/* 5. Pajak PBB RW */}
+          <Link
+            to="/dashboard/pbb"
+            className="p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200/80 hover:border-indigo-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Landmark className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-indigo-100 text-indigo-800">
+                SPPT
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-indigo-700">Monitoring PBB RW</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Kolektivitas pajak wilayah</p>
+            </div>
+          </Link>
+
+          {/* 6. Scorecard & Evaluasi RT */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('scorecard')}
+            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Layers className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800">
+                Scorecard
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Scorecard Antar-RT</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Radar komparasi kinerja</p>
+            </div>
+          </button>
+
+          {/* 7. Dashboard Analitik Looker / Power BI */}
+          <Link
+            to="/dashboard/analitik"
+            className="p-3.5 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Layers className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-100 text-purple-800">
+                Looker BI
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-700">Dashboard Analitik</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Visualisasi data Power BI</p>
+            </div>
+          </Link>
+
+          {/* 8. Tanya KANAYA RW */}
+          <Link
+            to="/dashboard/kanaya"
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-900 to-emerald-950 text-white hover:from-slate-800 hover:to-emerald-900 border border-emerald-500/30 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-400 text-emerald-950">
+                AI Copilot
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-emerald-200">Tanya KANAYA</h4>
+              <p className="text-[10px] text-slate-300 mt-0.5">Asisten regulasi RW</p>
+            </div>
+          </Link>
+        </div>
+      </div>
 
       {/* 2. Sub-Tabs Navigasi Meja Kerja RW */}
       <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-1">
@@ -1511,6 +1796,17 @@ export default function DashboardKetuaRW() {
           </div>
         )}
       </AnimatePresence>
+      {/* PIN Otorisasi Pejabat RW (6-Digit Security BottomSheet) */}
+      <AuthorizationPinModal
+        isOpen={pinModal.isOpen}
+        onClose={() => setPinModal({ isOpen: false, title: '', description: '', onConfirm: null })}
+        onSuccess={() => {
+          if (pinModal.onConfirm) pinModal.onConfirm();
+        }}
+        actionTitle={pinModal.title}
+        actionDescription={pinModal.description}
+        officerRole="Ketua RW"
+      />
     </div>
   );
 }

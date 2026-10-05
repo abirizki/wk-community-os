@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Service Worker: Bumi Warga — Community OS
  * Progressive Web App & Robust Offline-First Support
  */
