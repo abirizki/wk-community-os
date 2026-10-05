@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -21,6 +22,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function WargaList() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Guard Privasi UU PDP: Warga biasa tidak berhak melihat buku warga lingkungan orang lain
+  useEffect(() => {
+    if (user && (!user.role || ['warga', 'pengguna', 'user'].includes(user.role))) {
+      navigate('/dashboard/kk', { replace: true });
+    }
+  }, [user, navigate]);
   
   const canAssisted = user && ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'].includes(user.role);
   const canBulkImport = user && ['admin_kelurahan', 'superadmin', 'admin'].includes(user.role);
