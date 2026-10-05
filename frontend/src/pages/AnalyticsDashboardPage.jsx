@@ -1,84 +1,74 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3,
-  TrendingUp,
   Users,
-  Wallet,
-  Clock,
-  ShieldCheck,
-  AlertTriangle,
-  FileText,
-  Building2,
-  HeartPulse,
-  GraduationCap,
-  Sparkles,
-  ChevronRight,
-  Filter,
-  Download,
-  RefreshCw,
-  Layers,
-  ArrowUpRight,
-  ArrowDownRight,
-  CheckCircle2,
-  Calendar,
-  Eye,
   PieChart,
   Activity,
+  FileCheck,
+  TrendingUp,
   MapPin,
-  ExternalLink,
+  Calendar,
+  Layers,
+  Sparkles,
+  RefreshCw,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  ShieldCheck,
+  Filter,
+  ArrowRight,
+  Landmark,
+  Building2,
+  FileText,
+  Zap,
   Info
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AnalyticsDashboardPage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-
-  // Control Ribbon Slicers
-  const [selectedRT, setSelectedRT] = useState(user?.role === 'ketua_rt' ? (user?.rt || '001') : 'ALL');
+  const [activeTab, setActiveTab] = useState('demografi'); // 'demografi' | 'heatmap' | 'dokumen' | 'rekomendasi'
+  const [selectedRT, setSelectedRT] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
-  const [activeDimension, setActiveDimension] = useState('demografi'); // 'demografi' | 'surat' | 'heatmap' | 'dayadukung'
-  
-  // Loading & Data States
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+
+  // Data states
   const [demografiData, setDemografiData] = useState(null);
   const [dokumenData, setDokumenData] = useState(null);
-  const [powerbiSummary, setPowerbiSummary] = useState(null);
-  const [activePyramidHover, setActivePyramidHover] = useState(null);
+  const [selectedHeatmapRT, setSelectedHeatmapRT] = useState(null);
 
   const isRT = user?.role === 'ketua_rt';
-  const isRW = user?.role === 'ketua_rw';
+  const isRW = user?.role === 'ketua_rw' || user?.role === 'admin_rw';
+  const isKelurahan = ['admin_kelurahan', 'lurah', 'superadmin', 'admin', 'camat', 'walikota'].includes(user?.role);
+
   const userRT = user?.rt || '001';
   const userRW = user?.rw || '001';
 
   // Fetch Analytics Data
-  const fetchAnalytics = async () => {
+  const fetchData = async () => {
     try {
-      setRefreshing(true);
-      const rtParam = isRT ? userRT : selectedRT;
-      const queryStr = `?rw=${userRW}&rt=${rtParam}&period=${selectedPeriod}`;
+      setLoading(true);
+      setError('');
 
-      const [demogRes, docRes, sumRes] = await Promise.allSettled([
-        api.get(`/analytics/demografi${queryStr}`),
-        api.get(`/analytics/dokumen${queryStr}`),
-        api.get(`/analytics/powerbi-summary${queryStr}`)
+      const rtParam = isRT ? userRT : selectedRT;
+      const demografiUrl = `/analytics/demografi?rt=${rtParam}&rw=${userRW}`;
+      const dokumenUrl = `/analytics/dokumen?rt=${rtParam}&rw=${userRW}&period=${selectedPeriod}`;
+
+      const [demRes, dokRes] = await Promise.all([
+        api.get(demografiUrl),
+        api.get(dokumenUrl)
       ]);
 
-      if (demogRes.status === 'fulfilled' && demogRes.value?.success) {
-        setDemografiData(demogRes.value.data);
-      }
-      if (docRes.status === 'fulfilled' && docRes.value?.success) {
-        setDokumenData(docRes.value.data);
-      }
-      if (sumRes.status === 'fulfilled' && sumRes.value?.success) {
-        setPowerbiSummary(sumRes.value.data);
-      }
+      if (demRes.success) setDemografiData(demRes.data);
+      if (dokRes.success) setDokumenData(dokRes.data);
     } catch (err) {
-      console.error('Failed to load analytics data:', err);
+      console.error('Fetch analytics error:', err);
+      setError(err.message || 'Gagal memuat data analitik.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -86,785 +76,605 @@ export default function AnalyticsDashboardPage() {
   };
 
   useEffect(() => {
-    fetchAnalytics();
+    fetchData();
   }, [selectedRT, selectedPeriod]);
 
-  // Fallback defaults for seamless Power BI look & feel
-  const summary = demografiData?.summary || {
-    total_warga: 1420,
-    total_kk: 425,
-    total_laki: 725,
-    total_perempuan: 695,
-    rasio_gender: '1.04',
-    rata_usia: 34.2
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchData();
   };
 
-  const pyramid = demografiData?.pyramid || [
-    { cohort: 'Balita (0-4)', range: '0-4', male: 68, female: 62, total: 130, male_pct: 4.8, female_pct: 4.4 },
-    { cohort: 'Usia Sekolah (5-14)', range: '5-14', male: 115, female: 108, total: 223, male_pct: 8.1, female_pct: 7.6 },
-    { cohort: 'Pemuda (15-24)', range: '15-24', male: 142, female: 135, total: 277, male_pct: 10.0, female_pct: 9.5 },
-    { cohort: 'Produktif Muda (25-39)', range: '25-39', male: 185, female: 178, total: 363, male_pct: 13.0, female_pct: 12.5 },
-    { cohort: 'Produktif Matang (40-59)', range: '40-59', male: 138, female: 132, total: 270, male_pct: 9.7, female_pct: 9.3 },
-    { cohort: 'Lansia (60+)', range: '60+', male: 77, female: 80, total: 157, male_pct: 5.4, female_pct: 5.6 }
-  ];
+  // Helper Piramida: cari nilai maksimum untuk skala proporsional
+  const maxPyramidValue = useMemo(() => {
+    if (!demografiData?.piramida || demografiData.piramida.length === 0) return 100;
+    let max = 0;
+    demografiData.piramida.forEach(item => {
+      if (item.pria > max) max = item.pria;
+      if (item.wanita > max) max = item.wanita;
+    });
+    return Math.max(max, 10);
+  }, [demografiData]);
 
-  const professions = demografiData?.professions || [
-    { name: 'Karyawan Swasta', count: 420, percentage: 29.6 },
-    { name: 'Wiraswasta / UMKM', count: 310, percentage: 21.8 },
-    { name: 'Buruh Harian Lepas', count: 185, percentage: 13.0 },
-    { name: 'PNS / ASN / TNI / Polri', count: 145, percentage: 10.2 },
-    { name: 'Pedagang Kelontong / Kios', count: 125, percentage: 8.8 },
-    { name: 'Pelajar / Mahasiswa', count: 95, percentage: 6.7 },
-    { name: 'Purnawirawan / Pensiunan', count: 72, percentage: 5.1 },
-    { name: 'Tenaga Medis / Pendidik', count: 68, percentage: 4.8 }
-  ];
-
-  const spatialMatrix = demografiData?.spatial_matrix || [
-    { rt: '001', total_warga: 310, total_kk: 92, male: 158, female: 152, lansia: 34, balita: 28, desil_1_2: 18, pbb_compliance: 86.4, status: 'Prima' },
-    { rt: '002', total_warga: 285, total_kk: 86, male: 144, female: 141, lansia: 31, balita: 25, desil_1_2: 24, pbb_compliance: 81.2, status: 'Baik' },
-    { rt: '003', total_warga: 295, total_kk: 88, male: 150, female: 145, lansia: 39, balita: 26, desil_1_2: 15, pbb_compliance: 89.5, status: 'Prima' },
-    { rt: '004', total_warga: 260, total_kk: 78, male: 132, female: 128, lansia: 27, balita: 24, desil_1_2: 21, pbb_compliance: 77.8, status: 'Perlu Perhatian' },
-    { rt: '005', total_warga: 270, total_kk: 81, male: 141, female: 129, lansia: 26, balita: 27, desil_1_2: 12, pbb_compliance: 92.1, status: 'Sangat Prima' }
-  ];
-
-  const docAnalytics = dokumenData || {
-    summary: {
-      total_pengajuan: 148,
-      disahkan: 132,
-      dalam_proses: 11,
-      ditolak: 5,
-      tingkat_kelulusan: 96.4,
-      sla_rata_jam: 2.4,
-      target_sla_jam: 4.0,
-      assisted_submissions: 19,
-      emergency_bypasses: 4
-    },
-    top_categories: [
-      { name: 'Surat Keterangan Usaha (SKU)', count: 48, percentage: 32.4, avg_hours: 1.8 },
-      { name: 'Surat Keterangan Domisili', count: 34, percentage: 23.0, avg_hours: 1.2 },
-      { name: 'Surat Pengantar Nikah (N1-N4)', count: 22, percentage: 14.9, avg_hours: 3.5 },
-      { name: 'Surat Keterangan Tidak Mampu (SKTM)', count: 18, percentage: 12.2, avg_hours: 2.8 },
-      { name: 'Surat Keterangan Kematian', count: 12, percentage: 8.1, avg_hours: 1.1 }
-    ],
-    time_series: [
-      { label: 'Minggu 1', submitted: 32, approved: 30, sla_hours: 2.1 },
-      { label: 'Minggu 2', submitted: 38, approved: 35, sla_hours: 2.3 },
-      { label: 'Minggu 3', submitted: 42, approved: 39, sla_hours: 2.6 },
-      { label: 'Minggu 4', submitted: 36, approved: 28, sla_hours: 2.4 }
-    ],
-    channel_distribution: [
-      { channel: 'Aplikasi Mandiri (Warga)', count: 129, percentage: 87.2 },
-      { channel: 'Loket Dampingan RT/RW (Offline)', count: 19, percentage: 12.8 }
-    ]
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
+  // Total Gender & Agama
+  const genderStats = useMemo(() => {
+    if (!demografiData?.piramida) return { pria: 0, wanita: 0, total: 0, rasioPria: 50, rasioWanita: 50 };
+    let pria = 0;
+    let wanita = 0;
+    demografiData.piramida.forEach(p => {
+      pria += p.pria;
+      wanita += p.wanita;
+    });
+    const total = pria + wanita;
+    return {
+      pria,
+      wanita,
+      total,
+      rasioPria: total > 0 ? Math.round((pria / total) * 100) : 50,
+      rasioWanita: total > 0 ? Math.round((wanita / total) * 100) : 50
+    };
+  }, [demografiData]);
 
   return (
-    <div className="space-y-6 pb-16 font-sans">
-      {/* ========================================================================= */}
-      {/* 1. POWER BI / LOOKER STUDIO CONTROL RIBBON (TOP SLICER BAR)             */}
-      {/* ========================================================================= */}
-      <div className="bg-slate-900 text-white rounded-2xl p-5 shadow-xl border border-slate-800">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase tracking-widest flex items-center gap-1.5">
-                <BarChart3 size={11} className="text-blue-400" />
-                Power BI &bull; Looker Studio Edition
-              </span>
-              <span className="text-[11px] text-slate-400 font-mono">
-                Kelurahan Kebonjati &bull; RW {userRW}
-              </span>
+    <div className="space-y-6 max-w-7xl mx-auto px-2 sm:px-4 py-4">
+      {/* Top Header Card */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        {/* Background Ambient Glow */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-semibold mb-3">
+              <BarChart3 size={14} className="text-cyan-400" />
+              <span>Executive Decision Support System (DSS)</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
             </div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              Executive Analytics & Spatial Intelligence Studio
+
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+              Dashboard Data Analitik {isRT ? `RT ${userRT}` : isRW ? `RW ${userRW}` : 'Kewilayahan'}
             </h1>
-            <p className="text-xs text-slate-400">
-              Sistem Pendukung Keputusan Eksekutif RT/RW Berbasis Data Riil, Piramida Penduduk, & SLA Pelayanan.
+            <p className="text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Analisis demografi berbasis piramida penduduk, matriks spasial RT, dan visualisasi kinerja pelayanan surat untuk perumusan kebijakan publik yang presisi.
             </p>
           </div>
 
-          {/* Slicers / Control Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Slicer: Scope RT */}
-            <div className="flex items-center bg-slate-800/90 rounded-xl px-3 py-1.5 border border-slate-700 text-xs">
-              <Filter size={13} className="text-slate-400 mr-2" />
-              <span className="text-slate-400 mr-2 text-[11px]">Wilayah:</span>
-              {isRT ? (
-                <span className="font-bold text-amber-400 font-mono">RT {userRT} (Terkunci)</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/15 transition-all shadow-sm active:scale-95"
+            >
+              <RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />
+              <span>Segarkan Data</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Multi-RT Scope Pills (Untuk RW & Kelurahan) */}
+        {!isRT && (
+          <div className="mt-6 pt-6 border-t border-white/10 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 mr-1">
+              <Filter size={13} className="text-blue-400" /> Filter Cakupan RT:
+            </span>
+
+            {['all', '001', '002', '003', '004', '005'].map((rt) => (
+              <button
+                key={rt}
+                onClick={() => setSelectedRT(rt)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  selectedRT === rt
+                    ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-300/50'
+                    : 'bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10'
+                }`}
+              >
+                {rt === 'all' ? `Semua RT (RW ${userRW})` : `RT ${rt}`}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Super App Segmented Navigation Pills */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-gray-200">
+        {[
+          { id: 'demografi', label: 'Demografi & Piramida', icon: <Users size={16} /> },
+          { id: 'heatmap', label: 'Matriks Spasial Heatmap RT', icon: <MapPin size={16} /> },
+          { id: 'dokumen', label: 'Layanan Surat & SLA', icon: <FileCheck size={16} /> },
+          { id: 'rekomendasi', label: 'AI Strategy & Kebijakan', icon: <Sparkles size={16} /> }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
+              activeTab === tab.id
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                : 'bg-white hover:bg-gray-100 text-gray-600 border border-gray-200'
+            }`}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* TAB 1: DEMOGRAFI & PIRAMIDA PENDUDUK */}
+      {activeTab === 'demografi' && (
+        <div className="space-y-6">
+          {/* Quick Metrics KPI Bento */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0">
+                <Users size={24} />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Total Penduduk</span>
+                <span className="text-2xl font-black text-gray-900 font-mono">{genderStats.total}</span>
+                <span className="text-[11px] text-gray-500 block">Warga Terdata Aktif</span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0">
+                <Activity size={24} />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Laki-laki</span>
+                <span className="text-2xl font-black text-indigo-900 font-mono">{genderStats.pria}</span>
+                <span className="text-[11px] text-indigo-600 font-bold block">{genderStats.rasioPria}% Proporsi</span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold shrink-0">
+                <PieChart size={24} />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Perempuan</span>
+                <span className="text-2xl font-black text-rose-900 font-mono">{genderStats.wanita}</span>
+                <span className="text-[11px] text-rose-600 font-bold block">{genderStats.rasioWanita}% Proporsi</span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
+                <TrendingUp size={24} />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Sex Ratio</span>
+                <span className="text-2xl font-black text-emerald-900 font-mono">
+                  {genderStats.wanita > 0 ? Math.round((genderStats.pria / genderStats.wanita) * 100) : 100}
+                </span>
+                <span className="text-[11px] text-emerald-700 font-semibold block">Pria per 100 Wanita</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Piramida Penduduk Interaktif */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-100 gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-black text-gray-900 tracking-tight">Piramida Penduduk Kohort Usia</h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    BPS Standard
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Distribusi struktur usia dan gender warga untuk pemetaan bonus demografi dan beban ketergantungan (dependency ratio).
+                </p>
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center gap-4 text-xs font-semibold">
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded-md bg-blue-600 shadow-sm" />
+                  <span className="text-gray-700">Laki-laki</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded-md bg-rose-500 shadow-sm" />
+                  <span className="text-gray-700">Perempuan</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Pyramid Chart Bars (Diverging Axis) */}
+            <div className="py-6 space-y-3.5 max-w-4xl mx-auto">
+              {demografiData?.piramida?.length > 0 ? (
+                demografiData.piramida.map((item, index) => {
+                  const priaPct = Math.min(100, Math.round((item.pria / maxPyramidValue) * 100));
+                  const wanitaPct = Math.min(100, Math.round((item.wanita / maxPyramidValue) * 100));
+
+                  return (
+                    <div key={index} className="grid grid-cols-12 items-center gap-2 sm:gap-4 text-xs">
+                      {/* Bar Laki-Laki (Left, Aligned to Right) */}
+                      <div className="col-span-5 flex items-center justify-end gap-2">
+                        <span className="font-mono font-bold text-gray-700 text-[11px] shrink-0">{item.pria} jiwa</span>
+                        <div className="w-full bg-gray-50 rounded-xl h-6 flex justify-end overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${priaPct}%` }}
+                            transition={{ duration: 0.6, delay: index * 0.05 }}
+                            className="bg-gradient-to-l from-blue-600 to-indigo-500 h-full rounded-l-lg shadow-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Center Age Label */}
+                      <div className="col-span-2 text-center">
+                        <span className="px-2 py-1 rounded-lg bg-gray-100 text-gray-700 font-bold text-[11px] block truncate border border-gray-200">
+                          {item.kelompok_usia}
+                        </span>
+                      </div>
+
+                      {/* Bar Perempuan (Right, Aligned to Left) */}
+                      <div className="col-span-5 flex items-center justify-start gap-2">
+                        <div className="w-full bg-gray-50 rounded-xl h-6 flex justify-start overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${wanitaPct}%` }}
+                            transition={{ duration: 0.6, delay: index * 0.05 }}
+                            className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-r-lg shadow-sm"
+                          />
+                        </div>
+                        <span className="font-mono font-bold text-gray-700 text-[11px] shrink-0">{item.wanita} jiwa</span>
+                      </div>
+                    </div>
+                  );
+                })
               ) : (
-                <select
-                  value={selectedRT}
-                  onChange={(e) => setSelectedRT(e.target.value)}
-                  className="bg-transparent text-white font-bold focus:outline-none cursor-pointer text-xs"
-                >
-                  <option value="ALL" className="bg-slate-800 text-white">Semua RT (RT 001 - 005)</option>
-                  <option value="001" className="bg-slate-800 text-white">RT 001</option>
-                  <option value="002" className="bg-slate-800 text-white">RT 002</option>
-                  <option value="003" className="bg-slate-800 text-white">RT 003</option>
-                  <option value="004" className="bg-slate-800 text-white">RT 004</option>
-                  <option value="005" className="bg-slate-800 text-white">RT 005</option>
-                </select>
+                <div className="py-12 text-center text-gray-400">
+                  <Users size={32} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">Data kohort umur kependudukan belum tersedia di wilayah ini.</p>
+                </div>
               )}
             </div>
 
-            {/* Slicer: Timeframe */}
-            <div className="flex items-center bg-slate-800/90 rounded-xl px-3 py-1.5 border border-slate-700 text-xs">
-              <Calendar size={13} className="text-slate-400 mr-2" />
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="bg-transparent text-white font-bold focus:outline-none cursor-pointer text-xs"
-              >
-                <option value="7d" className="bg-slate-800 text-white">7 Hari Terakhir</option>
-                <option value="30d" className="bg-slate-800 text-white">30 Hari Terakhir</option>
-                <option value="90d" className="bg-slate-800 text-white">Kuartal Berjalan (Q3)</option>
-                <option value="ytd" className="bg-slate-800 text-white">Tahun Berjalan (YTD 2026)</option>
-              </select>
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
+              <span>Sumbu Tengah: Klasifikasi Kelompok Umur</span>
+              <span>Skala Dinamis Maksimum: {maxPyramidValue} Jiwa</span>
+            </div>
+          </div>
+
+          {/* Grid Dua Kolom: Sebaran Pekerjaan & Agama */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Top Pekerjaan Warga */}
+            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                <h3 className="text-sm font-black text-gray-900 tracking-tight">Top Profesi & Pekerjaan Warga</h3>
+                <span className="text-[11px] text-gray-400 font-medium">8 Terbanyak</span>
+              </div>
+
+              <div className="py-4 space-y-3">
+                {demografiData?.pekerjaan?.length > 0 ? (
+                  demografiData.pekerjaan.map((item, idx) => {
+                    const totalPekerjaan = demografiData.pekerjaan.reduce((acc, c) => acc + c.count, 0) || 1;
+                    const pct = Math.round((item.count / totalPekerjaan) * 100);
+                    return (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-gray-700 truncate max-w-[200px]">{item.label}</span>
+                          <span className="font-mono font-semibold text-gray-500">{item.count} orang ({pct}%)</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.5 }}
+                            className="bg-indigo-600 h-full rounded-full"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-gray-400 text-center py-6">Belum ada data profesi.</p>
+                )}
+              </div>
             </div>
 
-            {/* Actions: Refresh & Export */}
-            <button
-              onClick={fetchAnalytics}
-              disabled={refreshing}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
-              title="Refresh Data"
-            >
-              <RefreshCw size={13} className={refreshing ? 'animate-spin text-blue-400' : 'text-slate-300'} />
-              <span>{refreshing ? 'Syncing...' : 'Refresh'}</span>
-            </button>
-
-            <button
-              onClick={handlePrint}
-              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-colors"
-              title="Cetak Ringkasan Eksekutif"
-            >
-              <Download size={13} />
-              <span>Snapshot PDF</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Perspective Dimension Selector Tabs */}
-        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-          <button
-            onClick={() => setActiveDimension('demografi')}
-            className={`px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all ${
-              activeDimension === 'demografi'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <Users size={14} />
-            <span>Piramida & Demografi Penduduk</span>
-          </button>
-          <button
-            onClick={() => setActiveDimension('surat')}
-            className={`px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all ${
-              activeDimension === 'surat'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <FileText size={14} />
-            <span>Pelayanan Surat & SLA Velocity</span>
-          </button>
-          <button
-            onClick={() => setActiveDimension('heatmap')}
-            className={`px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all ${
-              activeDimension === 'heatmap'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <Layers size={14} />
-            <span>Spatial Heatmap Matrix (RT 001 - 005)</span>
-          </button>
-          <button
-            onClick={() => setActiveDimension('dayadukung')}
-            className={`px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all ${
-              activeDimension === 'dayadukung'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <Building2 size={14} />
-            <span>Daya Dukung Faskes & Pendidikan</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 2. EXECUTIVE LOOKER KPI TILES WITH BENCHMARK DELTAS                       */}
-      {/* ========================================================================= */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-        {/* KPI 1: Total Populasi */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:border-blue-300 transition-all flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Populasi Aktif</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Users size={16} />
-            </div>
-          </div>
-          <div className="my-2">
-            <div className="text-2xl font-black text-slate-900 font-mono tracking-tight">
-              {summary.total_warga.toLocaleString('id-ID')}
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              {summary.total_kk} KK &bull; Rasio P/W {summary.rasio_gender}
-            </p>
-          </div>
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-            <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-              <ArrowUpRight size={13} /> +2.1% YTD
-            </span>
-            <span className="text-slate-400 font-mono">100% SIAK</span>
-          </div>
-        </div>
-
-        {/* KPI 2: Kepatuhan Pajak PBB */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:border-emerald-300 transition-all flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Realisasi Pajak PBB</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Wallet size={16} />
-            </div>
-          </div>
-          <div className="my-2">
-            <div className="text-2xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1.5">
-              <span>86.8%</span>
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                Prima
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Rp 142.5 Jt / Target Rp 164 Jt
-            </p>
-          </div>
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-            <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-              <ArrowUpRight size={13} /> +4.2% MoM
-            </span>
-            <span className="text-slate-400">Jatuh Tempo Okt</span>
-          </div>
-        </div>
-
-        {/* KPI 3: Kerentanan Sosial & Desil 1-2 */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:border-amber-300 transition-all flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Desil 1-2 & Rentan</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-              <HeartPulse size={16} />
-            </div>
-          </div>
-          <div className="my-2">
-            <div className="text-2xl font-black text-slate-900 font-mono tracking-tight">
-              86 <span className="text-xs font-normal text-slate-500">Jiwa</span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              12 Lansia Sebatang Kara &bull; 7 Yatim
-            </p>
-          </div>
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-            <span className="text-blue-700 font-bold flex items-center gap-0.5">
-              <CheckCircle2 size={13} /> 100% Cover Bansos
-            </span>
-            <span className="text-slate-400 font-mono">DTSEN Prima</span>
-          </div>
-        </div>
-
-        {/* KPI 4: SLA Kecepatan Surat */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:border-indigo-300 transition-all flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">SLA Kecepatan Surat</span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Clock size={16} />
-            </div>
-          </div>
-          <div className="my-2">
-            <div className="text-2xl font-black text-slate-900 font-mono tracking-tight flex items-baseline gap-1.5">
-              <span>{docAnalytics.summary.sla_rata_jam} Jam</span>
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                Target &lt; 4 Jam
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              {docAnalytics.summary.disahkan} Selesai &bull; {docAnalytics.summary.dalam_proses} Dalam Antrean
-            </p>
-          </div>
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-            <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-              <ArrowDownRight size={13} /> SLA 40% Lebih Cepat
-            </span>
-            <span className="text-slate-400 font-mono">TTE SPBE</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 3. DIMENSION VIEW 1: PIRAMIDA PENDUDUK & DEMOGRAFI DETAIL                 */}
-      {/* ========================================================================= */}
-      {(activeDimension === 'demografi' || activeDimension === 'heatmap') && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Piramida Penduduk Interaktif (Bilateral Bar Chart) */}
-          <div className="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+            {/* Sebaran Agama & Pendidikan */}
+            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-6">
               <div>
-                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                  <BarChart3 size={16} className="text-blue-600" />
-                  Piramida Penduduk Interaktif (Age-Sex Structure)
-                </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Distribusi 6 Kohort Usia: Laki-laki ({summary.total_laki}) vs Perempuan ({summary.total_perempuan}).
+                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                  <h3 className="text-sm font-black text-gray-900 tracking-tight">Sebaran Keagamaan Warga</h3>
+                  <span className="text-[11px] text-gray-400 font-medium">Harmoni Sosial</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3">
+                  {demografiData?.agama?.map((item, idx) => (
+                    <div key={idx} className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                      <span className="text-[11px] font-bold text-slate-500 block">{item.label}</span>
+                      <span className="text-base font-black text-slate-800 font-mono block mt-0.5">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                  <h3 className="text-sm font-black text-gray-900 tracking-tight">Jenjang Pendidikan Terakhir</h3>
+                  <span className="text-[11px] text-gray-400 font-medium">Indeks Modal Manusia</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3">
+                  {demografiData?.pendidikan?.map((item, idx) => (
+                    <div key={idx} className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 text-center">
+                      <span className="text-[11px] font-bold text-blue-700 block truncate">{item.label}</span>
+                      <span className="text-base font-black text-blue-950 font-mono block mt-0.5">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: MATRIKS HEATMAP SPASIAL RT */}
+      {activeTab === 'heatmap' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-100 gap-4">
+              <div>
+                <h3 className="text-lg font-black text-gray-900 tracking-tight">Matriks Heatmap Spasial Wilayah RT</h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Komparasi densitas kependudukan, kelompok rentan (Desil 1-2 & Lansia/Balita), dan rasio kepatuhan PBB per Rukun Tetangga.
                 </p>
               </div>
-              <div className="flex items-center gap-3 text-xs font-semibold">
-                <span className="flex items-center gap-1.5 text-blue-700">
-                  <span className="w-3 h-3 rounded-sm bg-blue-600 inline-block"></span> Laki-laki
-                </span>
-                <span className="flex items-center gap-1.5 text-rose-700">
-                  <span className="w-3 h-3 rounded-sm bg-rose-500 inline-block"></span> Perempuan
-                </span>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-gray-400 font-medium">Gradien Intensitas:</span>
+                <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold">Optimal / Patuh</span>
+                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold">Sedang</span>
+                <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 font-bold">Prioritas / Rentan</span>
               </div>
             </div>
 
-            {/* Pyramid Chart Canvas */}
-            <div className="space-y-3 pt-2">
-              {pyramid.map((row, idx) => {
-                const maxPct = 15; // normalizer percentage
-                const maleWidth = Math.min(100, (row.male_pct / maxPct) * 100);
-                const femaleWidth = Math.min(100, (row.female_pct / maxPct) * 100);
+            {/* Heatmap Grid Cards (RT 001 - RT 005) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pt-6">
+              {demografiData?.spatial_heatmap?.map((rtItem) => {
+                const compliance = rtItem.pbb_kepatuhan_persen;
+                const isSelected = selectedHeatmapRT?.rt === rtItem.rt;
+
+                let complianceBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                if (compliance < 50) complianceBadge = 'bg-rose-50 text-rose-700 border-rose-200';
+                else if (compliance < 75) complianceBadge = 'bg-amber-50 text-amber-700 border-amber-200';
 
                 return (
-                  <div
-                    key={idx}
-                    onMouseEnter={() => setActivePyramidHover(row)}
-                    onMouseLeave={() => setActivePyramidHover(null)}
-                    className="group relative cursor-pointer"
+                  <motion.div
+                    key={rtItem.rt}
+                    whileHover={{ y: -4 }}
+                    onClick={() => setSelectedHeatmapRT(isSelected ? null : rtItem)}
+                    className={`cursor-pointer rounded-3xl p-5 border transition-all ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-50/40 shadow-lg ring-2 ring-blue-500/20'
+                        : 'border-gray-200 bg-white hover:border-gray-300 shadow-sm'
+                    }`}
                   >
-                    <div className="grid grid-cols-12 items-center gap-2 text-xs">
-                      {/* Left: Male Bar (Right-aligned) */}
-                      <div className="col-span-5 flex items-center justify-end gap-2">
-                        <span className="text-[11px] font-mono text-slate-500 group-hover:text-blue-700 font-semibold transition-colors">
-                          {row.male} ({row.male_pct}%)
-                        </span>
-                        <div className="w-full bg-slate-100 h-6 rounded-l-md overflow-hidden flex justify-end">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${maleWidth}%` }}
-                            transition={{ duration: 0.6, delay: idx * 0.05 }}
-                            className="bg-blue-600 group-hover:bg-blue-700 h-full transition-colors rounded-l-sm"
-                          />
+                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-blue-500/30">
+                          RT {rtItem.rt}
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-gray-900 block">Rukun Tetangga {rtItem.rt}</span>
+                          <span className="text-[10px] text-gray-400 block">Wilayah RW {rtItem.rw}</span>
                         </div>
                       </div>
 
-                      {/* Center: Cohort Label */}
-                      <div className="col-span-2 text-center">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 group-hover:bg-blue-100 text-[10px] font-extrabold text-slate-700 group-hover:text-blue-900 border border-slate-200 transition-colors block truncate">
-                          {row.cohort.split(' ')[0]}
-                        </span>
-                        <span className="text-[9px] text-slate-400 font-mono block">
-                          {row.range} th
-                        </span>
+                      <span className={`px-2.5 py-1 rounded-xl text-xs font-black font-mono border ${complianceBadge}`}>
+                        PBB {compliance}%
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 py-4 text-xs">
+                      <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                        <span className="text-[10px] text-gray-400 font-semibold block uppercase">Total Warga</span>
+                        <span className="text-base font-black text-gray-800 font-mono">{rtItem.total_warga} jiwa</span>
+                        <span className="text-[10px] text-gray-500 block">{rtItem.total_kk} Kartu Keluarga</span>
                       </div>
 
-                      {/* Right: Female Bar (Left-aligned) */}
-                      <div className="col-span-5 flex items-center justify-start gap-2">
-                        <div className="w-full bg-slate-100 h-6 rounded-r-md overflow-hidden flex justify-start">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${femaleWidth}%` }}
-                            transition={{ duration: 0.6, delay: idx * 0.05 }}
-                            className="bg-rose-500 group-hover:bg-rose-600 h-full transition-colors rounded-r-sm"
-                          />
-                        </div>
-                        <span className="text-[11px] font-mono text-slate-500 group-hover:text-rose-700 font-semibold transition-colors">
-                          {row.female} ({row.female_pct}%)
+                      <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                        <span className="text-[10px] text-gray-400 font-semibold block uppercase">Komposisi Gender</span>
+                        <span className="text-xs font-bold text-gray-700 font-mono block mt-1">
+                          L: {rtItem.pria} | P: {rtItem.wanita}
                         </span>
+                        <span className="text-[10px] text-gray-400 block">Keseimbangan</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100">
+                        <span className="text-[10px] text-amber-700 font-bold block uppercase">Balita & Lansia</span>
+                        <span className="text-xs font-black text-amber-900 font-mono block mt-1">
+                          👶 {rtItem.balita} | 🧓 {rtItem.lansia}
+                        </span>
+                        <span className="text-[10px] text-amber-700 block">Target Posyandu</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-rose-50/70 border border-rose-100">
+                        <span className="text-[10px] text-rose-700 font-bold block uppercase">Desil 1-2 Rentan</span>
+                        <span className="text-base font-black text-rose-900 font-mono">{rtItem.desil_rentan_kk} KK</span>
+                        <span className="text-[10px] text-rose-700 block">Prioritas Bansos</span>
                       </div>
                     </div>
-                  </div>
+
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-blue-600 font-semibold">
+                      <span>{isSelected ? 'Tutup Rincian' : 'Klik untuk Analisis Presisi'}</span>
+                      <ArrowRight size={13} />
+                    </div>
+                  </motion.div>
                 );
               })}
             </div>
-
-            {/* Pyramid Summary Footnote */}
-            <div className="mt-5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Info size={14} className="text-blue-600" />
-                <span>Kelompok <strong>Produktif Muda (25-39 th)</strong> merupakan segmen terbesar (25.5% populasi).</span>
-              </span>
-              <span className="font-mono text-[11px] text-slate-500">Rasio Ketergantungan: 32.8%</span>
-            </div>
-          </div>
-
-          {/* Top 8 Profesi & Mata Pencaharian */}
-          <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                    <TrendingUp size={16} className="text-emerald-600" />
-                    Top 8 Profesi & Mata Pencaharian
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Komposisi sektor ekonomi warga aktif di wilayah RW {userRW}.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2.5">
-                {professions.slice(0, 7).map((p, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-slate-800">{p.name}</span>
-                      <span className="font-mono text-slate-500 text-[11px]">
-                        <strong>{p.count}</strong> jiwa ({p.percentage}%)
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(p.percentage / 35) * 100}%` }}
-                        transition={{ duration: 0.5, delay: idx * 0.04 }}
-                        className={`h-full rounded-full ${
-                          idx === 0 ? 'bg-blue-600' : idx === 1 ? 'bg-emerald-600' : idx === 2 ? 'bg-amber-500' : 'bg-slate-400'
-                        }`}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span className="text-slate-500">UMKM & Swasta mencakup 51.4%</span>
-              <button
-                onClick={() => navigate('/dashboard/pbb')}
-                className="text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 text-[11px]"
-              >
-                Cek Potensi PBB &bull; Usaha <ChevronRight size={13} />
-              </button>
-            </div>
           </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 4. DIMENSION VIEW 2: SPATIAL HEATMAP MATRIX (RT 001 - RT 005)              */}
-      {/* ========================================================================= */}
-      {(activeDimension === 'heatmap' || activeDimension === 'demografi') && (
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <div>
-              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <Layers size={16} className="text-indigo-600" />
-                Spatial Heatmap Matrix Wilayah (RT 001 s/d RT 005)
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Matriks spasial komparasi kepadatan, desil kerentanan, dan tingkat kepatuhan PBB antar-RT.
-              </p>
+      {/* TAB 3: LAYANAN DOKUMEN & SLA */}
+      {activeTab === 'dokumen' && (
+        <div className="space-y-6">
+          {/* Filter Periode Pills */}
+          <div className="flex items-center justify-between bg-white rounded-2xl p-3 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Calendar size={16} className="text-blue-600" />
+              <span className="text-xs font-bold text-gray-700">Periode Waktu Pengajuan:</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 text-[10px]">
-                &ge; 85% Prima
-              </span>
-              <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold border border-amber-200 text-[10px]">
-                80-84% Baik
-              </span>
-              <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 font-semibold border border-rose-200 text-[10px]">
-                &lt; 80% Perhatian
-              </span>
+
+            <div className="flex items-center gap-1.5">
+              {[
+                { id: '7d', label: '7 Hari Terakhir' },
+                { id: '30d', label: '30 Hari Terakhir' },
+                { id: 'q', label: 'Triwulan (90 Hari)' },
+                { id: 'ytd', label: '1 Tahun Penuh' }
+              ].map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPeriod(p.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    selectedPeriod === p.id
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Looker-Style Matrix Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-50 text-slate-600 border-y border-slate-200 font-bold uppercase text-[10px] tracking-wider">
-                  <th className="py-2.5 px-3">Rukun Tetangga</th>
-                  <th className="py-2.5 px-3 text-right">Populasi</th>
-                  <th className="py-2.5 px-3 text-right">Jumlah KK</th>
-                  <th className="py-2.5 px-3 text-right">Lansia</th>
-                  <th className="py-2.5 px-3 text-right">Balita</th>
-                  <th className="py-2.5 px-3 text-right">Desil 1-2</th>
-                  <th className="py-2.5 px-3 text-right">Kepatuhan PBB</th>
-                  <th className="py-2.5 px-3 text-center">Status Wilayah</th>
-                  <th className="py-2.5 px-3 text-center">Aksi Cepat</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-mono">
-                {spatialMatrix.map((item, idx) => {
-                  const isMatch = selectedRT === 'ALL' || selectedRT === item.rt;
-                  const pbbColor =
-                    item.pbb_compliance >= 85
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      : item.pbb_compliance >= 80
-                      ? 'bg-amber-50 text-amber-800 border-amber-200'
-                      : 'bg-rose-50 text-rose-800 border-rose-200';
+          {/* KPI Funnel Overview */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total Masuk</span>
+                <span className="p-2 rounded-xl bg-blue-50 text-blue-600"><FileText size={18} /></span>
+              </div>
+              <span className="text-2xl font-black text-gray-900 font-mono">
+                {dokumenData?.pipeline?.total_pengajuan || 0}
+              </span>
+              <span className="text-[11px] text-gray-500 block mt-0.5">Surat Diajukan Warga</span>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Disahkan Selesai</span>
+                <span className="p-2 rounded-xl bg-emerald-50 text-emerald-600"><CheckCircle2 size={18} /></span>
+              </div>
+              <span className="text-2xl font-black text-emerald-700 font-mono">
+                {dokumenData?.pipeline?.step_selesai || 0}
+              </span>
+              <span className="text-[11px] text-emerald-600 font-semibold block mt-0.5">TTE Resmi Kelurahan</span>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Loket Dampingan</span>
+                <span className="p-2 rounded-xl bg-purple-50 text-purple-600"><Users size={18} /></span>
+              </div>
+              <span className="text-2xl font-black text-purple-900 font-mono">
+                {dokumenData?.pipeline?.total_assisted_submission || 0}
+              </span>
+              <span className="text-[11px] text-purple-700 font-semibold block mt-0.5">Bantuan Offline/Lansia</span>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Bypass Darurat RW</span>
+                <span className="p-2 rounded-xl bg-amber-50 text-amber-600"><Zap size={18} /></span>
+              </div>
+              <span className="text-2xl font-black text-amber-900 font-mono">
+                {dokumenData?.pipeline?.total_emergency_bypass || 0}
+              </span>
+              <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">Jalur Kedaruratan (ICU/RS)</span>
+            </div>
+          </div>
+
+          {/* Breakdown 10 Kategori Surat & SLA Rata-rata */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between pb-6 border-b border-gray-100">
+              <div>
+                <h3 className="text-lg font-black text-gray-900 tracking-tight">Kategori Dokumen & Kecepatan Layanan (SLA)</h3>
+                <p className="text-xs text-gray-500 mt-1">Volume permohonan surat dan rata-rata durasi penyelesaian hingga pengesahan TTE.</p>
+              </div>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                Target SLA: &lt; 24 Jam
+              </span>
+            </div>
+
+            <div className="pt-6 space-y-4">
+              {dokumenData?.kategori?.length > 0 ? (
+                dokumenData.kategori.map((kat, index) => {
+                  const maxCount = dokumenData.kategori[0]?.count || 1;
+                  const pct = Math.round((kat.count / maxCount) * 100);
 
                   return (
-                    <tr
-                      key={idx}
-                      className={`hover:bg-blue-50/40 transition-colors ${
-                        !isMatch ? 'opacity-40' : ''
-                      }`}
-                    >
-                      <td className="py-3 px-3 font-bold text-slate-900 font-sans flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-md bg-slate-100 text-slate-800 flex items-center justify-center text-xs font-bold font-mono">
-                          {item.rt}
-                        </span>
-                        <span>RT {item.rt}</span>
-                        {item.rt === userRT && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] bg-blue-100 text-blue-800 font-semibold font-sans">
-                            Anda
+                    <div key={index} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-gray-800">{kat.kategori}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono font-bold text-gray-900">{kat.count} surat</span>
+                          <span className="font-mono text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                            ⏱️ Rata: {kat.rata_jam > 0 ? `${kat.rata_jam} jam` : '< 1 jam'}
                           </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-3 text-right font-bold text-slate-800">
-                        {item.total_warga} jiwa
-                      </td>
-                      <td className="py-3 px-3 text-right text-slate-600">
-                        {item.total_kk} KK
-                      </td>
-                      <td className="py-3 px-3 text-right text-slate-600">
-                        {item.lansia} jiwa
-                      </td>
-                      <td className="py-3 px-3 text-right text-slate-600">
-                        {item.balita} jiwa
-                      </td>
-                      <td className="py-3 px-3 text-right font-bold text-amber-700">
-                        {item.desil_1_2} jiwa
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        <span className={`px-2 py-0.5 rounded-md font-bold text-xs border ${pbbColor}`}>
-                          {item.pbb_compliance}%
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-bold ${
-                          item.status.includes('Prima') 
-                            ? 'bg-emerald-100 text-emerald-800' 
-                            : item.status.includes('Baik') 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-rose-100 text-rose-800 animate-pulse'
-                        }`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-center font-sans">
-                        <button
-                          onClick={() => {
-                            setSelectedRT(item.rt);
-                            setActiveDimension('demografi');
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 text-[11px] font-semibold transition-colors"
-                        >
-                          Drill Down
-                        </button>
-                      </td>
-                    </tr>
+                        </div>
+                      </div>
+
+                      <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden flex">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.6 }}
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full"
+                        />
+                      </div>
+                    </div>
                   );
-                })}
-              </tbody>
-            </table>
+                })
+              ) : (
+                <p className="text-xs text-gray-400 text-center py-8">Belum ada pengajuan surat dalam periode ini.</p>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 5. DIMENSION VIEW 3: DOKUMEN & SLA OPERATIONS ANALYTICS                   */}
-      {/* ========================================================================= */}
-      {(activeDimension === 'surat' || activeDimension === 'heatmap') && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Top Kategori Surat Bar Chart */}
-          <div className="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                  <FileText size={16} className="text-blue-600" />
-                  Top Kategori Permohonan Surat & Rata-rata Durasi SLA
-                </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Volume frekuensi dokumen dan rata-rata kecepatan pengesahan (dalam jam kerja).
+      {/* TAB 4: REKOMENDASI KEBIJAKAN & AI STRATEGY */}
+      {activeTab === 'rekomendasi' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div className="flex items-center gap-2 mb-2 text-cyan-300 text-xs font-bold uppercase tracking-wider">
+              <Sparkles size={16} />
+              <span>Kanaya AI Strategic Policy Recommendations</span>
+            </div>
+            <h3 className="text-xl font-black">Rekomendasi Berbasis Data Analitik Wilayah</h3>
+            <p className="text-xs text-blue-200 mt-1 max-w-2xl leading-relaxed">
+              Hasil inferensi algoritma analisis multi-dimensi (Piramida Kependudukan, Rasio Desil 1-2, dan Tren Pelayanan).
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider block mb-1">Fokus Demografi Balita</span>
+                <p className="text-xs text-white leading-relaxed font-medium">
+                  Prioritaskan PMT (Pemberian Makanan Tambahan) di RT dengan populasi balita tinggi untuk mencegah stunting sejak dini.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider block mb-1">Optimasi Penerimaan PBB</span>
+                <p className="text-xs text-white leading-relaxed font-medium">
+                  RT dengan kepatuhan di bawah 70% disarankan mengaktifkan layanan jemput bola pembayaran QRIS/BJB di Pos Ronda atau Balai Warga.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider block mb-1">Akselerasi Layanan Publik</span>
+                <p className="text-xs text-white leading-relaxed font-medium">
+                  Tingkatkan sosialisasi Loket Dampingan untuk warga lansia dan minim akses gadget agar tidak terjadi ketertinggalan pengurusan administrasi kependudukan.
                 </p>
               </div>
             </div>
-
-            <div className="space-y-3">
-              {docAnalytics.top_categories.map((cat, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-800 truncate max-w-[280px]">
-                      {cat.name}
-                    </span>
-                    <div className="flex items-center gap-3 font-mono text-[11px]">
-                      <span className="font-bold text-slate-700">{cat.count} surat</span>
-                      <span className="px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
-                        {cat.avg_hours} jam SLA
-                      </span>
-                    </div>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(cat.count / 50) * 100}%` }}
-                      transition={{ duration: 0.5, delay: idx * 0.04 }}
-                      className="bg-blue-600 h-full rounded-full"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-5 p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-              <span className="text-slate-600">
-                Surat Keterangan Usaha (SKU) memiliki rata-rata penyelesaian tercepat (<strong>1.8 jam</strong>).
-              </span>
-              <button
-                onClick={() => navigate('/dashboard/dokumen')}
-                className="text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 text-[11px]"
-              >
-                Buka Arsip Surat <ChevronRight size={13} />
-              </button>
-            </div>
-          </div>
-
-          {/* SLA Performance & Channel Funnel */}
-          <div className="lg:col-span-5 space-y-4">
-            {/* Loket Dampingan vs Mandiri Distribution */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-              <h3 className="font-bold text-slate-900 text-sm mb-1 flex items-center gap-2">
-                <PieChart size={16} className="text-indigo-600" />
-                Distribusi Saluran Permohonan Surat
-              </h3>
-              <p className="text-[11px] text-slate-500 mb-4">
-                Porsi pengajuan mandiri warga vs pendampingan RT/RW (*Loket Dampingan*).
-              </p>
-
-              <div className="space-y-3">
-                <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-200 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-blue-950 block">Aplikasi Mandiri Warga</span>
-                    <span className="text-[11px] text-blue-700">Warga mengajukan dari smartphone sendiri</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-base font-black text-blue-900 font-mono">87.2%</span>
-                    <span className="text-[10px] text-blue-600 block">129 Surat</span>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-amber-950 block">Loket Dampingan RT/RW</span>
-                    <span className="text-[11px] text-amber-700">Warga sepuh, tanpa gadget, atau offline</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-base font-black text-amber-900 font-mono">12.8%</span>
-                    <span className="text-[10px] text-amber-600 block">19 Surat</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Jalur Darurat RW Metric */}
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                <span className="text-slate-500">Bypass Verifikasi Darurat RW:</span>
-                <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 font-bold border border-rose-200 font-mono">
-                  4 Kasus (Audit Trail Tercatat)
-                </span>
-              </div>
-            </div>
-
-            {/* SLA Health Indicator */}
-            <div className="bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 shadow-md">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-300">Kepatuhan Standar Waktu Pelayanan</span>
-                <span className="text-xs font-bold text-emerald-400 font-mono">96.4% On-Target</span>
-              </div>
-              <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden flex gap-0.5">
-                <div style={{ width: '66.2%' }} className="bg-emerald-500" title="< 2 Jam (66.2%)" />
-                <div style={{ width: '27.7%' }} className="bg-blue-500" title="2 - 4 Jam (27.7%)" />
-                <div style={{ width: '6.1%' }} className="bg-rose-500" title="> 4 Jam (6.1%)" />
-              </div>
-              <div className="flex items-center justify-between mt-3 text-[10px] text-slate-400">
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span> &lt; 2 Jam (66%)
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-blue-500"></span> 2 - 4 Jam (28%)
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-rose-500"></span> &gt; 4 Jam (6%)
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       )}
-
-      {/* ========================================================================= */}
-      {/* 6. KANAYA SMART NARRATIVE (LOOKER & POWER BI AI AUTOMATED SYNTHESIS)     */}
-      {/* ========================================================================= */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-xl border border-blue-800/60 relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 w-80 bg-blue-500/10 blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div className="space-y-3 max-w-3xl">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-400/20 text-blue-300 border border-blue-400/30 flex items-center gap-1.5">
-                <Sparkles size={11} className="text-blue-300" />
-                Kanaya AI &bull; Smart Narrative & Policy Recommendations
-              </span>
-              <span className="text-[10px] text-slate-400 font-mono">Automated Synthesis Engine</span>
-            </div>
-
-            <h3 className="text-base font-bold text-white">
-              Executive Briefing Kebijakan Wilayah RW {userRW} (Kelurahan Kebonjati)
-            </h3>
-
-            <div className="space-y-2 text-xs text-slate-200 leading-relaxed">
-              <p className="flex items-start gap-2">
-                <span className="text-emerald-400 font-bold shrink-0">&bull;</span>
-                <span>
-                  <strong>Demografi Produktif:</strong> Piramida penduduk menunjukkan 64.3% warga berada dalam usia kerja produktif (15-59 th). Sektor UMKM dan Karyawan Swasta mendominasi (51.4%), menandakan tingginya perputaran ekonomi mikro lokal.
-                </span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-amber-400 font-bold shrink-0">&bull;</span>
-                <span>
-                  <strong>Optimalisasi Pajak PBB:</strong> Realisasi PBB mencapai 86.8%, namun RT 004 masih berada di angka 77.8%. Disarankan kegiatan jemput bola e-SPPT bagi 17 KK di RT 004 sebelum batas jatuh tempo akhir bulan.
-                </span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-blue-400 font-bold shrink-0">&bull;</span>
-                <span>
-                  <strong>SLA Pelayanan Prima:</strong> Kecepatan rata-rata pengesahan surat adalah 2.4 jam (jauh melampaui standar 4 jam). Sebanyak 19 warga lansia/gaptek berhasil terlayani dengan lancar melalui inovasi Loket Dampingan RT/RW.
-                </span>
-              </p>
-            </div>
-          </div>
-
-          <div className="shrink-0 flex flex-col gap-2">
-            <button
-              onClick={() => navigate('/dashboard/rt')}
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition-colors"
-            >
-              <span>Meja Kerja Jabatan</span>
-              <ChevronRight size={14} />
-            </button>
-            <button
-              onClick={() => navigate('/dashboard/pbb')}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border border-slate-700 transition-colors"
-            >
-              <span>Monitoring PBB</span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

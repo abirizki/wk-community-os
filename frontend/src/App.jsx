@@ -12,7 +12,6 @@ import BansosPage from './pages/BansosPage';
 import DesilPage from './pages/DesilPage';
 import DataMaturityPage from './pages/DataMaturityPage';
 import DayaDukungPage from './pages/DayaDukungPage';
-import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 import CommandCenterPage from './pages/CommandCenterPage';
 import IntegrasiPage from './pages/IntegrasiPage';
 import WhatsAppGatewayPage from './pages/WhatsAppGatewayPage';
@@ -60,7 +59,6 @@ function App() {
             <Route path="desil" element={<DesilPage />} />
             <Route path="data-maturity" element={<DataMaturityPage />} />
             <Route path="daya-dukung" element={<DayaDukungPage />} />
-            <Route path="analitik" element={<AnalyticsDashboardPage />} />
             <Route path="pbb" element={<PBBPage />} />
             <Route path="keuangan" element={<KeuanganPage />} />
             <Route path="posyandu" element={<PosyanduPage />} />

@@ -63,19 +63,14 @@ import {
   MessageCircle,
   BedDouble,
   ExternalLink,
-  Save,
-  FilePlus,
-  BarChart3,
-  QrCode
+  Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import AssistedSubmissionModal from '../../components/AssistedSubmissionModal';
 
 export default function DashboardKetuaRT() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [showAssistedModal, setShowAssistedModal] = useState(false);
 
   // Active Tab State: 'surat' (default) | 'fasilitas' | 'rentan'
   const activeTab = searchParams.get('tab') || 'surat';
@@ -657,229 +652,6 @@ export default function DashboardKetuaRT() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ========================================================================= */}
-      {/* 1. KANAYA AI &bull; COPILOT MEJA KERJA RT (SMART GOVERNANCE BRIEFING)     */}
-      {/* ========================================================================= */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50 to-sky-50 border border-blue-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="space-y-1.5 max-w-2xl">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
-              <Sparkles size={11} className="text-blue-700" /> KANAYA AI &bull; Copilot Tata Kelola RT
-            </span>
-            <span className="text-[10px] text-slate-500 font-mono">RT {rtNomor} / RW {rwNomor}</span>
-          </div>
-          <h2 className="text-sm font-bold text-slate-900">
-            {pendingDocs.length > 0 
-              ? `Terdapat ${pendingDocs.length} permohonan surat warga yang menunggu tindakan verifikasi Anda.` 
-              : `Antrean surat tertib terkendali. Kepatuhan iuran tercatat ${iuranSummary.persentase} (${iuranSummary.sudah_bayar}/${iuranSummary.total_kk} KK).`}
-          </h2>
-          <p className="text-[11px] text-slate-600">
-            {pendingDocs.length > 0
-              ? `Gunakan tombol "Tinjau Berkas" untuk verifikasi instan atau buka "Loket Dampingan" jika ada warga sepuh yang membutuhkan pembuatan surat manual.`
-              : `Seluruh data kewilayahan, pemantauan lansia sebatang kara, dan fasilitas ibadah beririsan dalam status prima.`}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => setShowAssistedModal(true)}
-            className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm transition-colors text-xs cursor-pointer"
-          >
-            <FilePlus size={14} />
-            <span>+ Loket Dampingan</span>
-          </button>
-          <button
-            onClick={() => handleTabChange('surat')}
-            className="px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm transition-colors text-xs cursor-pointer"
-          >
-            <FileCheck size={14} />
-            <span>Periksa Antrean</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 2. SUPER APPS QUICK LAUNCHER (8 PINTASAN UTAMA MEJA KERJA RT)             */}
-      {/* ========================================================================= */}
-      <div className="space-y-3 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-              Pintasan Cepat Meja Kerja RT (Super Apps Hub)
-            </h2>
-          </div>
-          <span className="text-xs text-slate-500 font-medium">8 Layanan Terintegrasi</span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* 1. Antrean Verifikasi Surat */}
-          <div
-            onClick={() => handleTabChange('surat')}
-            className={`p-4 rounded-2xl bg-white hover:bg-blue-50/50 border shadow-sm transition-all group flex flex-col justify-between space-y-3 cursor-pointer ${
-              activeTab === 'surat' ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-blue-300'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <FileCheck size={22} />
-              </div>
-              {pendingDocs.length > 0 ? (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 border border-red-300 animate-pulse">
-                  {pendingDocs.length} Menunggu
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                  Nihil
-                </span>
-              )}
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Verifikasi Surat</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">SOP 3-Keputusan & SLA</p>
-            </div>
-          </div>
-
-          {/* 2. Loket Dampingan Warga */}
-          <div
-            onClick={() => setShowAssistedModal(true)}
-            className="p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 shadow-sm transition-all group flex flex-col justify-between space-y-3 cursor-pointer"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <FilePlus size={22} />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                Warga Gaptek
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Loket Dampingan</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Ajukan Berkas Offline</p>
-            </div>
-          </div>
-
-          {/* 3. Dashboard Data Analitik */}
-          <Link
-            to="/dashboard/analitik"
-            className="p-4 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <BarChart3 size={22} />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800">
-                Power BI &bull; Looker
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Dashboard Analitik</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Piramida & Heatmap RT</p>
-            </div>
-          </Link>
-
-          {/* 4. Monitoring Pajak PBB */}
-          <Link
-            to="/dashboard/pbb"
-            className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Wallet size={22} />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                86.4% Lunas
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Monitoring PBB</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">e-SPPT & Kepatuhan Pajak</p>
-            </div>
-          </Link>
-
-          {/* 5. Daya Dukung Wilayah */}
-          <Link
-            to="/dashboard/daya-dukung"
-            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Building2 size={22} />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800">
-                Faskes & Sekolah
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Daya Dukung Wilayah</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Puskesmas & Rumah Ibadah</p>
-            </div>
-          </Link>
-
-          {/* 6. Bansos & Desil DTSEN */}
-          <Link
-            to="/dashboard/bansos"
-            className="p-4 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200 hover:border-purple-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Gift size={22} />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
-                Desil 1-2
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Bantuan Sosial & DTSEN</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Sanggah & Validasi Lapangan</p>
-            </div>
-          </Link>
-
-          {/* 7. Warga Prioritas / Rentan */}
-          <div
-            onClick={() => handleTabChange('rentan')}
-            className={`p-4 rounded-2xl bg-white hover:bg-rose-50/50 border shadow-sm transition-all group flex flex-col justify-between space-y-3 cursor-pointer ${
-              activeTab === 'rentan' ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-200 hover:border-rose-300'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Heart size={22} />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800">
-                {kelompokRentanList.length} Jiwa
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Warga Rentan & Lansia</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Yatim Piatu & Lansia Sebatang</p>
-            </div>
-          </div>
-
-          {/* 8. Konsultasi Kanaya AI */}
-          <div
-            onClick={() => {
-              const kanayaBtn = document.querySelector('button[title*="Kanaya"]');
-              if (kanayaBtn) kanayaBtn.click();
-            }}
-            className="p-4 rounded-2xl bg-white hover:bg-cyan-50/50 border border-slate-200 hover:border-cyan-300 shadow-sm transition-all group flex flex-col justify-between space-y-3 cursor-pointer"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Sparkles size={22} />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-100 text-cyan-800">
-                Online Copilot
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Konsultasi Kanaya AI</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Regulasi Perda & Rekomendasi</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Sub-Tabs Navigasi Meja Kerja RT */}
       <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-1.5 shadow-2xs flex flex-wrap items-center gap-1.5 mb-6">
@@ -2070,17 +1842,6 @@ export default function DashboardKetuaRT() {
           </div>
         )}
       </AnimatePresence>
-
-      {/* Modal Loket Dampingan Warga (Offline/Gaptek) */}
-      <AssistedSubmissionModal
-        isOpen={showAssistedModal}
-        onClose={() => setShowAssistedModal(false)}
-        onSuccess={() => {
-          setActionSuccessToast('Permohonan dampingan warga berhasil diajukan dan langsung disahkan RT.');
-          loadRTData();
-        }}
-        officialRole="ketua_rt"
-      />
     </DashboardShell>
   );
 }
