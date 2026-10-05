@@ -186,26 +186,40 @@ export default function DashboardLayout() {
         { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
         { name: 'Surat', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
         { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
-        { name: 'PBB', path: '/dashboard/pbb', icon: <Wallet size={18} /> },
         { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={18} /> },
+        { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
       ];
     }
     if (isRT) {
       return [
+        { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
         { name: 'Meja Kerja', path: '/dashboard', icon: <Home size={18} /> },
         { name: 'Surat RT', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
-        { name: 'Analitik', path: '/dashboard/analitik', icon: <BarChart3 size={18} /> },
-        { name: 'PBB RT', path: '/dashboard/pbb', icon: <Wallet size={18} /> },
+        { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
+        { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
+        { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
+        { name: 'Meja Kerja', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Warga & KK', path: '/dashboard/warga', icon: <Users size={18} /> },
         { name: 'Kas RT', path: '/dashboard/keuangan', icon: <Wallet size={18} /> },
+        { name: 'Aduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={18} /> },
+        { name: 'Profil RT', path: '/dashboard/profil', icon: <User size={18} /> },
+        { name: 'Warga', path: '/dashboard/warga', icon: <Users size={18} /> },
       ];
     }
     if (isRW) {
       return [
+        { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
         { name: 'Meja Kerja', path: '/dashboard', icon: <Home size={18} /> },
         { name: 'Surat RW', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
-        { name: 'Analitik', path: '/dashboard/analitik', icon: <BarChart3 size={18} /> },
-        { name: 'PBB RW', path: '/dashboard/pbb', icon: <Wallet size={18} /> },
+        { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
+        { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
+        { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
+        { name: 'Meja Kerja', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Warga & KK', path: '/dashboard/warga', icon: <Users size={18} /> },
         { name: 'Kas RW', path: '/dashboard/keuangan', icon: <Wallet size={18} /> },
+        { name: 'Aduan', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={18} /> },
+        { name: 'Profil RW', path: '/dashboard/profil', icon: <User size={18} /> },
+        { name: 'Warga', path: '/dashboard/warga', icon: <Users size={18} /> },
       ];
     }
     if (isPosyandu) {
@@ -217,12 +231,12 @@ export default function DashboardLayout() {
         { name: 'Profil', path: '/dashboard/profil', icon: <User size={18} /> },
       ];
     }
-    // Default Aparatur Kelurahan / Eksekutif
+    // Mobile bottom bar untuk Aparatur/Eksekutif saat buka di Smartphone
     return [
       { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
-      { name: 'Analitik', path: '/dashboard/analitik', icon: <BarChart3 size={18} /> },
       { name: 'Surat', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
-      { name: 'PBB', path: '/dashboard/pbb', icon: <Wallet size={18} /> },
+      { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
+      { name: 'Warga', path: '/dashboard/warga', icon: <User size={18} /> },
       { name: 'SOP', path: '/dashboard/panduan', icon: <BookOpen size={18} /> },
     ];
   };

@@ -60,30 +60,6 @@ router.get('/prefill-data', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/dokumen/stats - Statistik ringkasan dokumen untuk Dashboard RT/RW
-router.get('/stats', requireAuth, async (req, res) => {
-  try {
-    const rt = req.query.rt || req.session.user?.rt || '001';
-    const rw = req.query.rw || req.session.user?.rw || '001';
-    const stats = await dokumenRepository.getStats({ rt, rw });
-    
-    // Hitung persentase kepatuhan SLA jika total ada
-    const total = Number(stats?.total_permohonan || 0);
-    const approved = Number(stats?.total_approved || 0);
-    const compliance_rate = total > 0 ? `${Math.round((approved / total) * 100)}%` : '100%';
-
-    res.json({
-      success: true,
-      data: {
-        ...stats,
-        compliance_rate
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
 // GET /api/dokumen/family-members - Anggota keluarga 1 KK untuk pemohon surat
 router.get('/family-members', requireAuth, async (req, res) => {
   try {
