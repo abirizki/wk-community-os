@@ -721,7 +721,7 @@ export default function DashboardLayout() {
       <ForceChangePasswordModal />
 
       {/* Kanaya AI Floating Assistant (Interactive Presence) */}
-      {(!user?.role || user?.role === 'warga' || user?.role === 'pengguna' || user?.role === 'user') && <KanayaAIAssistant user={user} />}
+      <KanayaAIAssistant user={user} />
     </div>
   );
 }

@@ -3,7 +3,7 @@
  * Progressive Web App & Robust Offline-First Support
  */
 
-const CACHE_VERSION = 'bumi-warga-v8';
+const CACHE_VERSION = 'bumi-warga-v9';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 

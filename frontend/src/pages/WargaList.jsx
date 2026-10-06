@@ -87,7 +87,11 @@ export default function WargaList() {
         offset: String(offset),
         search: search.trim()
       });
-      if (filterRT) params.append('rt', filterRT);
+      if (user?.role === 'ketua_rt') {
+        params.append('rt', user.rt || '001');
+      } else if (filterRT) {
+        params.append('rt', filterRT);
+      }
 
       const response = await api.get(`/warga?${params.toString()}`);
       if (response.success) {

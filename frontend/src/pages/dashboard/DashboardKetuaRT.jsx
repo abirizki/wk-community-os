@@ -641,32 +641,6 @@ export default function DashboardKetuaRT() {
         />
       }
     >
-      {/* Toast Notifikasi Berhasil & Error */}
-      <AnimatePresence>
-        {actionSuccessToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm mb-4"
-          >
-            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-            <span>{actionSuccessToast}</span>
-          </motion.div>
-        )}
-        {actionErrorToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-3 bg-red-50 text-red-900 border border-red-200 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm mb-4"
-          >
-            <XCircle size={16} className="text-red-600 shrink-0" />
-            <span>{actionErrorToast}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* 0. Persona Mode Switcher (Single Identity, Dual Role) */}
       <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white shadow-md border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -696,69 +670,6 @@ export default function DashboardKetuaRT() {
             <span>Buka Layanan Mandiri Warga Saya</span>
             <ArrowRight className="w-3.5 h-3.5 opacity-70" />
           </Link>
-        </div>
-      </div>
-
-      {/* 1. Hero Section: KANAYA AI Strategic Briefing Card */}
-      <div className="mb-6 rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-emerald-950 text-white p-5 sm:p-6 border border-emerald-500/20 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-900/40">
-                <Sparkles className="w-5 h-5 text-slate-950" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold tracking-wider uppercase text-emerald-300">
-                    KANAYA Strategic Governance Copilot
-                  </span>
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                </div>
-                <p className="text-[11px] text-emerald-100/70">Ringkasan AI Meja Kerja RT</p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-              <p className="text-xs sm:text-sm text-slate-100 leading-relaxed font-sans">
-                {aiBrief?.executive_summary || `Selamat bertugas, Ketua RT ${rtNomor}. Saat ini terdapat ${pendingDocs.length} berkas permohonan warga yang menanti verifikasi Anda. Kolektivitas iuran mencapai ${iuranSummary.persentase}, dan tercatat ${kelompokRentanList.length} jiwa warga rentan dalam pemantauan bansos.`}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 text-xs">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-emerald-200 font-mono">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span>SLA Target: 4 Jam</span>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-emerald-200 font-mono">
-                <Heart className="w-3.5 h-3.5 text-rose-400" />
-                <span>{kelompokRentanList.length} Jiwa Rentan</span>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-emerald-200 font-mono">
-                <Wallet className="w-3.5 h-3.5 text-teal-400" />
-                <span>Iuran: {iuranSummary.sudah_bayar}/{iuranSummary.total_kk} KK</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0">
-            <Link
-              to="/dashboard/kanaya"
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>Konsultasi AI KANAYA</span>
-            </Link>
-            <button
-              type="button"
-              onClick={loadRTData}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              <span>Perbarui Data Realtime</span>
-            </button>
-          </div>
         </div>
       </div>
 
