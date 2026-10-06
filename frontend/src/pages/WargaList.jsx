@@ -319,24 +319,26 @@ export default function WargaList() {
           />
         </form>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
-            <Filter size={16} /> Filter RT:
+        {user?.role !== 'ketua_rt' && (
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+              <Filter size={16} /> Filter RT:
+            </div>
+            <select
+              value={filterRT}
+              onChange={(e) => {
+                setFilterRT(e.target.value);
+                setPage(1);
+              }}
+              className="px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-on-surface font-medium"
+            >
+              <option value="">Semua RT di Wilayah Anda</option>
+              <option value="001">RT 001</option>
+              <option value="002">RT 002</option>
+              <option value="003">RT 003</option>
+            </select>
           </div>
-          <select
-            value={filterRT}
-            onChange={(e) => {
-              setFilterRT(e.target.value);
-              setPage(1);
-            }}
-            className="px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-on-surface font-medium"
-          >
-            <option value="">Semua RT (RW 001)</option>
-            <option value="001">RT 001</option>
-            <option value="002">RT 002</option>
-            <option value="003">RT 003</option>
-          </select>
-        </div>
+        )}
       </div>
 
       {/* TABLE */}
