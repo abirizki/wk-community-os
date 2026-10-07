@@ -74,8 +74,6 @@ export default function DashboardKetuaRT() {
   // Loading States
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [aiBrief, setAiBrief] = useState(null);
-  const [loadingBrief, setLoadingBrief] = useState(true);
 
   // Tab 1: Antrean Dokumen & Iuran
   const [pendingDocs, setPendingDocs] = useState([]);
@@ -172,16 +170,7 @@ export default function DashboardKetuaRT() {
     try {
       setRefreshing(true);
 
-      // 1. Role AI Brief
-      setLoadingBrief(true);
-      api.get('/analytics/role-brief')
-        .then((res) => {
-          if (res.success) setAiBrief(res.data);
-        })
-        .catch((e) => console.warn('Brief fetch warn:', e.message))
-        .finally(() => setLoadingBrief(false));
-
-      // 2. Fetch Core RT Data & Facilities in parallel
+      // Fetch Core RT Data & Facilities in parallel
       const [
         docListRes,
         docStatsRes,
@@ -657,7 +646,7 @@ export default function DashboardKetuaRT() {
 
           {/* 2. Loket Dampingan Warga */}
           <Link
-            to="/dashboard/surat?mode=dampingan"
+            to="/dashboard/dokumen?mode=dampingan&action=new"
             className="p-3.5 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
@@ -746,46 +735,47 @@ export default function DashboardKetuaRT() {
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-rose-700">Radar Rentan & Bansos</h4>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-rose-700">Radar Rentan & Yatim</h4>
               <p className="text-[10px] text-slate-400 mt-0.5">Yatim & Lansia Sebatang</p>
             </div>
           </button>
 
-          {/* 7. Dashboard Analitik Looker / Power BI */}
-          <Link
-            to="/dashboard/analitik"
-            className="p-3.5 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          {/* 7. Fasilitas Wilayah RT */}
+          <button
+            type="button"
+            onClick={() => handleTabChange('fasilitas')}
+            className="p-3.5 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Layers className="w-5 h-5" />
+                <Building2 className="w-5 h-5" />
               </div>
               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-100 text-purple-800">
-                Looker BI
+                Fasilitas
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-700">Dashboard Analitik</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Visualisasi data Power BI</p>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-700">Fasilitas Wilayah</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Kos, ibadah, faskes & sekolah</p>
             </div>
-          </Link>
+          </button>
 
-          {/* 8. Tanya KANAYA Copilot */}
+          {/* 8. Bantuan Sosial & DTKS (Menggantikan Statcard AI) */}
           <Link
-            to="/dashboard/kanaya"
-            className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-900 to-emerald-950 text-white hover:from-slate-800 hover:to-emerald-900 border border-emerald-500/30 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+            to="/dashboard/bansos"
+            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Sparkles className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Gift className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-400 text-emerald-950">
-                AI Copilot
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800">
+                Bansos
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-emerald-200">Tanya KANAYA</h4>
-              <p className="text-[10px] text-slate-300 mt-0.5">Asisten regulasi RT/RW</p>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Bansos & DTKS</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Distribusi & sanggah kuota</p>
             </div>
           </Link>
         </div>
@@ -1241,9 +1231,9 @@ export default function DashboardKetuaRT() {
                 <h3 className="text-base font-extrabold text-on-surface">
                   Perlindungan Sosial Anak Yatim Piatu & Lansia Sebatang Kara
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
-                  <Sparkles size={12} />
-                  <span>AI Copilot Active</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                  <ShieldCheck size={12} />
+                  <span>Dual-Sourcing Aktif</span>
                 </span>
               </div>
               <p className="text-xs text-on-surface-variant mt-0.5">
