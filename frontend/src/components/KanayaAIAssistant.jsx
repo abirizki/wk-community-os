@@ -188,8 +188,8 @@ export default function KanayaAIAssistant({ user }) {
 
   return (
     <>
-      {/* 1. FLOATING AI ASSISTANT ORB */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none print:hidden">
+      {/* 1. FLOATING AI ASSISTANT ORB (Mobile-responsive bottom clearance) */}
+      <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex flex-col items-end pointer-events-none print:hidden">
         <AnimatePresence>
           {speechBubbleVisible && !isOpen && (
             <motion.div

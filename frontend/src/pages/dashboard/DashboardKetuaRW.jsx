@@ -339,7 +339,7 @@ export default function DashboardKetuaRW() {
         <div className="flex items-center gap-2">
           <span className="text-xs text-emerald-200/70 hidden md:inline">Perlu urus surat/KK keluarga sendiri?</span>
           <Link
-            to="/dashboard/warga"
+            to="/dashboard/dokumen"
             className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           >
             <Home className="w-4 h-4 text-emerald-300" />
@@ -403,22 +403,22 @@ export default function DashboardKetuaRW() {
             </div>
           </Link>
 
-          {/* 3. Buku Warga & KK RW */}
+          {/* 3. Layanan Surat Mandiri RW */}
           <Link
-            to="/dashboard/warga-lingkungan"
+            to="/dashboard/dokumen"
             className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Users className="w-5 h-5" />
+                <FileCheck className="w-5 h-5" />
               </div>
               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-100 text-blue-800 font-mono">
-                RW {rwNomor}
+                Mandiri
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700">Buku Warga Lintas-RT</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Direktori terproteksi PDP</p>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700">Layanan Surat Mandiri</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Pengajuan surat KK sendiri</p>
             </div>
           </Link>
 

@@ -15,16 +15,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
-import {
-  DashboardShell,
-  RoleHeader,
-  AIBriefCard,
-  KPIGrid,
-  KPICard,
-  ActionCenter,
-  StatusBadge,
-  SLABadge
-} from '../../components/design-system';
+import { StatusBadge, SLABadge } from "../../components/design-system";
 import {
   FileCheck,
   Clock,
@@ -576,71 +567,27 @@ export default function DashboardKetuaRT() {
   }, [sortedDocs, kelompokRentanList, iuranSummary, navigate, rtNomor]);
 
   return (
-    <DashboardShell
-      // 1. Header Role Ketua RT
-      header={
-        <RoleHeader
-          role="ketua_rt"
-          userName={user?.nama || 'Ketua RT'}
-          scopeLabel={`RT ${rtNomor} / RW ${rwNomor} • Kelurahan Kebonjati`}
-          onRefresh={loadRTData}
-          loading={refreshing}
-        />
-      }
-      // 2. Role-Scoped AI Brief
-      briefCard={
-        <AIBriefCard
-          brief={aiBrief}
-          loading={loadingBrief}
-          onRetry={loadRTData}
-        />
-      }
-      // 3. Grid KPI RT (Maksimal 4)
-      kpiGrid={
-        <KPIGrid columns={4}>
-          <KPICard
-            label="Antrean Masuk RT"
-            value={pendingDocs.length}
-            unit="berkas"
-            icon={<FileCheck size={20} />}
-            urgency={pendingDocs.length > 0 ? 'critical' : 'low'}
-            onClick={() => handleTabChange('surat')}
-          />
-          <KPICard
-            label="Kepatuhan SLA RT"
-            value={pendingDocs.length === 0 ? '100%' : `${Math.max(60, 100 - pendingDocs.length * 10)}%`}
-            unit="target"
-            icon={<Clock size={20} />}
-            urgency={pendingDocs.length > 2 ? 'high' : 'low'}
-          />
-          <KPICard
-            label="Kolektivitas Iuran"
-            value={iuranSummary.persentase}
-            unit={`${iuranSummary.sudah_bayar} KK`}
-            icon={<Wallet size={20} />}
-            urgency="medium"
-            onClick={() => navigate('/dashboard/keuangan')}
-          />
-          <KPICard
-            label="Kelompok Rentan RT"
-            value={kelompokRentanList.length}
-            unit="jiwa"
-            icon={<Heart size={20} />}
-            urgency={kelompokRentanList.length > 0 ? 'high' : 'low'}
-            onClick={() => handleTabChange('rentan')}
-          />
-        </KPIGrid>
-      }
-      // 4. Action Center Prioritas
-      actionCenter={
-        <ActionCenter
-          title="Tindakan Prioritas & Verifikasi Berkas RT"
-          actions={actionItems}
-          onRefresh={loadRTData}
-          isRefreshing={refreshing}
-        />
-      }
-    >
+    <div className="space-y-6 pb-16">
+      {/* Pesan Sukses Aksi */}
+      <AnimatePresence>
+        {actionSuccessToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between gap-3 shadow-sm"
+          >
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <p className="text-sm font-medium">{actionSuccessToast}</p>
+            </div>
+            <button onClick={() => setActionSuccessToast('')} className="text-emerald-500 hover:text-emerald-700">
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 0. Persona Mode Switcher (Single Identity, Dual Role) */}
       <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white shadow-md border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -663,7 +610,7 @@ export default function DashboardKetuaRT() {
         <div className="flex items-center gap-2">
           <span className="text-xs text-emerald-200/70 hidden md:inline">Perlu urus surat/KK pribadi?</span>
           <Link
-            to="/dashboard/warga"
+            to="/dashboard/dokumen"
             className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           >
             <Home className="w-4 h-4 text-emerald-300" />
@@ -727,22 +674,22 @@ export default function DashboardKetuaRT() {
             </div>
           </Link>
 
-          {/* 3. Buku Warga & KK */}
+          {/* 3. Layanan Surat Mandiri RT */}
           <Link
-            to="/dashboard/warga-lingkungan"
+            to="/dashboard/dokumen"
             className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Users className="w-5 h-5" />
+                <FileCheck className="w-5 h-5" />
               </div>
               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-100 text-blue-800 font-mono">
-                RT {rtNomor}
+                Mandiri
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700">Buku Warga & KK</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Direktori terproteksi PDP</p>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700">Layanan Surat Mandiri</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Pengajuan surat KK sendiri</p>
             </div>
           </Link>
 
@@ -844,69 +791,6 @@ export default function DashboardKetuaRT() {
         </div>
       </div>
 
-      {/* Sub-Tabs Navigasi Meja Kerja RT */}
-      <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-1.5 shadow-2xs flex flex-wrap items-center gap-1.5 mb-6">
-        <button
-          type="button"
-          onClick={() => handleTabChange('surat')}
-          className={`flex-1 min-w-[140px] py-2.5 px-3.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'surat'
-              ? 'bg-primary text-white shadow-xs'
-              : 'bg-transparent text-slate-600 hover:bg-surface-container'
-          }`}
-        >
-          <FileCheck size={16} />
-          <span>Antrean Surat Masuk</span>
-          {pendingDocs.length > 0 && (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
-              activeTab === 'surat' ? 'bg-white/20 text-white' : 'bg-red-100 text-red-700'
-            }`}>
-              {pendingDocs.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabChange('fasilitas')}
-          className={`flex-1 min-w-[140px] py-2.5 px-3.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'fasilitas'
-              ? 'bg-primary text-white shadow-xs'
-              : 'bg-transparent text-slate-600 hover:bg-surface-container'
-          }`}
-        >
-          <Building2 size={16} />
-          <span>Potensi & Fasilitas Wilayah</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
-            activeTab === 'fasilitas' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-          }`}>
-            {keagamaanList.length + hunianSewaList.length + kesehatanList.length + pendidikanList.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabChange('rentan')}
-          className={`flex-1 min-w-[140px] py-2.5 px-3.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'rentan'
-              ? 'bg-primary text-white shadow-xs'
-              : 'bg-transparent text-slate-600 hover:bg-surface-container'
-          }`}
-        >
-          <Heart size={16} />
-          <span>Perlindungan Yatim & Lansia</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono tabular-nums ${
-            activeTab === 'rentan' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-900'
-          }`}>
-            {kelompokRentanList.length}
-          </span>
-          <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-purple-100 text-purple-800">
-            AI Copilot
-          </span>
-        </button>
-      </div>
-
-      {/* ========================================================================= */}
       {/* TAB 1: MEJA ANTREAN VERIFIKASI SURAT RT (SOP 3-KEPUTUSAN)                  */}
       {/* ========================================================================= */}
       {activeTab === 'surat' && (
@@ -2045,6 +1929,6 @@ export default function DashboardKetuaRT() {
         actionDescription={pinModal.description}
         officerRole="Ketua RT"
       />
-    </DashboardShell>
+    </div>
   );
 }

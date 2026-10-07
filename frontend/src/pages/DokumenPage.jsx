@@ -182,12 +182,16 @@ export default function DokumenPage() {
   const isCitizen = !isOfficer || user?.role === 'warga';
 
   const [data, setData] = useState([]);
+  const [myDocs, setMyDocs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
 
   // Tab State
-  const [activeTab, setActiveTab] = useState(isOfficer ? 'pending_approval' : 'all');
+  const initialMode = searchParams.get('mode');
+  const [activeTab, setActiveTab] = useState(
+    initialMode === 'mandiri' ? 'my_docs' : (isOfficer ? 'pending_approval' : 'all')
+  );
 
   // Request Modal State
   const [showModal, setShowModal] = useState(false);
@@ -305,8 +309,22 @@ export default function DokumenPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const res = isOfficer ? await api.get('/dokumen') : await api.get('/dokumen/me');
-      setData(res.data || []);
+      if (isOfficer) {
+        const [officerRes, myRes] = await Promise.allSettled([
+          api.get('/dokumen'),
+          api.get('/dokumen/me')
+        ]);
+        if (officerRes.status === 'fulfilled') {
+          setData(officerRes.value?.data || []);
+        }
+        if (myRes.status === 'fulfilled') {
+          setMyDocs(myRes.value?.data || []);
+        }
+      } else {
+        const res = await api.get('/dokumen/me');
+        setData(res.data || []);
+        setMyDocs(res.data || []);
+      }
       await loadFamilyMembers();
     } catch (err) {
       setError(err.message || 'Gagal mengambil data permohonan surat.');
@@ -530,7 +548,7 @@ export default function DokumenPage() {
   };
 
   // Filter list based on tab
-  const displayedData = data.filter((doc) => {
+  const displayedData = (activeTab === 'my_docs' ? myDocs : data).filter((doc) => {
     if (activeTab === 'pending_approval') {
       if (isRT) return doc.approval_step === 'RT' && doc.status !== 'REJECTED';
       if (isRW) return doc.approval_step === 'RW' && doc.status !== 'REJECTED';
@@ -602,8 +620,7 @@ export default function DokumenPage() {
           </p>
         </div>
 
-        {!isOfficer && (
-          <button
+        <button
             onClick={() => {
               setSubjekPemohon('self');
               setShowModal(true);
@@ -611,9 +628,8 @@ export default function DokumenPage() {
             className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 cursor-pointer"
           >
             <Plus size={18} />
-            <span>Ajukan Surat Baru</span>
+            <span>Ajukan Surat Baru (Mandiri)</span>
           </button>
-        )}
       </div>
 
       {/* ALERTS */}
@@ -677,6 +693,17 @@ export default function DokumenPage() {
             </span>
           </button>
           <button
+            onClick={() => setActiveTab('my_docs')}
+            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              activeTab === 'my_docs'
+                ? 'bg-primary text-on-primary shadow-sm'
+                : 'text-on-surface-variant hover:bg-surface-container-low'
+            }`}
+          >
+            <User size={16} />
+            <span>Surat Mandiri Saya & KK ({myDocs.length})</span>
+          </button>
+          <button
             onClick={() => setActiveTab('all')}
             className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'all'
@@ -685,7 +712,7 @@ export default function DokumenPage() {
             }`}
           >
             <FileText size={16} />
-            <span>Semua Dokumen ({data.length})</span>
+            <span>Semua Dokumen Wilayah ({data.length})</span>
           </button>
         </div>
       )}

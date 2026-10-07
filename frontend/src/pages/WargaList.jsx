@@ -87,11 +87,7 @@ export default function WargaList() {
         offset: String(offset),
         search: search.trim()
       });
-      if (user?.role === 'ketua_rt') {
-        params.append('rt', user.rt || '001');
-      } else if (filterRT) {
-        params.append('rt', filterRT);
-      }
+      if (filterRT) params.append('rt', filterRT);
 
       const response = await api.get(`/warga?${params.toString()}`);
       if (response.success) {
@@ -323,26 +319,24 @@ export default function WargaList() {
           />
         </form>
 
-        {user?.role !== 'ketua_rt' && (
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
-              <Filter size={16} /> Filter RT:
-            </div>
-            <select
-              value={filterRT}
-              onChange={(e) => {
-                setFilterRT(e.target.value);
-                setPage(1);
-              }}
-              className="px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-on-surface font-medium"
-            >
-              <option value="">Semua RT di Wilayah Anda</option>
-              <option value="001">RT 001</option>
-              <option value="002">RT 002</option>
-              <option value="003">RT 003</option>
-            </select>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+            <Filter size={16} /> Filter RT:
           </div>
-        )}
+          <select
+            value={filterRT}
+            onChange={(e) => {
+              setFilterRT(e.target.value);
+              setPage(1);
+            }}
+            className="px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-on-surface font-medium"
+          >
+            <option value="">Semua RT (RW 001)</option>
+            <option value="001">RT 001</option>
+            <option value="002">RT 002</option>
+            <option value="003">RT 003</option>
+          </select>
+        </div>
       </div>
 
       {/* TABLE */}
@@ -377,8 +371,12 @@ export default function WargaList() {
                 wargaList.map((warga) => (
                   <tr key={warga.nik} className="hover:bg-surface-container-low/50 transition-colors">
                     <td className="p-4">
-                      <div className="font-mono font-medium text-on-surface">{warga.nik}</div>
-                      <div className="text-xs text-on-surface-variant font-mono">KK: {warga.no_kk}</div>
+                      <div className="font-mono font-medium text-on-surface">
+                        {['superadmin', 'admin_kelurahan'].includes(user?.role) ? warga.nik : (warga.nik ? `${warga.nik.slice(0, 6)}******${warga.nik.slice(-4)}` : '-')}
+                      </div>
+                      <div className="text-xs text-on-surface-variant font-mono" title="Disensor demi perlindungan data pribadi (UU PDP No. 27/2022)">
+                        KK: {['superadmin', 'admin_kelurahan'].includes(user?.role) ? warga.no_kk : (warga.no_kk ? `${warga.no_kk.slice(0, 6)}******${warga.no_kk.slice(-4)}` : '-')}
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="font-semibold text-on-surface">{warga.nama}</div>
