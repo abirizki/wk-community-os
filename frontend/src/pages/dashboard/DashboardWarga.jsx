@@ -1,4 +1,4 @@
-﻿/**
+/**
  * frontend/src/pages/dashboard/DashboardWarga.jsx
  * Super App Citizen Experience Dashboard for Warga (Bumi Warga - Jabar Pintar Digital)
  * Features:

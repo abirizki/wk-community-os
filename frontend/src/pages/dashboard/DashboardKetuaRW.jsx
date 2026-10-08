@@ -386,7 +386,7 @@ export default function DashboardKetuaRW() {
 
           {/* 2. Loket Dampingan RW */}
           <Link
-            to="/dashboard/dokumen?mode=dampingan&action=new"
+            to="/dashboard/surat?mode=dampingan"
             className="p-3.5 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
@@ -480,42 +480,41 @@ export default function DashboardKetuaRW() {
             </div>
           </button>
 
-          {/* 7. Aset & Fasilitas RW */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('fasilitas')}
-            className="p-3.5 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          {/* 7. Dashboard Analitik Looker / Power BI */}
+          <Link
+            to="/dashboard/analitik"
+            className="p-3.5 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Building2 className="w-5 h-5" />
+                <Layers className="w-5 h-5" />
               </div>
               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-100 text-purple-800">
-                Aset RW
+                Looker BI
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-700">Aset & Fasilitas RW</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Balai warga, kamling & TPS</p>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-700">Dashboard Analitik</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Visualisasi data Power BI</p>
             </div>
-          </button>
+          </Link>
 
-          {/* 8. Bantuan Sosial Wilayah RW (Menggantikan Statcard AI) */}
+          {/* 8. Tanya KANAYA RW */}
           <Link
-            to="/dashboard/bansos"
-            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+            to="/dashboard/kanaya"
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-900 to-emerald-950 text-white hover:from-slate-800 hover:to-emerald-900 border border-emerald-500/30 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Gift className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800">
-                Bansos
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-400 text-emerald-950">
+                AI Copilot
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Bantuan Sosial RW</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Monitoring kuota & sanggahan</p>
+              <h4 className="text-xs font-bold text-emerald-200">Tanya KANAYA</h4>
+              <p className="text-[10px] text-slate-300 mt-0.5">Asisten regulasi RW</p>
             </div>
           </Link>
         </div>
