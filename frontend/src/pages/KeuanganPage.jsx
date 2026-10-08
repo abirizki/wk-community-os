@@ -89,7 +89,8 @@ export default function KeuanganPage() {
     nominal: '',
     keterangan: '',
     tanggal_transaksi: new Date().toISOString().slice(0, 10),
-    bukti_foto_url: ''
+    bukti_foto_url: '',
+    identitas_pembayar: ''
   });
 
   // Kuitansi Modal
@@ -179,7 +180,8 @@ export default function KeuanganPage() {
           nominal: '',
           keterangan: '',
           tanggal_transaksi: new Date().toISOString().slice(0, 10),
-          bukti_foto_url: ''
+          bukti_foto_url: '',
+          identitas_pembayar: ''
         });
         return;
       }
@@ -193,7 +195,8 @@ export default function KeuanganPage() {
         nominal: '',
         keterangan: '',
         tanggal_transaksi: new Date().toISOString().slice(0, 10),
-        bukti_foto_url: ''
+        bukti_foto_url: '',
+        identitas_pembayar: ''
       });
       fetchSummary();
       fetchTransaksi();
@@ -505,9 +508,16 @@ export default function KeuanganPage() {
                         </td>
                         <td className="p-3.5 text-on-surface-variant max-w-sm">
                           <p className="line-clamp-2 text-on-surface font-medium">{tx.keterangan}</p>
-                          <span className="text-[10px] text-sky-800 font-semibold bg-sky-50 px-1.5 py-0.2 rounded">
-                            RT {tx.rt} / RW {tx.rw}
-                          </span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-sky-800 font-semibold bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100">
+                              RT {tx.rt} / RW {tx.rw}
+                            </span>
+                            {tx.identitas_pembayar && (
+                              <span className="text-[10px] text-emerald-800 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                                Dari: {tx.identitas_pembayar}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="p-3.5 text-right whitespace-nowrap font-mono font-bold">
                           <span className={tx.tipe === 'MASUK' ? 'text-emerald-700 text-sm' : 'text-rose-700 text-sm'}>
@@ -842,6 +852,23 @@ export default function KeuanganPage() {
                   />
                 </div>
               </div>
+
+              {txForm.tipe === 'MASUK' && (
+                <div className="bg-sky-50 border border-sky-100 p-3 rounded-xl mb-3">
+                  <label className="block font-bold text-sky-900 mb-1">
+                    <span className="text-rose-500">*</span> Identitas Pembayar / Donatur:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={txForm.identitas_pembayar}
+                    onChange={(e) => setTxForm({ ...txForm, identitas_pembayar: e.target.value })}
+                    placeholder="Nama warga atau instansi penyumbang..."
+                    className="w-full p-2.5 bg-white border border-sky-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none text-xs"
+                  />
+                  <p className="text-[10px] text-sky-700 mt-1">Wajib diisi untuk akuntabilitas kas masuk RT/RW.</p>
+                </div>
+              )}
 
               <div>
                 <label className="block font-bold text-on-surface mb-1">Keterangan / Peruntukan Dana:</label>

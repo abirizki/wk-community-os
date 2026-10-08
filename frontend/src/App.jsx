@@ -24,6 +24,7 @@ import ProfilePage from './pages/ProfilePage';
 import KeuanganPage from './pages/KeuanganPage';
 import AparaturPage from './pages/AparaturPage';
 import VerifySuratPage from './pages/VerifySuratPage';
+import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 import ScannerPage from './pages/ScannerPage';
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
             <Route path="warga" element={<WargaList />} />
             <Route path="warga/:nik" element={<WargaDetail />} />
             <Route path="dokumen" element={<DokumenPage />} />
+            <Route path="analitik" element={<AnalyticsDashboardPage />} />
             <Route path="bansos" element={<BansosPage />} />
             <Route path="desil" element={<DesilPage />} />
             <Route path="data-maturity" element={<DataMaturityPage />} />

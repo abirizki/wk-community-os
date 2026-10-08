@@ -464,6 +464,12 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] CREATE keuangan_kas note:', e.message);
     }
 
+    
+    // 8.1 Patch identitas pembayar pada keuangan_kas
+    try {
+      await connection.query("ALTER TABLE keuangan_kas ADD COLUMN identitas_pembayar VARCHAR(150) NULL");
+    } catch (e) {}
+
     // 9. Pastikan tabel keuangan_iuran_warga (Iuran Bulanan KK) tersedia
     try {
       await connection.query(`

@@ -13,7 +13,8 @@
     "lucide-react": "^0.500.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.18.3"
+    "react-router-dom": "^7.18.3",
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react-swc": "^4.2.0",
