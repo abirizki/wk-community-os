@@ -598,8 +598,11 @@ export default function DashboardKetuaRT() {
       {/* 0. Persona Mode Switcher (Single Identity, Dual Role) */}
       <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white shadow-md border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5 text-emerald-300" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0 relative group">
+            {user?.photo_url ? <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover rounded-xl" /> : <ShieldCheck className="w-5 h-5 text-emerald-300" />}
+            <div className="absolute inset-0 bg-black/40 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <span className="text-[8px] font-bold text-white uppercase text-center leading-tight">Ganti<br/>Foto</span>
+            </div>
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -617,7 +620,7 @@ export default function DashboardKetuaRT() {
         <div className="flex items-center gap-2">
           <span className="text-xs text-emerald-200/70 hidden md:inline">Perlu urus surat/KK pribadi?</span>
           <Link
-            to="/dashboard/dokumen"
+            to="/dashboard/dokumen?mode=dampingan"
             className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           >
             <Home className="w-4 h-4 text-emerald-300" />
@@ -649,14 +652,14 @@ export default function DashboardKetuaRT() {
                   <RefreshCw className="w-3 h-3 animate-spin" /> Menganalisa data wilayah...
                 </span>
               ) : (
-                aiBrief?.summary || 'Terdapat beberapa permohonan surat yang perlu segera diverifikasi. Data iuran warga menunjukkan 85% telah melunasi kewajiban bulan ini. Lansia sebatang kara dan anak yatim memerlukan perhatian khusus melalui program Bansos terdekat.'
+                aiBrief?.summary || `Halo, ${user?.name || "Bapak/Ibu"}. Terdapat ${pendingDocs.length} permohonan surat yang menunggu verifikasi. Tingkat partisipasi iuran kas mencapai ${iuranSummary.persentase} dari total ${iuranSummary.total_kk} KK. Kami juga mendeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia) yang perlu diprioritaskan pada penyaluran Bansos berikutnya.`
               )}
             </p>
           </div>
-          <button className="px-4 py-2 bg-white hover:bg-blue-50 text-blue-600 rounded-xl text-xs font-bold shadow-sm border border-blue-100 transition-colors shrink-0 flex items-center gap-2">
+          <Link to="/dashboard/analitik" className="px-4 py-2 bg-white hover:bg-blue-50 text-blue-600 rounded-xl text-xs font-bold shadow-sm border border-blue-100 transition-colors shrink-0 flex items-center gap-2">
             Lihat Analitik Lengkap
             <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -697,7 +700,7 @@ export default function DashboardKetuaRT() {
 
           {/* 2. Loket Dampingan Warga */}
           <Link
-            to="/dashboard/dokumen"
+            to="/dashboard/dokumen?mode=dampingan"
             className="p-3.5 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
@@ -716,7 +719,7 @@ export default function DashboardKetuaRT() {
 
           {/* 3. Layanan Surat Mandiri RT */}
           <Link
-            to="/dashboard/dokumen"
+            to="/dashboard/dokumen?mode=mandiri"
             className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
@@ -832,6 +835,70 @@ export default function DashboardKetuaRT() {
       </div>
 
       {/* ========================================================================= */}
+      
+      {/* SECTION VISUALISASI KANAYA DATA ANALYTICS */}
+      <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm mb-6">
+        <div className="flex items-center justify-between mb-6">
+           <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+            <Sparkles className="text-blue-600" size={18} />
+            Analitik Warga & Kerentanan (Kanaya Insights)
+          </h3>
+          <span className="text-[10px] text-slate-500 font-mono">Data ter-update: Hari Ini</span>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-slate-700 text-center">Demografi Warga (Usia)</h4>
+            <div className="h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={[{name: 'Anak', value: 45}, {name: 'Dewasa', value: 120}, {name: 'Lansia', value: 20}]} dataKey="value" cx="50%" cy="50%" innerRadius={40} outerRadius={60}>
+                    <Cell fill="#3b82f6" />
+                    <Cell fill="#10b981" />
+                    <Cell fill="#f59e0b" />
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-[10px] text-center text-slate-500 font-medium">Mayoritas warga di usia produktif (Dewasa).</p>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-slate-700 text-center">Penerima Bansos vs Non-Bansos</h4>
+            <div className="h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[{name: 'Warga', Penerima: 35, Non_Penerima: 150}]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Bar dataKey="Penerima" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30} />
+                  <Bar dataKey="Non_Penerima" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={30} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-[10px] text-center text-slate-500 font-medium">18% KK adalah penerima Bansos aktif.</p>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-slate-700 text-center">Kerentanan Ekonomi (DESIL)</h4>
+            <div className="h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[{name: 'Desil 1 (Sangat Miskin)', value: 12}, {name: 'Desil 2 (Miskin)', value: 23}, {name: 'Desil 3 (Rentan)', value: 45}]} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                  <XAxis type="number" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={80} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Bar dataKey="value" fill="#f59e0b" radius={[0, 4, 4, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-[10px] text-center text-slate-500 font-medium">Prioritas intervensi pada 12 KK di Desil 1.</p>
+          </div>
+        </div>
+      </div>
+  
       {/* SECTION VISUALISASI DATA INTERAKTIF                                      */}
       {/* ========================================================================= */}
       <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-6">

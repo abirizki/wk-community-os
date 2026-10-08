@@ -14,3 +14,4 @@ if (!appJsx.includes('AnalyticsDashboardPage')) {
 } else {
   console.log('AnalyticsDashboardPage already in App.jsx');
 }
+

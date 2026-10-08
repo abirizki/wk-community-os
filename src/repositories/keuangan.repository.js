@@ -220,7 +220,7 @@ class KeuanganRepository {
   async generateMonthlyBills(periodeBulan, rt, rw, nominal = 25000) {
     // Ambil seluruh KK unik di wilayah
     const [kkRows] = await pool.execute(
-      `SELECT no_kk, nama_kepala_keluarga, rt, rw 
+      `SELECT no_kk, kepala_keluarga AS nama_kepala_keluarga, rt, rw 
        FROM kartu_keluarga 
        WHERE rt = ? AND rw = ?`,
       [rt, rw]

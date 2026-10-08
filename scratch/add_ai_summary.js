@@ -50,3 +50,4 @@ function addAISummary(filePath) {
 
 addAISummary('frontend/src/pages/dashboard/DashboardKetuaRT.jsx');
 addAISummary('frontend/src/pages/dashboard/DashboardKetuaRW.jsx');
+

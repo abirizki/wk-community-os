@@ -320,8 +320,17 @@ export default function DashboardKetuaRW() {
       {/* 0. Persona Mode Switcher (Single Identity, Dual Role) */}
       <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white shadow-md border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5 text-emerald-300" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0 relative group">
+              {user?.photo_url ? (
+                <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover rounded-xl" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-emerald-300" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <span className="text-[8px] font-bold text-white uppercase text-center leading-tight">Ganti<br/>Foto</span>
+              </div>
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -339,7 +348,7 @@ export default function DashboardKetuaRW() {
         <div className="flex items-center gap-2">
           <span className="text-xs text-emerald-200/70 hidden md:inline">Perlu urus surat/KK keluarga sendiri?</span>
           <Link
-            to="/dashboard/dokumen"
+            to="/dashboard/dokumen?mode=dampingan"
             className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           >
             <Home className="w-4 h-4 text-emerald-300" />
@@ -371,14 +380,14 @@ export default function DashboardKetuaRW() {
                   <RefreshCw className="w-3 h-3 animate-spin" /> Menganalisa data wilayah...
                 </span>
               ) : (
-                aiBrief?.summary || 'Terdapat beberapa permohonan surat yang perlu segera diverifikasi. Data iuran warga menunjukkan 85% telah melunasi kewajiban bulan ini. Lansia sebatang kara dan anak yatim memerlukan perhatian khusus melalui program Bansos terdekat.'
+                aiBrief?.summary || `Halo, ${user?.name || "Bapak/Ibu"}. Terdapat ${pendingDocs.length} permohonan surat yang menunggu verifikasi. Tingkat partisipasi iuran kas mencapai ${iuranSummary.persentase} dari total ${iuranSummary.total_kk} KK. Kami juga mendeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia) yang perlu diprioritaskan pada penyaluran Bansos berikutnya.`
               )}
             </p>
           </div>
-          <button className="px-4 py-2 bg-white hover:bg-blue-50 text-blue-600 rounded-xl text-xs font-bold shadow-sm border border-blue-100 transition-colors shrink-0 flex items-center gap-2">
+          <Link to="/dashboard/analitik" className="px-4 py-2 bg-white hover:bg-blue-50 text-blue-600 rounded-xl text-xs font-bold shadow-sm border border-blue-100 transition-colors shrink-0 flex items-center gap-2">
             Lihat Analitik Lengkap
             <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -419,7 +428,7 @@ export default function DashboardKetuaRW() {
 
           {/* 2. Loket Dampingan RW */}
           <Link
-            to="/dashboard/dokumen"
+            to="/dashboard/dokumen?mode=dampingan"
             className="p-3.5 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
@@ -438,7 +447,7 @@ export default function DashboardKetuaRW() {
 
           {/* 3. Layanan Surat Mandiri RW */}
           <Link
-            to="/dashboard/dokumen"
+            to="/dashboard/dokumen?mode=mandiri"
             className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
