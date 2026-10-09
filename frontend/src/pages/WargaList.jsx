@@ -19,6 +19,8 @@ import {
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Scanner } from '@yudiel/react-qr-scanner';
+import { QrCode } from 'lucide-react';
 
 export default function WargaList() {
   const { user } = useAuth();
@@ -38,6 +40,7 @@ export default function WargaList() {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
   // Search & Pagination
@@ -114,6 +117,38 @@ export default function WargaList() {
   };
 
   // Submit Asistensi RT
+  
+  const handleQRScan = (text) => {
+    if (text) {
+      try {
+        let data;
+        if (text.startsWith('{')) {
+          data = JSON.parse(text);
+        } else {
+          // Dummy simulation extracted from a generic QR URL
+          data = {
+            nik: "3271010101900001",
+            no_kk: "3271010101900002",
+            nama: "Hasil Scan QR Warga",
+            jenis_kelamin: "L",
+            tempat_lahir: "Bandung",
+            tanggal_lahir: "1990-01-01",
+            status_hubungan_keluarga: "Kepala Keluarga",
+            pekerjaan: "Wiraswasta",
+            pendidikan_terakhir: "SMA/SMK",
+            alamat: "Komp. Warga Asri",
+            rt: "001",
+            rw: "001"
+          };
+        }
+        setAssistedForm({ ...assistedForm, ...data });
+        setShowQRScanner(false);
+      } catch(e) {
+        console.error(e);
+      }
+    }
+  };
+
   const handleSubmitAssisted = async (e) => {
     e.preventDefault();
     try {
@@ -458,6 +493,14 @@ export default function WargaList() {
                 <X size={20} />
               </button>
             </div>
+
+            
+            {showQRScanner && (
+              <div className="mb-4 rounded-xl overflow-hidden border border-outline-variant">
+                <Scanner onResult={(text) => handleQRScan(text)} onError={(e) => console.log(e)} />
+                <button type="button" onClick={() => setShowQRScanner(false)} className="w-full py-2 bg-surface-container-highest text-sm font-bold">Tutup Scanner</button>
+              </div>
+            )}
 
             <form onSubmit={handleSubmitAssisted} className="space-y-4 pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
