@@ -116,8 +116,6 @@ export default function DashboardKetuaRW() {
   // Modal Pendaftaran Aset Baru Tingkat RW
   const [loadingBrief, setLoadingBrief] = useState(false);
   const [aiBrief, setAiBrief] = useState(null);
-  const [loadingBrief, setLoadingBrief] = useState(false);
-  const [aiBrief, setAiBrief] = useState(null);
   const [showAsetModal, setShowAsetModal] = useState(false);
   const [asetForm, setAsetForm] = useState({
     nama_fasilitas: '',
