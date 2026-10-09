@@ -663,7 +663,27 @@ export default function DashboardKetuaRT() {
         </div>
       </div>
 
-      {/* 2. Super Apps Bento Quick Launcher (8 Flutter-Style Grid Shortcuts) */}
+      
+      {/* Menu Analitik Kebijakan (Top Level) */}
+      <div className="mb-6 flex gap-4">
+        <Link to="/dashboard/analitik" className="flex-1 bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between group hover:scale-[1.01] transition-transform">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <PieChart className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm sm:text-base">Strategi & Analitik Kebijakan AI</h3>
+              <p className="text-xs text-blue-100 mt-0.5">Pantau data faktual, demografi, & rekomendasi Kanaya</p>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-blue-700 transition-colors">
+            <ArrowRight className="w-4 h-4" />
+          </div>
+        </Link>
+      </div>
+
+      
+      {/* 2. Super Apps Bento Quick Launcher */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
