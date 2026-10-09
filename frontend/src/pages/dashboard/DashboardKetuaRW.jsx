@@ -114,6 +114,10 @@ export default function DashboardKetuaRW() {
   });
 
   // Modal Pendaftaran Aset Baru Tingkat RW
+  const [loadingBrief, setLoadingBrief] = useState(false);
+  const [aiBrief, setAiBrief] = useState(null);
+  const [loadingBrief, setLoadingBrief] = useState(false);
+  const [aiBrief, setAiBrief] = useState(null);
   const [showAsetModal, setShowAsetModal] = useState(false);
   const [asetForm, setAsetForm] = useState({
     nama_fasilitas: '',
@@ -380,7 +384,7 @@ export default function DashboardKetuaRW() {
                   <RefreshCw className="w-3 h-3 animate-spin" /> Menganalisa data wilayah...
                 </span>
               ) : (
-                aiBrief?.summary || `Halo, ${user?.name || "Bapak/Ibu"}. Terdapat ${pendingDocs.length} permohonan surat yang menunggu verifikasi. Tingkat partisipasi iuran kas mencapai ${iuranSummary.persentase} dari total ${iuranSummary.total_kk} KK. Kami juga mendeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia) yang perlu diprioritaskan pada penyaluran Bansos berikutnya.`
+                aiBrief?.summary || `Halo, ${user?.name || "Bapak/Ibu"}. Terdapat ${dokumenList.length} permohonan surat terusan yang menunggu validasi RW. Kinerja pelayanan dari ${scorecardData.length} RT terpantau aktif. Kami mendeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia) yang perlu diprioritaskan pada penyaluran Bansos berikutnya.`
               )}
             </p>
           </div>
