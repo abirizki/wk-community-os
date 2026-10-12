@@ -596,23 +596,49 @@ export default function DashboardKetuaRT() {
       </AnimatePresence>
 
       {/* 0. Persona Mode Switcher (Single Identity, Dual Role) */}
-      <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white shadow-md border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-sky-800 via-blue-900 to-slate-900 text-white shadow-md border border-sky-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0 relative group">
-            {user?.photo_url ? <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover rounded-xl" /> : <ShieldCheck className="w-5 h-5 text-emerald-300" />}
-            <div className="absolute inset-0 bg-black/40 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-              <span className="text-[8px] font-bold text-white uppercase text-center leading-tight">Ganti<br/>Foto</span>
+          <label className="w-11 h-11 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center shrink-0 relative group cursor-pointer overflow-hidden shadow-sm" title="Klik untuk unggah foto profil">
+            {user?.photo_url ? (
+              <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover rounded-xl" />
+            ) : (
+              <ShieldCheck className="w-6 h-6 text-sky-300" />
+            )}
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('foto', file);
+                try {
+                  const res = await api.post('/users/upload-photo', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                  });
+                  if (res.success) {
+                    alert('Foto profil berhasil diperbarui!');
+                    window.location.reload();
+                  }
+                } catch {
+                  alert('Foto profil berhasil dipilih.');
+                }
+              }}
+            />
+            <div className="absolute inset-0 bg-black/50 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-[8px] font-bold text-white uppercase text-center leading-tight">Unggah<br/>Foto</span>
             </div>
-          </div>
+          </label>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-400 text-emerald-950">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-400 text-sky-950">
                 Mode Pejabat Aktif
               </span>
-              <span className="text-xs text-emerald-200/80 font-mono">RT {rtNomor} / RW {rwNomor}</span>
+              <span className="text-xs text-sky-200/90 font-mono">RT {rtNomor} / RW {rwNomor}</span>
             </div>
             <h2 className="text-sm sm:text-base font-bold text-white mt-0.5">
-              Meja Kerja Otoritas Ketua RT
+              {user?.nama || user?.name ? `${user?.nama || user?.name} • Ketua RT ${rtNomor}` : `Meja Kerja Otoritas Ketua RT ${rtNomor}`}
             </h2>
           </div>
         </div>
@@ -835,20 +861,20 @@ export default function DashboardKetuaRT() {
 
           {/* 8. Tanya KANAYA Copilot */}
           <Link
-            to="/dashboard/kanaya"
-            className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-900 to-emerald-950 text-white hover:from-slate-800 hover:to-emerald-900 border border-emerald-500/30 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+            to="/dashboard/daya-dukung"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200/80 hover:border-sky-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Sparkles className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Building2 className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-400 text-emerald-950">
-                AI Copilot
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-sky-100 text-sky-800">
+                Fasilitas
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-emerald-200">Tanya KANAYA</h4>
-              <p className="text-[10px] text-slate-300 mt-0.5">Asisten regulasi RT/RW</p>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-sky-700">Daya Dukung RT</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Sekolah, Faskes, UMKM</p>
             </div>
           </Link>
         </div>

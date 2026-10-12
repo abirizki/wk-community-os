@@ -168,7 +168,7 @@ export default function DayaDukungPage() {
     }
   };
 
-  const canManageFacilities = ['superadmin', 'admin_kelurahan', 'admin'].includes(user?.role);
+  const canManageFacilities = ['superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rw', 'admin_rw', 'ketua_rt'].includes(user?.role);
 
   // Filtered inventories
   const filteredSchools = (pendidikanData.inventory || []).filter(s => 
@@ -976,11 +976,14 @@ export default function DayaDukungPage() {
                     onChange={(e) => setSchoolForm({ ...schoolForm, jenjang: e.target.value })}
                     className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
                   >
-                    <option value="PAUD">PAUD / TK</option>
-                    <option value="SD">Sekolah Dasar (SD)</option>
+                    <option value="PAUD">PAUD / SPS</option>
+                    <option value="TK">TK / RA</option>
+                    <option value="SD">Sekolah Dasar (SD / MI)</option>
                     <option value="SMP">SMP / MTs</option>
                     <option value="SMA">SMA / MA</option>
                     <option value="SMK">SMK</option>
+                    <option value="SLB">SLB (Sekolah Luar Biasa)</option>
+                    <option value="PKBM">PKBM / Lembaga Kursus</option>
                   </select>
                 </div>
                 <div>
@@ -1024,9 +1027,10 @@ export default function DayaDukungPage() {
                     onChange={(e) => setSchoolForm({ ...schoolForm, akreditasi: e.target.value })}
                     className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
                   >
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
+                    <option value="A">Terakreditasi A (Unggul)</option>
+                    <option value="B">Terakreditasi B (Baik)</option>
+                    <option value="C">Terakreditasi C (Cukup)</option>
+                    <option value="Belum Terakreditasi">Belum Terakreditasi</option>
                   </select>
                 </div>
               </div>
@@ -1091,12 +1095,15 @@ export default function DayaDukungPage() {
                     onChange={(e) => setHealthForm({ ...healthForm, jenis_faskes: e.target.value })}
                     className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
                   >
-                    <option value="Puskesmas">Puskesmas</option>
+                    <option value="Puskesmas">Puskesmas Induk</option>
                     <option value="Pustu">Puskesmas Pembantu (Pustu)</option>
                     <option value="Klinik Pratama">Klinik Pratama</option>
-                    <option value="Posyandu">Posyandu</option>
-                    <option value="Apotek">Apotek</option>
-                    <option value="Praktik Mandiri">Praktik Mandiri</option>
+                    <option value="Klinik Utama">Klinik Utama / Spesialis</option>
+                    <option value="Dokter Praktek Mandiri">Dokter Praktek Mandiri</option>
+                    <option value="Bidan Praktek Mandiri">Bidan Praktek Mandiri (BPM)</option>
+                    <option value="Poskeskel">Poskeskel / Posyandu</option>
+                    <option value="Apotek">Apotek / Toko Obat Berizin</option>
+                    <option value="Rumah Sakit">Rumah Sakit (RS/RSIA)</option>
                   </select>
                 </div>
                 <div>
@@ -1106,9 +1113,10 @@ export default function DayaDukungPage() {
                     onChange={(e) => setHealthForm({ ...healthForm, kategori_pengelola: e.target.value })}
                     className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
                   >
-                    <option value="Pemerintah">Pemerintah</option>
+                    <option value="Pemerintah">Pemerintah (Dinkes)</option>
                     <option value="Swasta">Swasta</option>
-                    <option value="Masyarakat">Masyarakat (Kader)</option>
+                    <option value="Yayasan">Yayasan / BUMN</option>
+                    <option value="Mandiri / Perorangan">Mandiri / Perorangan</option>
                   </select>
                 </div>
               </div>
@@ -1216,12 +1224,16 @@ export default function DayaDukungPage() {
                     onChange={(e) => setBizForm({ ...bizForm, kategori_usaha: e.target.value })}
                     className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
                   >
-                    <option value="Kuliner & Warung">Kuliner & Warung</option>
-                    <option value="Toko Sembako / Kelontong">Toko Sembako / Kelontong</option>
-                    <option value="Jasa & Servis">Jasa & Servis</option>
+                    <option value="Warung & Toko Kelontong Mikro">Warung & Toko Kelontong Mikro</option>
+                    <option value="Toko Grosir & Agen Sembako">Toko Grosir & Agen Sembako</option>
+                    <option value="Pabrik & Manufaktur / Industri Rumahan">Pabrik & Manufaktur / Industri Rumahan</option>
+                    <option value="Hotel, Penginapan & Kost Komersial">Hotel, Penginapan & Kost Komersial</option>
+                    <option value="Restoran, Kafe & Rumah Makan">Restoran, Kafe & Rumah Makan</option>
+                    <option value="Pasar Tradisional / Modern">Pasar Tradisional / Modern</option>
+                    <option value="Jasa & Bengkel / Ekspedisi">Jasa, Bengkel & Ekspedisi</option>
+                    <option value="Toko Pangan Murah (Bina Lingkungan)">Toko Pangan Murah (Bina Lingkungan)</option>
                     <option value="Fashion & Tekstil">Fashion & Tekstil</option>
                     <option value="Kerajinan & Industri Kreatif">Kerajinan & Industri Kreatif</option>
-                    <option value="Pertanian & Peternakan Perkotaan">Pertanian / Peternakan</option>
                   </select>
                 </div>
                 <div>
@@ -1232,8 +1244,9 @@ export default function DayaDukungPage() {
                     className="w-full p-2.5 rounded-xl bg-surface-container-low border border-outline-variant"
                   >
                     <option value="Mikro">Mikro (&lt; 50 Juta aset)</option>
-                    <option value="Kecil">Kecil</option>
-                    <option value="Menengah">Menengah</option>
+                    <option value="Kecil">Kecil (50 - 500 Juta)</option>
+                    <option value="Menengah">Menengah (500 Juta - 10 M)</option>
+                    <option value="Besar">Besar (&gt; 10 M)</option>
                   </select>
                 </div>
               </div>

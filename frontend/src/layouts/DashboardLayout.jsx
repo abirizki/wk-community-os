@@ -106,6 +106,7 @@ export default function DashboardLayout() {
         { name: 'Pengesahan Surat (TTE / QR)', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Penetapan Definitif Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Pengesahan Desil & DTKS', path: '/dashboard/desil', icon: <Layers size={19} /> },
+        { name: 'Daya Dukung & Fasilitas', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
         { name: 'Monitoring Stunting Wilayah', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
         { name: 'Evaluasi Aduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP Kelurahan', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -118,6 +119,7 @@ export default function DashboardLayout() {
         { name: 'Verifikasi Berkas Surat', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Master Data Warga', path: '/dashboard/warga', icon: <User size={19} /> },
         { name: 'Register Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={19} /> },
+        { name: 'Daya Dukung & Fasilitas', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
         { name: 'Pengelolaan Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Rekonsiliasi Desil & DTKS', path: '/dashboard/desil', icon: <Layers size={19} /> },
         { name: 'Rekonsiliasi PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
@@ -130,6 +132,7 @@ export default function DashboardLayout() {
     if (isRW) {
       return [
         { name: 'Meja Kerja RW', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Daya Dukung & Fasilitas RW', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
         { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Bantuan Sosial RW', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Verifikasi Desil RW', path: '/dashboard/desil', icon: <Layers size={19} /> },
@@ -142,6 +145,7 @@ export default function DashboardLayout() {
     if (isRT) {
       return [
         { name: 'Meja Kerja RT', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Daya Dukung & Fasilitas RT', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
         { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Bantuan Sosial RT', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Ground Check Desil RT', path: '/dashboard/desil', icon: <Layers size={19} /> },
