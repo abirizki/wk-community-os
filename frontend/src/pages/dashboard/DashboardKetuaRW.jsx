@@ -381,35 +381,69 @@ export default function DashboardKetuaRW() {
       </div>
 
       
-      {/* AI Summary / Kanaya Insight */}
-      <div className="mb-6 p-5 rounded-[1.5rem] bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-100/50 shadow-sm relative overflow-hidden">
-        {/* Dekorasi Background */}
-        <div className="absolute right-0 top-0 w-32 h-32 bg-blue-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute left-0 bottom-0 w-24 h-24 bg-sky-200/30 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row gap-4 items-start md:items-center">
-          <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-blue-100 flex items-center justify-center shrink-0">
-            <Sparkles className="w-6 h-6 text-blue-500" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-extrabold text-blue-900">Ringkasan Pintar Kanaya AI</h3>
-              <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[9px] font-bold uppercase tracking-wider">Update Hari Ini</span>
+      {/* Unified Kanaya AI Intelligence Bento Card */}
+      <div className="mb-6 p-5 sm:p-6 rounded-[2rem] bg-gradient-to-br from-sky-50 via-blue-50/80 to-indigo-50/60 border border-sky-200/70 shadow-sm relative overflow-hidden group">
+        <div className="absolute right-0 top-0 w-48 h-48 bg-sky-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <div className="absolute left-0 bottom-0 w-36 h-36 bg-blue-300/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5 flex-1">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
+              <Sparkles className="w-6 h-6 animate-pulse" />
             </div>
-            <p className="text-xs sm:text-sm text-blue-800/80 leading-relaxed font-medium">
-              {loadingBrief ? (
-                <span className="flex items-center gap-2">
-                  <RefreshCw className="w-3 h-3 animate-spin" /> Menganalisa data wilayah...
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 text-[10px] font-extrabold uppercase tracking-wider border border-sky-200">
+                  Kanaya AI Strategic Policy RW
                 </span>
-              ) : (
-                aiBrief?.summary || `Halo, ${user?.name || "Bapak/Ibu"}. Terdapat ${dokumenList.length} permohonan surat terusan yang menunggu validasi RW. Kinerja pelayanan dari ${scorecardData.length} RT terpantau aktif. Kami mendeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia) yang perlu diprioritaskan pada penyaluran Bansos berikutnya.`
-              )}
-            </p>
+                <span className="text-[11px] font-semibold text-slate-500 font-mono">Evidence-Based</span>
+              </div>
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
+                Rekomendasi Kebijakan Koordinasi Lintas-RT
+              </h3>
+            </div>
           </div>
-          <Link to="/dashboard/analitik" className="px-4 py-2 bg-white hover:bg-blue-50 text-blue-600 rounded-xl text-xs font-bold shadow-sm border border-blue-100 transition-colors shrink-0 flex items-center gap-2">
-            Lihat Analitik Lengkap
-            <ArrowRight className="w-3.5 h-3.5" />
+
+          <Link
+            to="/dashboard/analitik"
+            className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 group-hover:scale-[1.02] shrink-0"
+          >
+            <span>Buka Analitik & Looker BI</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
+        </div>
+
+        <div className="relative z-10 mt-4 pt-3.5 border-t border-sky-100">
+          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+            {loadingBrief ? (
+              <span className="flex items-center gap-2 text-sky-700">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Menganalisis data agregat wilayah RT...
+              </span>
+            ) : (
+              aiBrief?.summary || `Halo, ${user?.nama || user?.name || "Bapak/Ibu"}. Terdapat ${dokumenList.length} permohonan surat terusan yang menunggu validasi RW. Kinerja pelayanan dari ${scorecardData.length} RT terpantau aktif. Kami mendeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia) di seluruh wilayah RW.`
+            )}
+          </p>
+        </div>
+
+        <div className="relative z-10 grid grid-cols-3 gap-2.5 mt-4 pt-3 border-t border-sky-100/60">
+          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
+            <span className="text-[10px] font-semibold text-slate-500">Terusan RT</span>
+            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
+              {dokumenList.length} berkas
+            </span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
+            <span className="text-[10px] font-semibold text-slate-500">Binaan RT</span>
+            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
+              {scorecardData.length} Wilayah RT
+            </span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
+            <span className="text-[10px] font-semibold text-slate-500">Warga Rentan</span>
+            <span className="text-xs sm:text-sm font-extrabold text-rose-600 font-mono mt-0.5">
+              {kelompokRentanList.length} jiwa
+            </span>
+          </div>
         </div>
       </div>
 

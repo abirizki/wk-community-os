@@ -728,6 +728,25 @@ export default function DashboardWarga() {
               <p className="text-[11px] text-slate-500 mt-0.5">Sampaikan Keluhan RT/RW</p>
             </div>
           </Link>
+
+          {/* 9. Daftarkan Usaha & UMKM */}
+          <Link
+            to="/dashboard/daya-dukung"
+            className="p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Building2 size={22} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                Mandiri
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-xs">Daftarkan Usaha Warga</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Warung, UMKM & Toko</p>
+            </div>
+          </Link>
         </div>
       </div>
 

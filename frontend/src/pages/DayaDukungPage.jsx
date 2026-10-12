@@ -278,55 +278,167 @@ export default function DayaDukungPage() {
         )}
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="flex overflow-x-auto no-scrollbar gap-2 p-1.5 bg-surface-container-low rounded-2xl border border-outline-variant/60">
-        <button
-          onClick={() => setActiveTab('pendidikan')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-            activeTab === 'pendidikan'
-              ? 'bg-surface text-primary shadow-xs border border-outline-variant/60'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface/50'
-          }`}
-        >
-          <GraduationCap size={18} />
-          <span>Sektor Pendidikan & Kursi PPDB</span>
-        </button>
+      {/* Super Apps Bento Option Grid (Mobile-First Carrying Capacity Hub) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse" />
+            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-700">
+              Pilar Daya Dukung & Fasilitas Wilayah
+            </h3>
+          </div>
+          <span className="text-[11px] text-slate-400 font-mono">Bento Hub 4 Sektor</span>
+        </div>
 
-        <button
-          onClick={() => setActiveTab('kesehatan')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-            activeTab === 'kesehatan'
-              ? 'bg-surface text-primary shadow-xs border border-outline-variant/60'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface/50'
-          }`}
-        >
-          <HeartPulse size={18} />
-          <span>Sektor Kesehatan & Rasio Medis</span>
-        </button>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {/* Bento 1: Pendidikan */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('pendidikan')}
+            className={`p-4 rounded-3xl border text-left transition-all relative overflow-hidden flex flex-col justify-between h-36 sm:h-40 group cursor-pointer ${
+              activeTab === 'pendidikan'
+                ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-blue-500 shadow-lg shadow-blue-500/25 scale-[1.02]'
+                : 'bg-white hover:bg-blue-50/50 text-slate-800 border-slate-200/80 hover:border-blue-300 shadow-sm'
+            }`}
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                activeTab === 'pendidikan' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
+              }`}>
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                activeTab === 'pendidikan' ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-700 border border-blue-100'
+              }`}>
+                PPDB & Kursi
+              </span>
+            </div>
+            <div>
+              <div className={`text-xl sm:text-2xl font-black font-mono tracking-tight ${
+                activeTab === 'pendidikan' ? 'text-white' : 'text-blue-900'
+              }`}>
+                {pendidikanData.inventory?.length || 0} <span className="text-xs font-semibold opacity-80">Sekolah</span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold mt-0.5">Sektor Pendidikan</h4>
+              <p className={`text-[10px] line-clamp-1 mt-0.5 ${
+                activeTab === 'pendidikan' ? 'text-blue-100' : 'text-slate-400'
+              }`}>
+                Zonasi & kuota murid baru
+              </p>
+            </div>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('ekonomi')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-            activeTab === 'ekonomi'
-              ? 'bg-surface text-primary shadow-xs border border-outline-variant/60'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface/50'
-          }`}
-        >
-          <Store size={18} />
-          <span>Ekonomi Lokal & UMKM (SKU)</span>
-        </button>
+          {/* Bento 2: Kesehatan */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('kesehatan')}
+            className={`p-4 rounded-3xl border text-left transition-all relative overflow-hidden flex flex-col justify-between h-36 sm:h-40 group cursor-pointer ${
+              activeTab === 'kesehatan'
+                ? 'bg-gradient-to-br from-rose-600 to-red-700 text-white border-rose-500 shadow-lg shadow-rose-500/25 scale-[1.02]'
+                : 'bg-white hover:bg-rose-50/50 text-slate-800 border-slate-200/80 hover:border-rose-300 shadow-sm'
+            }`}
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                activeTab === 'kesehatan' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'
+              }`}>
+                <HeartPulse className="w-5 h-5" />
+              </div>
+              <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                activeTab === 'kesehatan' ? 'bg-white/20 text-white' : 'bg-rose-50 text-rose-700 border border-rose-100'
+              }`}>
+                Faskes & Medis
+              </span>
+            </div>
+            <div>
+              <div className={`text-xl sm:text-2xl font-black font-mono tracking-tight ${
+                activeTab === 'kesehatan' ? 'text-white' : 'text-rose-900'
+              }`}>
+                {kesehatanData.inventory?.length || 0} <span className="text-xs font-semibold opacity-80">Faskes</span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold mt-0.5">Sektor Kesehatan</h4>
+              <p className={`text-[10px] line-clamp-1 mt-0.5 ${
+                activeTab === 'kesehatan' ? 'text-rose-100' : 'text-slate-400'
+              }`}>
+                Rasio dokter, bidan & bed
+              </p>
+            </div>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('sanitasi')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-            activeTab === 'sanitasi'
-              ? 'bg-surface text-primary shadow-xs border border-outline-variant/60'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface/50'
-          }`}
-        >
-          <Droplets size={18} />
-          <span>Sanitasi & Korelasi Stunting</span>
-        </button>
+          {/* Bento 3: Ekonomi & UMKM */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('ekonomi')}
+            className={`p-4 rounded-3xl border text-left transition-all relative overflow-hidden flex flex-col justify-between h-36 sm:h-40 group cursor-pointer ${
+              activeTab === 'ekonomi'
+                ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-500 shadow-lg shadow-emerald-500/25 scale-[1.02]'
+                : 'bg-white hover:bg-emerald-50/50 text-slate-800 border-slate-200/80 hover:border-emerald-300 shadow-sm'
+            }`}
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                activeTab === 'ekonomi' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'
+              }`}>
+                <Store className="w-5 h-5" />
+              </div>
+              <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                activeTab === 'ekonomi' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+              }`}>
+                UMKM & Usaha
+              </span>
+            </div>
+            <div>
+              <div className={`text-xl sm:text-2xl font-black font-mono tracking-tight ${
+                activeTab === 'ekonomi' ? 'text-white' : 'text-emerald-900'
+              }`}>
+                {usahaData.inventory?.length || 0} <span className="text-xs font-semibold opacity-80">Entitas</span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold mt-0.5">Ekonomi & Usaha</h4>
+              <p className={`text-[10px] line-clamp-1 mt-0.5 ${
+                activeTab === 'ekonomi' ? 'text-emerald-100' : 'text-slate-400'
+              }`}>
+                Grosir, warung, pabrik, hotel
+              </p>
+            </div>
+          </button>
+
+          {/* Bento 4: Sanitasi & Stunting */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('sanitasi')}
+            className={`p-4 rounded-3xl border text-left transition-all relative overflow-hidden flex flex-col justify-between h-36 sm:h-40 group cursor-pointer ${
+              activeTab === 'sanitasi'
+                ? 'bg-gradient-to-br from-cyan-600 to-blue-700 text-white border-cyan-500 shadow-lg shadow-cyan-500/25 scale-[1.02]'
+                : 'bg-white hover:bg-cyan-50/50 text-slate-800 border-slate-200/80 hover:border-cyan-300 shadow-sm'
+            }`}
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                activeTab === 'sanitasi' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-cyan-700'
+              }`}>
+                <Droplets className="w-5 h-5" />
+              </div>
+              <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                activeTab === 'sanitasi' ? 'bg-white/20 text-white' : 'bg-cyan-50 text-cyan-700 border border-cyan-100'
+              }`}>
+                Sanitasi
+              </span>
+            </div>
+            <div>
+              <div className={`text-xl sm:text-2xl font-black font-mono tracking-tight ${
+                activeTab === 'sanitasi' ? 'text-white' : 'text-cyan-900'
+              }`}>
+                {summaryData?.sanitasi?.jamban_sehat_tercover_persen || 0}% <span className="text-xs font-semibold opacity-80">Sehat</span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold mt-0.5">Sanitasi & Stunting</h4>
+              <p className={`text-[10px] line-clamp-1 mt-0.5 ${
+                activeTab === 'sanitasi' ? 'text-cyan-100' : 'text-slate-400'
+              }`}>
+                Jamban, air & drainase
+              </p>
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* =================================================================== */}

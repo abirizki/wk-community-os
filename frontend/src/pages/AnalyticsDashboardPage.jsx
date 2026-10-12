@@ -30,7 +30,7 @@ import {
 
 export default function AnalyticsDashboardPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('demografi'); // 'demografi' | 'heatmap' | 'dokumen' | 'rekomendasi'
+  const [activeTab, setActiveTab] = useState('rekomendasi'); // Default: Kanaya AI Strategic Policy Recommendations
   const [selectedRT, setSelectedRT] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
   const [loading, setLoading] = useState(true);
