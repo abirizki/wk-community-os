@@ -54,7 +54,8 @@ import {
   Layers,
   Send,
   BedDouble,
-  GraduationCap
+  GraduationCap,
+  Ticket
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthorizationPinModal from '../../components/AuthorizationPinModal';

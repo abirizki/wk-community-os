@@ -55,7 +55,8 @@ import {
   MessageCircle,
   BedDouble,
   ExternalLink,
-  Save
+  Save,
+  Ticket
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthorizationPinModal from '../../components/AuthorizationPinModal';
