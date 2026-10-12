@@ -55,11 +55,15 @@ import {
   Send,
   BedDouble,
   GraduationCap,
-  Ticket
+  Ticket,
+  QrCode,
+  Camera,
+  UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthorizationPinModal from '../../components/AuthorizationPinModal';
 import ActivationCouponModal from '../../components/ActivationCouponModal';
+import ScanAndRegisterWargaModal from '../../components/ScanAndRegisterWargaModal';
 
 export default function DashboardKetuaRW() {
   const { user } = useAuth();
@@ -80,6 +84,7 @@ export default function DashboardKetuaRW() {
 
   // PIN Otorisasi Pejabat RW (6-Digit Security Gate)
   const [showActivationModal, setShowActivationModal] = useState(false);
+  const [showScanRegisterModal, setShowScanRegisterModal] = useState(false);
   const [pinModal, setPinModal] = useState({
     isOpen: false,
     title: '',
@@ -371,6 +376,15 @@ export default function DashboardKetuaRW() {
         </div>
 
         <div className="flex items-center gap-2">
+                    <button
+            type="button"
+            onClick={() => setShowScanRegisterModal(true)}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+            title="Pindai QR KK & Input Data Warga Baru"
+          >
+            <Camera className="w-4 h-4 text-emerald-300" />
+            <span>Scan QR KK & Input Warga</span>
+          </button>
           <button
             type="button"
             onClick={() => setShowActivationModal(true)}
@@ -491,6 +505,26 @@ export default function DashboardKetuaRW() {
             <div>
               <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Validasi Terusan RT</h4>
               <p className="text-[10px] text-slate-400 mt-0.5">TTE Pengesahan RW</p>
+            </div>
+          </button>
+
+                    {/* Scan QR KK & Input Warga RW */}
+          <button
+            type="button"
+            onClick={() => setShowScanRegisterModal(true)}
+            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <QrCode className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800">
+                Kamera QR
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Scan QR KK & Input Warga</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Pindai KK & Input Baru</p>
             </div>
           </button>
 

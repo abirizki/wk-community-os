@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../utils/api';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import {
   Ticket,
   X,
@@ -15,7 +16,8 @@ import {
   AlertCircle,
   CheckCircle2,
   UserCheck,
-  QrCode
+  QrCode,
+  Camera
 } from 'lucide-react';
 
 export default function ActivationCouponModal({ isOpen, onClose, defaultNik = '', onGenerated }) {
@@ -25,6 +27,7 @@ export default function ActivationCouponModal({ isOpen, onClose, defaultNik = ''
   const [wargaSuggestions, setWargaSuggestions] = useState([]);
   const [selectedWarga, setSelectedWarga] = useState(null);
   const [loadingSearch, setLoadingSearch] = useState(false);
+  const [showQrScanner, setShowQrScanner] = useState(false);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedResult, setGeneratedResult] = useState(null);
@@ -120,12 +123,51 @@ export default function ActivationCouponModal({ isOpen, onClose, defaultNik = ''
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Selalu rakit URL secara aman dari domain browser aktif untuk menghindari broken link
+  const getEffectiveClaimUrl = () => {
+    if (!generatedResult) return '';
+    const origin = (typeof window !== 'undefined' && window.location?.origin)
+      ? window.location.origin
+      : 'https://bumiwarga.online';
+    return `${origin}/login?tab=claim&token=${encodeURIComponent(generatedResult.token)}&nik=${encodeURIComponent(generatedResult.nik)}`;
+  };
+
   const handleShareWhatsApp = () => {
     if (!generatedResult) return;
-    const msg = `Sampurasun Bpk/Ibu ${generatedResult.nama},\n\nBerikut adalah *Kode Kupon Aktivasi Resmi* akun Bumi Warga Anda:\n🎫 *KODE KUPON:* ${generatedResult.token}\n🆔 *NIK:* ${generatedResult.nik}\n⏳ *Masa Berlaku:* 24 Jam\n\nSilakan buka aplikasi atau tautan berikut untuk membuat kata sandi pribadi Anda:\n${generatedResult.claim_url}\n\nSalam,\nPengurus RT ${generatedResult.rt} / RW ${generatedResult.rw}`;
+    const claimUrl = getEffectiveClaimUrl();
+    const msg = `Sampurasun Bpk/Ibu ${generatedResult.nama},\n\nBerikut adalah *Kode Kupon Aktivasi Resmi* akun Bumi Warga Anda:\n🎫 *KODE KUPON:* ${generatedResult.token}\n🆔 *NIK:* ${generatedResult.nik}\n⏳ *Masa Berlaku:* 24 Jam\n\nSilakan buka aplikasi atau tautan berikut untuk membuat kata sandi pribadi Anda:\n${claimUrl}\n\nSalam,\nPengurus RT ${generatedResult.rt} / RW ${generatedResult.rw}`;
     
     const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank');
+  };
+
+  // Handler Scan QR KK langsung di dalam modal
+  const handleScanInsideModal = (detectedCodes) => {
+    let rawText = '';
+    if (Array.isArray(detectedCodes) && detectedCodes.length > 0) {
+      rawText = detectedCodes[0]?.rawValue || detectedCodes[0];
+    } else if (typeof detectedCodes === 'string') {
+      rawText = detectedCodes;
+    } else if (detectedCodes?.rawValue) {
+      rawText = detectedCodes.rawValue;
+    }
+
+    if (!rawText) return;
+
+    // Cari angka 16 digit
+    const matches = rawText.match(/\b\d{16}\b/g);
+    if (matches && matches.length > 0) {
+      const detectedNik = matches[matches.length > 1 ? 1 : 0];
+      setNik(detectedNik);
+      setShowQrScanner(false);
+      setErrorMsg('');
+    } else {
+      const clean = rawText.replace(/\D/g, '');
+      if (clean.length >= 16) {
+        setNik(clean.slice(0, 16));
+        setShowQrScanner(false);
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -242,14 +284,45 @@ export default function ActivationCouponModal({ isOpen, onClose, defaultNik = ''
                     )}
                   </div>
 
-                  {/* Input NIK */}
+                  {/* Kamera Scanner QR KK di dalam Modal */}
+                  {showQrScanner && (
+                    <div className="p-3 bg-slate-900 rounded-2xl space-y-2 animate-fade-in">
+                      <div className="flex justify-between items-center text-white text-xs px-1">
+                        <span className="font-bold flex items-center gap-1.5">
+                          <Camera className="w-4 h-4 text-emerald-400" />
+                          Arahkan ke QR KK / KTP Warga
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowQrScanner(false)}
+                          className="text-slate-400 hover:text-white"
+                        >
+                          Tutup Kamera
+                        </button>
+                      </div>
+                      <div className="rounded-xl overflow-hidden aspect-video max-h-48">
+                        <Scanner
+                          onScan={(res) => handleScanInsideModal(res)}
+                          onError={(err) => console.warn(err)}
+                          styles={{ container: { width: '100%', height: '100%' } }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Input NIK & Tombol Scan QR */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 flex justify-between">
-                      <span>NIK Warga (16 Digit)</span>
-                      <span className={`text-[10px] font-mono ${nik.length === 16 ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}>
-                        {nik.length}/16
-                      </span>
-                    </label>
+                    <div className="flex justify-between items-center px-1">
+                      <label className="text-xs font-bold text-slate-700">NIK Warga (16 Digit) *</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowQrScanner(!showQrScanner)}
+                        className="text-[11px] font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>{showQrScanner ? 'Tutup Scanner' : 'Pindai QR KK'}</span>
+                      </button>
+                    </div>
                     <input
                       type="text"
                       maxLength={16}
@@ -338,7 +411,7 @@ export default function ActivationCouponModal({ isOpen, onClose, defaultNik = ''
                     </button>
                   </div>
 
-                  {/* QR Code Scan Langsung untuk Warga */}
+                  {/* QR Code Scan Langsung untuk Warga (Menggunakan origin aman) */}
                   <div className="p-4 bg-white border border-slate-200 rounded-2xl flex flex-col items-center">
                     <p className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
                       <QrCode className="w-4 h-4 text-sky-600" />
@@ -347,7 +420,7 @@ export default function ActivationCouponModal({ isOpen, onClose, defaultNik = ''
                     <div className="w-36 h-36 bg-slate-50 border border-slate-100 rounded-xl p-2 flex items-center justify-center shadow-inner">
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                          generatedResult.claim_url
+                          getEffectiveClaimUrl()
                         )}`}
                         alt="QR Aktivasi"
                         className="w-full h-full object-contain"
@@ -462,4 +535,3 @@ export default function ActivationCouponModal({ isOpen, onClose, defaultNik = ''
     </div>
   );
 }
-

@@ -140,6 +140,12 @@ router.post(
         ]
       );
 
+      // Tentukan domain publik secara aman (hindari localhost:3000 pada reverse proxy)
+      const forwardedHost = req.headers['x-forwarded-host'] || req.get('host') || 'bumiwarga.online';
+      const forwardedProto = req.headers['x-forwarded-proto'] || (process.env.NODE_ENV === 'production' ? 'https' : req.protocol);
+      const isLocal = forwardedHost.includes('localhost') || forwardedHost.includes('127.0.0.1');
+      const baseOrigin = process.env.FRONTEND_ORIGIN || (isLocal && process.env.NODE_ENV === 'production' ? 'https://bumiwarga.online' : `${forwardedProto}://${forwardedHost}`);
+
       return res.status(201).json({
         success: true,
         message: `Kupon aktivasi untuk ${targetWarga.nama} berhasil diterbitkan.`,
@@ -151,7 +157,7 @@ router.post(
           rt: targetWarga.rt,
           rw: targetWarga.rw,
           validity: '24 Jam',
-          claim_url: `${req.protocol}://${req.get('host')}/login?tab=claim&token=${token}&nik=${targetWarga.nik}`
+          claim_url: `${baseOrigin}/login?tab=claim&token=${token}&nik=${targetWarga.nik}`
         }
       });
     } catch (err) {
