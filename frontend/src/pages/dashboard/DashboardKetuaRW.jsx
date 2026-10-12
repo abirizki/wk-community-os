@@ -58,6 +58,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthorizationPinModal from '../../components/AuthorizationPinModal';
+import ActivationCouponModal from '../../components/ActivationCouponModal';
 
 export default function DashboardKetuaRW() {
   const { user } = useAuth();
@@ -77,6 +78,7 @@ export default function DashboardKetuaRW() {
   const [successMsg, setSuccessMsg] = useState('');
 
   // PIN Otorisasi Pejabat RW (6-Digit Security Gate)
+  const [showActivationModal, setShowActivationModal] = useState(false);
   const [pinModal, setPinModal] = useState({
     isOpen: false,
     title: '',
@@ -368,6 +370,15 @@ export default function DashboardKetuaRW() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowActivationModal(true)}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+            title="Terbitkan Kupon Aktivasi Sekali Pakai untuk Warga"
+          >
+            <Ticket className="w-4 h-4 text-amber-300" />
+            <span>Kupon Aktivasi Warga</span>
+          </button>
           <span className="text-xs text-emerald-200/70 hidden md:inline">Perlu urus surat/KK keluarga sendiri?</span>
           <Link
             to="/dashboard/dokumen?mode=dampingan"

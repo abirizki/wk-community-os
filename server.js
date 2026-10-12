@@ -63,6 +63,14 @@ const authLimiter = rateLimit({
   message: { success: false, message: 'Terlalu banyak percobaan login yang gagal, coba lagi beberapa saat lagi.' }
 });
 
+const activationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // Limit each IP to 30 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak percobaan aktivasi, coba lagi beberapa saat lagi.' }
+});
+
 // Apply global limiter to all routes
 app.use(globalLimiter);
 
@@ -170,6 +178,7 @@ app.use('/api/rw', require('./src/routes/rw.routes'));
 app.use('/api/aparatur', require('./src/routes/aparatur.routes'));
 app.use('/api/ai/kanaya', require('./src/routes/kanaya.routes'));
 app.use('/api/scanner', require('./src/routes/scanner.routes'));
+app.use('/api/activation', activationLimiter, require('./src/routes/activation.routes'));
 
 // Pure MySQL REST Routes (No hardcoded mock data)
 console.log(`[Bumi Warga] API routes mounted cleanly. Connected to MySQL database.`);

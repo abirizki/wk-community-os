@@ -85,7 +85,8 @@ async function autoPatchDatabase() {
       'bpjs_ketenagakerjaan VARCHAR(50) NULL',
       "bpjs_ketenagakerjaan_status VARCHAR(50) NULL DEFAULT 'AKTIF'",
       'kip VARCHAR(50) NULL',
-      'kis VARCHAR(50) NULL'
+      'kis VARCHAR(50) NULL',
+      'nama_ibu VARCHAR(100) NULL'
     ];
     for (const wCol of wargaColumns) {
       try {
@@ -968,6 +969,36 @@ async function autoPatchDatabase() {
       }
     } catch (e) {
       console.warn('[AutoPatch] CREATE aparatur_kelurahan note:', e.message);
+    }
+
+    // 14. Pastikan tabel activation_tokens tersedia untuk Kupon Aktivasi Sekali Pakai RT/RW
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`activation_tokens\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`token\` VARCHAR(32) NOT NULL UNIQUE,
+          \`nik\` VARCHAR(16) NOT NULL,
+          \`no_kk\` VARCHAR(16) NOT NULL,
+          \`nama\` VARCHAR(150) NOT NULL,
+          \`rt\` VARCHAR(10) NOT NULL,
+          \`rw\` VARCHAR(10) NOT NULL,
+          \`created_by_role\` VARCHAR(50) NOT NULL,
+          \`created_by_user_id\` INT NULL,
+          \`expires_at\` DATETIME NOT NULL,
+          \`status\` ENUM('active', 'used', 'expired', 'revoked') NOT NULL DEFAULT 'active',
+          \`used_at\` DATETIME NULL,
+          \`used_by_ip\` VARCHAR(50) NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_act_token\` (\`token\`),
+          INDEX \`idx_act_nik\` (\`nik\`),
+          INDEX \`idx_act_rt_rw\` (\`rt\`, \`rw\`),
+          INDEX \`idx_act_status\` (\`status\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('[AutoPatch] Tabel activation_tokens diverifikasi.');
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE activation_tokens note:', e.message);
     }
 
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');
