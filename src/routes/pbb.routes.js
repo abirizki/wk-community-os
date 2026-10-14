@@ -167,5 +167,57 @@ router.post('/push-reminder', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/pbb/download/template - Unduh template CSV resmi DHKP PBB
+router.get('/download/template', (req, res) => {
+  const csvContent = pbbService.getTemplateCsv();
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="TEMPLATE_DHKP_PBB_KELURAHAN.csv"');
+  res.status(200).send(csvContent);
+});
+
+// POST /api/pbb/bulk-import - Upload Masal Data DHKP PBB oleh Admin Kelurahan
+router.post('/bulk-import', requireAuth, async (req, res) => {
+  try {
+    const allowed = ['admin_kelurahan', 'admin', 'superadmin', 'lurah', 'staf_kelurahan'];
+    if (!allowed.includes(req.session.user.role)) {
+      return res.status(403).json({ success: false, message: 'Hanya Admin Kelurahan yang berwenang mengunggah DHKP PBB' });
+    }
+
+    const result = await pbbService.bulkImport(req.body, req.session.user);
+    res.status(201).json({
+      success: true,
+      message: `Berhasil mengunggah ${result.total_imported} data DHKP PBB. ${result.notifikasi_sent} notifikasi telah dikirim ke warga.`,
+      data: result
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/pbb/list - Ambil daftar PBB untuk Meja Kerja RT/RW dan Kelurahan
+router.get('/list', requireAuth, async (req, res) => {
+  try {
+    const list = await pbbService.listPbb(req.session.user, req.query);
+    res.json({ success: true, data: list });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// PUT /api/pbb/verify-rt/:id - Verifikasi status PBB oleh RT/RW
+router.put('/verify-rt/:id', requireAuth, async (req, res) => {
+  try {
+    const allowed = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'admin', 'superadmin'];
+    if (!allowed.includes(req.session.user.role)) {
+      return res.status(403).json({ success: false, message: 'Hanya Pengurus RT/RW yang berwenang melakukan verifikasi PBB' });
+    }
+
+    const result = await pbbService.verifyByRt(req.params.id, req.body, req.session.user);
+    res.json({ success: true, message: result.message, data: result });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
 

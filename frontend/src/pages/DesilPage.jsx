@@ -33,7 +33,10 @@ import { api } from '../utils/api';
 
 export default function DesilPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('kuesioner'); // 'kuesioner' | 'bukti' | 'verifikasi' | 'rekonsiliasi'
+  const normalizedRole = user?.role === 'admin' ? 'admin_kelurahan' : (user?.role || 'warga');
+  const isOfficerUser = ['superadmin', 'admin_kelurahan', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt', 'lurah', 'staf_kelurahan'].includes(normalizedRole);
+
+  const [activeTab, setActiveTab] = useState(isOfficerUser ? 'verifikasi' : 'kuesioner'); // 'kuesioner' | 'bukti' | 'verifikasi' | 'rekonsiliasi'
   const [loading, setLoading] = useState(false);
   const [familyDesil, setFamilyDesil] = useState(null);
   const [verifikasiList, setVerifikasiList] = useState([]);
@@ -97,10 +100,10 @@ export default function DesilPage() {
     catatan_komparasi_kelurahan: ''
   });
 
-  const isOfficer = ['superadmin', 'admin_kelurahan', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt', 'lurah'].includes(user?.role);
-  const isRT = user?.role === 'ketua_rt';
-  const isRW = ['ketua_rw', 'admin_rw'].includes(user?.role);
-  const isKelurahan = ['superadmin', 'admin_kelurahan', 'lurah', 'admin'].includes(user?.role);
+  const isOfficer = isOfficerUser;
+  const isRT = normalizedRole === 'ketua_rt';
+  const isRW = ['ketua_rw', 'admin_rw'].includes(normalizedRole);
+  const isKelurahan = ['superadmin', 'admin_kelurahan', 'lurah', 'admin', 'staf_kelurahan'].includes(normalizedRole);
 
   // Load My Family Desil
   const fetchMyFamilyDesil = async () => {

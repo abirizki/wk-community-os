@@ -1104,8 +1104,29 @@ async function autoPatchDatabase() {
             ('BALITA', 'Kenzo Pratama', '3273011002260003', '002', '001', 'Vitamin A Kapsul Biru (100.000 IU)', 1, '2026-08-10', 'Kader Posyandu Melati', 'Bulan Vitamin A Kemenkes')
         `);
       }
+    // 18. Patch Kolom Verifikasi RT & Objek Pajak pada tabel PBB
+    try {
+      const pbbCols = [
+        'nama_wajib_pajak VARCHAR(150) NULL',
+        'alamat_objek_pajak TEXT NULL',
+        'rt VARCHAR(5) NULL',
+        'rw VARCHAR(5) NULL',
+        'verifikasi_rt TINYINT(1) DEFAULT 0',
+        'verifikasi_rt_at DATETIME NULL',
+        'verifikator_rt_user_id INT NULL',
+        'catatan_rt TEXT NULL',
+        'bukti_bayar_url VARCHAR(255) NULL'
+      ];
+      for (const col of pbbCols) {
+        try {
+          await connection.query(`ALTER TABLE pbb ADD COLUMN ${col}`);
+        } catch (e) {}
+      }
+      try {
+        await connection.query('ALTER TABLE pbb ADD INDEX idx_pbb_rt_rw (rw, rt)');
+      } catch (e) {}
     } catch (e) {
-      console.warn('[AutoPatch] CREATE posyandu_pmt_distribusi note:', e.message);
+      console.warn('[AutoPatch] Patch PBB note:', e.message);
     }
 
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');

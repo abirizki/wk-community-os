@@ -115,13 +115,10 @@ export default function DashboardLayout() {
     if (isAdminKelurahan) {
       return [
         { name: 'Beranda Operasional', path: '/dashboard', icon: <Home size={19} /> },
-        { name: 'Verifikasi Berkas Surat', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
-        { name: 'Master Data Warga', path: '/dashboard/warga', icon: <User size={19} /> },
-        { name: 'Register Kartu Keluarga', path: '/dashboard/kk', icon: <Users size={19} /> },
-        { name: 'Pengelolaan Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
-        { name: 'Rekonsiliasi Desil & DTKS', path: '/dashboard/desil', icon: <Layers size={19} /> },
-        { name: 'Rekonsiliasi PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
-        { name: 'Buku Kas & Keuangan', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
+        { name: 'Verifikasi Pelayanan Surat', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+        { name: 'Verifikasi Desil & DTKS', path: '/dashboard/desil', icon: <Layers size={19} /> },
+        { name: 'Kliring Bansos & Tiket QR', path: '/dashboard/bansos', icon: <Gift size={19} /> },
+        { name: 'Rekonsiliasi & Upload PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
         { name: 'Gerbang Pesan WhatsApp', path: '/dashboard/whatsapp', icon: <MessageSquare size={19} /> },
         { name: 'Panduan SOP Operasional', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
       ];
