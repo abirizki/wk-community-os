@@ -1001,6 +1001,113 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] CREATE activation_tokens note:', e.message);
     }
 
+    // 15. Tabel Ibu Hamil & 1000 HPK
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`posyandu_ibu_hamil\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`nik\` VARCHAR(16) NOT NULL UNIQUE,
+          \`nama\` VARCHAR(150) NOT NULL,
+          \`no_kk\` VARCHAR(16) NULL,
+          \`tanggal_lahir\` DATE NULL,
+          \`usia_kehamilan_minggu\` INT NOT NULL DEFAULT 12,
+          \`hpht\` DATE NULL,
+          \`hpl\` DATE NULL,
+          \`lila_cm\` DECIMAL(4,1) NOT NULL DEFAULT 24.0,
+          \`status_kek\` ENUM('Normal', 'Risiko KEK') NOT NULL DEFAULT 'Normal',
+          \`status_risiko\` ENUM('Risiko Rendah', 'Risiko Tinggi', 'Sangat Tinggi') NOT NULL DEFAULT 'Risiko Rendah',
+          \`nama_suami\` VARCHAR(150) NULL,
+          \`no_kontak\` VARCHAR(20) NULL,
+          \`rt\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`alamat\` TEXT NULL,
+          \`jumlah_konsumsi_ttd\` INT NOT NULL DEFAULT 30,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_bumil_rt_rw\` (\`rw\`, \`rt\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      // Seed data contoh ibu hamil jika masih kosong
+      const [bumilRows] = await connection.query("SELECT COUNT(*) as count FROM posyandu_ibu_hamil");
+      if (bumilRows[0].count === 0) {
+        await connection.execute(`
+          INSERT INTO posyandu_ibu_hamil
+            (nik, nama, no_kk, tanggal_lahir, usia_kehamilan_minggu, hpht, hpl, lila_cm, status_kek, status_risiko, nama_suami, no_kontak, rt, rw, alamat, jumlah_konsumsi_ttd)
+          VALUES
+            ('3273014502970001', 'Ny. Fitri Handayani', '3273012001010021', '1997-02-15', 24, '2026-05-01', '2027-02-05', 22.8, 'Risiko KEK', 'Risiko Tinggi', 'Asep Suhendar', '081234887766', '001', '001', 'Jl. Kebonjati No. 16 RT 01/RW 01', 45),
+            ('3273015809990002', 'Ny. Ratna Sari', '3273012001010022', '1999-09-18', 16, '2026-06-25', '2027-04-01', 25.5, 'Normal', 'Risiko Rendah', 'Bambang Irawan', '081399776655', '002', '001', 'Jl. Kebonjati Gang Saluyu RT 02/RW 01', 30)
+        `);
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE posyandu_ibu_hamil note:', e.message);
+    }
+
+    // 16. Tabel Pemeriksaan Ibu Hamil
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`posyandu_ibu_hamil_pemeriksaan\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`ibu_hamil_id\` INT NOT NULL,
+          \`tanggal_pemeriksaan\` DATE NOT NULL,
+          \`usia_kehamilan_minggu\` INT NOT NULL,
+          \`berat_badan_kg\` DECIMAL(5,2) NOT NULL,
+          \`tensi_sistolik\` INT NOT NULL DEFAULT 120,
+          \`tensi_diastolik\` INT NOT NULL DEFAULT 80,
+          \`lila_cm\` DECIMAL(4,1) NOT NULL,
+          \`tinggi_fundus_cm\` DECIMAL(4,1) NULL,
+          \`djj\` INT NULL,
+          \`hb_g_dl\` DECIMAL(4,1) NULL,
+          \`ttd_diberikan\` INT NOT NULL DEFAULT 30,
+          \`keluhan\` TEXT NULL,
+          \`tindakan_petugas\` TEXT NULL,
+          \`petugas\` VARCHAR(100) NOT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX \`idx_pemeriksaan_bumil_id\` (\`ibu_hamil_id\`),
+          INDEX \`idx_pemeriksaan_bumil_tgl\` (\`tanggal_pemeriksaan\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE posyandu_ibu_hamil_pemeriksaan note:', e.message);
+    }
+
+    // 17. Tabel Distribusi PMT & Suplementasi (Vitamin A & Obat Cacing)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`posyandu_pmt_distribusi\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`target_kategori\` VARCHAR(50) NOT NULL,
+          \`nama_penerima\` VARCHAR(150) NOT NULL,
+          \`nik_penerima\` VARCHAR(16) NOT NULL,
+          \`rt\` VARCHAR(5) NOT NULL,
+          \`rw\` VARCHAR(5) NOT NULL,
+          \`jenis_bantuan\` VARCHAR(100) NOT NULL,
+          \`jumlah_paket\` INT NOT NULL DEFAULT 1,
+          \`tanggal_distribusi\` DATE NOT NULL,
+          \`petugas\` VARCHAR(100) NOT NULL,
+          \`catatan\` TEXT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX \`idx_pmt_penerima\` (\`nik_penerima\`),
+          INDEX \`idx_pmt_wilayah\` (\`rw\`, \`rt\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      // Seed data contoh PMT jika masih kosong
+      const [pmtRows] = await connection.query("SELECT COUNT(*) as count FROM posyandu_pmt_distribusi");
+      if (pmtRows[0].count === 0) {
+        await connection.execute(`
+          INSERT INTO posyandu_pmt_distribusi
+            (target_kategori, nama_penerima, nik_penerima, rt, rw, jenis_bantuan, jumlah_paket, tanggal_distribusi, petugas, catatan)
+          VALUES
+            ('BALITA_GIZI_KURANG', 'Muhammad Al-Fatih', '3273010505240001', '001', '001', 'Biskuit Balita Kemenkes & Susu', 2, '2026-09-15', 'Kader Posyandu Melati', 'Pemberian paket PMT Pemulihan Tahap 1'),
+            ('IBU_HAMIL_KEK', 'Ny. Fitri Handayani', '3273014502970001', '001', '001', 'Susu Ibu Hamil & Tablet Tambah Darah', 1, '2026-09-15', 'Kader Posyandu Melati', 'LILA 22.8 cm, intervensi 1000 HPK'),
+            ('BALITA', 'Kenzo Pratama', '3273011002260003', '002', '001', 'Vitamin A Kapsul Biru (100.000 IU)', 1, '2026-08-10', 'Kader Posyandu Melati', 'Bulan Vitamin A Kemenkes')
+        `);
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE posyandu_pmt_distribusi note:', e.message);
+    }
+
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');
   } catch (err) {
     console.warn('[AutoPatch] Catatan auto-patch database:', err.message);

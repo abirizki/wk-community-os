@@ -437,8 +437,55 @@ class PosyanduService {
     if (category === 'lansia') {
       return await posyanduRepository.listTargetLansia({ wilayahList, search });
     }
+    if (category === 'bumil' || category === 'ibu_hamil') {
+      return await posyanduRepository.listTargetBumil({ wilayahList, search });
+    }
 
     return await posyanduRepository.listTargetBalita({ wilayahList, search });
+  }
+
+  /**
+   * Catat rekam medis pemeriksaan ibu hamil (1000 HPK)
+   */
+  async recordPemeriksaanBumil(payload, currentUser) {
+    if (!payload.ibu_hamil_id) {
+      const err = new Error('Ibu Hamil wajib dipilih');
+      err.status = 400;
+      throw err;
+    }
+    return await posyanduRepository.recordPemeriksaanBumil({
+      ...payload,
+      petugas: payload.petugas || currentUser?.nama || 'Kader Posyandu'
+    });
+  }
+
+  /**
+   * Daftar distribusi PMT & Suplementasi
+   */
+  async listPmt(currentUser, query = {}) {
+    let wilayahList = [];
+    if (currentUser.role === 'kader_posyandu') {
+      const profile = await posyanduRepository.getKaderProfile(currentUser.id, currentUser);
+      wilayahList = profile.wilayah_tugas || [];
+    } else if (currentUser.role === 'ketua_rt') {
+      wilayahList = [{ rw: currentUser.rw || '001', rt: currentUser.rt || '001' }];
+    }
+    return await posyanduRepository.listPmtDistribusi({ wilayahList, search: query.search || '' });
+  }
+
+  /**
+   * Catat penyerahan paket PMT atau suplementasi
+   */
+  async recordPmt(payload, currentUser) {
+    if (!payload.nama_penerima || !payload.jenis_bantuan) {
+      const err = new Error('Nama penerima dan jenis bantuan PMT wajib diisi');
+      err.status = 400;
+      throw err;
+    }
+    return await posyanduRepository.createPmtDistribusi({
+      ...payload,
+      petugas: payload.petugas || currentUser?.nama || 'Kader Posyandu'
+    });
   }
 
   // ----------------------------------------------------

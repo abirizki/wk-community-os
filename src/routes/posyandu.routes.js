@@ -221,11 +221,55 @@ router.get('/tim-kader', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/posyandu/sasaran-baru - Pendaftaran sasaran baru (balita / lansia) oleh kader
+// POST /api/posyandu/sasaran-baru - Pendaftaran sasaran baru (balita / bumil / lansia) oleh kader
 router.post('/sasaran-baru', requireAuth, async (req, res) => {
   try {
     const result = await posyanduService.registerSasaranBaru(req.body, req.session.user);
     res.status(201).json({ success: true, message: 'Sasaran baru berhasil didaftarkan', data: result });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// ==========================================
+// IBU HAMIL (1000 HPK) & DISTRIBUSI PMT
+// ==========================================
+
+// GET /api/posyandu/bumil - Daftar ibu hamil di wilayah binaan
+router.get('/bumil', requireAuth, async (req, res) => {
+  try {
+    const list = await posyanduService.searchTargetWarga(req.session.user, { category: 'bumil', ...req.query });
+    res.json({ success: true, data: list });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/posyandu/bumil/pemeriksaan - Catat rekam medis pemeriksaan ibu hamil
+router.post('/bumil/pemeriksaan', requireAuth, async (req, res) => {
+  try {
+    const record = await posyanduService.recordPemeriksaanBumil(req.body, req.session.user);
+    res.status(201).json({ success: true, message: 'Pemeriksaan ibu hamil berhasil dicatat', data: record });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/posyandu/pmt - Riwayat distribusi PMT & Suplementasi
+router.get('/pmt', requireAuth, async (req, res) => {
+  try {
+    const list = await posyanduService.listPmt(req.session.user, req.query);
+    res.json({ success: true, data: list });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/posyandu/pmt - Catat penyerahan paket PMT
+router.post('/pmt', requireAuth, async (req, res) => {
+  try {
+    const record = await posyanduService.recordPmt(req.body, req.session.user);
+    res.status(201).json({ success: true, message: 'Distribusi PMT berhasil dicatat', data: record });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });
   }
