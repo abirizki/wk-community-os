@@ -52,7 +52,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [activeTab, setActiveTab] = useState('biodata'); // 'biodata' | 'surat' | 'bansos' | 'pengaduan' | 'kinerja'
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'biodata' | 'surat' | 'bansos' | 'pengaduan' | 'kinerja'
 
   // Social Security Form
   const [insuranceForm, setInsuranceForm] = useState({
@@ -285,74 +285,166 @@ export default function ProfilePage() {
           )}
         </AnimatePresence>
 
-        {/* NAVIGATION TABS */}
-        <div className="flex border-b border-outline-variant mt-6 -mb-6 -mx-6 px-6 overflow-x-auto gap-2 bg-surface-container-low/30 scrollbar-none">
-          <button
-            onClick={() => setActiveTab('biodata')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-              activeTab === 'biodata'
-                ? 'border-primary text-primary bg-surface-container-lowest font-bold rounded-t-lg'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <User size={15} />
-            <span>{warga ? 'Identitas & BPJS/Asuransi' : 'Kredensial & Profil Kedinasan'}</span>
-          </button>
+        {/* BENTO QUICK NAVIGATION HUB */}
+        <div className="mt-6 pt-4 border-t border-outline-variant/60">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse" />
+              <span className="text-xs font-extrabold uppercase tracking-wider text-on-surface">
+                Pusat Kendali Profil 360° (Bento Super App)
+              </span>
+            </div>
+            {activeTab !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('all')}
+                className="text-[11px] font-bold text-sky-600 hover:text-sky-800 flex items-center gap-1 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200 transition-colors"
+              >
+                Tampilkan Semua Bento
+              </button>
+            )}
+          </div>
 
-          <button
-            onClick={() => setActiveTab('surat')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-              activeTab === 'surat'
-                ? 'border-primary text-primary bg-surface-container-lowest font-bold rounded-t-lg'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <FileText size={15} />
-            <span>Riwayat Surat ({profileData?.riwayatSurat?.length || 0})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('bansos')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-              activeTab === 'bansos'
-                ? 'border-primary text-primary bg-surface-container-lowest font-bold rounded-t-lg'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <Gift size={15} />
-            <span>Bansos & Bantuan ({profileData?.riwayatBansos?.length || 0})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('pengaduan')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-              activeTab === 'pengaduan'
-                ? 'border-primary text-primary bg-surface-container-lowest font-bold rounded-t-lg'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <MessageSquareWarning size={15} />
-            <span>Laporan Aduan ({profileData?.riwayatPengaduan?.length || 0})</span>
-          </button>
-
-          {isOfficer && (
+          <div className={`grid grid-cols-2 ${isOfficer ? 'sm:grid-cols-5' : 'sm:grid-cols-4'} gap-2.5`}>
+            {/* Bento Selector 1: Biodata / Kredensial */}
             <button
-              onClick={() => setActiveTab('kinerja')}
-              className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-                activeTab === 'kinerja'
-                  ? 'border-primary text-primary bg-surface-container-lowest font-bold rounded-t-lg'
-                  : 'border-transparent text-on-surface-variant hover:text-on-surface'
+              type="button"
+              onClick={() => setActiveTab(activeTab === 'biodata' ? 'all' : 'biodata')}
+              className={`p-3 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                activeTab === 'biodata'
+                  ? 'bg-gradient-to-br from-sky-600 to-blue-700 text-white border-sky-500 shadow-md shadow-sky-600/20 scale-[1.02]'
+                  : 'bg-surface-container-low/70 hover:bg-surface-container border-outline-variant/60 text-on-surface'
               }`}
             >
-              <Award size={15} />
-              <span>Rekapitulasi Kinerja Petugas</span>
+              <div className="flex items-center justify-between">
+                <div className={`p-1.5 rounded-xl ${activeTab === 'biodata' ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-800'}`}>
+                  <User size={16} />
+                </div>
+                <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${activeTab === 'biodata' ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+                  SIAK
+                </span>
+              </div>
+              <div className="mt-2">
+                <span className="text-[11px] font-bold block line-clamp-1">
+                  {warga ? 'Identitas & KK' : 'Kredensial Dinas'}
+                </span>
+                <span className={`text-[10px] block ${activeTab === 'biodata' ? 'text-sky-100' : 'text-on-surface-variant'}`}>
+                  {warga?.nik ? '16 Digit Valid' : 'Akses Terverifikasi'}
+                </span>
+              </div>
             </button>
-          )}
+
+            {/* Bento Selector 2: Surat */}
+            <button
+              type="button"
+              onClick={() => setActiveTab(activeTab === 'surat' ? 'all' : 'surat')}
+              className={`p-3 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                activeTab === 'surat'
+                  ? 'bg-gradient-to-br from-indigo-600 to-indigo-800 text-white border-indigo-500 shadow-md shadow-indigo-600/20 scale-[1.02]'
+                  : 'bg-surface-container-low/70 hover:bg-surface-container border-outline-variant/60 text-on-surface'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className={`p-1.5 rounded-xl ${activeTab === 'surat' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800'}`}>
+                  <FileText size={16} />
+                </div>
+                <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${activeTab === 'surat' ? 'bg-white/25 text-white' : 'bg-indigo-100 text-indigo-800'}`}>
+                  {profileData?.riwayatSurat?.length || 0}
+                </span>
+              </div>
+              <div className="mt-2">
+                <span className="text-[11px] font-bold block">Riwayat Surat</span>
+                <span className={`text-[10px] block ${activeTab === 'surat' ? 'text-indigo-100' : 'text-on-surface-variant'}`}>
+                  Pengajuan Kependudukan
+                </span>
+              </div>
+            </button>
+
+            {/* Bento Selector 3: Bansos */}
+            <button
+              type="button"
+              onClick={() => setActiveTab(activeTab === 'bansos' ? 'all' : 'bansos')}
+              className={`p-3 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                activeTab === 'bansos'
+                  ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-500 shadow-md shadow-emerald-600/20 scale-[1.02]'
+                  : 'bg-surface-container-low/70 hover:bg-surface-container border-outline-variant/60 text-on-surface'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className={`p-1.5 rounded-xl ${activeTab === 'bansos' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+                  <Gift size={16} />
+                </div>
+                <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${activeTab === 'bansos' ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+                  {profileData?.riwayatBansos?.length || 0}
+                </span>
+              </div>
+              <div className="mt-2">
+                <span className="text-[11px] font-bold block">Bansos & Bantuan</span>
+                <span className={`text-[10px] block ${activeTab === 'bansos' ? 'text-emerald-100' : 'text-on-surface-variant'}`}>
+                  Jaring Perlindungan
+                </span>
+              </div>
+            </button>
+
+            {/* Bento Selector 4: Pengaduan */}
+            <button
+              type="button"
+              onClick={() => setActiveTab(activeTab === 'pengaduan' ? 'all' : 'pengaduan')}
+              className={`p-3 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                activeTab === 'pengaduan'
+                  ? 'bg-gradient-to-br from-amber-600 to-orange-700 text-white border-amber-500 shadow-md shadow-amber-600/20 scale-[1.02]'
+                  : 'bg-surface-container-low/70 hover:bg-surface-container border-outline-variant/60 text-on-surface'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className={`p-1.5 rounded-xl ${activeTab === 'pengaduan' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'}`}>
+                  <MessageSquareWarning size={16} />
+                </div>
+                <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${activeTab === 'pengaduan' ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-800'}`}>
+                  {profileData?.riwayatPengaduan?.length || 0}
+                </span>
+              </div>
+              <div className="mt-2">
+                <span className="text-[11px] font-bold block">Laporan Aduan</span>
+                <span className={`text-[10px] block ${activeTab === 'pengaduan' ? 'text-amber-100' : 'text-on-surface-variant'}`}>
+                  Aspirasi Wilayah
+                </span>
+              </div>
+            </button>
+
+            {/* Bento Selector 5: Kinerja (Petugas Only) */}
+            {isOfficer && (
+              <button
+                type="button"
+                onClick={() => setActiveTab(activeTab === 'kinerja' ? 'all' : 'kinerja')}
+                className={`p-3 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between col-span-2 sm:col-span-1 ${
+                  activeTab === 'kinerja'
+                    ? 'bg-gradient-to-br from-purple-600 to-indigo-800 text-white border-purple-500 shadow-md shadow-purple-600/20 scale-[1.02]'
+                    : 'bg-surface-container-low/70 hover:bg-surface-container border-outline-variant/60 text-on-surface'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className={`p-1.5 rounded-xl ${activeTab === 'kinerja' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-800'}`}>
+                    <Award size={16} />
+                  </div>
+                  <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${activeTab === 'kinerja' ? 'bg-white/25 text-white' : 'bg-purple-100 text-purple-800'}`}>
+                    {profileData?.rekapKinerja?.kepatuhan_sla_persen || 100}%
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <span className="text-[11px] font-bold block">Kinerja Petugas</span>
+                  <span className={`text-[10px] block ${activeTab === 'kinerja' ? 'text-purple-100' : 'text-on-surface-variant'}`}>
+                    Kepatuhan SLA Pelayanan
+                  </span>
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* TAB 1: BIODATA / KREDENSIAL */}
-      {activeTab === 'biodata' && (
+      {/* BENTO SECTION 1: BIODATA / IDENTITAS & KREDENSIAL */}
+      {(activeTab === 'all' || activeTab === 'biodata') && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {warga ? (
             <>
@@ -669,8 +761,8 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* TAB 2: RIWAYAT SURAT */}
-      {activeTab === 'surat' && (
+      {/* BENTO SECTION 2: RIWAYAT SURAT */}
+      {(activeTab === 'all' || activeTab === 'surat') && (
         <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
@@ -770,104 +862,107 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* TAB 3: RIWAYAT BANSOS */}
-      {activeTab === 'bansos' && (
-        <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-              <Gift size={18} className="text-sky-600" /> Riwayat Kepesertaan Bantuan Sosial
-            </h3>
-            <span className="text-xs text-on-surface-variant font-medium">
-              Total {profileData?.riwayatBansos?.length || 0} Catatan
-            </span>
-          </div>
-
-          {(!profileData?.riwayatBansos || profileData.riwayatBansos.length === 0) ? (
-            <div className="text-center py-12 text-xs text-on-surface-variant">
-              <Gift size={36} className="mx-auto mb-2 text-outline" />
-              <p>Belum ada catatan penerimaan atau usulan bantuan sosial terdaftar.</p>
+      {/* BENTO SECTION 3 & 4 (DUAL BENTO GRID FOR SERVICES) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* BENTO SECTION 3: RIWAYAT BANSOS */}
+        {(activeTab === 'all' || activeTab === 'bansos') && (
+          <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                <Gift size={18} className="text-emerald-600" /> Riwayat Kepesertaan Bantuan Sosial
+              </h3>
+              <span className="text-xs text-on-surface-variant font-medium">
+                Total {profileData?.riwayatBansos?.length || 0} Catatan
+              </span>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {profileData.riwayatBansos.map((b) => (
-                <div key={b.id} className="p-4 rounded-xl border border-outline-variant bg-surface-container-low space-y-2 text-xs">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="font-mono text-[11px] text-primary font-bold">{b.nomor_pengajuan || `BS-${b.id}`}</span>
-                      <h4 className="font-bold text-sm text-on-surface">{b.jenis_bansos}</h4>
+
+            {(!profileData?.riwayatBansos || profileData.riwayatBansos.length === 0) ? (
+              <div className="text-center py-12 text-xs text-on-surface-variant">
+                <Gift size={36} className="mx-auto mb-2 text-outline" />
+                <p>Belum ada catatan penerimaan atau usulan bantuan sosial terdaftar.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {profileData.riwayatBansos.map((b) => (
+                  <div key={b.id} className="p-4 rounded-xl border border-outline-variant bg-surface-container-low space-y-2 text-xs">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="font-mono text-[11px] text-primary font-bold">{b.nomor_pengajuan || `BS-${b.id}`}</span>
+                        <h4 className="font-bold text-sm text-on-surface">{b.jenis_bansos}</h4>
+                      </div>
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                        b.status === 'DISBURSED' || b.status === 'APPROVED'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : (b.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')
+                      }`}>
+                        {b.status}
+                      </span>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                      b.status === 'DISBURSED' || b.status === 'APPROVED'
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : (b.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')
-                    }`}>
-                      {b.status}
-                    </span>
-                  </div>
 
-                  <p className="text-on-surface-variant">{b.alasan_pengajuan || 'Bantuan Perlindungan Sosial'}</p>
+                    <p className="text-on-surface-variant">{b.alasan_pengajuan || 'Bantuan Perlindungan Sosial'}</p>
 
-                  <div className="pt-2 border-t border-outline-variant/60 flex justify-between items-center text-[11px]">
-                    <span className="font-bold text-sky-800">
-                      Rp {Number(b.nominal_bantuan || 0).toLocaleString('id-ID')}
-                    </span>
-                    <span className="text-on-surface-variant">
-                      {new Date(b.created_at).toLocaleDateString('id-ID')}
-                    </span>
-                  </div>
-
-                  {b.foto_penyerahan_url && (
-                    <div className="mt-2 pt-2 border-t border-outline-variant/60 flex items-center gap-2 text-emerald-700 font-semibold text-[11px]">
-                      <CheckCircle2 size={14} /> Bukti serah terima geotagged tersimpan
+                    <div className="pt-2 border-t border-outline-variant/60 flex justify-between items-center text-[11px]">
+                      <span className="font-bold text-sky-800">
+                        Rp {Number(b.nominal_bantuan || 0).toLocaleString('id-ID')}
+                      </span>
+                      <span className="text-on-surface-variant">
+                        {new Date(b.created_at).toLocaleDateString('id-ID')}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* TAB 4: RIWAYAT PENGADUAN */}
-      {activeTab === 'pengaduan' && (
-        <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-              <MessageSquareWarning size={18} className="text-sky-600" /> Riwayat Laporan Pengaduan Lingkungan
-            </h3>
-            <span className="text-xs text-on-surface-variant font-medium">
-              Total {profileData?.riwayatPengaduan?.length || 0} Aduan
-            </span>
-          </div>
-
-          {(!profileData?.riwayatPengaduan || profileData.riwayatPengaduan.length === 0) ? (
-            <div className="text-center py-12 text-xs text-on-surface-variant">
-              <MessageSquareWarning size={36} className="mx-auto mb-2 text-outline" />
-              <p>Belum ada laporan pengaduan lingkungan yang diajukan.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {profileData.riwayatPengaduan.map((aduan) => (
-                <div key={aduan.id} className="p-4 rounded-xl border border-outline-variant bg-surface-container-low text-xs space-y-1.5">
-                  <div className="flex justify-between items-start">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-100 text-sky-800">
-                      {aduan.kategori || 'Fasilitas Umum'}
-                    </span>
-                    <span className="text-[11px] text-on-surface-variant">
-                      {new Date(aduan.created_at).toLocaleDateString('id-ID')}
-                    </span>
+                    {b.foto_penyerahan_url && (
+                      <div className="mt-2 pt-2 border-t border-outline-variant/60 flex items-center gap-2 text-emerald-700 font-semibold text-[11px]">
+                        <CheckCircle2 size={14} /> Bukti serah terima geotagged tersimpan
+                      </div>
+                    )}
                   </div>
-                  <h4 className="font-bold text-sm text-on-surface">{aduan.judul}</h4>
-                  <p className="text-on-surface-variant">{aduan.deskripsi}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* TAB 5: REKAPITULASI KINERJA PETUGAS */}
-      {activeTab === 'kinerja' && isOfficer && (
+        {/* BENTO SECTION 4: RIWAYAT PENGADUAN */}
+        {(activeTab === 'all' || activeTab === 'pengaduan') && (
+          <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                <MessageSquareWarning size={18} className="text-amber-600" /> Riwayat Laporan Pengaduan Lingkungan
+              </h3>
+              <span className="text-xs text-on-surface-variant font-medium">
+                Total {profileData?.riwayatPengaduan?.length || 0} Aduan
+              </span>
+            </div>
+
+            {(!profileData?.riwayatPengaduan || profileData.riwayatPengaduan.length === 0) ? (
+              <div className="text-center py-12 text-xs text-on-surface-variant">
+                <MessageSquareWarning size={36} className="mx-auto mb-2 text-outline" />
+                <p>Belum ada laporan pengaduan lingkungan yang diajukan.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {profileData.riwayatPengaduan.map((aduan) => (
+                  <div key={aduan.id} className="p-4 rounded-xl border border-outline-variant bg-surface-container-low text-xs space-y-1.5">
+                    <div className="flex justify-between items-start">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 text-amber-800">
+                        {aduan.kategori || 'Fasilitas Umum'}
+                      </span>
+                      <span className="text-[11px] text-on-surface-variant">
+                        {new Date(aduan.created_at).toLocaleDateString('id-ID')}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-sm text-on-surface">{aduan.judul}</h4>
+                    <p className="text-on-surface-variant">{aduan.deskripsi}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* BENTO SECTION 5: REKAPITULASI KINERJA PETUGAS */}
+      {(activeTab === 'all' || activeTab === 'kinerja') && isOfficer && (
         <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-6">
           <div>
             <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">

@@ -167,6 +167,145 @@ class KkService {
 
     return card;
   }
+
+  /**
+   * Impor masal Kartu Keluarga dan Anggota Warga (Kemendagri Standard)
+   * Mendukung validasi 16 digit NIK & No KK serta upsert otomatis
+   */
+  async bulkImport(rows, currentUser, options = {}) {
+    const pool = require('../db/pool');
+    const results = {
+      total_rows: rows.length,
+      success_kks: 0,
+      success_warga: 0,
+      errors: []
+    };
+
+    const kkMap = new Map(); // no_kk -> kkData
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const rowIdx = i + 1;
+      const noKk = String(r.no_kk || r.No_KK || r['Nomor KK'] || '').trim().replace(/\D/g, '');
+      const nik = String(r.nik || r.NIK || r['Nomor NIK'] || '').trim().replace(/\D/g, '');
+      const nama = String(r.nama || r.Nama || r['Nama Lengkap'] || '').trim();
+
+      if (!noKk || noKk.length !== 16) {
+        results.errors.push({ row: rowIdx, field: 'no_kk', message: `No. KK '${noKk}' tidak valid (wajib tepat 16 digit).` });
+        continue;
+      }
+
+      if (!nik || nik.length !== 16) {
+        results.errors.push({ row: rowIdx, field: 'nik', message: `NIK '${nik}' untuk '${nama}' tidak valid (wajib tepat 16 digit).` });
+        continue;
+      }
+
+      if (!nama) {
+        results.errors.push({ row: rowIdx, field: 'nama', message: `Nama warga baris ke-${rowIdx} wajib diisi.` });
+        continue;
+      }
+
+      // Kumpulkan data Kartu Keluarga
+      if (!kkMap.has(noKk)) {
+        kkMap.set(noKk, {
+          no_kk: noKk,
+          kepala_keluarga: String(r.kepala_keluarga || r['Kepala Keluarga'] || nama).trim(),
+          alamat: String(r.alamat || r.Alamat || 'Kelurahan Kebonjati').trim(),
+          rt: String(r.rt || r.RT || currentUser?.rt || '001').padStart(3, '0').slice(-3),
+          rw: String(r.rw || r.RW || currentUser?.rw || '001').padStart(3, '0').slice(-3),
+          kelurahan: String(r.kelurahan || r.Kelurahan || 'Kebonjati').trim(),
+          kecamatan: String(r.kecamatan || r.Kecamatan || 'Andir').trim(),
+          kota: String(r.kota || r.Kota || 'Bandung').trim(),
+          provinsi: String(r.provinsi || r.Provinsi || 'Jawa Barat').trim(),
+          kode_pos: String(r.kode_pos || r['Kode Pos'] || '40181').trim()
+        });
+      }
+
+      // Upsert warga
+      try {
+        const jenis_kelamin = (r.jenis_kelamin || r['Jenis Kelamin'] || 'L').toUpperCase().startsWith('P') ? 'P' : 'L';
+        const tempat_lahir = String(r.tempat_lahir || r['Tempat Lahir'] || 'Bandung').trim();
+        const tanggal_lahir = r.tanggal_lahir || r['Tanggal Lahir'] || '1990-01-01';
+        const agama = r.agama || r.Agama || 'Islam';
+        const status_perkawinan = r.status_perkawinan || r['Status Perkawinan'] || 'Belum Kawin';
+        const pekerjaan = r.pekerjaan || r.Pekerjaan || 'Wiraswasta';
+        const pendidikan = r.pendidikan || r.pendidikan_terakhir || r['Pendidikan'] || 'SMA/SMK';
+        const golongan_darah = r.golongan_darah || r['Golongan Darah'] || 'Tidak Tahu';
+        const alamat = String(r.alamat || r.Alamat || kkMap.get(noKk).alamat).trim();
+        const rt = kkMap.get(noKk).rt;
+        const rw = kkMap.get(noKk).rw;
+        const nama_ibu = r.nama_ibu || r['Nama Ibu Kandung'] || null;
+        const kategori_asuransi = r.kategori_asuransi || r['Kategori BPJS'] || null;
+        const nomor_asuransi = r.nomor_asuransi || r['Nomor BPJS'] || null;
+        const no_telepon = r.no_telepon || r['No Telepon'] || r['WhatsApp'] || null;
+
+        await pool.execute(
+          `INSERT INTO warga 
+            (nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, agama, pendidikan_terakhir, pekerjaan, status_perkawinan, golongan_darah, alamat, rt, rw, nama_ibu, kategori_asuransi, nomor_asuransi, no_telepon)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE
+             nama = VALUES(nama),
+             no_kk = VALUES(no_kk),
+             jenis_kelamin = VALUES(jenis_kelamin),
+             tempat_lahir = VALUES(tempat_lahir),
+             tanggal_lahir = VALUES(tanggal_lahir),
+             agama = VALUES(agama),
+             pendidikan_terakhir = VALUES(pendidikan_terakhir),
+             pekerjaan = VALUES(pekerjaan),
+             status_perkawinan = VALUES(status_perkawinan),
+             golongan_darah = VALUES(golongan_darah),
+             alamat = VALUES(alamat),
+             rt = VALUES(rt),
+             rw = VALUES(rw),
+             nama_ibu = COALESCE(VALUES(nama_ibu), nama_ibu),
+             kategori_asuransi = COALESCE(VALUES(kategori_asuransi), kategori_asuransi),
+             nomor_asuransi = COALESCE(VALUES(nomor_asuransi), nomor_asuransi),
+             no_telepon = COALESCE(VALUES(no_telepon), no_telepon)`,
+          [
+            nik, noKk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, agama, pendidikan,
+            pekerjaan, status_perkawinan, golongan_darah, alamat, rt, rw, nama_ibu,
+            kategori_asuransi, nomor_asuransi, no_telepon
+          ]
+        );
+        results.success_warga++;
+      } catch (wErr) {
+        results.errors.push({ row: rowIdx, field: 'warga_insert', message: `Gagal simpan warga '${nama}': ${wErr.message}` });
+      }
+    }
+
+    // Upsert semua KK unik
+    for (const [noKk, kk] of kkMap.entries()) {
+      try {
+        await pool.execute(
+          `INSERT INTO kartu_keluarga
+            (no_kk, kepala_keluarga, alamat, rt, rw, kelurahan, kecamatan, kota, provinsi)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE
+             kepala_keluarga = VALUES(kepala_keluarga),
+             alamat = VALUES(alamat),
+             rt = VALUES(rt),
+             rw = VALUES(rw),
+             kelurahan = VALUES(kelurahan),
+             kecamatan = VALUES(kecamatan),
+             kota = VALUES(kota),
+             provinsi = VALUES(provinsi)`,
+          [
+            kk.no_kk, kk.kepala_keluarga, kk.alamat, kk.rt, kk.rw,
+            kk.kelurahan, kk.kecamatan, kk.kota, kk.provinsi
+          ]
+        );
+        results.success_kks++;
+      } catch (kkErr) {
+        results.errors.push({ no_kk: noKk, field: 'kk_insert', message: `Gagal simpan KK '${noKk}': ${kkErr.message}` });
+      }
+    }
+
+    return {
+      success: true,
+      message: `Impor masal selesai: ${results.success_kks} KK dan ${results.success_warga} warga berhasil didata.`,
+      data: results
+    };
+  }
 }
 
 module.exports = new KkService();

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { Link, useNavigate } from 'react-router-dom';
@@ -36,14 +36,13 @@ import DashboardKaderPosyandu from './dashboard/DashboardKaderPosyandu';
 import DashboardKetuaRT from './dashboard/DashboardKetuaRT';
 import DashboardKetuaRW from './dashboard/DashboardKetuaRW';
 import DashboardLurah from './dashboard/DashboardLurah';
+import DashboardAdminKelurahan from './dashboard/DashboardAdminKelurahan';
 import DashboardWarga from './dashboard/DashboardWarga';
 
 export default function DashboardHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Role routing khusus Sprint 2: Kader Posyandu & Ketua RT
-  // Role routing khusus Sprint 2 & 3:
   // Role routing khusus:
   // 1. Kader Posyandu
   if (user?.role === 'kader_posyandu') {
@@ -53,7 +52,6 @@ export default function DashboardHome() {
   if (user?.role === 'ketua_rt') {
     return <DashboardKetuaRT />;
   }
-  // 3. Lurah (Executive Command Center & TTE)
   // 3. Ketua RW & Admin RW (Meja Kerja Koordinator Kewilayahan)
   if (user?.role === 'ketua_rw' || user?.role === 'admin_rw') {
     return <DashboardKetuaRW />;
@@ -62,8 +60,11 @@ export default function DashboardHome() {
   if (user?.role === 'lurah') {
     return <DashboardLurah />;
   }
-  // 4. Warga (Citizen Experience & Workflow Stepper)
-  // 5. Warga (Citizen Experience & Workflow Stepper)
+  // 5. Admin Kelurahan & Staf Kelurahan (Meja Kerja Operasional, Verifikasi & Bansos Clearing)
+  if (user?.role === 'admin_kelurahan' || user?.role === 'admin' || user?.role === 'staf_kelurahan') {
+    return <DashboardAdminKelurahan />;
+  }
+  // 6. Warga (Citizen Experience & Workflow Stepper)
   if (user?.role === 'warga' || user?.role === 'pengguna' || user?.role === 'user' || !user?.role) {
     return <DashboardWarga />;
   }

@@ -20,6 +20,7 @@ const ROLE_DISPLAY = {
   superadmin: { label: 'Super Admin (Owner)', bg: 'bg-purple-100 text-purple-800 border-purple-200' },
   admin_kelurahan: { label: 'Admin Kelurahan', bg: 'bg-blue-100 text-blue-800 border-blue-200' },
   admin: { label: 'Admin Kelurahan', bg: 'bg-blue-100 text-blue-800 border-blue-200' },
+  staf_kelurahan: { label: 'Staf Kelurahan', bg: 'bg-sky-100 text-sky-800 border-sky-200' },
   admin_rw: { label: 'Admin RW', bg: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
   ketua_rw: { label: 'Ketua RW', bg: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
   ketua_rt: { label: 'Ketua RT', bg: 'bg-teal-100 text-teal-800 border-teal-200' },
@@ -56,10 +57,10 @@ export default function UserManagementPage() {
   // Determine allowed sub-roles that current user can create
   const getAllowedRolesToCreate = () => {
     if (currentUserRole === 'superadmin') {
-      return ['admin_kelurahan', 'admin_rw', 'ketua_rw', 'ketua_rt', 'kader_posyandu', 'warga'];
+      return ['admin_kelurahan', 'staf_kelurahan', 'admin_rw', 'ketua_rw', 'ketua_rt', 'kader_posyandu', 'warga'];
     }
     if (currentUserRole === 'admin_kelurahan') {
-      return ['admin_rw', 'ketua_rw', 'ketua_rt', 'kader_posyandu', 'warga'];
+      return ['staf_kelurahan', 'admin_rw', 'ketua_rw', 'ketua_rt', 'kader_posyandu', 'warga'];
     }
     if (currentUserRole === 'ketua_rw' || currentUserRole === 'admin_rw') {
       return ['ketua_rt'];

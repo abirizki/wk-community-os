@@ -12,6 +12,7 @@ const ROLE_HIERARCHY = {
   lurah: 1,
   admin_kelurahan: 1,
   admin: 1, // Alias kompatibilitas
+  staf_kelurahan: 1.5,
   admin_rw: 2,
   ketua_rw: 2,
   ketua_rt: 3,
