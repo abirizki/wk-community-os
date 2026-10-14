@@ -1104,6 +1104,10 @@ async function autoPatchDatabase() {
             ('BALITA', 'Kenzo Pratama', '3273011002260003', '002', '001', 'Vitamin A Kapsul Biru (100.000 IU)', 1, '2026-08-10', 'Kader Posyandu Melati', 'Bulan Vitamin A Kemenkes')
         `);
       }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE posyandu_pmt_distribusi note:', e.message);
+    }
+
     // 18. Patch Kolom Verifikasi RT & Objek Pajak pada tabel PBB
     try {
       const pbbCols = [
