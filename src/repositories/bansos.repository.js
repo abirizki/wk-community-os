@@ -17,6 +17,8 @@ class BansosRepository {
       nik_penerima,
       nama_penerima,
       jenis_bansos,
+      kategori_bansos = 'REGULER',
+      nomor_antrean = null,
       alasan_pengajuan,
       nominal_bantuan = 0,
       nominal_awal = null,
@@ -32,14 +34,16 @@ class BansosRepository {
 
     const [result] = await pool.execute(
       `INSERT INTO bansos_pengajuan 
-       (nomor_pengajuan, no_kk, nik_penerima, nama_penerima, jenis_bansos, alasan_pengajuan, nominal_bantuan, nominal_awal, sumber_dana, status, approval_step, rt, rw, diajukan_oleh_user_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (nomor_pengajuan, no_kk, nik_penerima, nama_penerima, jenis_bansos, kategori_bansos, nomor_antrean, alasan_pengajuan, nominal_bantuan, nominal_awal, sumber_dana, status, approval_step, rt, rw, diajukan_oleh_user_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         noPengajuan,
         no_kk,
         nik_penerima,
         nama_penerima,
         jenis_bansos,
+        kategori_bansos,
+        nomor_antrean,
         alasan_pengajuan,
         nominal_bantuan,
         nominal_awal || nominal_bantuan,
@@ -79,17 +83,19 @@ class BansosRepository {
   }
 
   /**
-   * Penjadwalan & Penerbitan Tiket Undangan Pengambilan Bantuan Ber-QR
+   * Penjadwalan & Penerbitan Tiket Undangan Pengambilan Bantuan Ber-QR (Single)
    */
   async scheduleTicket(id, data) {
     const qrCode = data.qr_ticket_code || `VERIF-BANSOS-${id}-${Date.now().toString(36).toUpperCase()}`;
+    const nomorAntrean = data.nomor_antrean || null;
     await pool.execute(
       `UPDATE bansos_pengajuan SET
          jadwal_pengambilan_tanggal = ?,
          jadwal_pengambilan_waktu = ?,
          lokasi_pengambilan = ?,
          persyaratan_bawaan = ?,
-         qr_ticket_code = ?
+         qr_ticket_code = ?,
+         nomor_antrean = COALESCE(?, nomor_antrean)
        WHERE id = ?`,
       [
         data.jadwal_pengambilan_tanggal,
@@ -97,10 +103,58 @@ class BansosRepository {
         data.lokasi_pengambilan || 'Kantor Kelurahan Kebonjati',
         data.persyaratan_bawaan || '1. KTP Asli Penerima\n2. Kartu Keluarga (KK) Asli\n3. Tunjukkan QR Code Tiket ini',
         qrCode,
+        nomorAntrean,
         id
       ]
     );
     return this.findById(id);
+  }
+
+  /**
+   * Penjadwalan Massal & Penerbitan Tiket Undangan + Nomor Antrean Ber-QR
+   */
+  async batchScheduleTickets(scheduleList) {
+    const updatedIds = [];
+    for (const item of scheduleList) {
+      const { id, jadwal_pengambilan_tanggal, jadwal_pengambilan_waktu, lokasi_pengambilan, persyaratan_bawaan, qr_ticket_code, nomor_antrean } = item;
+      await pool.execute(
+        `UPDATE bansos_pengajuan SET
+           jadwal_pengambilan_tanggal = ?,
+           jadwal_pengambilan_waktu = ?,
+           lokasi_pengambilan = ?,
+           persyaratan_bawaan = ?,
+           qr_ticket_code = ?,
+           nomor_antrean = ?
+         WHERE id = ?`,
+        [
+          jadwal_pengambilan_tanggal,
+          jadwal_pengambilan_waktu || '08:30 - 12:00 WIB',
+          lokasi_pengambilan || 'Kantor Kelurahan Kebonjati',
+          persyaratan_bawaan || '1. KTP Asli Penerima\n2. Kartu Keluarga (KK) Asli\n3. Tunjukkan QR Code Tiket ini',
+          qr_ticket_code,
+          nomor_antrean,
+          id
+        ]
+      );
+      updatedIds.push(id);
+    }
+    return updatedIds;
+  }
+
+  /**
+   * Import massal usulan penerima bansos dari CSV / Excel
+   */
+  async bulkImport(items) {
+    const inserted = [];
+    for (const item of items) {
+      try {
+        const res = await this.create(item);
+        inserted.push(res);
+      } catch (err) {
+        console.warn('[BansosRepo] bulkImport row fail:', err.message, item.nik_penerima);
+      }
+    }
+    return inserted;
   }
 
   /**

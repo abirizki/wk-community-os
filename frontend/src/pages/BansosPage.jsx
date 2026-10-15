@@ -29,7 +29,13 @@ import {
   Printer,
   TrendingUp,
   QrCode,
-  Save
+  Save,
+  Upload,
+  Download,
+  ListChecks,
+  FileSpreadsheet,
+  Layers,
+  Ticket
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -134,7 +140,25 @@ export default function BansosPage() {
     jadwal_pengambilan_tanggal: '',
     jadwal_pengambilan_waktu: '09:00 - 12:00 WIB',
     lokasi_pengambilan: 'Kantor Kelurahan Kebonjati, Jl. Kebonjati No. 12',
-    persyaratan_bawaan: 'KTP Asli, KK Asli, dan Tiket Pengambilan ini'
+    persyaratan_bawaan: 'KTP Asli, KK Asli, dan Tiket Pengambilan ini',
+    nomor_antrean: ''
+  });
+
+  // Bulk CSV Upload State
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
+  const [bulkCsvRows, setBulkCsvRows] = useState([]);
+  const [bulkPreviewStats, setBulkPreviewStats] = useState({ total: 0, valid: 0, invalid: 0 });
+  const [bulkImportLoading, setBulkImportLoading] = useState(false);
+
+  // Batch Scheduling & Tickets State
+  const [selectedBansosIds, setSelectedBansosIds] = useState([]);
+  const [showBatchScheduleModal, setShowBatchScheduleModal] = useState(false);
+  const [batchScheduleForm, setBatchScheduleForm] = useState({
+    jadwal_pengambilan_tanggal: '',
+    jadwal_pengambilan_waktu: '08:30 - 11:30 WIB',
+    lokasi_pengambilan: 'Aula Kantor Kelurahan Kebonjati, Jl. Kebonjati No. 1',
+    persyaratan_bawaan: '1. KTP Asli Penerima\n2. Kartu Keluarga (KK) Asli\n3. Tunjukkan Tiket Digital Ber-QR ini',
+    antrean_prefix: 'A-'
   });
 
   const [proposeForm, setProposeForm] = useState({
@@ -266,6 +290,123 @@ export default function BansosPage() {
       setError(err.message || 'Gagal menjadwalkan pengambilan bantuan.');
     } finally {
       setSubmittingAction(false);
+    }
+  };
+
+  // Unduh Template CSV Usulan Bansos
+  const handleDownloadTemplate = () => {
+    window.open('/api/bansos/download/template', '_blank');
+  };
+
+  // Parser File CSV Usulan Bansos
+  const handleCsvFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = evt.target.result;
+        const lines = text.split(/\r\n|\n/).filter((line) => line.trim().length > 0);
+        if (lines.length <= 1) {
+          setError('File CSV kosong atau hanya berisi judul kolom.');
+          return;
+        }
+        const headers = lines[0].split(',').map((h) => h.trim().toLowerCase().replace(/['"]/g, ''));
+        const rows = [];
+        let valid = 0;
+        let invalid = 0;
+
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(',').map((v) => v.trim().replace(/^['"]|['"]$/g, ''));
+          if (values.length < 3) continue;
+          const rowObj = {};
+          headers.forEach((h, idx) => {
+            rowObj[h] = values[idx] || '';
+          });
+          const isValidNik = /^\d{16}$/.test(rowObj.nik_penerima || '');
+          if (isValidNik) valid++;
+          else invalid++;
+          rows.push({
+            ...rowObj,
+            _isValid: isValidNik
+          });
+        }
+        setBulkCsvRows(rows);
+        setBulkPreviewStats({ total: rows.length, valid, invalid });
+      } catch (err) {
+        setError('Gagal memproses file CSV: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Submit Import Massal Usulan Bansos
+  const handleExecuteBulkImport = async () => {
+    if (bulkCsvRows.length === 0) return;
+    setBulkImportLoading(true);
+    setError('');
+    try {
+      const res = await api.post('/bansos/bulk-import', { rows: bulkCsvRows });
+      if (res?.success) {
+        setSuccessMsg(res.message || `Berhasil mengimpor ${res.success_count || bulkCsvRows.length} usulan bansos.`);
+        setShowBulkUploadModal(false);
+        setBulkCsvRows([]);
+        fetchBansos();
+        setTimeout(() => setSuccessMsg(''), 5000);
+      } else {
+        setError(res?.message || 'Gagal mengimpor data usulan bansos.');
+      }
+    } catch (err) {
+      setError(err.message || 'Terjadi kesalahan saat mengunggah usulan bansos.');
+    } finally {
+      setBulkImportLoading(false);
+    }
+  };
+
+  // Submit Penjadwalan & Tiket Massal (Admin Kelurahan)
+  const handleExecuteBatchSchedule = async (e) => {
+    e.preventDefault();
+    if (selectedBansosIds.length === 0) {
+      setError('Pilih minimal satu penerima bantuan sosial yang telah disahkan.');
+      return;
+    }
+    setSubmittingAction(true);
+    setError('');
+    try {
+      const res = await api.post('/bansos/batch-schedule', {
+        ids: selectedBansosIds,
+        ...batchScheduleForm
+      });
+      if (res?.success) {
+        setSuccessMsg(res.message || `Berhasil menerbitkan tiket dan nomor antrean untuk ${selectedBansosIds.length} penerima.`);
+        setShowBatchScheduleModal(false);
+        setSelectedBansosIds([]);
+        fetchBansos();
+        fetchMyTickets();
+        setTimeout(() => setSuccessMsg(''), 5000);
+      } else {
+        setError(res?.message || 'Gagal menerbitkan tiket antrean massal.');
+      }
+    } catch (err) {
+      setError(err.message || 'Terjadi kesalahan saat memproses penjadwalan massal.');
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  const toggleSelectBansos = (id) => {
+    setSelectedBansosIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllApproved = () => {
+    const approvedIds = bansosList.filter((b) => b.status === 'APPROVED').map((b) => b.id);
+    if (approvedIds.length === 0) return;
+    if (selectedBansosIds.length === approvedIds.length) {
+      setSelectedBansosIds([]);
+    } else {
+      setSelectedBansosIds(approvedIds);
     }
   };
 
@@ -606,6 +747,38 @@ export default function BansosPage() {
               </button>
 
               <button
+                onClick={() => {
+                  setBulkCsvRows([]);
+                  setBulkPreviewStats({ total: 0, valid: 0, invalid: 0 });
+                  setShowBulkUploadModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl font-semibold shadow-sm hover:bg-emerald-100 transition-colors text-xs"
+              >
+                <FileSpreadsheet size={15} className="text-emerald-700" />
+                <span>Unggah Massal (CSV)</span>
+              </button>
+
+              {isKelurahan && (
+                <button
+                  onClick={() => {
+                    if (selectedBansosIds.length === 0) {
+                      const approvedIds = bansosList.filter((b) => b.status === 'APPROVED').map((b) => b.id);
+                      if (approvedIds.length === 0) {
+                        setError('Belum ada usulan bansos berstatus APPROVED untuk diterbitkan tiket.');
+                        return;
+                      }
+                      setSelectedBansosIds(approvedIds);
+                    }
+                    setShowBatchScheduleModal(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 bg-purple-600 text-white rounded-xl font-semibold shadow-sm hover:bg-purple-700 transition-colors text-xs"
+                >
+                  <Ticket size={15} />
+                  <span>Jadwalkan & Tiket Masal {selectedBansosIds.length > 0 ? `(${selectedBansosIds.length})` : ''}</span>
+                </button>
+              )}
+
+              <button
                 onClick={() => setShowProposeModal(true)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold shadow-sm hover:bg-primary/90 transition-colors text-xs"
               >
@@ -793,6 +966,20 @@ export default function BansosPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-surface-container-low border-b border-outline-variant text-on-surface font-semibold">
               <tr>
+                {isKelurahan && (
+                  <th className="p-4 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      onChange={toggleSelectAllApproved}
+                      checked={
+                        bansosList.filter((b) => b.status === 'APPROVED').length > 0 &&
+                        selectedBansosIds.length === bansosList.filter((b) => b.status === 'APPROVED').length
+                      }
+                      title="Pilih Semua yang Disahkan (APPROVED)"
+                      className="rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                    />
+                  </th>
+                )}
                 <th className="p-4">No. Pengajuan / Tgl</th>
                 <th className="p-4">Penerima Manfaat</th>
                 <th className="p-4">Jenis Program</th>
@@ -805,14 +992,14 @@ export default function BansosPage() {
             <tbody className="divide-y divide-outline-variant">
               {loading ? (
                 <tr>
-                  <td colSpan={isOfficer ? 7 : 6} className="p-8 text-center text-on-surface-variant">
+                  <td colSpan={isKelurahan ? 8 : (isOfficer ? 7 : 6)} className="p-8 text-center text-on-surface-variant">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
                     Memuat data bantuan sosial...
                   </td>
                 </tr>
               ) : displayedList.length === 0 ? (
                 <tr>
-                  <td colSpan={isOfficer ? 7 : 6} className="p-8 text-center text-on-surface-variant">
+                  <td colSpan={isKelurahan ? 8 : (isOfficer ? 7 : 6)} className="p-8 text-center text-on-surface-variant">
                     Tidak ada data penerima bantuan sosial.
                   </td>
                 </tr>
@@ -823,6 +1010,17 @@ export default function BansosPage() {
 
                   return (
                     <tr key={item.id} className="hover:bg-surface-container-low/50 transition-colors">
+                      {isKelurahan && (
+                        <td className="p-4 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedBansosIds.includes(item.id)}
+                            onChange={() => toggleSelectBansos(item.id)}
+                            disabled={item.status !== 'APPROVED'}
+                            className="rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer disabled:opacity-30"
+                          />
+                        </td>
+                      )}
                       <td className="p-4 text-xs font-mono whitespace-nowrap text-on-surface">
                         <div className="font-semibold">{item.nomor_pengajuan}</div>
                         <div className="text-on-surface-variant text-[11px]">
@@ -833,20 +1031,32 @@ export default function BansosPage() {
                         <div className="font-semibold text-on-surface">{item.nama_penerima}</div>
                         <div className="text-xs text-on-surface-variant font-mono">NIK: {item.nik_penerima}</div>
                         <div className="text-[11px] text-on-surface-variant font-medium">RT {item.rt} / RW {item.rw}</div>
-                        {item.desil_saat_ini ? (
-                          <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                            Desil {item.desil_saat_ini} (Resmi)
-                          </span>
-                        ) : item.desil_usulan ? (
-                          <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                            Draft Desil {item.desil_usulan}
-                          </span>
-                        ) : null}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.nomor_antrean && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-200">
+                              <Ticket size={10} className="text-purple-700" /> #{item.nomor_antrean}
+                            </span>
+                          )}
+                          {item.desil_saat_ini ? (
+                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              Desil {item.desil_saat_ini} (Resmi)
+                            </span>
+                          ) : item.desil_usulan ? (
+                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                              Draft Desil {item.desil_usulan}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="p-4">
                         <span className="inline-block px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                           {item.jenis_bansos}
                         </span>
+                        {item.kategori_bansos && item.kategori_bansos !== 'REGULER' && (
+                          <span className="inline-block ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            {item.kategori_bansos}
+                          </span>
+                        )}
                         <div>
                           {item.sumber_dana === 'APBN_PUSAT' ? (
                             <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300">
@@ -876,6 +1086,11 @@ export default function BansosPage() {
                       </td>
                       <td className="p-4 text-center whitespace-nowrap">
                         {renderStatusBadge(item)}
+                        {item.jadwal_pengambilan_tanggal && (
+                          <div className="text-[10px] text-purple-800 font-semibold mt-1">
+                            {new Date(item.jadwal_pengambilan_tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4 max-w-xs text-xs text-on-surface-variant">
                         <div className="truncate font-medium text-on-surface" title={item.alasan_pengajuan}>
@@ -1007,10 +1222,20 @@ export default function BansosPage() {
                         {t.qr_ticket_code || `BW-TKT-${t.id}`}
                       </span>
                     </div>
-                    <h3 className="text-lg font-bold mt-1.5">{t.jenis_bansos}</h3>
-                    <p className="text-xs text-emerald-100">
-                      Penerima: <strong>{t.nama_penerima}</strong> (NIK: {t.nik_penerima})
-                    </p>
+                    <div className="flex justify-between items-end mt-1.5">
+                      <div>
+                        <h3 className="text-lg font-bold">{t.jenis_bansos}</h3>
+                        <p className="text-xs text-emerald-100">
+                          Penerima: <strong>{t.nama_penerima}</strong> (NIK: {t.nik_penerima})
+                        </p>
+                      </div>
+                      <div className="text-right bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-400/30">
+                        <span className="block text-[10px] text-emerald-200 font-semibold uppercase tracking-wider">No. Antrean</span>
+                        <span className="text-xl font-black tracking-wide text-white font-mono">
+                          #{t.nomor_antrean || `A-${String(t.id).padStart(3, '0')}`}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="p-4 space-y-3 text-xs">
@@ -1162,8 +1387,7 @@ export default function BansosPage() {
                     <th className="p-3">Uraian Alasan Fakta</th>
                     <th className="p-3">Pelapor (RT/RW)</th>
                     <th className="p-3 text-center">Status Review</th>
-                    <th className="p-3 text-center">Aksi Kelurahan</th>
-                    <th className="p-3 text-center">Aksi Kelurahan & Cetak</th>
+                    <th className="p-3 text-center">Aksi Putusan & Cetak</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
@@ -2269,6 +2493,19 @@ export default function BansosPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nomor Antrean Pengambilan (Opsional)
+                </label>
+                <input
+                  type="text"
+                  value={scheduleForm.nomor_antrean}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, nomor_antrean: e.target.value })}
+                  placeholder={`Contoh: A-${String(selectedBansos.id).padStart(3, '0')}`}
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Dokumen Persyaratan yang Wajib Dibawa Warga
                 </label>
                 <input
@@ -2295,6 +2532,248 @@ export default function BansosPage() {
                 >
                   {submittingAction ? <Loader2 size={14} className="animate-spin" /> : <QrCode size={14} />}
                   Terbitkan Jadwal & Tiket QR
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL UPLOAD MASSAL USULAN BANSOS (CSV)                              */}
+      {/* ===================================================================== */}
+      {showBulkUploadModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-slate-900"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-slate-200">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <FileSpreadsheet className="text-emerald-600" size={20} /> Unggah Massal Calon Penerima Bansos (CSV)
+              </h3>
+              <button onClick={() => setShowBulkUploadModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 leading-relaxed flex items-start justify-between gap-3">
+              <div>
+                Gunakan template resmi untuk mengimpor daftar calon penerima manfaat bantuan sosial sekaligus.
+                NIK dan KK akan diverifikasi otomatis terhadap data induk kependudukan.
+              </div>
+              <button
+                type="button"
+                onClick={handleDownloadTemplate}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold flex items-center gap-1.5 whitespace-nowrap shadow-sm text-xs transition-colors flex-shrink-0"
+              >
+                <Download size={13} /> Unduh Format CSV
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-6 text-center cursor-pointer transition-colors bg-slate-50/50">
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={handleCsvFileUpload}
+                  className="hidden"
+                  id="bansos-csv-input"
+                />
+                <label htmlFor="bansos-csv-input" className="cursor-pointer block space-y-2">
+                  <Upload className="mx-auto text-slate-400" size={32} />
+                  <div className="text-xs font-bold text-slate-700">Pilih file CSV usulan bansos dari perangkat</div>
+                  <div className="text-[11px] text-slate-400">Format .csv dengan pemisah koma (comma-separated)</div>
+                </label>
+              </div>
+
+              {bulkCsvRows.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-slate-700">Pratinjau Data Impor ({bulkPreviewStats.total} baris):</span>
+                    <div className="flex gap-2">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px]">
+                        Valid: {bulkPreviewStats.valid}
+                      </span>
+                      {bulkPreviewStats.invalid > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[11px]">
+                          Anomali: {bulkPreviewStats.invalid}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="max-h-52 overflow-y-auto border border-slate-200 rounded-xl">
+                    <table className="w-full text-left text-[11px]">
+                      <thead className="bg-slate-100 text-slate-700 font-bold sticky top-0">
+                        <tr>
+                          <th className="p-2">No</th>
+                          <th className="p-2">NIK</th>
+                          <th className="p-2">Nama</th>
+                          <th className="p-2">Wilayah</th>
+                          <th className="p-2">Program</th>
+                          <th className="p-2 text-right">Nominal</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {bulkCsvRows.slice(0, 10).map((row, idx) => (
+                          <tr key={idx} className={row._isValid ? 'hover:bg-slate-50' : 'bg-rose-50/60'}>
+                            <td className="p-2 text-slate-500">{idx + 1}</td>
+                            <td className="p-2 font-mono">{row.nik_penerima}</td>
+                            <td className="p-2 font-semibold">{row.nama_penerima || '-'}</td>
+                            <td className="p-2">RT {row.rt || '001'}/RW {row.rw || '001'}</td>
+                            <td className="p-2 font-medium text-emerald-700">{row.jenis_bansos || 'BANSOS'}</td>
+                            <td className="p-2 text-right font-mono">
+                              Rp {Number(row.nominal_bantuan || 0).toLocaleString('id-ID')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {bulkCsvRows.length > 10 && (
+                    <p className="text-[10px] text-slate-400 italic text-right">
+                      Menampilkan 10 dari {bulkCsvRows.length} baris data usulan.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBulkUploadModal(false);
+                  setBulkCsvRows([]);
+                }}
+                className="px-4 py-2 rounded-lg text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteBulkImport}
+                disabled={bulkImportLoading || bulkCsvRows.length === 0}
+                className="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {bulkImportLoading ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                Impor {bulkPreviewStats.valid > 0 ? `${bulkPreviewStats.valid} Data` : 'Sekarang'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL PENJADWALAN & TIKET MASSAL (ADMIN KELURAHAN)                   */}
+      {/* ===================================================================== */}
+      {showBatchScheduleModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-slate-900"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-slate-200">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Ticket className="text-purple-600" size={20} /> Terbitkan Tiket & Nomor Antrean Massal
+              </h3>
+              <button onClick={() => setShowBatchScheduleModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 text-xs text-purple-900 leading-relaxed">
+              Anda akan menerbitkan tiket undangan resmi dan nomor antrean berurutan secara otomatis untuk{' '}
+              <strong>{selectedBansosIds.length} penerima manfaat</strong> yang telah disahkan.
+              Warga dan RT/RW akan menerima notifikasi tiket digital di dashboard masing-masing.
+            </div>
+
+            <form onSubmit={handleExecuteBatchSchedule} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Tanggal Pengambilan *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={batchScheduleForm.jadwal_pengambilan_tanggal}
+                    onChange={(e) => setBatchScheduleForm({ ...batchScheduleForm, jadwal_pengambilan_tanggal: e.target.value })}
+                    className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Prefix Nomor Antrean
+                  </label>
+                  <input
+                    type="text"
+                    value={batchScheduleForm.antrean_prefix}
+                    onChange={(e) => setBatchScheduleForm({ ...batchScheduleForm, antrean_prefix: e.target.value })}
+                    placeholder="Contoh: A-, B-, atau ANTRI-"
+                    className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500 font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Waktu / Sesi Pengambilan *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={batchScheduleForm.jadwal_pengambilan_waktu}
+                  onChange={(e) => setBatchScheduleForm({ ...batchScheduleForm, jadwal_pengambilan_waktu: e.target.value })}
+                  placeholder="Contoh: Sesi Pagi 08:30 - 11:30 WIB"
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Tempat / Lokasi Pengambilan *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={batchScheduleForm.lokasi_pengambilan}
+                  onChange={(e) => setBatchScheduleForm({ ...batchScheduleForm, lokasi_pengambilan: e.target.value })}
+                  placeholder="Contoh: Aula Kantor Kelurahan Kebonjati, Jl. Kebonjati No. 1"
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Dokumen Persyaratan Bawaan Warga
+                </label>
+                <textarea
+                  rows={2}
+                  value={batchScheduleForm.persyaratan_bawaan}
+                  onChange={(e) => setBatchScheduleForm({ ...batchScheduleForm, persyaratan_bawaan: e.target.value })}
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setShowBatchScheduleModal(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingAction || selectedBansosIds.length === 0}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-purple-600 text-white hover:bg-purple-700 shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {submittingAction ? <Loader2 size={14} className="animate-spin" /> : <Ticket size={14} />}
+                  Terbitkan {selectedBansosIds.length} Tiket Ber-QR
                 </button>
               </div>
             </form>

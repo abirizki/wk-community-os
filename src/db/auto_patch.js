@@ -282,7 +282,9 @@ async function autoPatchDatabase() {
       'jadwal_pengambilan_waktu VARCHAR(100) NULL',
       'lokasi_pengambilan VARCHAR(255) NULL',
       'persyaratan_bawaan TEXT NULL',
-      'qr_ticket_code VARCHAR(100) NULL'
+      'qr_ticket_code VARCHAR(100) NULL',
+      'nomor_antrean VARCHAR(50) NULL',
+      'kategori_bansos VARCHAR(50) NULL'
     ];
     for (const bCol of bansosExtraCols) {
       try {

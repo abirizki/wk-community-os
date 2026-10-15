@@ -30,6 +30,39 @@ router.get('/stats', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/bansos/download/template - Unduh format template CSV usulan penerima bansos
+router.get('/download/template', requireAuth, (req, res) => {
+  try {
+    const csvData = bansosService.getTemplateCsv();
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="template_usulan_bansos.csv"');
+    return res.status(200).send(csvData);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/bansos/bulk-import - Import massal usulan bansos (Kelurahan / RT / RW)
+router.post('/bulk-import', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'), async (req, res) => {
+  try {
+    const { rows } = req.body;
+    const result = await bansosService.bulkImportBansos(rows, req.session.user);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/bansos/batch-schedule - Penjadwalan & Penerbitan Massal Tiket Undangan + No Antrean Ber-QR
+router.post('/batch-schedule', requireAuth, requireRole('admin_kelurahan', 'lurah', 'superadmin', 'admin'), async (req, res) => {
+  try {
+    const result = await bansosService.batchScheduleTickets(req.body, req.session.user);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 // POST /api/bansos - Usulkan calon penerima bansos (RT/RW/Admin)
 router.post('/', requireAuth, async (req, res) => {
   try {

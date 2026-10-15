@@ -647,7 +647,265 @@ class BansosService {
   }
 
   /**
-   * Penjadwalan & Penerbitan Tiket Undangan Pengambilan Bantuan Ber-QR
+  /**
+   * Template CSV Usulan Calon Penerima Bantuan Sosial
+   */
+  getTemplateCsv() {
+    const headers = [
+      'no_kk',
+      'nik_penerima',
+      'nama_penerima',
+      'rt',
+      'rw',
+      'jenis_bansos',
+      'kategori_bansos',
+      'nominal_bantuan',
+      'sumber_dana',
+      'alasan_pengajuan'
+    ];
+    const sampleRows = [
+      [
+        '3273010101900001',
+        '3273010505880001',
+        'Ahmad Subarjo',
+        '001',
+        '001',
+        'PKH',
+        'LANSIA',
+        '600000',
+        'APBN_PUSAT',
+        'Keluarga lansia prasejahtera prioritas intervensi pangan'
+      ],
+      [
+        '3273010101900002',
+        '3273011208920002',
+        'Siti Aminah',
+        '002',
+        '001',
+        'BPNT',
+        'REGULER',
+        '200000',
+        'APBN_PUSAT',
+        'Keluarga prasejahtera terdaftar DTKS Desil 1'
+      ],
+      [
+        '3273010101900003',
+        '3273012004950003',
+        'Budi Santoso',
+        '001',
+        '002',
+        'BLT_DD',
+        'DIFABEL',
+        '300000',
+        'DANA_DESA',
+        'Penyandang disabilitas fisik tidak memiliki penghasilan tetap'
+      ]
+    ];
+    return [headers.join(','), ...sampleRows.map((r) => r.join(','))].join('\n');
+  }
+
+  /**
+   * Import massal usulan penerima bansos dari CSV (Kelurahan / RT / RW)
+   */
+  async bulkImportBansos(rows, currentUser) {
+    const allowedRoles = ['admin_kelurahan', 'lurah', 'superadmin', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt'];
+    if (!allowedRoles.includes(currentUser.role)) {
+      const err = new Error('Hanya Petugas Kelurahan dan Pengurus RT/RW yang berwenang mengunggah usulan bansos massal.');
+      err.status = 403;
+      throw err;
+    }
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      const err = new Error('Data usulan bansos kosong atau tidak valid.');
+      err.status = 400;
+      throw err;
+    }
+
+    const isOfficer = ['admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(currentUser.role);
+    const initialStatus = isOfficer ? 'APPROVED' : (currentUser.role.includes('rw') ? 'PENDING_KELURAHAN' : 'PENDING_RW');
+    const initialStep = isOfficer ? 'COMPLETED' : (currentUser.role.includes('rw') ? 'KELURAHAN' : 'RW');
+
+    let successCount = 0;
+    const errors = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const nik = String(row.nik_penerima || '').trim();
+      if (!nik || nik.length !== 16) {
+        errors.push(`Baris ${i + 1}: NIK '${nik}' tidak valid (wajib 16 digit).`);
+        continue;
+      }
+
+      let noKK = String(row.no_kk || '').trim();
+      let nama = String(row.nama_penerima || '').trim();
+      let rt = String(row.rt || '').trim();
+      let rw = String(row.rw || '').trim();
+
+      // Lookup data warga bila belum lengkap
+      if (!nama || !noKK || !rt || !rw) {
+        try {
+          const warga = await wargaRepository.findByNik(nik);
+          if (warga) {
+            if (!nama) nama = warga.nama;
+            if (!noKK) noKK = warga.no_kk;
+            if (!rt) rt = warga.rt;
+            if (!rw) rw = warga.rw;
+          }
+        } catch (e) {}
+      }
+
+      // Enforce RT/RW scope jika pengunggah adalah RT/RW
+      if (currentUser.role === 'ketua_rt') {
+        rt = currentUser.rt;
+        rw = currentUser.rw;
+      } else if (currentUser.role === 'ketua_rw' || currentUser.role === 'admin_rw') {
+        rw = currentUser.rw;
+      }
+
+      const jenisBansos = String(row.jenis_bansos || 'BANSOS_DAERAH').trim().toUpperCase();
+      const kategoriBansos = String(row.kategori_bansos || 'REGULER').trim().toUpperCase();
+      const sumberDana = String(row.sumber_dana || 'APBN_PUSAT').trim().toUpperCase();
+      const nominal = parseFloat(row.nominal_bantuan) || 0;
+      const alasan = String(row.alasan_pengajuan || 'Usulan penerima bansos hasil pendataan terpadu kelurahan').trim();
+
+      try {
+        await bansosRepository.create({
+          no_kk: noKK || '3273010101900001',
+          nik_penerima: nik,
+          nama_penerima: nama || 'Warga Terdata',
+          jenis_bansos: jenisBansos,
+          kategori_bansos: kategoriBansos,
+          nominal_bantuan: nominal,
+          nominal_awal: nominal,
+          sumber_dana: sumberDana,
+          status: initialStatus,
+          approval_step: initialStep,
+          alasan_pengajuan: alasan,
+          rt: rt || '001',
+          rw: rw || '001',
+          diajukan_oleh_user_id: currentUser.id
+        });
+
+        successCount++;
+
+        // Notifikasi ke warga
+        try {
+          await notifikasiRepository.create({
+            nik_target: nik,
+            judul: isOfficer ? 'Bantuan Sosial Disahkan' : 'Usulan Bantuan Sosial Didaftarkan',
+            pesan: isOfficer
+              ? `Selamat, keluarga Anda telah disahkan sebagai penerima manfaat program ${jenisBansos}. Silakan tunggu jadwal pengambilan tiket digital Anda.`
+              : `Anda diusulkan sebagai calon penerima manfaat program ${jenisBansos}. Dokumen sedang dalam verifikasi berjenjang.`,
+            tipe: isOfficer ? 'success' : 'info',
+            link: '/dashboard/bansos'
+          });
+        } catch (e) {}
+      } catch (err) {
+        errors.push(`Baris ${i + 1} (NIK ${nik}): ${err.message}`);
+      }
+    }
+
+    return {
+      success: true,
+      message: `Berhasil mengimpor ${successCount} data calon penerima bansos.`,
+      total_processed: rows.length,
+      success_count: successCount,
+      failed_count: errors.length,
+      errors
+    };
+  }
+
+  /**
+   * Penjadwalan & Penerbitan Tiket Massal + Nomor Antrean Ber-QR (Admin Kelurahan)
+   */
+  async batchScheduleTickets(payload, currentUser) {
+    const allowedRoles = ['admin_kelurahan', 'lurah', 'superadmin', 'admin'];
+    if (!allowedRoles.includes(currentUser.role)) {
+      const err = new Error('Hanya Petugas Kelurahan yang berwenang menerbitkan jadwal dan tiket massal.');
+      err.status = 403;
+      throw err;
+    }
+
+    const {
+      ids,
+      jadwal_pengambilan_tanggal,
+      jadwal_pengambilan_waktu,
+      lokasi_pengambilan,
+      persyaratan_bawaan,
+      antrean_prefix = 'A-'
+    } = payload;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      const err = new Error('Pilih minimal satu penerima bansos yang akan dijadwalkan.');
+      err.status = 400;
+      throw err;
+    }
+
+    if (!jadwal_pengambilan_tanggal) {
+      const err = new Error('Tanggal pengambilan bantuan wajib ditentukan.');
+      err.status = 400;
+      throw err;
+    }
+
+    const scheduleList = [];
+    let counter = 1;
+
+    for (const id of ids) {
+      const bansos = await bansosRepository.findById(id);
+      if (!bansos || bansos.status !== 'APPROVED') continue;
+
+      const nomorAntrean = `${antrean_prefix}${String(counter).padStart(3, '0')}`;
+      const qrCode = `VERIF-BW-${bansos.id}-${Date.now().toString(36).toUpperCase()}-${counter}`;
+
+      scheduleList.push({
+        id: bansos.id,
+        jadwal_pengambilan_tanggal,
+        jadwal_pengambilan_waktu: jadwal_pengambilan_waktu || '08:30 - 12:00 WIB',
+        lokasi_pengambilan: lokasi_pengambilan || 'Kantor Kelurahan Kebonjati',
+        persyaratan_bawaan: persyaratan_bawaan || '1. KTP Asli Penerima\n2. Kartu Keluarga (KK) Asli\n3. Tunjukkan QR Code Tiket ini',
+        qr_ticket_code: qrCode,
+        nomor_antrean: nomorAntrean,
+        nik_penerima: bansos.nik_penerima,
+        nama_penerima: bansos.nama_penerima,
+        jenis_bansos: bansos.jenis_bansos,
+        rt: bansos.rt,
+        rw: bansos.rw
+      });
+
+      counter++;
+    }
+
+    if (scheduleList.length === 0) {
+      const err = new Error('Tidak ada data bansos berstatus APPROVED yang valid untuk dijadwalkan.');
+      err.status = 400;
+      throw err;
+    }
+
+    await bansosRepository.batchScheduleTickets(scheduleList);
+
+    // Kirim notifikasi individual ke seluruh warga penerima
+    for (const item of scheduleList) {
+      try {
+        await notifikasiRepository.create({
+          nik_target: item.nik_penerima,
+          judul: `Tiket Bantuan Terbit: No Antrean ${item.nomor_antrean}`,
+          pesan: `Bantuan ${item.jenis_bansos} siap diambil pada ${jadwal_pengambilan_tanggal} (${item.jadwal_pengambilan_waktu}) di ${item.lokasi_pengambilan}. Nomor Antrean: ${item.nomor_antrean}. Buka dashboard untuk melihat QR Tiket Resmi.`,
+          tipe: 'success',
+          link: '/dashboard/bansos'
+        });
+      } catch (e) {}
+    }
+
+    return {
+      success: true,
+      message: `Berhasil menerbitkan ${scheduleList.length} tiket pengambilan bantuan ber-QR dan nomor antrean.`,
+      total_scheduled: scheduleList.length,
+      data: scheduleList
+    };
+  }
+
+  /**
+   * Penjadwalan & Penerbitan Tiket Undangan Pengambilan Bantuan Ber-QR (Single)
    */
   async scheduleTicket(id, scheduleData, currentUser) {
     const allowedRoles = ['admin_kelurahan', 'lurah', 'superadmin', 'admin'];
@@ -670,9 +928,11 @@ class BansosService {
       throw err;
     }
 
+    const nomorAntrean = scheduleData.nomor_antrean || `A-${String(bansos.id).padStart(3, '0')}`;
     const qrCode = `VERIF-BW-${bansos.id}-${Date.now().toString(36).toUpperCase()}`;
     const updated = await bansosRepository.scheduleTicket(id, {
       ...scheduleData,
+      nomor_antrean: nomorAntrean,
       qr_ticket_code: qrCode
     });
 
@@ -680,8 +940,8 @@ class BansosService {
     try {
       await notifikasiRepository.create({
         nik_target: bansos.nik_penerima,
-        judul: 'Tiket Pengambilan Bantuan Sosial Terbit',
-        pesan: `Bantuan ${bansos.jenis_bansos} untuk keluarga Anda siap diambil pada ${scheduleData.jadwal_pengambilan_tanggal || 'jadwal ditentukan'} di ${scheduleData.lokasi_pengambilan || 'Kantor Kelurahan'}. Bawa KTP & KK Asli serta tunjukkan Tiket QR Code di dashboard Anda.`,
+        judul: `Tiket Bantuan Terbit: No Antrean ${nomorAntrean}`,
+        pesan: `Bantuan ${bansos.jenis_bansos} untuk keluarga Anda siap diambil pada ${scheduleData.jadwal_pengambilan_tanggal || 'jadwal ditentukan'} (${scheduleData.jadwal_pengambilan_waktu || '08:30 - 12:00 WIB'}) di ${scheduleData.lokasi_pengambilan || 'Kantor Kelurahan'}. Nomor Antrean: ${nomorAntrean}. Bawa KTP & KK Asli serta tunjukkan Tiket QR Code di dashboard Anda.`,
         tipe: 'success',
         link: '/dashboard/bansos'
       });
@@ -711,7 +971,8 @@ class BansosService {
 
     const [rows] = await pool.execute(
       `SELECT b.*, 
-              COALESCE(b.qr_ticket_code, CONCAT('VERIF-BW-', b.id)) AS qr_ticket_code
+              COALESCE(b.qr_ticket_code, CONCAT('VERIF-BW-', b.id)) AS qr_ticket_code,
+              COALESCE(b.nomor_antrean, CONCAT('A-', LPAD(b.id, 3, '0'))) AS nomor_antrean
        FROM bansos_pengajuan b
        WHERE (b.nik_penerima = ? OR (b.no_kk = ? AND ? IS NOT NULL))
          AND b.status = 'APPROVED'
