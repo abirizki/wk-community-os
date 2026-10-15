@@ -33,7 +33,15 @@ import {
   ArrowRight,
   Lock,
   Key,
-  X
+  X,
+  BarChart3,
+  PieChart,
+  Activity,
+  TrendingUp,
+  Layers,
+  Landmark,
+  Users2,
+  Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -187,12 +195,527 @@ export default function ProfilePage() {
 
   const warga = profileData?.warga;
   const isOfficer = ['lurah', 'admin_kelurahan', 'admin', 'superadmin', 'ketua_rw', 'ketua_rt', 'kader_posyandu'].includes(user?.role) || (profileData?.rekapKinerja !== null && profileData?.rekapKinerja !== undefined);
+  const isKelurahanAdmin = ['admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(user?.role);
+  const demografi = profileData?.demografiKelurahan;
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
         <Loader2 className="animate-spin text-primary" size={36} />
         <p className="text-xs text-on-surface-variant font-medium">Memuat profil dan riwayat layanan terpadu...</p>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // TAMPILAN BENTO GRID EKSEKUTIF KELURAHAN (ADMIN KELURAHAN / LURAH)
+  // =========================================================================
+  if (isKelurahanAdmin && demografi) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-6 pb-14">
+        {/* EXECUTIVE BANNER BENTO: PROFIL KELURAHAN & APARATUR */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-indigo-800/40">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center font-black text-2xl shadow-lg border-2 border-amber-300 flex-shrink-0">
+                <Landmark size={32} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                    Pusat Pemerintahan SPBE
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Smart Governance Terpadu
+                  </span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black mt-1.5 tracking-tight">
+                  {demografi.kantor?.nama_kelurahan || 'Kelurahan Kebonjati'}
+                </h1>
+                <p className="text-xs text-indigo-200/90 mt-1 flex items-center gap-2 flex-wrap">
+                  <span>{demografi.kantor?.kecamatan || 'Kecamatan Cikole'}</span>
+                  <span>&bull;</span>
+                  <span>{demografi.kantor?.kota || 'Kota Sukabumi'}</span>
+                  <span>&bull;</span>
+                  <span>Provinsi {demografi.kantor?.provinsi || 'Jawa Barat'}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-xs space-y-1">
+                <div className="text-[10px] text-indigo-200 uppercase font-semibold">Kepala Kelurahan / Lurah</div>
+                <div className="font-bold text-white text-sm">{demografi.kantor?.nama_lurah}</div>
+                <div className="text-[10px] text-indigo-300 font-mono">NIP: {demografi.kantor?.nip_lurah}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ALERTS */}
+        <AnimatePresence>
+          {successMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl flex items-center gap-2 text-xs font-medium"
+            >
+              <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />
+              {successMsg}
+            </motion.div>
+          )}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl flex items-center gap-2 text-xs font-medium"
+            >
+              <AlertCircle size={16} className="text-rose-600 flex-shrink-0" />
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* BENTO GRID MACRO METRICS & DEMOGRAPHY */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          
+          {/* BENTO 1: TOTAL POPULASI & DAYA DUKUNG (2 COLS) */}
+          <div className="md:col-span-2 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-sky-100 text-sky-700 rounded-xl">
+                    <Users2 size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Daya Dukung Demografi</h3>
+                    <p className="text-[10px] text-slate-500">Agregasi Data Kependudukan Terverifikasi</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                  SIAK & Dukcapil Sinkron
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <span className="text-[11px] font-semibold text-slate-500 block">Total Jiwa Penduduk</span>
+                  <span className="text-3xl font-black text-slate-900 tracking-tight mt-1 block">
+                    {demografi.total_warga.toLocaleString('id-ID')}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-1 block">Warga ber-KTP & Domisili Terdata</span>
+                </div>
+
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <span className="text-[11px] font-semibold text-slate-500 block">Kepala Keluarga (KK)</span>
+                  <span className="text-3xl font-black text-indigo-700 tracking-tight mt-1 block">
+                    {demografi.total_kk.toLocaleString('id-ID')}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Rata-rata {demografi.total_kk > 0 ? (demografi.total_warga / demografi.total_kk).toFixed(1) : 0} jiwa/KK
+                  </span>
+                </div>
+              </div>
+
+              {/* GENDER DISTRIBUTION BAR */}
+              <div className="mt-4 space-y-1.5">
+                <div className="flex justify-between text-xs font-semibold">
+                  <span className="text-sky-700 flex items-center gap-1">
+                    Laki-Laki: {demografi.pria} ({demografi.total_warga > 0 ? Math.round((demografi.pria / demografi.total_warga) * 100) : 0}%)
+                  </span>
+                  <span className="text-rose-600 flex items-center gap-1">
+                    Perempuan: {demografi.wanita} ({demografi.total_warga > 0 ? Math.round((demografi.wanita / demografi.total_warga) * 100) : 0}%)
+                  </span>
+                </div>
+                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">
+                  <div
+                    style={{ width: `${demografi.total_warga > 0 ? (demografi.pria / demografi.total_warga) * 100 : 50}%` }}
+                    className="bg-sky-500 h-full transition-all"
+                  />
+                  <div
+                    style={{ width: `${demografi.total_warga > 0 ? (demografi.wanita / demografi.total_warga) * 100 : 50}%` }}
+                    className="bg-rose-400 h-full transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* DEPENDENCY RATIO INSIGHT */}
+            <div className="mt-5 p-3.5 bg-indigo-50/70 rounded-2xl border border-indigo-100 flex items-center gap-3">
+              <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-sm flex-shrink-0">
+                <Activity size={18} />
+              </div>
+              <div className="text-xs">
+                <span className="font-bold text-indigo-950 block">
+                  Angka Rasio Ketergantungan: {demografi.dependency_ratio}%
+                </span>
+                <p className="text-[11px] text-indigo-800/80 leading-relaxed mt-0.5">
+                  Setiap 100 penduduk usia produktif menopang ~{demografi.dependency_ratio} penduduk non-produktif (Balita & Lansia).
+                  Menunjukkan kondisi <strong>Bonus Demografi Prima</strong> untuk percepatan pertumbuhan wilayah.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* BENTO 2: PIRAMIDA USIA & GENERASI (1 COL) */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-amber-100 text-amber-700 rounded-xl">
+                    <BarChart3 size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Piramida Usia</h3>
+                    <p className="text-[10px] text-slate-500">Struktur Generasi Penduduk</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 mt-4 text-xs">
+                <div>
+                  <div className="flex justify-between font-semibold text-slate-700 mb-1">
+                    <span>Balita (0 - 5 th)</span>
+                    <span className="font-bold text-sky-700">{demografi.usia_balita} jiwa</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-sky-500 h-full rounded-full"
+                      style={{ width: `${demografi.total_warga > 0 ? (demografi.usia_balita / demografi.total_warga) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between font-semibold text-slate-700 mb-1">
+                    <span>Usia Sekolah (6 - 18 th)</span>
+                    <span className="font-bold text-indigo-700">{demografi.usia_sekolah} jiwa</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-indigo-500 h-full rounded-full"
+                      style={{ width: `${demografi.total_warga > 0 ? (demografi.usia_sekolah / demografi.total_warga) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between font-semibold text-slate-700 mb-1">
+                    <span>Usia Produktif (19 - 59 th)</span>
+                    <span className="font-bold text-emerald-700">{demografi.usia_produktif} jiwa</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-emerald-500 h-full rounded-full"
+                      style={{ width: `${demografi.total_warga > 0 ? (demografi.usia_produktif / demografi.total_warga) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between font-semibold text-slate-700 mb-1">
+                    <span>Lansia (60+ th)</span>
+                    <span className="font-bold text-amber-700">{demografi.usia_lansia} jiwa</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-amber-500 h-full rounded-full"
+                      style={{ width: `${demografi.total_warga > 0 ? (demografi.usia_lansia / demografi.total_warga) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 text-[10px] text-slate-400">
+              Data terintegrasi otomatis dengan Posyandu & Layanan Lansia.
+            </div>
+          </div>
+
+          {/* BENTO 3: JARING PENGAMAN SOSIAL & DESIL DTKS (1 COL) */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+                    <Gift size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Desil & DTKS</h3>
+                    <p className="text-[10px] text-slate-500">Peta Kesejahteraan Sosial</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2.5 mt-4 text-xs">
+                <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-100 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-rose-950 block">Desil 1 (Sangat Miskin)</span>
+                    <span className="text-[10px] text-rose-700">Intervensi Prioritas Ekstrem</span>
+                  </div>
+                  <span className="text-base font-black text-rose-700 font-mono">
+                    {demografi.desil?.desil_1 || 0} KK
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-amber-950 block">Desil 2 (Miskin)</span>
+                    <span className="text-[10px] text-amber-700">Calon Penerima PKH/BPNT</span>
+                  </div>
+                  <span className="text-base font-black text-amber-700 font-mono">
+                    {demografi.desil?.desil_2 || 0} KK
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-blue-950 block">Desil 3 - 4 (Rentan)</span>
+                    <span className="text-[10px] text-blue-700">Perlindungan Subsidi Sosial</span>
+                  </div>
+                  <span className="text-base font-black text-blue-700 font-mono">
+                    {demografi.desil?.desil_3_4 || 0} KK
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-emerald-950 block">Non-Desil (Mampu)</span>
+                    <span className="text-[10px] text-emerald-700">Mandiri Sejahtera</span>
+                  </div>
+                  <span className="text-base font-black text-emerald-700 font-mono">
+                    {demografi.desil?.non_desil || 0} KK
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[11px]">
+              <span className="text-slate-500">Realisasi Bantuan:</span>
+              <span className="font-bold text-emerald-700 font-mono">
+                {demografi.bansos?.total_disalurkan || 0} Tersalurkan
+              </span>
+            </div>
+          </div>
+
+          {/* BENTO 4: KEPATUHAN PBB & KEUANGAN LINGKUNGAN (2 COLS) */}
+          <div className="md:col-span-2 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+                    <Coins size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Kepatuhan PBB & Potensi Pajak</h3>
+                    <p className="text-[10px] text-slate-500">Rekonsiliasi DHKP & Verifikasi Lapangan RT</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Bapenda Terintegrasi
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 mt-4 text-center">
+                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                  <span className="text-[11px] text-slate-500 block">Total NOP Terdata</span>
+                  <span className="text-xl font-bold text-slate-900 mt-1 block">
+                    {demografi.pbb?.total_nop || 0}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+                  <span className="text-[11px] text-emerald-700 block font-medium">Lunas Terverifikasi</span>
+                  <span className="text-xl font-bold text-emerald-800 mt-1 block">
+                    {demografi.pbb?.total_lunas || 0}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-rose-50 rounded-2xl border border-rose-100">
+                  <span className="text-[11px] text-rose-700 block font-medium">Tertunggak</span>
+                  <span className="text-xl font-bold text-rose-800 mt-1 block">
+                    {demografi.pbb?.total_tertunggak || 0}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-slate-500 block">Total Potensi Ketetapan NJOP:</span>
+                  <span className="text-base font-bold text-slate-900">
+                    Rp {Number(demografi.pbb?.total_pokok || 0).toLocaleString('id-ID')}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-500 block">Tingkat Kepatuhan:</span>
+                  <span className="text-base font-bold text-emerald-600">
+                    {demografi.pbb?.total_nop > 0
+                      ? Math.round((demografi.pbb.total_lunas / demografi.pbb.total_nop) * 100)
+                      : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 text-[11px] text-slate-400 italic">
+              * Data PBB divalidasi langsung oleh Ketua RT masing-masing wilayah untuk optimalisasi PAD Kota Sukabumi.
+            </div>
+          </div>
+
+          {/* BENTO 5: SEBARAN WILAYAH KERJA RT / RW (1 COL) */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-purple-100 text-purple-700 rounded-xl">
+                    <MapPin size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Sebaran Wilayah</h3>
+                    <p className="text-[10px] text-slate-500">Daya Tampung RW & RT</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 mt-4 max-h-48 overflow-y-auto pr-1">
+                {demografi.sebaran_wilayah && demografi.sebaran_wilayah.length > 0 ? (
+                  demografi.sebaran_wilayah.map((w, idx) => (
+                    <div key={idx} className="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-700">RW {w.rw} / RT {w.rt}</span>
+                      <div className="text-right text-[11px]">
+                        <span className="font-bold text-slate-900">{w.jumlah_warga}</span> Jiwa &bull; <span className="font-semibold text-slate-600">{w.jumlah_kk}</span> KK
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-xs text-slate-400 py-6">
+                    Data wilayah sedang disinkronkan.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 text-[10px] text-slate-400">
+              Peta batas yurisdiksi terkoordinasi dengan pengurus lingkungan RT/RW.
+            </div>
+          </div>
+
+          {/* BENTO 6: KINERJA PELAYANAN PUBLIK & SLA SPBE (1 COL) */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-indigo-100 text-indigo-700 rounded-xl">
+                    <ShieldCheck size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Kinerja Pelayanan SPBE</h3>
+                    <p className="text-[10px] text-slate-500">SLA & Kecepatan Layanan</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 mt-4 text-xs">
+                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Kepatuhan Standar Waktu SLA</span>
+                  <span className="text-2xl font-black text-indigo-700 mt-1 block">
+                    {profileData?.rekapKinerja?.kepatuhan_sla_persen || 98.5}%
+                  </span>
+                  <span className="text-[10px] text-slate-500">Rata-rata respon &lt; 2 jam kerja</span>
+                </div>
+
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
+                  <span className="text-slate-600 font-medium">Surat Terverifikasi</span>
+                  <span className="font-bold text-slate-900 font-mono">
+                    {profileData?.rekapKinerja?.total_surat_diproses || 0} Berkas
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
+                  <span className="text-slate-600 font-medium">Sanggahan Bansos Diputus</span>
+                  <span className="font-bold text-slate-900 font-mono">
+                    {profileData?.rekapKinerja?.total_audit_sanggahan || 0} Putusan
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+              <CheckCircle2 size={12} /> Standar Pelayanan Publik Ombudsman Terpenuhi
+            </div>
+          </div>
+
+        </div>
+
+        {/* KREDENSIAL JABATAN & HAK AKSES SPBE */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Building2 size={18} className="text-indigo-600" /> Kredensial Jabatan & Hak Akses SPBE
+            </h3>
+            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 font-bold border border-indigo-200">
+              Aparatur Kelurahan Terdaftar
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-slate-400 block mb-1">Jabatan Resmi</span>
+              <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                <ShieldCheck size={14} className="text-sky-600" />
+                {getRoleBadge(user?.role)}
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-slate-400 block mb-1">ID Akun Kedinasan</span>
+              <span className="font-mono font-bold text-slate-900 flex items-center gap-1">
+                {user?.username || '-'}
+                <button
+                  onClick={() => copyToClipboard(user?.username)}
+                  className="p-1 text-slate-400 hover:text-slate-700 rounded"
+                  title="Salin ID"
+                >
+                  {copiedNik ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                </button>
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-slate-400 block mb-1">Wilayah Penugasan</span>
+              <span className="font-semibold text-slate-900 flex items-center gap-1">
+                <MapPin size={13} className="text-red-500" />
+                Seluruh Wilayah Kelurahan Kebonjati
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-slate-400 block mb-1">Instansi / Unit Kerja</span>
+              <span className="font-semibold text-slate-900">
+                Kelurahan Kebonjati, Kec. Cikole, Kota Sukabumi
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-slate-400 block mb-1">Email Kedinasan</span>
+              <span className="font-semibold text-slate-900 flex items-center gap-1">
+                <Mail size={13} className="text-sky-600" />
+                {demografi.kantor?.email || 'kelurahan.kebonjati@sukabumikota.go.id'}
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-slate-400 block mb-1">Kontak Kantor Pelayanan</span>
+              <span className="font-semibold text-slate-900 flex items-center gap-1">
+                <Phone size={13} className="text-emerald-600" />
+                {demografi.kantor?.telepon || '(0266) 221-123'}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

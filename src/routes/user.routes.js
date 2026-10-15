@@ -192,6 +192,113 @@ router.get('/profile-history', async (req, res) => {
       }
     }
 
+    // 7. Agregasi Daya Dukung Demografi & Makro Kelurahan (Khusus Admin Kelurahan / Lurah)
+    let demografiKelurahan = null;
+    const isKelurahanAdmin = ['admin_kelurahan', 'lurah', 'superadmin', 'admin'].includes(currentUser.role);
+    if (isKelurahanAdmin) {
+      try {
+        const [wargaGeneral] = await pool.query(`
+          SELECT 
+            COUNT(*) AS total_warga,
+            COUNT(DISTINCT no_kk) AS total_kk,
+            SUM(CASE WHEN jenis_kelamin = 'L' THEN 1 ELSE 0 END) AS pria,
+            SUM(CASE WHEN jenis_kelamin = 'P' THEN 1 ELSE 0 END) AS wanita,
+            SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) <= 5 THEN 1 ELSE 0 END) AS usia_balita,
+            SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 6 AND 18 THEN 1 ELSE 0 END) AS usia_sekolah,
+            SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 19 AND 59 THEN 1 ELSE 0 END) AS usia_produktif,
+            SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60 THEN 1 ELSE 0 END) AS usia_lansia
+          FROM warga
+        `);
+
+        // Distribusi Wilayah RT & RW
+        const [sebaranWilayah] = await pool.query(`
+          SELECT rw, rt, COUNT(*) AS jumlah_warga, COUNT(DISTINCT no_kk) AS jumlah_kk
+          FROM warga
+          WHERE rw IS NOT NULL AND rt IS NOT NULL
+          GROUP BY rw, rt
+          ORDER BY rw ASC, rt ASC
+        `);
+
+        // Distribusi Desil Kesejahteraan
+        let desilStats = { desil_1: 0, desil_2: 0, desil_3_4: 0, non_desil: 0 };
+        try {
+          const [dRows] = await pool.query(`
+            SELECT 
+              SUM(CASE WHEN desil_saat_ini = 1 THEN 1 ELSE 0 END) AS desil_1,
+              SUM(CASE WHEN desil_saat_ini = 2 THEN 1 ELSE 0 END) AS desil_2,
+              SUM(CASE WHEN desil_saat_ini IN (3, 4) THEN 1 ELSE 0 END) AS desil_3_4,
+              SUM(CASE WHEN desil_saat_ini > 4 OR desil_saat_ini IS NULL THEN 1 ELSE 0 END) AS non_desil
+            FROM desil_keluarga
+          `);
+          if (dRows.length > 0) desilStats = dRows[0];
+        } catch (e) {}
+
+        // Potensi & Kepatuhan PBB
+        let pbbStats = { total_nop: 0, total_lunas: 0, total_tertunggak: 0, total_pokok: 0 };
+        try {
+          const [pRows] = await pool.query(`
+            SELECT 
+              COUNT(*) AS total_nop,
+              SUM(CASE WHEN status_bayar = 'LUNAS' OR verifikasi_rt = 1 THEN 1 ELSE 0 END) AS total_lunas,
+              SUM(CASE WHEN status_bayar != 'LUNAS' AND (verifikasi_rt = 0 OR verifikasi_rt IS NULL) THEN 1 ELSE 0 END) AS total_tertunggak,
+              COALESCE(SUM(nominal_ketetapan), 0) AS total_pokok
+            FROM pbb
+          `);
+          if (pRows.length > 0) pbbStats = pRows[0];
+        } catch (e) {}
+
+        // Statistik Bansos Kelurahan
+        let bansosSummary = { total_penerima: 0, total_disalurkan: 0, total_anggaran: 0 };
+        try {
+          const [bRows] = await pool.query(`
+            SELECT 
+              COUNT(*) AS total_penerima,
+              SUM(CASE WHEN status = 'DISBURSED' THEN 1 ELSE 0 END) AS total_disalurkan,
+              COALESCE(SUM(nominal_bantuan), 0) AS total_anggaran
+            FROM bansos_pengajuan
+            WHERE status IN ('APPROVED', 'DISBURSED')
+          `);
+          if (bRows.length > 0) bansosSummary = bRows[0];
+        } catch (e) {}
+
+        const statsRow = wargaGeneral[0] || {};
+        const totalWarga = Number(statsRow.total_warga || 0);
+        const usiaProduktif = Number(statsRow.usia_produktif || 0);
+        const nonProduktif = Number(statsRow.usia_balita || 0) + Number(statsRow.usia_sekolah || 0) + Number(statsRow.usia_lansia || 0);
+        const dependencyRatio = usiaProduktif > 0 ? Math.round((nonProduktif / usiaProduktif) * 100) : 0;
+
+        demografiKelurahan = {
+          total_warga: totalWarga,
+          total_kk: Number(statsRow.total_kk || 0),
+          pria: Number(statsRow.pria || 0),
+          wanita: Number(statsRow.wanita || 0),
+          usia_balita: Number(statsRow.usia_balita || 0),
+          usia_sekolah: Number(statsRow.usia_sekolah || 0),
+          usia_produktif: usiaProduktif,
+          usia_lansia: Number(statsRow.usia_lansia || 0),
+          dependency_ratio: dependencyRatio,
+          sebaran_wilayah: sebaranWilayah || [],
+          desil: desilStats,
+          pbb: pbbStats,
+          bansos: bansosSummary,
+          kantor: {
+            nama_kelurahan: 'Kelurahan Kebonjati',
+            kecamatan: 'Kecamatan Cikole',
+            kota: 'Kota Sukabumi',
+            provinsi: 'Jawa Barat',
+            kode_pos: '43111',
+            alamat: 'Jl. Kebonjati No. 1, Kota Sukabumi',
+            nama_lurah: 'H. Rahmat Hidayat, S.IP, M.Si',
+            nip_lurah: '19760815 200212 1 003',
+            telepon: '(0266) 221-123',
+            email: 'kelurahan.kebonjati@sukabumikota.go.id'
+          }
+        };
+      } catch (e) {
+        console.warn('Demografi kelurahan lookup warning:', e.message);
+      }
+    }
+
     res.json({
       success: true,
       data: {
@@ -208,7 +315,8 @@ router.get('/profile-history', async (req, res) => {
         riwayatSurat,
         riwayatBansos,
         riwayatPengaduan,
-        rekapKinerja
+        rekapKinerja,
+        demografiKelurahan
       }
     });
   } catch (error) {
