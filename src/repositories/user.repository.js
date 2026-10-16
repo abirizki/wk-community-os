@@ -15,19 +15,19 @@ class UserRepository {
   async findByUsername(username) {
     try {
       const [rows] = await pool.execute(
-        'SELECT id, username, password_hash, nama, role, rt, rw, status, created_at FROM users WHERE username = ?',
+        'SELECT id, username, password_hash, nama, role, rt, rw, status, created_at, nama_posyandu, jabatan, nomor_sk FROM users WHERE username = ?',
         [username]
       );
       return rows.length > 0 ? rows[0] : null;
     } catch (err) {
-      // Graceful fallback if rt/rw columns do not exist in older table schema
+      // Graceful fallback if extra columns do not exist in older table schema
       try {
         const [rows] = await pool.execute(
           'SELECT id, username, password_hash, nama, role, status, created_at FROM users WHERE username = ?',
           [username]
         );
         if (rows.length > 0) {
-          return { ...rows[0], rt: null, rw: null };
+          return { ...rows[0], rt: null, rw: null, nama_posyandu: null, jabatan: null, nomor_sk: null };
         }
       } catch (innerErr) {
         console.error('[userRepository.findByUsername] Error:', innerErr.message);
@@ -44,7 +44,7 @@ class UserRepository {
   async findById(id) {
     try {
       const [rows] = await pool.execute(
-        'SELECT id, username, nama, role, rt, rw, status, created_at FROM users WHERE id = ?',
+        'SELECT id, username, nama, role, rt, rw, status, created_at, nama_posyandu, jabatan, nomor_sk FROM users WHERE id = ?',
         [id]
       );
       return rows.length > 0 ? rows[0] : null;
@@ -55,7 +55,7 @@ class UserRepository {
           [id]
         );
         if (rows.length > 0) {
-          return { ...rows[0], rt: null, rw: null };
+          return { ...rows[0], rt: null, rw: null, nama_posyandu: null, jabatan: null, nomor_sk: null };
         }
       } catch (innerErr) {
         console.error('[userRepository.findById] Error:', innerErr.message);
@@ -134,14 +134,17 @@ class UserRepository {
       role = 'warga',
       rt = null,
       rw = null,
+      nama_posyandu = null,
+      jabatan = null,
+      nomor_sk = null,
       created_by_user_id = null,
       status = 'active'
     } = data;
 
     const [result] = await pool.execute(
-      `INSERT INTO users (username, password_hash, nama, role, rt, rw, created_by_user_id, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [username, password_hash, nama, role, rt, rw, created_by_user_id, status]
+      `INSERT INTO users (username, password_hash, nama, role, rt, rw, nama_posyandu, jabatan, nomor_sk, created_by_user_id, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [username, password_hash, nama, role, rt, rw, nama_posyandu, jabatan, nomor_sk, created_by_user_id, status]
     );
 
     return {
@@ -151,6 +154,9 @@ class UserRepository {
       role,
       rt,
       rw,
+      nama_posyandu,
+      jabatan,
+      nomor_sk,
       status
     };
   }
@@ -166,7 +172,7 @@ class UserRepository {
     const normalizedRole = userRole === 'admin' ? 'admin_kelurahan' : userRole;
 
     let query = `
-      SELECT u.id, u.username, u.nama, u.role, u.rt, u.rw, u.status, u.created_at,
+      SELECT u.id, u.username, u.nama, u.role, u.rt, u.rw, u.nama_posyandu, u.jabatan, u.nomor_sk, u.status, u.created_at,
              creator.nama AS created_by_name
       FROM users u
       LEFT JOIN users creator ON u.created_by_user_id = creator.id

@@ -62,15 +62,19 @@ async function autoPatchDatabase() {
       await connection.query("ALTER TABLE users MODIFY COLUMN username VARCHAR(50) NOT NULL");
     } catch (e) {}
 
-    const userColumns = ['rt', 'rw', 'last_login_at', 'must_change_password', 'kode_kecamatan', 'kode_kelurahan'];
+    const userColumns = ['rt', 'rw', 'last_login_at', 'must_change_password', 'kode_kecamatan', 'kode_kelurahan', 'created_by_user_id', 'status', 'nama_posyandu', 'jabatan', 'nomor_sk'];
     for (const col of userColumns) {
       try {
         if (col === 'last_login_at') {
           await connection.query("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP NULL DEFAULT NULL");
         } else if (col === 'must_change_password') {
           await connection.query("ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) DEFAULT 0");
+        } else if (col === 'created_by_user_id') {
+          await connection.query("ALTER TABLE users ADD COLUMN created_by_user_id INT NULL");
+        } else if (col === 'status') {
+          await connection.query("ALTER TABLE users ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'");
         } else {
-          await connection.query(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(50) NULL`);
+          await connection.query(`ALTER TABLE users ADD COLUMN ${col} VARCHAR(100) NULL`);
         }
       } catch (e) {}
     }

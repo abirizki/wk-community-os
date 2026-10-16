@@ -119,6 +119,7 @@ export default function DashboardLayout() {
         { name: 'Verifikasi Desil & DTKS', path: '/dashboard/desil', icon: <Layers size={19} /> },
         { name: 'Kliring Bansos & Tiket QR', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Rekonsiliasi & Upload PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
+        { name: 'Kelola Pengguna & Wilayah', path: '/dashboard/users', icon: <ShieldCheck size={19} /> },
         { name: 'Gerbang Pesan WhatsApp', path: '/dashboard/whatsapp', icon: <MessageSquare size={19} /> },
         { name: 'Panduan SOP Operasional', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
       ];

@@ -20,7 +20,7 @@ class UserService {
    * Create a new user enforcing hierarchy and scope
    */
   async createUser(creatorUser, userData) {
-    const { username, password, nama, role, rt, rw } = userData;
+    const { username, password, nama, role, rt, rw, nama_posyandu, jabatan, nomor_sk } = userData;
 
     if (!username || !password || !nama || !role) {
       throw new Error('Username, password, nama, dan role wajib diisi.');
@@ -46,6 +46,9 @@ class UserService {
       role,
       rt: rt ? String(rt).trim() : null,
       rw: rw ? String(rw).trim() : null,
+      nama_posyandu: nama_posyandu ? String(nama_posyandu).trim() : null,
+      jabatan: jabatan ? String(jabatan).trim() : null,
+      nomor_sk: nomor_sk ? String(nomor_sk).trim() : null,
       created_by_user_id: creatorUser.id,
       status: 'active'
     });
