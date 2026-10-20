@@ -21,6 +21,7 @@ import {
   KartuKIADigital,
   KartuLansiaDigital
 } from '../../components/design-system';
+import MaskedField from '../../components/MaskedField';
 import {
   FileText,
   FileCheck,
@@ -143,129 +144,14 @@ export default function DashboardWarga() {
       if (posyanduRes.status === 'fulfilled' && posyanduRes.value?.success && posyanduRes.value.data?.length > 0) {
         setFamilyBalita(posyanduRes.value.data);
       } else {
-        // Fallback Balita Budi Santoso
-        setFamilyBalita([
-          {
-            nik_anak: '3273010505240001',
-            no_kk: user?.no_kk || '3273010101900001',
-            nama_anak: 'Muhammad Al-Fatih',
-            jenis_kelamin_anak: 'L',
-            tanggal_lahir_anak: '2024-05-05',
-            tempat_lahir: 'Bandung',
-            rt: user?.rt || '001',
-            rw: user?.rw || '001',
-            nama_ibu: 'Siti Aminah',
-            nama_ayah: user?.nama || 'Budi Santoso',
-            nama_posyandu: `Posyandu Melati RW ${user?.rw || '001'}`,
-            umur_bulan: 28,
-            latest_checkup: {
-              tanggal: '2026-08-18',
-              umur_bulan: 28,
-              berat_badan_kg: 12.4,
-              tinggi_badan_cm: 88.5,
-              lingkar_kepala_cm: 48.0,
-              status_gizi: 'Normal'
-            },
-            growth_trend: {
-              tren_bb: 'naik',
-              delta_bb: 0.4,
-              label: 'Berat Badan Naik (+0.4 kg)',
-              status_pertumbuhan: 'Pertumbuhan Baik'
-            },
-            history: [
-              {
-                id: 1,
-                tanggal_pemeriksaan: '2026-05-18',
-                umur_bulan: 25,
-                berat_badan_kg: 11.5,
-                tinggi_badan_cm: 86.0,
-                lingkar_kepala_cm: 47.3,
-                status_gizi: 'Normal',
-                catatan_kesehatan: 'Berat naik normal.'
-              },
-              {
-                id: 2,
-                tanggal_pemeriksaan: '2026-06-20',
-                umur_bulan: 26,
-                berat_badan_kg: 11.8,
-                tinggi_badan_cm: 87.0,
-                lingkar_kepala_cm: 47.5,
-                status_gizi: 'Normal',
-                catatan_kesehatan: 'Tumbuh kembang aktif.'
-              },
-              {
-                id: 3,
-                tanggal_pemeriksaan: '2026-07-16',
-                umur_bulan: 27,
-                berat_badan_kg: 12.0,
-                tinggi_badan_cm: 87.8,
-                lingkar_kepala_cm: 47.8,
-                status_gizi: 'Normal',
-                imunisasi: 'Vitamin A Kapsul Biru',
-                catatan_kesehatan: 'Vitamin A telah diberikan.'
-              },
-              {
-                id: 4,
-                tanggal_pemeriksaan: '2026-08-18',
-                umur_bulan: 28,
-                berat_badan_kg: 12.4,
-                tinggi_badan_cm: 88.5,
-                lingkar_kepala_cm: 48.0,
-                status_gizi: 'Normal',
-                catatan_kesehatan: 'Pertumbuhan optimal.'
-              }
-            ]
-          }
-        ]);
+        setFamilyBalita([]);
       }
 
       // Handle Posyandu Lansia Keluarga
       if (lansiaRes.status === 'fulfilled' && lansiaRes.value?.success && lansiaRes.value.data?.length > 0) {
         setFamilyLansia(lansiaRes.value.data);
       } else {
-        setFamilyLansia([
-          {
-            id: 1,
-            nik: '3273010101550001',
-            nama: 'H. Suherman (Kakek)',
-            usia: '71 Tahun',
-            jenis_kelamin: 'L',
-            rt: user?.rt || '001',
-            rw: user?.rw || '001',
-            alamat: 'Jl. Melati No. 12',
-            status_tinggal: 'Bersama Keluarga',
-            riwayat_penyakit: 'Hipertensi Ringan',
-            last_tanggal_pemeriksaan: '2026-08-15',
-            last_tensi_sistolik: 135,
-            last_tensi_diastolik: 85,
-            last_gds: 125,
-            last_adl: 'Mandiri',
-            last_berat_badan: 62.5,
-            last_tinggi_badan: 165.0,
-            history: [
-              {
-                id: 1,
-                tanggal_pemeriksaan: '2026-06-15',
-                tensi_sistolik: 140,
-                tensi_diastolik: 90,
-                gula_darah_sewaktu: 130,
-                skor_kemandirian_adl: 'Mandiri',
-                keluhan_utama: 'Pusing ringan di tengkuk',
-                edukasi: 'Kurangi konsumsi garam berlebih, kontrol tensi rutin.'
-              },
-              {
-                id: 2,
-                tanggal_pemeriksaan: '2026-08-15',
-                tensi_sistolik: 135,
-                tensi_diastolik: 85,
-                gula_darah_sewaktu: 125,
-                skor_kemandirian_adl: 'Mandiri',
-                keluhan_utama: 'Tidak ada keluhan berarti',
-                edukasi: 'Pertahankan aktivitas fisik jalan santai pagi.'
-              }
-            ]
-          }
-        ]);
+        setFamilyLansia([]);
       }
     } catch (err) {
       console.error('Error loading citizen data:', err);
@@ -460,18 +346,24 @@ export default function DashboardWarga() {
               </div>
 
               <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                {user?.nama || 'Budi Santoso'}
+                {user?.nama || 'Warga Terdaftar'}
               </h1>
 
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs text-blue-200/90 font-mono">
-                <span>NIK: <strong className="text-white font-bold">{user?.username || user?.nik || '3273010203850003'}</strong></span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span>NIK:</span> 
+                  <MaskedField value={user?.username || user?.nik} type="nik" className="text-white font-bold" />
+                </span>
                 <span>&bull;</span>
-                <span>No. KK: <strong className="text-white font-bold">{user?.no_kk || '3273010101900001'}</strong></span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span>No. KK:</span> 
+                  <MaskedField value={user?.no_kk} type="kk" className="text-white font-bold" />
+                </span>
               </div>
 
               <p className="text-[11px] text-blue-300/80 flex items-center justify-center sm:justify-start gap-1">
                 <MapPin size={12} />
-                <span>RT {user?.rt || '001'} / RW {user?.rw || '001'} &bull; Kelurahan Kebonjati, Andir, Kota Bandung</span>
+                <span>RT {user?.rt || '001'} / RW {user?.rw || '001'} &bull; Kelurahan Kebonjati</span>
               </p>
             </div>
           </div>
@@ -841,8 +733,14 @@ export default function DashboardWarga() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-slate-500 text-xs">
-                Tidak ada data balita terdaftar pada Kartu Keluarga ini.
+              <div className="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center space-y-2.5">
+                <div className="w-12 h-12 rounded-full bg-pink-100 text-pink-700 mx-auto flex items-center justify-center">
+                  <Baby size={24} />
+                </div>
+                <h4 className="text-sm font-bold text-slate-800">Belum Ada Balita Terdaftar pada KK Ini</h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Jika keluarga Anda memiliki balita (usia 0–5 tahun), daftarkan penimbangan berkala ke Posyandu binaan RW {user?.rw || '001'} untuk pemantauan tumbuh kembang dan penerimaan vitamin/imunisasi.
+                </p>
               </div>
             )}
           </div>
@@ -858,8 +756,14 @@ export default function DashboardWarga() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-slate-500 text-xs">
-                Tidak ada data lansia terdaftar pada Kartu Keluarga ini.
+              <div className="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center space-y-2.5">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 mx-auto flex items-center justify-center">
+                  <HeartPulse size={24} />
+                </div>
+                <h4 className="text-sm font-bold text-slate-800">Belum Ada Lansia Terdaftar pada KK Ini</h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Pemeriksaan tekanan darah, gula darah sewaktu, dan skor kemandirian lansia (usia 60+ tahun) diselenggarakan secara berkala oleh Kader Posyandu Terintegrasi RW {user?.rw || '001'}.
+                </p>
               </div>
             )}
           </div>

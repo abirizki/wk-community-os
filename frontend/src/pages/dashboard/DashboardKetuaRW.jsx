@@ -64,6 +64,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AuthorizationPinModal from '../../components/AuthorizationPinModal';
 import ActivationCouponModal from '../../components/ActivationCouponModal';
 import ScanAndRegisterWargaModal from '../../components/ScanAndRegisterWargaModal';
+import MaskedField from '../../components/MaskedField';
 
 export default function DashboardKetuaRW() {
   const { user } = useAuth();
@@ -801,7 +802,7 @@ export default function DashboardKetuaRW() {
                           <h4 className="text-base font-bold text-slate-900">{doc.jenis_dokumen}</h4>
                           <p className="text-xs text-slate-500 mt-0.5">
                             Pemohon: <span className="font-semibold text-slate-700">{doc.nama_pemohon}</span> (NIK:{' '}
-                            <span className="font-mono tabular-nums">{doc.nik_pemohon}</span>)
+                            <MaskedField value={doc.nik_pemohon} type="nik" className="tabular-nums" />)
                           </p>
                         </div>
 
@@ -911,7 +912,7 @@ export default function DashboardKetuaRW() {
                   </div>
 
                   {/* Tombol Kontak WA Langsung */}
-                  {rtCard.ketua_rt?.telepon && (
+                  {rtCard.ketua_rt?.telepon && rtCard.ketua_rt.telepon.replace(/\D/g, '').length >= 9 && (
                     <a
                       href={`https://wa.me/${rtCard.ketua_rt.telepon.replace(/\D/g, '')}?text=Halo%20Ketua%20RT%20${rtCard.rt}%20Kebonjati`}
                       target="_blank"

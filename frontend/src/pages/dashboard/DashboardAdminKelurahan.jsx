@@ -43,6 +43,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import MaskedField from '../../components/MaskedField';
 
 const ROLE_DISPLAY = {
   superadmin: { label: 'Super Admin', bg: 'bg-purple-100 text-purple-800 border-purple-200' },
@@ -624,7 +625,7 @@ export default function DashboardAdminKelurahan() {
               <Landmark size={18} />
             </div>
             <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activeTab === 'pbb' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
-              {pbbSummary?.summary?.persen_kepatuhan || 82}%
+              {pbbSummary?.summary?.persen_kepatuhan ?? 0}%
             </span>
           </div>
           <div className="mt-3">
@@ -690,12 +691,14 @@ export default function DashboardAdminKelurahan() {
               </span>
               <div className="flex items-baseline gap-2 pt-1">
                 <span className="text-2xl sm:text-3xl font-black text-purple-700">
-                  {pbbSummary?.summary?.persen_kepatuhan || 82}%
+                  {pbbSummary?.summary?.persen_kepatuhan ?? 0}%
                 </span>
                 <span className="text-xs font-bold text-purple-700">Tercapai</span>
               </div>
               <span className="text-[11px] text-on-surface-variant block">
-                Rp {((pbbSummary?.summary?.total_terealisasi_rupiah || 350000000) / 1000000).toFixed(1)} Jt Terealisasi
+                {pbbSummary?.summary
+                  ? `Rp ${((pbbSummary.summary.total_terealisasi_rupiah || 0) / 1000000).toFixed(1)} Jt Terealisasi`
+                  : 'Belum ada data DHKP PBB'}
               </span>
             </div>
           </div>
@@ -834,7 +837,9 @@ export default function DashboardAdminKelurahan() {
                   <tr key={u.id} className="hover:bg-surface-container-lowest/70">
                     <td className="p-3">
                       <span className="font-bold text-on-surface block text-sm">{u.nama}</span>
-                      <span className="font-mono text-[11px] text-on-surface-variant">ID / NIK: {u.username}</span>
+                      <span className="font-mono text-[11px] text-on-surface-variant flex items-center gap-1">
+                        ID / NIK: <MaskedField value={u.username} type="nik" />
+                      </span>
                     </td>
                     <td className="p-3">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${ROLE_DISPLAY[u.role]?.bg || 'bg-slate-100 text-slate-800 border-slate-200'}`}>
@@ -1089,7 +1094,9 @@ export default function DashboardAdminKelurahan() {
                       <tr key={a.id} className="hover:bg-surface-container-lowest/70">
                         <td className="p-3">
                           <span className="font-bold text-on-surface block">{a.nama_warga}</span>
-                          <span className="font-mono text-[11px] text-on-surface-variant">NIK: {a.nik_warga}</span>
+                          <span className="font-mono text-[11px] text-on-surface-variant flex items-center gap-1">
+                            NIK: <MaskedField value={a.nik_warga} type="nik" />
+                          </span>
                         </td>
                         <td className="p-3 font-medium">RW {a.rw} / RT {a.rt}</td>
                         <td className="p-3">
@@ -1169,7 +1176,9 @@ export default function DashboardAdminKelurahan() {
                     <tr key={b.id} className="hover:bg-surface-container-lowest/70">
                       <td className="p-3">
                         <span className="font-bold text-on-surface block">{b.nama_penerima}</span>
-                        <span className="font-mono text-[11px] text-on-surface-variant">NIK: {b.nik_penerima}</span>
+                        <span className="font-mono text-[11px] text-on-surface-variant flex items-center gap-1">
+                          NIK: <MaskedField value={b.nik_penerima} type="nik" />
+                        </span>
                       </td>
                       <td className="p-3">
                         <span className="font-bold text-sky-800 block">{b.jenis_bansos}</span>
@@ -1239,15 +1248,15 @@ export default function DashboardAdminKelurahan() {
             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200">
               <span className="text-emerald-800 font-bold block">Total NOP Terbayar (Lunas)</span>
               <div className="text-2xl font-black text-emerald-950 mt-1">
-                {pbbSummary?.summary?.total_lunas || 635} Objek
+                {pbbSummary?.summary?.total_lunas ?? 0} Objek
               </div>
-              <span className="text-[11px] text-emerald-700 block">Kepatuhan rata-rata {pbbSummary?.summary?.persen_kepatuhan || 82}%</span>
+              <span className="text-[11px] text-emerald-700 block">Kepatuhan rata-rata {pbbSummary?.summary?.persen_kepatuhan ?? 0}%</span>
             </div>
 
             <div className="p-4 bg-rose-50 rounded-2xl border border-rose-200">
               <span className="text-rose-800 font-bold block">Total NOP Tertunggak</span>
               <div className="text-2xl font-black text-rose-950 mt-1">
-                {pbbSummary?.summary?.total_tertunggak || 135} Objek
+                {pbbSummary?.summary?.total_tertunggak ?? 0} Objek
               </div>
               <span className="text-[11px] text-rose-700 block">Sasaran prioritas push pengingat RT/RW</span>
             </div>
@@ -1255,7 +1264,7 @@ export default function DashboardAdminKelurahan() {
             <div className="p-4 bg-sky-50 rounded-2xl border border-sky-200">
               <span className="text-sky-800 font-bold block">Total Potensi Penerimaan</span>
               <div className="text-2xl font-black text-sky-950 mt-1">
-                Rp {Number(pbbSummary?.summary?.total_potensi_rupiah || 426000000).toLocaleString('id-ID')}
+                Rp {Number(pbbSummary?.summary?.total_potensi_rupiah || 0).toLocaleString('id-ID')}
               </div>
               <span className="text-[11px] text-sky-700 block">Target Pendapatan Asli Daerah (PAD)</span>
             </div>
@@ -1276,39 +1285,51 @@ export default function DashboardAdminKelurahan() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/60">
-                {(pbbSummary?.per_rw || []).map((r) => {
-                  const pct = r.total_nop > 0 ? Math.round((r.total_lunas / r.total_nop) * 100) : 0;
-                  return (
-                    <tr key={r.rw} className="hover:bg-surface-container-lowest/70">
-                      <td className="p-3 font-bold text-on-surface">Rukun Warga (RW) {r.rw}</td>
-                      <td className="p-3 font-mono">{r.total_nop}</td>
-                      <td className="p-3 font-bold text-emerald-700">{r.total_lunas}</td>
-                      <td className="p-3 font-bold text-rose-700">{r.total_tertunggak}</td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${pct}%` }} />
+                {(!pbbSummary?.per_rw || pbbSummary.per_rw.length === 0) ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-on-surface-variant">
+                      <div className="max-w-md mx-auto space-y-2">
+                        <Landmark size={32} className="mx-auto text-on-surface-variant/40" />
+                        <p className="font-bold text-on-surface">Belum Ada Rekonsiliasi DHKP PBB</p>
+                        <p className="text-xs">Data penerimaan PBB per RW akan terisi otomatis setelah berkas DHKP resmi diunggah ke sistem melalui menu Rekonsiliasi PBB.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  pbbSummary.per_rw.map((r) => {
+                    const pct = r.total_nop > 0 ? Math.round((r.total_lunas / r.total_nop) * 100) : 0;
+                    return (
+                      <tr key={r.rw} className="hover:bg-surface-container-lowest/70">
+                        <td className="p-3 font-bold text-on-surface">Rukun Warga (RW) {r.rw}</td>
+                        <td className="p-3 font-mono">{r.total_nop}</td>
+                        <td className="p-3 font-bold text-emerald-700">{r.total_lunas}</td>
+                        <td className="p-3 font-bold text-rose-700">{r.total_tertunggak}</td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="font-bold font-mono">{pct}%</span>
                           </div>
-                          <span className="font-bold font-mono">{pct}%</span>
-                        </div>
-                      </td>
-                      <td className="p-3 font-mono">
-                        Rp {Number(r.total_potensi_rupiah || 0).toLocaleString('id-ID')}
-                      </td>
-                      <td className="p-3 text-right">
-                        <button
-                          onClick={() => {
-                            setSelectedRwPbb(r.rw);
-                            setPbbModalOpen(true);
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-emerald-100 flex items-center gap-1 ml-auto"
-                        >
-                          <Send size={12} /> Push RW {r.rw}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                        <td className="p-3 font-mono">
+                          Rp {Number(r.total_potensi_rupiah || 0).toLocaleString('id-ID')}
+                        </td>
+                        <td className="p-3 text-right">
+                          <button
+                            onClick={() => {
+                              setSelectedRwPbb(r.rw);
+                              setPbbModalOpen(true);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-emerald-100 flex items-center gap-1 ml-auto"
+                          >
+                            <Send size={12} /> Push RW {r.rw}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>

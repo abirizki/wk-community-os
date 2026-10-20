@@ -21,6 +21,7 @@ import {
   Baby
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MaskedField from '../components/MaskedField';
 
 const ROLE_DISPLAY = {
   superadmin: { label: 'Super Admin (Diskominfo)', bg: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300' },
@@ -372,7 +373,7 @@ export default function UserManagementPage() {
                           <div className="text-[10px] text-on-surface-variant font-medium mt-0.5">{u.jabatan}</div>
                         )}
                       </td>
-                      <td className="p-3.5 font-mono text-on-surface-variant">{u.username}</td>
+                      <td className="p-3.5 font-mono text-on-surface-variant">{u.role === 'warga' || (u.username && u.username.length === 16) ? <MaskedField value={u.username} type="nik" /> : u.username}</td>
                       <td className="p-3.5">
                         <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${roleMeta.bg}`}>
                           {roleMeta.label}

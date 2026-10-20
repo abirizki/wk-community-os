@@ -16,6 +16,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 import { StatusBadge, SLABadge } from "../../components/design-system";
+import MaskedField from "../../components/MaskedField";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import {
   FileCheck,
@@ -952,55 +953,53 @@ export default function DashboardKetuaRT() {
           <span className="text-[10px] text-slate-500 font-mono">Data ter-update: Hari Ini</span>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-slate-700 text-center">Demografi Warga (Usia)</h4>
-            <div className="h-40">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={[{name: 'Anak', value: 45}, {name: 'Dewasa', value: 120}, {name: 'Lansia', value: 20}]} dataKey="value" cx="50%" cy="50%" innerRadius={40} outerRadius={60}>
-                    <Cell fill="#3b82f6" />
-                    <Cell fill="#10b981" />
-                    <Cell fill="#f59e0b" />
-                  </Pie>
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                </PieChart>
-              </ResponsiveContainer>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-on-surface">Kolektivitas Iuran RT</span>
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                {iuranSummary.persentase || '0%'}
+              </span>
             </div>
-            <p className="text-[10px] text-center text-slate-500 font-medium">Mayoritas warga di usia produktif (Dewasa).</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-on-surface">{iuranSummary.sudah_bayar}</span>
+              <span className="text-xs text-on-surface-variant">dari {iuranSummary.total_kk} KK Lunas</span>
+            </div>
+            <p className="text-[11px] text-on-surface-variant font-medium">
+              {iuranSummary.belum_bayar > 0 ? `${iuranSummary.belum_bayar} KK menunggak iuran kas lingkungan.` : 'Seluruh warga telah melunasi iuran.'}
+            </p>
           </div>
 
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-slate-700 text-center">Penerima Bansos vs Non-Bansos</h4>
-            <div className="h-40">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{name: 'Warga', Penerima: 35, Non_Penerima: 150}]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Bar dataKey="Penerima" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30} />
-                  <Bar dataKey="Non_Penerima" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-on-surface">Balita Risiko Stunting</span>
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${balitaRisikoCount > 0 ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                {balitaRisikoCount > 0 ? 'Perlu Intervensi' : 'Aman'}
+              </span>
             </div>
-            <p className="text-[10px] text-center text-slate-500 font-medium">18% KK adalah penerima Bansos aktif.</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-on-surface">{balitaRisikoCount}</span>
+              <span className="text-xs text-on-surface-variant">anak berisiko di RT {rtNomor}</span>
+            </div>
+            <p className="text-[11px] text-on-surface-variant font-medium">
+              Data terintegrasi dari buku KIA Posyandu binaan RW {rwNomor}.
+            </p>
           </div>
 
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-slate-700 text-center">Kerentanan Ekonomi (DESIL)</h4>
-            <div className="h-40">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{name: 'Desil 1 (Sangat Miskin)', value: 12}, {name: 'Desil 2 (Miskin)', value: 23}, {name: 'Desil 3 (Rentan)', value: 45}]} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                  <XAxis type="number" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={80} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Bar dataKey="value" fill="#f59e0b" radius={[0, 4, 4, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-on-surface">Warga Rentan Terdata</span>
+              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                Prioritas Jamsos
+              </span>
             </div>
-            <p className="text-[10px] text-center text-slate-500 font-medium">Prioritas intervensi pada 12 KK di Desil 1.</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-on-surface">{kelompokRentanList.length}</span>
+              <span className="text-xs text-on-surface-variant">jiwa yatim & lansia sebatang kara</span>
+            </div>
+            <p className="text-[11px] text-on-surface-variant font-medium">
+              Berdasarkan hasil pencocokan lapangan dan kartu keluarga aktif.
+            </p>
           </div>
         </div>
       </div>
@@ -1046,8 +1045,8 @@ export default function DashboardKetuaRT() {
               <PieChart>
                 <Pie
                   data={[
-                    { name: 'Selesai/Disetujui', value: docStats.total_approved || 12 },
-                    { name: 'Ditolak/Revisi', value: docStats.total_rejected || 2 },
+                    { name: 'Selesai/Disetujui', value: docStats.total_approved ?? 0 },
+                    { name: 'Ditolak/Revisi', value: docStats.total_rejected ?? 0 },
                     { name: 'Menunggu', value: docStats.pending_rt || pendingDocs.length }
                   ]}
                   cx="50%"
@@ -1178,7 +1177,7 @@ export default function DashboardKetuaRT() {
                       </h4>
 
                       <div className="text-xs text-on-surface-variant flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span><strong>Pemohon:</strong> {doc.nama_pemohon || 'Warga'} (NIK: <span className="font-mono tabular-nums">{doc.nik_pemohon}</span>)</span>
+                        <span className="inline-flex items-center gap-1"><strong>Pemohon:</strong> {doc.nama_pemohon || 'Warga'} (NIK: <MaskedField value={doc.nik_pemohon} type="nik" className="tabular-nums" />)</span>
                         <span>•</span>
                         <span><strong>Keperluan:</strong> {doc.keperluan || '-'}</span>
                         <span>•</span>

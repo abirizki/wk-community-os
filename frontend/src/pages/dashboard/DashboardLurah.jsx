@@ -394,7 +394,7 @@ export default function DashboardLurah() {
             unit="tepat waktu"
             icon={<Clock size={20} className="text-emerald-600" />}
             urgency={slaCompliance >= 95 ? 'low' : slaCompliance >= 85 ? 'medium' : 'critical'}
-            trend={{ direction: 'up', value: 1.2, label: 'Bulan berjalan' }}
+            trend={slaCompliance > 0 ? { direction: slaCompliance >= 90 ? 'up' : 'down', label: `${slaCompliance}% tercapai` } : null}
           />
           <KPICard
             label="Balita Gizi Buruk Aktif"
