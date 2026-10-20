@@ -684,71 +684,304 @@ export default function DashboardKetuaRT() {
       </div>
 
       
-      {/* Unified Kanaya AI Intelligence Bento Card */}
-      <div className="mb-6 p-5 sm:p-6 rounded-[2rem] bg-gradient-to-br from-sky-50 via-blue-50/80 to-indigo-50/60 border border-sky-200/70 shadow-sm relative overflow-hidden group">
-        <div className="absolute right-0 top-0 w-48 h-48 bg-sky-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-        <div className="absolute left-0 bottom-0 w-36 h-36 bg-blue-300/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3.5 flex-1">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
-              <Sparkles className="w-6 h-6 animate-pulse" />
+      {/* 1. BENTO WORKSPACE PILLAR SWITCHER (ACTION-FIRST INFORMATION ARCHITECTURE) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {/* Tab 1: Meja Antrean Surat (Action Desk) */}
+        <button
+          type="button"
+          onClick={() => handleTabChange('surat')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+            activeTab === 'surat'
+              ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-500 shadow-md shadow-emerald-600/20 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`p-2 rounded-xl ${activeTab === 'surat' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+              <FileCheck size={18} />
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 text-[10px] font-extrabold uppercase tracking-wider border border-sky-200">
-                  Kanaya AI Strategic Policy
-                </span>
-                <span className="text-[11px] font-semibold text-slate-500 font-mono">Evidence-Based</span>
-              </div>
-              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
-                Rekomendasi Kebijakan & Ringkasan Cerdas Wilayah
-              </h3>
-            </div>
-          </div>
-
-          <Link
-            to="/dashboard/analitik"
-            className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 group-hover:scale-[1.02] shrink-0"
-          >
-            <span>Buka Analitik & Looker BI</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-        </div>
-
-        <div className="relative z-10 mt-4 pt-3.5 border-t border-sky-100">
-          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-            {loadingBrief ? (
-              <span className="flex items-center gap-2 text-sky-700">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Menganalisis evidance data kependudukan, iuran, dan bansos...
+            {pendingDocs.length > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                activeTab === 'surat' ? 'bg-white text-emerald-900' : 'bg-rose-100 text-rose-700 animate-pulse'
+              }`}>
+                {pendingDocs.length} Antrean
               </span>
-            ) : (
-              aiBrief?.summary || `Halo, ${user?.nama || user?.name || "Bapak/Ibu"}. Terdapat ${pendingDocs.length} permohonan surat yang memerlukan verifikasi. Partisipasi iuran kas tercatat ${iuranSummary.persentase} dari ${iuranSummary.total_kk} KK. Terdeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia sebatang kara) yang direkomendasikan masuk prioritas program jaring pengaman sosial.`
             )}
-          </p>
-        </div>
+          </div>
+          <div className="mt-2.5">
+            <span className="text-xs font-bold block">Verifikasi Surat & TTE</span>
+            <span className={`text-[10px] block ${activeTab === 'surat' ? 'text-emerald-100' : 'text-slate-500'}`}>
+              SOP 3-Aksi & SLA
+            </span>
+          </div>
+        </button>
 
-        <div className="relative z-10 grid grid-cols-3 gap-2.5 mt-4 pt-3 border-t border-sky-100/60">
-          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
-            <span className="text-[10px] font-semibold text-slate-500">Antrean Surat</span>
-            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
-              {pendingDocs.length} berkas
+        {/* Tab 2: Radar Kelompok Rentan */}
+        <button
+          type="button"
+          onClick={() => handleTabChange('rentan')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+            activeTab === 'rentan'
+              ? 'bg-gradient-to-br from-rose-600 to-pink-700 text-white border-rose-500 shadow-md shadow-rose-600/20 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`p-2 rounded-xl ${activeTab === 'rentan' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'}`}>
+              <Heart size={18} />
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+              activeTab === 'rentan' ? 'bg-white text-rose-900' : 'bg-rose-100 text-rose-700'
+            }`}>
+              {kelompokRentanList.length} Jiwa
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
-            <span className="text-[10px] font-semibold text-slate-500">Kolektivitas Kas</span>
-            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
-              {iuranSummary.persentase || '0%'} <span className="text-[10px] text-slate-500 font-normal font-sans">({iuranSummary.sudah_bayar || 0}/{iuranSummary.total_kk || 0} KK)</span>
+          <div className="mt-2.5">
+            <span className="text-xs font-bold block">Radar Warga Rentan</span>
+            <span className={`text-[10px] block ${activeTab === 'rentan' ? 'text-rose-100' : 'text-slate-500'}`}>
+              Yatim & Lansia Sebatang
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
-            <span className="text-[10px] font-semibold text-slate-500">Warga Rentan</span>
-            <span className="text-xs sm:text-sm font-extrabold text-rose-600 font-mono mt-0.5">
-              {kelompokRentanList.length} jiwa
+        </button>
+
+        {/* Tab 3: Potensi & Fasilitas Wilayah */}
+        <button
+          type="button"
+          onClick={() => handleTabChange('fasilitas')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+            activeTab === 'fasilitas'
+              ? 'bg-gradient-to-br from-sky-600 to-blue-700 text-white border-sky-500 shadow-md shadow-sky-600/20 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`p-2 rounded-xl ${activeTab === 'fasilitas' ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-700'}`}>
+              <Building2 size={18} />
+            </div>
+            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+              activeTab === 'fasilitas' ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-800'
+            }`}>
+              Daya Dukung
             </span>
           </div>
-        </div>
+          <div className="mt-2.5">
+            <span className="text-xs font-bold block">Fasilitas & Hunian Sewa</span>
+            <span className={`text-[10px] block ${activeTab === 'fasilitas' ? 'text-sky-100' : 'text-slate-500'}`}>
+              Faskes, Kos, Tempat Ibadah
+            </span>
+          </div>
+        </button>
+
+        {/* Tab 4: Analitik & Ringkasan Cerdas */}
+        <button
+          type="button"
+          onClick={() => handleTabChange('analitik')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+            activeTab === 'analitik'
+              ? 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-indigo-500 shadow-md shadow-indigo-600/20 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`p-2 rounded-xl ${activeTab === 'analitik' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
+              <Sparkles size={18} />
+            </div>
+            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+              activeTab === 'analitik' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800'
+            }`}>
+              AI Insights
+            </span>
+          </div>
+          <div className="mt-2.5">
+            <span className="text-xs font-bold block">Analitik & Ringkasan AI</span>
+            <span className={`text-[10px] block ${activeTab === 'analitik' ? 'text-indigo-100' : 'text-slate-500'}`}>
+              Looker BI & Grafik Iuran
+            </span>
+          </div>
+        </button>
       </div>
+
+      {/* TAB 1: MEJA ANTREAN VERIFIKASI SURAT RT (ACTION-FIRST WORKSPACE) */}
+      {activeTab === 'surat' && (
+        <div className="space-y-6 mb-6">
+        <div id="antrean-verifikasi-rt" className="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-card overflow-hidden">
+          {/* Header Seksi & Kontrol Sorting */}
+          <div className="p-4 sm:p-5 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/30">
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-extrabold text-on-surface">
+                  Antrean Permohonan Pengantar Warga
+                </h3>
+                <span className="px-2.5 py-0.5 text-xs font-bold font-mono tabular-nums rounded-full bg-primary/10 text-primary">
+                  {pendingDocs.length} berkas
+                </span>
+              </div>
+              <p className="text-xs text-on-surface-variant mt-0.5">
+                Verifikasi faktual domisili dan kelengkapan berkas sebelum pengesahan berjenjang ke RW & Kelurahan.
+              </p>
+            </div>
+
+            {/* Controls Bar: Search & SLA Aging */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+                <input
+                  type="text"
+                  value={docSearch}
+                  onChange={(e) => setDocSearch(e.target.value)}
+                  placeholder="Cari pemohon / NIK / no. reg..."
+                  className="pl-8 pr-7 py-1.5 rounded-lg text-xs bg-surface-container-low border border-outline-variant focus:border-primary outline-none text-on-surface"
+                />
+                {docSearch && (
+                  <button
+                    onClick={() => setDocSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSortBy((prev) => (prev === 'aging_desc' ? 'aging_asc' : 'aging_desc'))}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-colors cursor-pointer"
+                title="Ubah urutan antrean berdasarkan waktu tunggu (aging)"
+              >
+                <ArrowUpDown size={14} className="text-primary" />
+                <span>
+                  {sortBy === 'aging_desc' ? 'Paling Lama Diajukan' : 'Paling Baru Diajukan'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={loadRTData}
+                disabled={refreshing}
+                className="p-1.5 rounded-lg border border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
+                title="Muat ulang antrean"
+              >
+                <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+              </button>
+            </div>
+          </div>
+
+          {/* Tabel / Daftar Antrean Surat */}
+          {sortedDocs.length === 0 ? (
+            <div className="py-12 px-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 border border-emerald-200">
+                <CheckCircle2 size={24} />
+              </div>
+              <h4 className="text-sm font-bold text-on-surface">Semua Berkas Surat RT Selesai Diverifikasi!</h4>
+              <p className="text-xs text-on-surface-variant mt-1 max-w-sm mx-auto">
+                Tidak ada permohonan surat warga yang tertahan di tingkat RT {rtNomor}. Kepatuhan pelayanan prima terjaga.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-outline-variant/60">
+              {sortedDocs.map((doc) => {
+                const isProcessingThis = processingId === doc.id;
+                const docTitle = doc.jenis_surat || doc.jenis_dokumen || 'Surat Pengantar';
+                const createdDate = doc.rt_received_at || doc.created_at;
+
+                return (
+                  <div
+                    key={doc.id}
+                    className="p-4 sm:p-5 hover:bg-surface-container-low/40 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                  >
+                    {/* Info Dokumen & Pemohon */}
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 tabular-nums">
+                          {doc.nomor_registrasi || `REG-${doc.id}`}
+                        </span>
+                        <StatusBadge status="PENDING_RT" />
+                        <SLABadge
+                          deadline={doc.sla_deadline}
+                          createdAt={createdDate}
+                          status={doc.status}
+                        />
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          Iuran RT: Lunas
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm sm:text-base font-extrabold text-on-surface tracking-tight">
+                        {docTitle}
+                      </h4>
+
+                      <div className="text-xs text-on-surface-variant flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="inline-flex items-center gap-1"><strong>Pemohon:</strong> {doc.nama_pemohon || 'Warga'} (NIK: <MaskedField value={doc.nik_pemohon} type="nik" className="tabular-nums" />)</span>
+                        <span>•</span>
+                        <span><strong>Keperluan:</strong> {doc.keperluan || '-'}</span>
+                        <span>•</span>
+                        <span>Diajukan: {createdDate ? new Date(createdDate).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</span>
+                      </div>
+                    </div>
+
+                    {/* SOP 3-WAY ACTIONS (Tinjau Berkas, Tolak/Revisi, Setujui) */}
+                    <div className="flex items-center gap-2 shrink-0 pt-2 lg:pt-0 self-end lg:self-center">
+                      {/* Tinjau Berkas */}
+                      <button
+                        type="button"
+                        onClick={() => setInspectDoc(doc)}
+                        className="px-3 py-2 rounded-xl border border-outline-variant text-on-surface hover:bg-surface-container text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                        title="Tinjau kelengkapan berkas & KTP pemohon"
+                      >
+                        <Eye size={15} />
+                        <span>Tinjau</span>
+                      </button>
+
+                      {/* Catatan Revisi */}
+                      <button
+                        type="button"
+                        disabled={isProcessingThis}
+                        onClick={() => {
+                          setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' });
+                        }}
+                        className="px-3 py-2 rounded-xl border border-amber-200 text-amber-800 bg-amber-50 hover:bg-amber-100 active:scale-95 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        title="Minta pemohon untuk melengkapi perbaikan berkas"
+                      >
+                        <RotateCcw size={15} />
+                        <span>Revisi</span>
+                      </button>
+
+                      {/* Tolak */}
+                      <button
+                        type="button"
+                        disabled={isProcessingThis}
+                        onClick={() => {
+                          setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' });
+                        }}
+                        className="px-3 py-2 rounded-xl border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 active:scale-95 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        title="Tolak permohonan surat"
+                      >
+                        <XCircle size={15} />
+                        <span>Tolak</span>
+                      </button>
+
+                      {/* One-Touch Setujui */}
+                      <button
+                        type="button"
+                        disabled={isProcessingThis}
+                        onClick={() => handleQuickApprove(doc.id, docTitle)}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        title="Verifikasi dengan satu klik dan teruskan ke RW"
+                      >
+                        {isProcessingThis ? (
+                          <RefreshCw size={15} className="animate-spin" />
+                        ) : (
+                          <CheckCircle2 size={15} />
+                        )}
+                        <span>Setujui (Teruskan RW)</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
       {/* 2. Super Apps Bento Quick Launcher */}
       <div className="mb-6">
@@ -943,6 +1176,79 @@ export default function DashboardKetuaRT() {
 
       {/* ========================================================================= */}
       
+        </div>
+      )}
+
+      {/* TAB ANALITIK & RINGKASAN CERDAS */}
+      {activeTab === 'analitik' && (
+        <div id="analitik-rt" className="space-y-6 mb-6">
+      {/* Unified Kanaya AI Intelligence Bento Card */}
+      <div className="mb-6 p-5 sm:p-6 rounded-[2rem] bg-gradient-to-br from-sky-50 via-blue-50/80 to-indigo-50/60 border border-sky-200/70 shadow-sm relative overflow-hidden group">
+        <div className="absolute right-0 top-0 w-48 h-48 bg-sky-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <div className="absolute left-0 bottom-0 w-36 h-36 bg-blue-300/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5 flex-1">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
+              <Sparkles className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 text-[10px] font-extrabold uppercase tracking-wider border border-sky-200">
+                  Kanaya AI Strategic Policy
+                </span>
+                <span className="text-[11px] font-semibold text-slate-500 font-mono">Evidence-Based</span>
+              </div>
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
+                Rekomendasi Kebijakan & Ringkasan Cerdas Wilayah
+              </h3>
+            </div>
+          </div>
+
+          <Link
+            to="/dashboard/analitik"
+            className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 group-hover:scale-[1.02] shrink-0"
+          >
+            <span>Buka Analitik & Looker BI</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        </div>
+
+        <div className="relative z-10 mt-4 pt-3.5 border-t border-sky-100">
+          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+            {loadingBrief ? (
+              <span className="flex items-center gap-2 text-sky-700">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Menganalisis evidance data kependudukan, iuran, dan bansos...
+              </span>
+            ) : (
+              aiBrief?.summary || `Halo, ${user?.nama || user?.name || "Bapak/Ibu"}. Terdapat ${pendingDocs.length} permohonan surat yang memerlukan verifikasi. Partisipasi iuran kas tercatat ${iuranSummary.persentase} dari ${iuranSummary.total_kk} KK. Terdeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia sebatang kara) yang direkomendasikan masuk prioritas program jaring pengaman sosial.`
+            )}
+          </p>
+        </div>
+
+        <div className="relative z-10 grid grid-cols-3 gap-2.5 mt-4 pt-3 border-t border-sky-100/60">
+          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
+            <span className="text-[10px] font-semibold text-slate-500">Antrean Surat</span>
+            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
+              {pendingDocs.length} berkas
+            </span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
+            <span className="text-[10px] font-semibold text-slate-500">Kolektivitas Kas</span>
+            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
+              {iuranSummary.persentase || '0%'} <span className="text-[10px] text-slate-500 font-normal font-sans">({iuranSummary.sudah_bayar || 0}/{iuranSummary.total_kk || 0} KK)</span>
+            </span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
+            <span className="text-[10px] font-semibold text-slate-500">Warga Rentan</span>
+            <span className="text-xs sm:text-sm font-extrabold text-rose-600 font-mono mt-0.5">
+              {kelompokRentanList.length} jiwa
+            </span>
+          </div>
+        </div>
+      </div>
+
+
       {/* SECTION VISUALISASI KANAYA DATA ANALYTICS */}
       <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm mb-6">
         <div className="flex items-center justify-between mb-6">
@@ -1067,186 +1373,6 @@ export default function DashboardKetuaRT() {
         </div>
       </div>
 
-      {/* TAB 1: MEJA ANTREAN VERIFIKASI SURAT RT (SOP 3-KEPUTUSAN)                  */}
-      {/* ========================================================================= */}
-      {activeTab === 'surat' && (
-        <div id="antrean-verifikasi-rt" className="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-card overflow-hidden">
-          {/* Header Seksi & Kontrol Sorting */}
-          <div className="p-4 sm:p-5 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/30">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-extrabold text-on-surface">
-                  Antrean Permohonan Pengantar Warga
-                </h3>
-                <span className="px-2.5 py-0.5 text-xs font-bold font-mono tabular-nums rounded-full bg-primary/10 text-primary">
-                  {pendingDocs.length} berkas
-                </span>
-              </div>
-              <p className="text-xs text-on-surface-variant mt-0.5">
-                Verifikasi faktual domisili dan kelengkapan berkas sebelum pengesahan berjenjang ke RW & Kelurahan.
-              </p>
-            </div>
-
-            {/* Controls Bar: Search & SLA Aging */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-                <input
-                  type="text"
-                  value={docSearch}
-                  onChange={(e) => setDocSearch(e.target.value)}
-                  placeholder="Cari pemohon / NIK / no. reg..."
-                  className="pl-8 pr-7 py-1.5 rounded-lg text-xs bg-surface-container-low border border-outline-variant focus:border-primary outline-none text-on-surface"
-                />
-                {docSearch && (
-                  <button
-                    onClick={() => setDocSearch('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSortBy((prev) => (prev === 'aging_desc' ? 'aging_asc' : 'aging_desc'))}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-colors cursor-pointer"
-                title="Ubah urutan antrean berdasarkan waktu tunggu (aging)"
-              >
-                <ArrowUpDown size={14} className="text-primary" />
-                <span>
-                  {sortBy === 'aging_desc' ? 'Paling Lama Diajukan' : 'Paling Baru Diajukan'}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={loadRTData}
-                disabled={refreshing}
-                className="p-1.5 rounded-lg border border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
-                title="Muat ulang antrean"
-              >
-                <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-              </button>
-            </div>
-          </div>
-
-          {/* Tabel / Daftar Antrean Surat */}
-          {sortedDocs.length === 0 ? (
-            <div className="py-12 px-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 border border-emerald-200">
-                <CheckCircle2 size={24} />
-              </div>
-              <h4 className="text-sm font-bold text-on-surface">Semua Berkas Surat RT Selesai Diverifikasi!</h4>
-              <p className="text-xs text-on-surface-variant mt-1 max-w-sm mx-auto">
-                Tidak ada permohonan surat warga yang tertahan di tingkat RT {rtNomor}. Kepatuhan pelayanan prima terjaga.
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-outline-variant/60">
-              {sortedDocs.map((doc) => {
-                const isProcessingThis = processingId === doc.id;
-                const docTitle = doc.jenis_surat || doc.jenis_dokumen || 'Surat Pengantar';
-                const createdDate = doc.rt_received_at || doc.created_at;
-
-                return (
-                  <div
-                    key={doc.id}
-                    className="p-4 sm:p-5 hover:bg-surface-container-low/40 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
-                  >
-                    {/* Info Dokumen & Pemohon */}
-                    <div className="space-y-1.5 flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 tabular-nums">
-                          {doc.nomor_registrasi || `REG-${doc.id}`}
-                        </span>
-                        <StatusBadge status="PENDING_RT" />
-                        <SLABadge
-                          deadline={doc.sla_deadline}
-                          createdAt={createdDate}
-                          status={doc.status}
-                        />
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          Iuran RT: Lunas
-                        </span>
-                      </div>
-
-                      <h4 className="text-sm sm:text-base font-extrabold text-on-surface tracking-tight">
-                        {docTitle}
-                      </h4>
-
-                      <div className="text-xs text-on-surface-variant flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span className="inline-flex items-center gap-1"><strong>Pemohon:</strong> {doc.nama_pemohon || 'Warga'} (NIK: <MaskedField value={doc.nik_pemohon} type="nik" className="tabular-nums" />)</span>
-                        <span>•</span>
-                        <span><strong>Keperluan:</strong> {doc.keperluan || '-'}</span>
-                        <span>•</span>
-                        <span>Diajukan: {createdDate ? new Date(createdDate).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</span>
-                      </div>
-                    </div>
-
-                    {/* SOP 3-WAY ACTIONS (Tinjau Berkas, Tolak/Revisi, Setujui) */}
-                    <div className="flex items-center gap-2 shrink-0 pt-2 lg:pt-0 self-end lg:self-center">
-                      {/* Tinjau Berkas */}
-                      <button
-                        type="button"
-                        onClick={() => setInspectDoc(doc)}
-                        className="px-3 py-2 rounded-xl border border-outline-variant text-on-surface hover:bg-surface-container text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                        title="Tinjau kelengkapan berkas & KTP pemohon"
-                      >
-                        <Eye size={15} />
-                        <span>Tinjau</span>
-                      </button>
-
-                      {/* Catatan Revisi */}
-                      <button
-                        type="button"
-                        disabled={isProcessingThis}
-                        onClick={() => {
-                          setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' });
-                        }}
-                        className="px-3 py-2 rounded-xl border border-amber-200 text-amber-800 bg-amber-50 hover:bg-amber-100 active:scale-95 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                        title="Minta pemohon untuk melengkapi perbaikan berkas"
-                      >
-                        <RotateCcw size={15} />
-                        <span>Revisi</span>
-                      </button>
-
-                      {/* Tolak */}
-                      <button
-                        type="button"
-                        disabled={isProcessingThis}
-                        onClick={() => {
-                          setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' });
-                        }}
-                        className="px-3 py-2 rounded-xl border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 active:scale-95 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                        title="Tolak permohonan surat"
-                      >
-                        <XCircle size={15} />
-                        <span>Tolak</span>
-                      </button>
-
-                      {/* One-Touch Setujui */}
-                      <button
-                        type="button"
-                        disabled={isProcessingThis}
-                        onClick={() => handleQuickApprove(doc.id, docTitle)}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                        title="Verifikasi dengan satu klik dan teruskan ke RW"
-                      >
-                        {isProcessingThis ? (
-                          <RefreshCw size={15} className="animate-spin" />
-                        ) : (
-                          <CheckCircle2 size={15} />
-                        )}
-                        <span>Setujui (Teruskan RW)</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       )}
 

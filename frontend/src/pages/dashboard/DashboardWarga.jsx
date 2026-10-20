@@ -439,7 +439,43 @@ export default function DashboardWarga() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. SUPER APPS QUICK LAUNCHER (8 FITUR UTAMA BER-BADGE NOTIFIKASI)        */}
+      {/* 3. WORKFLOW STEPPER PELACAKAN DOKUMEN AKTIF (ACTION-FIRST CITIZEN DESK)    */}
+      {/* ========================================================================= */}
+      {selectedDoc && (
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+            <div>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                Pelacakan Berkas Pengajuan Surat Aktif
+              </span>
+              <h3 className="text-sm font-extrabold text-slate-900">
+                {selectedDoc.jenis_dokumen || selectedDoc.jenis_surat || 'Surat Permohonan'} &bull; <span className="font-mono text-xs text-slate-600">{selectedDoc.nomor_surat || `ID #${selectedDoc.id}`}</span>
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                selectedDoc.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+              }`}>
+                {selectedDoc.status === 'APPROVED' ? 'Selesai / Terbit' : `Proses ${selectedDoc.approval_step || 'RT'}`}
+              </span>
+              <Link
+                to="/dashboard/dokumen"
+                className="text-xs font-bold text-blue-700 hover:text-blue-900 inline-flex items-center gap-1"
+              >
+                <span>Lihat Semua</span>
+                <ChevronRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Workflow Stepper */}
+          <WorkflowStepper steps={getDocSteps(selectedDoc)} />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. SUPER APPS QUICK LAUNCHER (8 FITUR UTAMA BER-BADGE NOTIFIKASI)        */}
       {/* ========================================================================= */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -641,42 +677,6 @@ export default function DashboardWarga() {
           </Link>
         </div>
       </div>
-
-      {/* ========================================================================= */}
-      {/* 4. WORKFLOW STEPPER PELACAKAN DOKUMEN AKTIF                               */}
-      {/* ========================================================================= */}
-      {selectedDoc && (
-        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-            <div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                Pelacakan Berkas Pengajuan Surat
-              </span>
-              <h3 className="text-sm font-extrabold text-slate-900">
-                {selectedDoc.jenis_dokumen || selectedDoc.jenis_surat || 'Surat Permohonan'} &bull; <span className="font-mono text-xs text-slate-600">{selectedDoc.nomor_surat || `ID #${selectedDoc.id}`}</span>
-              </h3>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                selectedDoc.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-              }`}>
-                {selectedDoc.status === 'APPROVED' ? 'Selesai / Terbit' : `Proses ${selectedDoc.approval_step || 'RT'}`}
-              </span>
-              <Link
-                to="/dashboard/dokumen"
-                className="text-xs font-bold text-blue-700 hover:text-blue-900 inline-flex items-center gap-1"
-              >
-                <span>Lihat Semua</span>
-                <ChevronRight size={14} />
-              </Link>
-            </div>
-          </div>
-
-          {/* Workflow Stepper */}
-          <WorkflowStepper steps={getDocSteps(selectedDoc)} />
-        </div>
-      )}
 
       {/* ========================================================================= */}
       {/* 5. MONITORING TERPADU BUKU KIA BALITA & POSYANDU LANSIA KELUARGA          */}

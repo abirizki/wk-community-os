@@ -408,264 +408,123 @@ export default function DashboardKetuaRW() {
       </div>
 
       
-      {/* Unified Kanaya AI Intelligence Bento Card */}
-      <div className="mb-6 p-5 sm:p-6 rounded-[2rem] bg-gradient-to-br from-sky-50 via-blue-50/80 to-indigo-50/60 border border-sky-200/70 shadow-sm relative overflow-hidden group">
-        <div className="absolute right-0 top-0 w-48 h-48 bg-sky-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-        <div className="absolute left-0 bottom-0 w-36 h-36 bg-blue-300/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3.5 flex-1">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
-              <Sparkles className="w-6 h-6 animate-pulse" />
+      {/* 1. BENTO WORKSPACE PILLAR SWITCHER RW (ACTION-FIRST INFORMATION ARCHITECTURE) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {/* Tab 1: Validasi Terusan RT */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('surat')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+            activeTab === 'surat'
+              ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-500 shadow-md shadow-emerald-600/20 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`p-2 rounded-xl ${activeTab === 'surat' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+              <FileCheck size={18} />
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 text-[10px] font-extrabold uppercase tracking-wider border border-sky-200">
-                  Kanaya AI Strategic Policy RW
-                </span>
-                <span className="text-[11px] font-semibold text-slate-500 font-mono">Evidence-Based</span>
-              </div>
-              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
-                Rekomendasi Kebijakan Koordinasi Lintas-RT
-              </h3>
-            </div>
-          </div>
-
-          <Link
-            to="/dashboard/analitik"
-            className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 group-hover:scale-[1.02] shrink-0"
-          >
-            <span>Buka Analitik & Looker BI</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-        </div>
-
-        <div className="relative z-10 mt-4 pt-3.5 border-t border-sky-100">
-          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-            {loadingBrief ? (
-              <span className="flex items-center gap-2 text-sky-700">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Menganalisis data agregat wilayah RT...
+            {dokumenList.length > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                activeTab === 'surat' ? 'bg-white text-emerald-900' : 'bg-amber-100 text-amber-800 animate-pulse'
+              }`}>
+                {dokumenList.length} Terusan
               </span>
-            ) : (
-              aiBrief?.summary || `Halo, ${user?.nama || user?.name || "Bapak/Ibu"}. Terdapat ${dokumenList.length} permohonan surat terusan yang menunggu validasi RW. Kinerja pelayanan dari ${scorecardData.length} RT terpantau aktif. Kami mendeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia) di seluruh wilayah RW.`
             )}
-          </p>
-        </div>
+          </div>
+          <div className="mt-2.5">
+            <span className="text-xs font-bold block">Validasi Terusan RT</span>
+            <span className={`text-[10px] block ${activeTab === 'surat' ? 'text-emerald-100' : 'text-slate-500'}`}>
+              TTE Pengesahan RW
+            </span>
+          </div>
+        </button>
 
-        <div className="relative z-10 grid grid-cols-3 gap-2.5 mt-4 pt-3 border-t border-sky-100/60">
-          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
-            <span className="text-[10px] font-semibold text-slate-500">Terusan RT</span>
-            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
-              {dokumenList.length} berkas
+        {/* Tab 2: Scorecard Antar-RT */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('scorecard')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+            activeTab === 'scorecard'
+              ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-blue-500 shadow-md shadow-blue-600/20 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`p-2 rounded-xl ${activeTab === 'scorecard' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'}`}>
+              <Layers size={18} />
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+              activeTab === 'scorecard' ? 'bg-white text-blue-900' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {scorecardData.length} RT
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
-            <span className="text-[10px] font-semibold text-slate-500">Binaan RT</span>
-            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
-              {scorecardData.length} Wilayah RT
+          <div className="mt-2.5">
+            <span className="text-xs font-bold block">Scorecard Antar-RT</span>
+            <span className={`text-[10px] block ${activeTab === 'scorecard' ? 'text-blue-100' : 'text-slate-500'}`}>
+              Radar Kinerja Wilayah
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
-            <span className="text-[10px] font-semibold text-slate-500">Warga Rentan</span>
-            <span className="text-xs sm:text-sm font-extrabold text-rose-600 font-mono mt-0.5">
-              {kelompokRentanList.length} jiwa
+        </button>
+
+        {/* Tab 3: Radar Kelompok Rentan */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('rentan')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+            activeTab === 'rentan'
+              ? 'bg-gradient-to-br from-rose-600 to-pink-700 text-white border-rose-500 shadow-md shadow-rose-600/20 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`p-2 rounded-xl ${activeTab === 'rentan' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'}`}>
+              <Heart size={18} />
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+              activeTab === 'rentan' ? 'bg-white text-rose-900' : 'bg-rose-100 text-rose-700'
+            }`}>
+              {kelompokRentanList.length} Jiwa
             </span>
           </div>
-        </div>
+          <div className="mt-2.5">
+            <span className="text-xs font-bold block">Radar Warga Rentan</span>
+            <span className={`text-[10px] block ${activeTab === 'rentan' ? 'text-rose-100' : 'text-slate-500'}`}>
+              Yatim & Lansia Binaan
+            </span>
+          </div>
+        </button>
+
+        {/* Tab 4: AI Strategic Policy RW */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('analitik')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+            activeTab === 'analitik'
+              ? 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-indigo-500 shadow-md shadow-indigo-600/20 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`p-2 rounded-xl ${activeTab === 'analitik' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
+              <Sparkles size={18} />
+            </div>
+            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+              activeTab === 'analitik' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800'
+            }`}>
+              AI Policy
+            </span>
+          </div>
+          <div className="mt-2.5">
+            <span className="text-xs font-bold block">Kebijakan Cerdas RW</span>
+            <span className={`text-[10px] block ${activeTab === 'analitik' ? 'text-indigo-100' : 'text-slate-500'}`}>
+              Looker BI & Analisis
+            </span>
+          </div>
+        </button>
       </div>
 
-      {/* 2. Super Apps Bento Quick Launcher RW (8 Flutter-Style Grid Shortcuts) */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-700">
-              Pintasan Meja Kerja Super Apps RW
-            </h3>
-          </div>
-          <span className="text-[11px] text-slate-400 font-mono">8 Layanan Cepat</span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* 1. Validasi Terusan RT */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('surat')}
-            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <FileCheck className="w-5 h-5" />
-              </div>
-              {dokumenList.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-100 text-amber-800">
-                  {dokumenList.length} terusan
-                </span>
-              )}
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Validasi Terusan RT</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">TTE Pengesahan RW</p>
-            </div>
-          </button>
-
-                    {/* Scan QR KK & Input Warga RW */}
-          <button
-            type="button"
-            onClick={() => setShowScanRegisterModal(true)}
-            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <QrCode className="w-5 h-5" />
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800">
-                Kamera QR
-              </span>
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Scan QR KK & Input Warga</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Pindai KK & Input Baru</p>
-            </div>
-          </button>
-
-          {/* 2. Loket Dampingan RW */}
-          <Link
-            to="/dashboard/dokumen?mode=dampingan"
-            className="p-3.5 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Check className="w-5 h-5" />
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-teal-100 text-teal-800">
-                Offline
-              </span>
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-teal-700">Loket Dampingan RW</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Asistensi surat langsung</p>
-            </div>
-          </Link>
-
-          {/* 3. Layanan Surat Mandiri RW */}
-          <Link
-            to="/dashboard/dokumen?mode=mandiri"
-            className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <FileCheck className="w-5 h-5" />
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-100 text-blue-800 font-mono">
-                Mandiri
-              </span>
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700">Layanan Surat Mandiri</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Pengajuan surat KK sendiri</p>
-            </div>
-          </Link>
-
-          {/* 4. Kas Gabungan RW */}
-          <Link
-            to="/dashboard/keuangan"
-            className="p-3.5 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200/80 hover:border-amber-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Wallet className="w-5 h-5" />
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-800">
-                Rekap
-              </span>
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-amber-700">Kas Gabungan RW</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Monitoring iuran antar-RT</p>
-            </div>
-          </Link>
-
-          {/* 5. Pajak PBB RW */}
-          <Link
-            to="/dashboard/pbb"
-            className="p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200/80 hover:border-indigo-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Landmark className="w-5 h-5" />
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-indigo-100 text-indigo-800">
-                SPPT
-              </span>
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-indigo-700">Monitoring PBB RW</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Kolektivitas pajak wilayah</p>
-            </div>
-          </Link>
-
-          {/* 6. Scorecard & Evaluasi RT */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('scorecard')}
-            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Layers className="w-5 h-5" />
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800">
-                Scorecard
-              </span>
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Scorecard Antar-RT</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Radar komparasi kinerja</p>
-            </div>
-          </button>
-
-          {/* 7. Dashboard Analitik Looker / Power BI */}
-          <Link
-            to="/dashboard/analitik"
-            className="p-3.5 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Layers className="w-5 h-5" />
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-100 text-purple-800">
-                Looker BI
-              </span>
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-700">Dashboard Analitik</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Visualisasi data Power BI</p>
-            </div>
-          </Link>
-
-          {/* 8. Tanya KANAYA RW */}
-          <Link
-            to="/dashboard/daya-dukung"
-            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200/80 hover:border-sky-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-sky-100 text-sky-800">
-                Fasilitas
-              </span>
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-sky-700">Daya Dukung RW</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Sekolah, Faskes, UMKM</p>
-            </div>
-          </Link>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
       {/* TAB 1: ANTREAN REKOMENDASI TERUSAN RT (TIER-2 APPROVAL)                  */}
       {/* ========================================================================= */}
       {activeTab === 'surat' && (
@@ -870,6 +729,272 @@ export default function DashboardKetuaRW() {
         </div>
       )}
 
+
+
+      {/* TAB ANALITIK & RINGKASAN CERDAS RW */}
+      {activeTab === 'analitik' && (
+        <div id="analitik-rw" className="space-y-6 mb-6">
+      {/* Unified Kanaya AI Intelligence Bento Card */}
+      <div className="mb-6 p-5 sm:p-6 rounded-[2rem] bg-gradient-to-br from-sky-50 via-blue-50/80 to-indigo-50/60 border border-sky-200/70 shadow-sm relative overflow-hidden group">
+        <div className="absolute right-0 top-0 w-48 h-48 bg-sky-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <div className="absolute left-0 bottom-0 w-36 h-36 bg-blue-300/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5 flex-1">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
+              <Sparkles className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 text-[10px] font-extrabold uppercase tracking-wider border border-sky-200">
+                  Kanaya AI Strategic Policy RW
+                </span>
+                <span className="text-[11px] font-semibold text-slate-500 font-mono">Evidence-Based</span>
+              </div>
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
+                Rekomendasi Kebijakan Koordinasi Lintas-RT
+              </h3>
+            </div>
+          </div>
+
+          <Link
+            to="/dashboard/analitik"
+            className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 group-hover:scale-[1.02] shrink-0"
+          >
+            <span>Buka Analitik & Looker BI</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        </div>
+
+        <div className="relative z-10 mt-4 pt-3.5 border-t border-sky-100">
+          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+            {loadingBrief ? (
+              <span className="flex items-center gap-2 text-sky-700">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Menganalisis data agregat wilayah RT...
+              </span>
+            ) : (
+              aiBrief?.summary || `Halo, ${user?.nama || user?.name || "Bapak/Ibu"}. Terdapat ${dokumenList.length} permohonan surat terusan yang menunggu validasi RW. Kinerja pelayanan dari ${scorecardData.length} RT terpantau aktif. Kami mendeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia) di seluruh wilayah RW.`
+            )}
+          </p>
+        </div>
+
+        <div className="relative z-10 grid grid-cols-3 gap-2.5 mt-4 pt-3 border-t border-sky-100/60">
+          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
+            <span className="text-[10px] font-semibold text-slate-500">Terusan RT</span>
+            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
+              {dokumenList.length} berkas
+            </span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
+            <span className="text-[10px] font-semibold text-slate-500">Binaan RT</span>
+            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
+              {scorecardData.length} Wilayah RT
+            </span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
+            <span className="text-[10px] font-semibold text-slate-500">Warga Rentan</span>
+            <span className="text-xs sm:text-sm font-extrabold text-rose-600 font-mono mt-0.5">
+              {kelompokRentanList.length} jiwa
+            </span>
+          </div>
+        </div>
+      </div>
+
+        </div>
+      )}
+
+      {/* 2. Super Apps Bento Quick Launcher RW (8 Flutter-Style Grid Shortcuts) */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-700">
+              Pintasan Meja Kerja Super Apps RW
+            </h3>
+          </div>
+          <span className="text-[11px] text-slate-400 font-mono">8 Layanan Cepat</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* 1. Validasi Terusan RT */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('surat')}
+            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <FileCheck className="w-5 h-5" />
+              </div>
+              {dokumenList.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-100 text-amber-800">
+                  {dokumenList.length} terusan
+                </span>
+              )}
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Validasi Terusan RT</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">TTE Pengesahan RW</p>
+            </div>
+          </button>
+
+                    {/* Scan QR KK & Input Warga RW */}
+          <button
+            type="button"
+            onClick={() => setShowScanRegisterModal(true)}
+            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <QrCode className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800">
+                Kamera QR
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Scan QR KK & Input Warga</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Pindai KK & Input Baru</p>
+            </div>
+          </button>
+
+          {/* 2. Loket Dampingan RW */}
+          <Link
+            to="/dashboard/dokumen?mode=dampingan"
+            className="p-3.5 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Check className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-teal-100 text-teal-800">
+                Offline
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-teal-700">Loket Dampingan RW</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Asistensi surat langsung</p>
+            </div>
+          </Link>
+
+          {/* 3. Layanan Surat Mandiri RW */}
+          <Link
+            to="/dashboard/dokumen?mode=mandiri"
+            className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <FileCheck className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-100 text-blue-800 font-mono">
+                Mandiri
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700">Layanan Surat Mandiri</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Pengajuan surat KK sendiri</p>
+            </div>
+          </Link>
+
+          {/* 4. Kas Gabungan RW */}
+          <Link
+            to="/dashboard/keuangan"
+            className="p-3.5 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200/80 hover:border-amber-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Wallet className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-800">
+                Rekap
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-amber-700">Kas Gabungan RW</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Monitoring iuran antar-RT</p>
+            </div>
+          </Link>
+
+          {/* 5. Pajak PBB RW */}
+          <Link
+            to="/dashboard/pbb"
+            className="p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200/80 hover:border-indigo-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Landmark className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-indigo-100 text-indigo-800">
+                SPPT
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-indigo-700">Monitoring PBB RW</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Kolektivitas pajak wilayah</p>
+            </div>
+          </Link>
+
+          {/* 6. Scorecard & Evaluasi RT */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('scorecard')}
+            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Layers className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800">
+                Scorecard
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Scorecard Antar-RT</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Radar komparasi kinerja</p>
+            </div>
+          </button>
+
+          {/* 7. Dashboard Analitik Looker / Power BI */}
+          <Link
+            to="/dashboard/analitik"
+            className="p-3.5 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Layers className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-100 text-purple-800">
+                Looker BI
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-700">Dashboard Analitik</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Visualisasi data Power BI</p>
+            </div>
+          </Link>
+
+          {/* 8. Tanya KANAYA RW */}
+          <Link
+            to="/dashboard/daya-dukung"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200/80 hover:border-sky-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-sky-100 text-sky-800">
+                Fasilitas
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-sky-700">Daya Dukung RW</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Sekolah, Faskes, UMKM</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
       {/* ========================================================================= */}
       {/* TAB 2: RADAR & SCORECARD KOMPARASI ANTAR-RT (RT HEALTHCARD)              */}
       {/* ========================================================================= */}
