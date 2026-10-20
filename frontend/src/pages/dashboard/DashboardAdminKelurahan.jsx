@@ -690,7 +690,7 @@ export default function DashboardAdminKelurahan() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-                    <Landmark size={18} className="text-emerald-600" /> Realisasi Kepatuhan PBB-P2 per Rukun Warga (RW)
+                    <Landmark size={18} className="text-emerald-600" /> RW Mana yang Memerlukan Akselerasi Penagihan PBB-P2?
                   </h3>
                   <p className="text-[11px] text-on-surface-variant mt-0.5">
                     Perbandingan jumlah NOP lunas dan tertunggak di wilayah binaan Kelurahan Kebonjati.
@@ -709,7 +709,7 @@ export default function DashboardAdminKelurahan() {
                   <BarChart data={pbbSummary?.per_rw || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                     <XAxis dataKey="rw" tickFormatter={(v) => `RW ${v}`} tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} allowDecimals={false} domain={[0, 'auto']} />
                     <Tooltip
                       formatter={(val, name) => [val, name === 'total_lunas' ? 'Lunas' : 'Tertunggak']}
                       labelFormatter={(l) => `Rukun Warga (RW) ${l}`}

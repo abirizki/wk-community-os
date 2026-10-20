@@ -1003,7 +1003,7 @@ export default function DashboardKetuaRW() {
           {/* Header Banner Scorecard */}
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h3 className="text-base font-bold text-slate-900">Radar Kinerja & Beban Pelayanan Antar-RT</h3>
+              <h3 className="text-base font-bold text-slate-900">RT Mana yang Memiliki Beban Antrean & Kerentanan Tertinggi?</h3>
               <p className="text-xs text-slate-500 mt-0.5">
                 Monitoring komparatif kondisi kependudukan, antrean pelayanan, kelompok rentan, dan hunian sewa di seluruh RT binaan.
               </p>

@@ -1316,7 +1316,7 @@ export default function DashboardKetuaRT() {
         <div className="flex-1">
           <h3 className="text-sm font-extrabold text-slate-900 mb-4 flex items-center gap-2">
             <Layers className="text-blue-600" size={18} />
-            Status Pembayaran Iuran RT
+            Berapa Banyak KK yang Telah Melunasi Iuran Kas Bulan Ini?
           </h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
@@ -1332,7 +1332,7 @@ export default function DashboardKetuaRT() {
                 layout="vertical"
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <XAxis type="number" domain={[0, Math.max(iuranSummary.total_kk, 10)]} allowDecimals={false} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fontWeight: 'bold', fill: '#64748b' }} axisLine={false} tickLine={false} width={80} />
                 <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                 <Bar dataKey="Lunas" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40} />
@@ -1344,7 +1344,7 @@ export default function DashboardKetuaRT() {
         <div className="flex-1 border-t md:border-t-0 md:border-l border-slate-100 pt-5 md:pt-0 md:pl-6">
            <h3 className="text-sm font-extrabold text-slate-900 mb-4 flex items-center gap-2">
             <FileCheck className="text-indigo-600" size={18} />
-            Komposisi Pengajuan Surat (Bulan Ini)
+            Bagaimana Rasio Penyelesaian Permohonan Surat Warga Bulan Ini?
           </h3>
           <div className="h-48">
              <ResponsiveContainer width="100%" height="100%">
