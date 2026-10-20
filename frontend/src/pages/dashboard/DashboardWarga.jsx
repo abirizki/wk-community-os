@@ -421,7 +421,7 @@ export default function DashboardWarga() {
           {myTickets.length > 0 ? (
             <Link
               to="/dashboard/bansos"
-              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm transition-colors text-xs"
+              className="px-3.5 py-2 min-h-[40px] bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs"
             >
               <QrCode size={14} />
               <span>Lihat Tiket QR Bansos</span>
@@ -429,7 +429,7 @@ export default function DashboardWarga() {
           ) : (
             <Link
               to="/dashboard/kk"
-              className="px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm transition-colors text-xs"
+              className="px-3.5 py-2 min-h-[40px] bg-blue-700 hover:bg-blue-800 active:scale-95 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs"
             >
               <FileCheck size={14} />
               <span>Buka Kartu Keluarga</span>

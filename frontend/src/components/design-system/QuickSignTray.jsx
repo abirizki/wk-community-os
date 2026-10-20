@@ -144,7 +144,7 @@ export default function QuickSignTray({
           exit={{ y: 120, opacity: 0 }}
           transition={{ type: 'spring', damping: 26, stiffness: 280 }}
           aria-label="Baki Tindakan Cepat Dokumen"
-          className={`fixed bottom-0 inset-x-0 z-50 w-full sm:bottom-6 sm:right-6 sm:left-auto sm:w-[480px] sm:max-w-[calc(100vw-3rem)] bg-surface-container-lowest border-t sm:border border-outline-variant shadow-elevated rounded-t-lg sm:rounded-lg overflow-hidden flex flex-col ${className}`}
+          className={`fixed bottom-16 inset-x-0 z-40 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[480px] sm:max-w-[calc(100vw-3rem)] bg-surface-container-lowest border-t sm:border border-outline-variant shadow-elevated rounded-t-xl sm:rounded-lg overflow-hidden flex flex-col ${className}`}
         >
           {/* HEADER TRAY */}
           <header className="px-4 py-3 bg-surface-container-low border-b border-outline-variant flex items-center justify-between gap-2 select-none">
@@ -299,7 +299,7 @@ export default function QuickSignTray({
                               type="button"
                               onClick={() => onViewDetail(item.id)}
                               disabled={loading}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-sky-800 bg-sky-50 hover:bg-sky-100 active:bg-sky-200 border border-sky-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500/40 disabled:opacity-50"
+                              className="inline-flex items-center justify-center gap-1 min-h-[36px] px-3 py-1.5 text-xs font-medium text-sky-800 bg-sky-50 hover:bg-sky-100 active:scale-95 border border-sky-200 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-sky-500/40 disabled:opacity-50"
                               title="Lihat rincian dokumen"
                             >
                               <Eye size={13} className="text-sky-700 stroke-[2.2]" />
@@ -313,7 +313,7 @@ export default function QuickSignTray({
                               type="button"
                               onClick={() => onReject(item.id)}
                               disabled={loading}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-800 bg-red-50 hover:bg-red-100 active:bg-red-200 border border-red-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/40 disabled:opacity-50"
+                              className="inline-flex items-center justify-center gap-1 min-h-[36px] px-3 py-1.5 text-xs font-medium text-red-800 bg-red-50 hover:bg-red-100 active:scale-95 border border-red-200 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-red-500/40 disabled:opacity-50"
                               title="Tolak permohonan dokumen"
                             >
                               <X size={13} className="text-red-700 stroke-[2.5]" />
@@ -327,7 +327,7 @@ export default function QuickSignTray({
                               type="button"
                               onClick={() => onApprove(item.id)}
                               disabled={loading}
-                              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
+                              className="inline-flex items-center justify-center gap-1 min-h-[36px] px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
                               title={`${actionLabel} dokumen ini`}
                             >
                               <Check size={13} className="stroke-[2.5]" />

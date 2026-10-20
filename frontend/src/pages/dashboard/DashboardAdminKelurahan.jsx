@@ -1107,7 +1107,7 @@ export default function DashboardAdminKelurahan() {
                                 setSelectedAudit(a);
                                 setReviewModalOpen(true);
                               }}
-                              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-colors"
+                              className="px-3.5 py-2 min-h-[38px] rounded-lg bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs shadow-sm transition-all inline-flex items-center justify-center"
                             >
                               Sidangkan
                             </button>

@@ -527,14 +527,14 @@ export default function DashboardLurah() {
                   <button
                     type="button"
                     onClick={() => handleInitiateReject(doc.id)}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 text-red-700 bg-red-50/50 hover:bg-red-100 transition-colors cursor-pointer"
+                    className="px-3 py-2 min-h-[40px] text-xs font-semibold rounded-lg border border-red-200 text-red-700 bg-red-50/50 hover:bg-red-100 active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center"
                   >
                     Tolak / Berita Acara
                   </button>
                   <button
                     type="button"
                     onClick={() => handleInitiateSingleSign(doc.id)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[40px] text-xs font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white shadow-sm transition-all cursor-pointer"
                   >
                     <Lock size={13} />
                     <span>Tandatangani TTE</span>

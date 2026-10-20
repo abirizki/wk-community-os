@@ -584,24 +584,24 @@ export default function DashboardLayout() {
         <OfflineIndicator />
 
         {/* Main Content Outlet */}
-        <main className="flex-1 p-4 lg:p-8 pb-20 lg:pb-8 overflow-y-auto">
+        <main className="flex-1 p-3.5 sm:p-4 lg:p-8 pb-28 lg:pb-8 overflow-y-auto">
           <Outlet />
         </main>
 
         {/* Bottom Navigation Bar Khusus Mobile-First (Warga & RT/RW) */}
         {mobileBottomNav && (
-          <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-14 bg-surface-container-lowest border-t border-outline-variant flex items-center justify-around z-30 shadow-lg px-2">
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-container-lowest/95 backdrop-blur-md border-t border-outline-variant flex items-center justify-around z-30 shadow-lg px-2 pb-safe">
             {mobileBottomNav.map((item) => {
               const active = isCurrentActive(item.path);
               return (
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  className={`flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-colors ${
+                  className={`flex flex-col items-center justify-center flex-1 min-h-[48px] min-w-[44px] py-1 text-[10px] font-semibold transition-transform active:scale-95 ${
                     active ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'
                   }`}
                 >
-                  <div className={`p-1 rounded-md ${active ? 'bg-primary/10 text-primary' : ''}`}>
+                  <div className={`p-1.5 rounded-lg transition-colors ${active ? 'bg-primary/10 text-primary' : ''}`}>
                     {item.icon}
                   </div>
                   <span className="truncate mt-0.5">{item.name}</span>

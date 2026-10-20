@@ -920,12 +920,12 @@ export default function DashboardKetuaRT() {
                     </div>
 
                     {/* SOP 3-WAY ACTIONS (Tinjau Berkas, Tolak/Revisi, Setujui) */}
-                    <div className="flex items-center gap-2 shrink-0 pt-2 lg:pt-0 self-end lg:self-center">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 pt-2 lg:pt-0 w-full sm:w-auto justify-end">
                       {/* Tinjau Berkas */}
                       <button
                         type="button"
                         onClick={() => setInspectDoc(doc)}
-                        className="px-3 py-2 rounded-xl border border-outline-variant text-on-surface hover:bg-surface-container text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="px-3 py-2 min-h-[40px] rounded-xl border border-outline-variant text-on-surface hover:bg-surface-container active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                         title="Tinjau kelengkapan berkas & KTP pemohon"
                       >
                         <Eye size={15} />
@@ -939,7 +939,7 @@ export default function DashboardKetuaRT() {
                         onClick={() => {
                           setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' });
                         }}
-                        className="px-3 py-2 rounded-xl border border-amber-200 text-amber-800 bg-amber-50 hover:bg-amber-100 active:scale-95 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        className="px-3 py-2 min-h-[40px] rounded-xl border border-amber-200 text-amber-800 bg-amber-50 hover:bg-amber-100 active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                         title="Minta pemohon untuk melengkapi perbaikan berkas"
                       >
                         <RotateCcw size={15} />
@@ -953,7 +953,7 @@ export default function DashboardKetuaRT() {
                         onClick={() => {
                           setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' });
                         }}
-                        className="px-3 py-2 rounded-xl border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 active:scale-95 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        className="px-3 py-2 min-h-[40px] rounded-xl border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                         title="Tolak permohonan surat"
                       >
                         <XCircle size={15} />
@@ -965,7 +965,7 @@ export default function DashboardKetuaRT() {
                         type="button"
                         disabled={isProcessingThis}
                         onClick={() => handleQuickApprove(doc.id, docTitle)}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        className="px-4 py-2 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                         title="Verifikasi dengan satu klik dan teruskan ke RW"
                       >
                         {isProcessingThis ? (

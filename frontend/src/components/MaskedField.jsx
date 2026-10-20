@@ -36,9 +36,9 @@ export default function MaskedField({
             setRevealed(!revealed);
           }}
           title={revealed ? 'Sembunyikan data pribadi' : 'Tampilkan data lengkap'}
-          className="p-0.5 rounded text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-container transition-colors"
+          className="p-1 -m-0.5 rounded-md text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-container transition-colors inline-flex items-center justify-center min-h-[28px] min-w-[28px] active:scale-90"
         >
-          {revealed ? <EyeOff size={13} /> : <Eye size={13} />}
+          {revealed ? <EyeOff size={14} /> : <Eye size={14} />}
         </button>
       )}
     </span>

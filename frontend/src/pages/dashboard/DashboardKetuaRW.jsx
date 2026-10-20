@@ -684,7 +684,7 @@ export default function DashboardKetuaRW() {
                       <div className="flex flex-row lg:flex-col items-center lg:items-end gap-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
                         <button
                           onClick={() => setInspectDoc(doc)}
-                          className="w-full lg:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                          className="w-full lg:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[40px] rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
                         >
                           <Eye className="w-3.5 h-3.5 text-slate-500" />
                           <span>Tinjau Berkas</span>
@@ -694,7 +694,7 @@ export default function DashboardKetuaRW() {
                           <button
                             onClick={() => handleApprove(doc.id)}
                             disabled={isProcessingDoc}
-                            className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-sm disabled:opacity-50"
+                            className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all shadow-sm disabled:opacity-50"
                             title="Setujui & Teruskan ke Loket Kelurahan"
                           >
                             <Check className="w-3.5 h-3.5" />
@@ -704,7 +704,7 @@ export default function DashboardKetuaRW() {
                           <button
                             onClick={() => setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' })}
                             disabled={isProcessingDoc}
-                            className="p-2 rounded-lg text-amber-700 hover:bg-amber-50 border border-amber-200 transition-colors"
+                            className="p-2 min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-lg text-amber-700 hover:bg-amber-50 active:scale-95 border border-amber-200 transition-all"
                             title="Kembalikan untuk Perbaikan"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
@@ -713,7 +713,7 @@ export default function DashboardKetuaRW() {
                           <button
                             onClick={() => setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' })}
                             disabled={isProcessingDoc}
-                            className="p-2 rounded-lg text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors"
+                            className="p-2 min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-lg text-rose-700 hover:bg-rose-50 active:scale-95 border border-rose-200 transition-all"
                             title="Tolak Permohonan"
                           >
                             <X className="w-3.5 h-3.5" />
