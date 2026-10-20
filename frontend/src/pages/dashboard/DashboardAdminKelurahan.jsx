@@ -44,6 +44,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import MaskedField from '../../components/MaskedField';
+import { KPIGrid, UnifiedStatCard } from '../../components/design-system';
 
 const ROLE_DISPLAY = {
   superadmin: { label: 'Super Admin', bg: 'bg-purple-100 text-purple-800 border-purple-200' },
@@ -643,65 +644,44 @@ export default function DashboardAdminKelurahan() {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* Bento KPI Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant shadow-sm space-y-1">
-              <span className="text-xs font-semibold text-on-surface-variant flex items-center gap-1.5">
-                <Users size={14} className="text-sky-600" /> Total Populasi Warga
-              </span>
-              <div className="flex items-baseline gap-2 pt-1">
-                <span className="text-2xl sm:text-3xl font-black text-on-surface">
-                  {executiveData?.kpi?.demography?.total_jiwa || '4.280'}
-                </span>
-                <span className="text-xs font-bold text-sky-700">Jiwa</span>
-              </div>
-              <span className="text-[11px] text-on-surface-variant block">Tersebar di 6 RW & 38 RT</span>
-            </div>
-
-            <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant shadow-sm space-y-1">
-              <span className="text-xs font-semibold text-on-surface-variant flex items-center gap-1.5">
-                <Building2 size={14} className="text-emerald-600" /> Kartu Keluarga Terdata
-              </span>
-              <div className="flex items-baseline gap-2 pt-1">
-                <span className="text-2xl sm:text-3xl font-black text-emerald-700">
-                  {executiveData?.kpi?.demography?.total_kk || '1.140'}
-                </span>
-                <span className="text-xs font-bold text-emerald-700">KK</span>
-              </div>
-              <span className="text-[11px] text-on-surface-variant block">Sinkronisasi SIAK & TTE</span>
-            </div>
-
-            <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant shadow-sm space-y-1">
-              <span className="text-xs font-semibold text-on-surface-variant flex items-center gap-1.5">
-                <Gift size={14} className="text-amber-600" /> Bantuan Sosial APBD & APBN
-              </span>
-              <div className="flex items-baseline gap-2 pt-1">
-                <span className="text-2xl sm:text-3xl font-black text-amber-700">
-                  {bansosList.length || '186'}
-                </span>
-                <span className="text-xs font-bold text-amber-700">KPM</span>
-              </div>
-              <span className="text-[11px] text-on-surface-variant block">
-                {approvedBansos.length} Disahkan &middot; {pendingKelurahanBansos.length} Menunggu
-              </span>
-            </div>
-
-            <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant shadow-sm space-y-1">
-              <span className="text-xs font-semibold text-on-surface-variant flex items-center gap-1.5">
-                <Landmark size={14} className="text-purple-600" /> Realisasi Pajak PBB 2026
-              </span>
-              <div className="flex items-baseline gap-2 pt-1">
-                <span className="text-2xl sm:text-3xl font-black text-purple-700">
-                  {pbbSummary?.summary?.persen_kepatuhan ?? 0}%
-                </span>
-                <span className="text-xs font-bold text-purple-700">Tercapai</span>
-              </div>
-              <span className="text-[11px] text-on-surface-variant block">
-                {pbbSummary?.summary
-                  ? `Rp ${((pbbSummary.summary.total_terealisasi_rupiah || 0) / 1000000).toFixed(1)} Jt Terealisasi`
-                  : 'Belum ada data DHKP PBB'}
-              </span>
-            </div>
-          </div>
+          <KPIGrid columns={4}>
+            <UnifiedStatCard
+              label="Total Populasi Warga"
+              value={executiveData?.kpi?.demography?.total_jiwa || 0}
+              unit="Jiwa"
+              context="Tersebar di 6 RW & 38 RT"
+              icon={<Users size={20} className="text-sky-600" />}
+              urgency="low"
+            />
+            <UnifiedStatCard
+              label="Kartu Keluarga Terdata"
+              value={executiveData?.kpi?.demography?.total_kk || 0}
+              unit="KK"
+              context="Sinkronisasi SIAK & TTE"
+              icon={<Building2 size={20} className="text-emerald-600" />}
+              urgency="success"
+            />
+            <UnifiedStatCard
+              label="Bantuan Sosial APBD & APBN"
+              value={bansosList.length}
+              unit="KPM"
+              context={`${approvedBansos.length} Disahkan · ${pendingKelurahanBansos.length} Menunggu`}
+              icon={<Gift size={20} className="text-amber-600" />}
+              urgency={pendingKelurahanBansos.length > 0 ? "high" : "low"}
+              onClick={() => setActiveTab('bansos')}
+            />
+            <UnifiedStatCard
+              label="Realisasi Pajak PBB 2026"
+              value={`${pbbSummary?.summary?.persen_kepatuhan ?? 0}%`}
+              unit="Tercapai"
+              context={pbbSummary?.summary
+                ? `Rp ${((pbbSummary.summary.total_terealisasi_rupiah || 0) / 1000000).toFixed(1)} Jt Terealisasi`
+                : 'Belum ada data DHKP PBB'}
+              icon={<Landmark size={20} className="text-purple-600" />}
+              urgency={(pbbSummary?.summary?.persen_kepatuhan ?? 0) >= 80 ? "low" : "medium"}
+              onClick={() => setActiveTab('pbb')}
+            />
+          </KPIGrid>
 
           {/* Visualisasi Demografi & Daya Dukung */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

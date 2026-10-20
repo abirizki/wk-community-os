@@ -7,6 +7,7 @@
 export { default as StatusBadge } from './StatusBadge';
 export { default as SLABadge } from './SLABadge';
 export { default as KPICard } from './KPICard';
+export { default as UnifiedStatCard } from './UnifiedStatCard';
 export { default as KPIGrid } from './KPIGrid';
 export { default as ActionCenter, getActionIconComponent } from './ActionCenter';
 export { default as DashboardShell } from './DashboardShell';

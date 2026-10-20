@@ -738,7 +738,7 @@ export default function DashboardKetuaRT() {
           <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
             <span className="text-[10px] font-semibold text-slate-500">Kolektivitas Kas</span>
             <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
-              {iuranSummary.persentase || '0%'}
+              {iuranSummary.persentase || '0%'} <span className="text-[10px] text-slate-500 font-normal font-sans">({iuranSummary.sudah_bayar || 0}/{iuranSummary.total_kk || 0} KK)</span>
             </span>
           </div>
           <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
@@ -958,7 +958,7 @@ export default function DashboardKetuaRT() {
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-on-surface">Kolektivitas Iuran RT</span>
               <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                {iuranSummary.persentase || '0%'}
+                {iuranSummary.persentase || '0%'} <span className="text-[10px] text-slate-500 font-normal font-sans">({iuranSummary.sudah_bayar || 0}/{iuranSummary.total_kk || 0} KK)</span>
               </span>
             </div>
             <div className="flex items-baseline gap-2">

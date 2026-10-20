@@ -382,7 +382,8 @@ export default function DashboardLurah() {
             unit="berkas"
             icon={<FileCheck size={20} className="text-primary" />}
             urgency={readyTTEDocs.length > 5 ? 'critical' : readyTTEDocs.length > 0 ? 'high' : 'low'}
-            trend={readyTTEDocs.length > 0 ? { direction: 'up', label: 'Perlu pengesahan segera' } : null}
+            trend={readyTTEDocs.length > 0 ? { direction: 'up', isPositive: false, label: 'Perlu pengesahan segera' } : null}
+            context="Antrean tanda tangan elektronik"
             onClick={() => {
               const el = document.getElementById('daftar-tte-section');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -394,12 +395,14 @@ export default function DashboardLurah() {
             unit="tepat waktu"
             icon={<Clock size={20} className="text-emerald-600" />}
             urgency={slaCompliance >= 95 ? 'low' : slaCompliance >= 85 ? 'medium' : 'critical'}
-            trend={slaCompliance > 0 ? { direction: slaCompliance >= 90 ? 'up' : 'down', label: `${slaCompliance}% tercapai` } : null}
+            context="Target minimum 95%"
+            trend={slaCompliance > 0 ? { direction: slaCompliance >= 90 ? 'up' : 'down', isPositive: slaCompliance >= 90, label: `${slaCompliance}% tercapai` } : null}
           />
           <KPICard
             label="Balita Gizi Buruk Aktif"
             value={atRiskBalitaCount}
             unit="anak"
+            context={`${stuntingClusterCount} klaster posyandu`}
             icon={<Baby size={20} className="text-amber-600" />}
             urgency={atRiskBalitaCount > 0 ? 'high' : 'low'}
             onClick={() => navigate('/dashboard/posyandu')}
@@ -408,6 +411,7 @@ export default function DashboardLurah() {
             label="Disposisi Tertahan > 48 Jam"
             value={overdueDispositionsCount}
             unit="tugas"
+            context="Melebihi batas SLA kelurahan"
             icon={<AlertTriangle size={20} className="text-red-600" />}
             urgency={overdueDispositionsCount > 0 ? 'critical' : 'low'}
             onClick={() => navigate('/dashboard/pengaduan')}

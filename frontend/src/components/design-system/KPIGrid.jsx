@@ -32,30 +32,30 @@ const itemVariants = {
 
 /**
  * Pemetaan kelas Tailwind responsif saat jumlah kolom ditentukan secara eksplisit.
+ * Mengikuti standar audit: grid-cols-2 di ponsel, grid-cols-4 di desktop.
  */
 const COLUMN_CLASSES = {
   1: 'grid-cols-1',
-  2: 'grid-cols-1 sm:grid-cols-2',
-  3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-  4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
-  5: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5',
-  6: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6',
+  2: 'grid-cols-2',
+  3: 'grid-cols-2 lg:grid-cols-3',
+  4: 'grid-cols-2 lg:grid-cols-4',
+  5: 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-5',
+  6: 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-6',
 };
 
 /**
  * Menghitung kelas grid responsif otomatis berdasarkan jumlah kartu anak:
- * - Mobile (< 640px): 1 kolom
- * - Tablet (640-1024px): 2 kolom
- * - Desktop (> 1024px): 3 atau 4 kolom (disesuaikan agar kartu terisi seimbang)
+ * - Mobile (< 640px): 2 kolom (kecuali hanya 1 kartu)
+ * - Tablet/Desktop (> 1024px): 3 atau 4 kolom
  *
  * @param {number} count - Jumlah kartu anak valid
  * @returns {string} Kelas grid Tailwind
  */
 function getResponsiveGridClass(count) {
   if (count <= 1) return 'grid-cols-1';
-  if (count === 2) return 'grid-cols-1 sm:grid-cols-2';
-  if (count === 3 || count === 6) return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
-  return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
+  if (count === 2) return 'grid-cols-2';
+  if (count === 3) return 'grid-cols-2 lg:grid-cols-3';
+  return 'grid-cols-2 lg:grid-cols-4';
 }
 
 /**
