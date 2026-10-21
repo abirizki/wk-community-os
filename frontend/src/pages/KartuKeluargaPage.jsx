@@ -43,7 +43,9 @@ import {
   Award,
   RefreshCw,
   GraduationCap,
-  Briefcase
+  Briefcase,
+  QrCode,
+  Copy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -538,13 +540,20 @@ export default function KartuKeluargaPage() {
           </div>
 
           {/* TABEL II: STATUS PERKAWINAN & HUBUNGAN KELUARGA */}
+          <div className="mb-2 flex items-center justify-between text-[11px] text-sky-900 bg-sky-50 px-3 py-1.5 rounded-lg border border-sky-200">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Users className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+              Sistem Kependudukan Terpadu: Mendukung Hubungan Keluarga Lengkap (Kepala Keluarga, Istri/Suami, Anak, Orang Tua, Mertua, Menantu, Cucu, Famili Lain)
+            </span>
+            <span className="text-[10px] font-semibold text-slate-500">Permendagri No. 109/2019</span>
+          </div>
           <div className="relative mb-6 overflow-x-auto">
             <table className="w-full text-left border-collapse border border-slate-900 text-[11px] font-serif">
               <thead>
                 <tr className="bg-slate-100/90 text-slate-900 text-center font-bold">
                   <th className="border border-slate-900 p-2 w-8">No</th>
                   <th className="border border-slate-900 p-2 min-w-[110px]">Status Perkawinan</th>
-                  <th className="border border-slate-900 p-2 min-w-[130px]">Status Hubungan Dalam Keluarga</th>
+                  <th className="border border-slate-900 p-2 min-w-[140px]">Status Hubungan Dalam Keluarga</th>
                   <th className="border border-slate-900 p-2 min-w-[90px]">Kewarganegaraan</th>
                   <th className="border border-slate-900 p-2 min-w-[110px]">No. Paspor</th>
                   <th className="border border-slate-900 p-2 min-w-[110px]">No. KITAP/KITAS</th>
@@ -563,18 +572,35 @@ export default function KartuKeluargaPage() {
                 </tr>
               </thead>
               <tbody>
-                {anggotaList.map((m, idx) => (
-                  <tr key={m.id || idx} className="hover:bg-sky-50/40 transition-colors">
-                    <td className="border border-slate-900 p-2 text-center font-bold">{idx + 1}</td>
-                    <td className="border border-slate-900 p-2 uppercase text-center">{m.status_perkawinan || (idx === 0 || idx === 1 ? 'KAWIN' : 'BELUM KAWIN')}</td>
-                    <td className="border border-slate-900 p-2 font-bold uppercase text-center">{m.status_hubungan_keluarga || 'Anggota'}</td>
-                    <td className="border border-slate-900 p-2 text-center">WNI</td>
-                    <td className="border border-slate-900 p-2 text-center font-mono">-</td>
-                    <td className="border border-slate-900 p-2 text-center font-mono">-</td>
-                    <td className="border border-slate-900 p-2 uppercase">{m.nama_ayah || 'SUHERMAN'}</td>
-                    <td className="border border-slate-900 p-2 uppercase">{m.nama_ibu || 'HARYATI'}</td>
-                  </tr>
-                ))}
+                {anggotaList.map((m, idx) => {
+                  const relLower = (m.status_hubungan_keluarga || '').toLowerCase();
+                  const badgeStyle = relLower.includes('kepala')
+                    ? 'bg-sky-100 text-sky-900 font-extrabold'
+                    : relLower.includes('istri')
+                    ? 'bg-rose-100 text-rose-900 font-bold'
+                    : relLower.includes('anak')
+                    ? 'bg-emerald-100 text-emerald-900'
+                    : relLower.includes('orang tua') || relLower.includes('mertua')
+                    ? 'bg-purple-100 text-purple-900 font-semibold'
+                    : 'bg-amber-100 text-amber-900 font-semibold';
+
+                  return (
+                    <tr key={m.id || idx} className="hover:bg-sky-50/40 transition-colors">
+                      <td className="border border-slate-900 p-2 text-center font-bold">{idx + 1}</td>
+                      <td className="border border-slate-900 p-2 uppercase text-center">{m.status_perkawinan || (idx === 0 || idx === 1 ? 'KAWIN' : 'BELUM KAWIN')}</td>
+                      <td className="border border-slate-900 p-2 text-center">
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] uppercase ${badgeStyle}`}>
+                          {m.status_hubungan_keluarga || 'Anggota'}
+                        </span>
+                      </td>
+                      <td className="border border-slate-900 p-2 text-center">WNI</td>
+                      <td className="border border-slate-900 p-2 text-center font-mono">-</td>
+                      <td className="border border-slate-900 p-2 text-center font-mono">-</td>
+                      <td className="border border-slate-900 p-2 uppercase">{m.nama_ayah || 'SUHERMAN'}</td>
+                      <td className="border border-slate-900 p-2 uppercase">{m.nama_ibu || 'HARYATI'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -699,27 +725,35 @@ export default function KartuKeluargaPage() {
             </div>
 
             <div className="flex flex-col items-center justify-center">
-              <div className="p-2 border-2 border-dashed border-sky-400/80 rounded-2xl bg-white shadow-sm flex flex-col items-center">
+              <div className="p-3 border-2 border-dashed border-sky-400/80 rounded-2xl bg-white shadow-sm flex flex-col items-center hover:shadow-md transition-shadow">
                 {/* QR Code Legalitas Dokumen Kependudukan Sah */}
-                <div className="w-20 h-20 bg-slate-900 text-white rounded-lg flex flex-col items-center justify-center p-1.5 shadow-inner">
-                  <div className="w-full h-full border border-white/40 flex items-center justify-center text-[9px] font-mono text-center leading-tight">
-                    BSRE TTE
-                    <br />
-                    SPBE VALID
-                  </div>
+                <div 
+                  onClick={() => window.open(`/verify/kk/${activeKk.no_kk}`, '_blank')}
+                  title="Klik untuk membuka tautan verifikasi keabsahan dokumen QR"
+                  className="w-24 h-24 bg-slate-50 border border-slate-300 rounded-xl flex flex-col items-center justify-center p-2 cursor-pointer group hover:border-sky-500 hover:bg-sky-50/50 transition-colors shadow-inner"
+                >
+                  <QrCode className="w-16 h-16 text-slate-800 group-hover:scale-105 transition-transform" />
+                  <span className="text-[8px] font-mono font-bold text-sky-700 mt-0.5 tracking-wider">BSRE VALID</span>
                 </div>
-                <span className="text-[9px] font-sans font-bold text-sky-800 mt-1 uppercase tracking-tight">
+                <span className="text-[9px] font-sans font-bold text-sky-800 mt-1.5 uppercase tracking-tight">
                   TTE SAH KEMENDAGRI RI
                 </span>
+                <Link
+                  to={`/verify/kk/${activeKk.no_kk}`}
+                  target="_blank"
+                  className="mt-1 text-[10px] text-sky-600 hover:text-sky-800 font-semibold underline flex items-center gap-1"
+                >
+                  <ExternalLink className="w-2.5 h-2.5" /> Buka Link Verifikasi
+                </Link>
               </div>
-              <p className="text-[9px] text-slate-400 mt-1 max-w-[200px] leading-tight">
-                Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik resmi BSrE.
+              <p className="text-[9px] text-slate-400 mt-1 max-w-[210px] leading-tight">
+                Pindai QR Code untuk memvalidasi keabsahan data kependudukan digital di pangkalan data resmi.
               </p>
             </div>
 
             <div>
               <p className="font-semibold text-slate-600">
-                Dikeluarkan di: <span className="uppercase">{activeKk.kota || 'Kota Bandung'}</span>
+                Dikeluarkan di: <span className="uppercase">{govProfile?.kota || activeKk.kota || 'Kota Sukabumi'}</span>
                 <br />
                 Pada Tanggal: {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
               </p>

@@ -20,6 +20,21 @@ router.get(['/my/card', '/me', '/my'], requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/kk/verify/:noKk - Verifikasi Publik Kartu Keluarga Digital (Scan QR Code Tanpa Login)
+router.get(['/verify/:noKk', '/public-verify/:noKk'], async (req, res) => {
+  try {
+    const { noKk } = req.params;
+    const verification = await kkService.getPublicFamilyCardVerification(noKk);
+    res.json({ success: true, valid: true, data: verification });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      success: false,
+      valid: false,
+      message: error.message || 'Gagal memverifikasi keabsahan Kartu Keluarga.'
+    });
+  }
+});
+
 // GET /api/kk/:noKk - Cari KK spesifik (Anti-IDOR: dilindungi Scope Guard)
 router.get('/:noKk', requireAuth, requireFamilyOrStaffScope('noKk'), async (req, res) => {
   try {
@@ -52,6 +67,7 @@ router.get('/download/template', requireAuth, (req, res) => {
     'pendidikan',
     'pekerjaan',
     'status_perkawinan',
+    'status_hubungan_keluarga',
     'golongan_darah',
     'nama_ibu',
     'kategori_asuransi',
@@ -74,6 +90,7 @@ router.get('/download/template', requireAuth, (req, res) => {
     'S1',
     'Karyawan Swasta',
     'Kawin',
+    'Kepala Keluarga',
     'O',
     'Haryati',
     'BPJS Kesehatan Mandiri',
@@ -96,6 +113,7 @@ router.get('/download/template', requireAuth, (req, res) => {
     'D3',
     'Wiraswasta',
     'Kawin',
+    'Istri',
     'A',
     'Rukmini',
     'BPJS Kesehatan Mandiri',

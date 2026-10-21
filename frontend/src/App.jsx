@@ -24,6 +24,7 @@ import ProfilePage from './pages/ProfilePage';
 import KeuanganPage from './pages/KeuanganPage';
 import AparaturPage from './pages/AparaturPage';
 import VerifySuratPage from './pages/VerifySuratPage';
+import VerifyKkPage from './pages/VerifyKkPage';
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 import ScannerPage from './pages/ScannerPage';
 
@@ -35,7 +36,10 @@ function App() {
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-surat/:hash" element={<VerifySuratPage />} />
+          <Route path="/verify-kk/:noKk" element={<VerifyKkPage />} />
+          <Route path="/verify/kk/:noKk" element={<VerifyKkPage />} />
           <Route path="/verify/:hash" element={<VerifySuratPage />} />
+          <Route path="/scanner" element={<ScannerPage />} />
 
           {/* Protected Routes */}
           <Route
