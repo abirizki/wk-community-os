@@ -64,15 +64,15 @@ function LambangGaruda({ className = "w-16 h-16" }) {
 
 // Data Standar Blanko Kartu Keluarga Otentik (Fallback Aman & Resilient)
 const DEFAULT_KK_DATA = {
-  no_kk: '3273011405180002',
+  no_kk: '3272031405180002',
   kepala_keluarga: 'BUDI SANTOSO',
   alamat: 'JL. SUKASARI NO. 45 RT. 003 RW. 002',
   rt: '003',
   rw: '002',
-  kode_pos: '40181',
+  kode_pos: '43111',
   kelurahan: 'Kebonjati',
-  kecamatan: 'Andir',
-  kota: 'Kota Bandung',
+  kecamatan: 'Sukabumi',
+  kota: 'Kota Sukabumi',
   provinsi: 'Jawa Barat',
   anggota: [
     {
@@ -474,11 +474,11 @@ export default function KartuKeluargaPage() {
               </div>
               <div className="flex">
                 <span className="w-40 font-semibold text-slate-600">Kecamatan</span>
-                <span className="font-semibold uppercase">: {activeKk.kecamatan || 'Andir'}</span>
+                <span className="font-semibold uppercase">: {activeKk.kecamatan || 'Sukabumi'}</span>
               </div>
               <div className="flex">
                 <span className="w-40 font-semibold text-slate-600">Kabupaten / Kota</span>
-                <span className="font-semibold uppercase">: {activeKk.kota || 'Kota Bandung'}</span>
+                <span className="font-semibold uppercase">: {activeKk.kota || 'Kota Sukabumi'}</span>
               </div>
               <div className="flex">
                 <span className="w-40 font-semibold text-slate-600">Provinsi</span>

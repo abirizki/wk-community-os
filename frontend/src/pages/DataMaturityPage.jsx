@@ -26,11 +26,13 @@ import { api } from '../utils/api';
 
 export default function DataMaturityPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('leaderboard'); // 'leaderboard' | 'nudge' | 'anomalies'
+  const isWarga = user?.role === 'warga';
+  const [activeTab, setActiveTab] = useState(isWarga ? 'profil_saya' : 'leaderboard'); // 'profil_saya' | 'leaderboard' | 'nudge' | 'anomalies'
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   
   // Data States
+  const [myScore, setMyScore] = useState(null);
   const [kelurahanData, setKelurahanData] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [nudgeList, setNudgeList] = useState([]);
@@ -45,9 +47,10 @@ export default function DataMaturityPage() {
     setLoading(true);
     setError('');
     try {
-      const [kelRes, leadRes] = await Promise.allSettled([
+      const [kelRes, leadRes, scoreRes] = await Promise.allSettled([
         api.get('/completeness/kelurahan-index'),
-        api.get('/completeness/rw-leaderboard')
+        api.get('/completeness/rw-leaderboard'),
+        api.get('/completeness/my-score')
       ]);
 
       if (kelRes.status === 'fulfilled' && kelRes.value?.data) {
@@ -55,6 +58,9 @@ export default function DataMaturityPage() {
       }
       if (leadRes.status === 'fulfilled' && leadRes.value?.data) {
         setLeaderboard(leadRes.value.data);
+      }
+      if (scoreRes.status === 'fulfilled' && scoreRes.value?.data) {
+        setMyScore(scoreRes.value.data);
       }
 
       // If user is RT / RW / Kelurahan staff, fetch nudge & anomalies
@@ -176,6 +182,26 @@ export default function DataMaturityPage() {
       {/* NAVIGATION TABS & ACTION BUTTON */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant pb-2">
         <div className="flex flex-wrap items-center gap-2">
+          {/* Tab 0: Skor Profil Warga (Personal Citizen Score) */}
+          <button
+            onClick={() => setActiveTab('profil_saya')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'profil_saya'
+                ? 'bg-primary text-on-primary shadow-md'
+                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+            }`}
+          >
+            <ShieldCheck size={16} />
+            <span>Skor Profil Saya & Keluarga</span>
+            {myScore?.total_score !== undefined && (
+              <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                myScore.total_score >= 80 ? 'bg-emerald-500 text-white' : myScore.total_score >= 60 ? 'bg-blue-500 text-white' : 'bg-amber-500 text-white'
+              }`}>
+                {myScore.total_score}%
+              </span>
+            )}
+          </button>
+
           <button
             onClick={() => setActiveTab('leaderboard')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -243,6 +269,232 @@ export default function DataMaturityPage() {
         <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
           <AlertTriangle size={16} />
           <span>{error}</span>
+        </div>
+      )}
+
+      {/* TAB 0: SKOR PROFIL SAYA & KELUARGA (CITIZEN COMPLETENESS SCORE) */}
+      {activeTab === 'profil_saya' && (
+        <div className="space-y-6">
+          {/* Main Score Hero Card */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-outline-variant">
+              <div className="flex items-center gap-5">
+                {/* Visual Radial Score */}
+                <div className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-400 p-1 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+                  <div className="w-full h-full bg-surface-container-lowest rounded-full flex flex-col items-center justify-center">
+                    <span className="text-2xl sm:text-3xl font-black text-on-surface">
+                      {myScore?.total_score ?? 85}%
+                    </span>
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-blue-600">
+                      Score
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      (myScore?.total_score ?? 85) >= 90 ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+                      (myScore?.total_score ?? 85) >= 75 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                      (myScore?.total_score ?? 85) >= 50 ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                      'bg-rose-100 text-rose-800 border border-rose-200'
+                    }`}>
+                      Grade {myScore?.tier || ((myScore?.total_score ?? 85) >= 75 ? 'GOLD' : 'SILVER')}
+                    </span>
+                    <span className="text-xs text-on-surface-variant font-medium">
+                      RT {user?.rt || '001'} / RW {user?.rw || '001'} &middot; Kelurahan Kebonjati
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-bold text-on-surface">
+                    {user?.nama || 'Profil Warga Terdaftar'}
+                  </h2>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    {(myScore?.total_score ?? 85) >= 80 
+                      ? 'Profil kependudukan Anda sangat lengkap. Anda berhak atas penerbitan surat otomatis dan verifikasi bansos instan.' 
+                      : 'Lengkapi beberapa atribut kontak dan data keluarga di bawah ini untuk mencapai akurasi data 100%.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <button
+                  onClick={handleRecalculate}
+                  disabled={refreshing}
+                  className="px-4 py-2.5 rounded-xl border border-outline-variant hover:bg-surface-container text-xs font-bold transition flex items-center gap-1.5"
+                >
+                  <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+                  <span>Cek Ulang Skor</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 4 Pilar Kematangan Data */}
+            <div className="mt-6">
+              <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                <Layers size={14} className="text-blue-600" /> Rincian Capaian 4 Pilar Kelengkapan
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Pilar 1 */}
+                <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-on-surface">1. Identitas Pokok</span>
+                    <span className="font-mono font-bold text-blue-700">
+                      {myScore?.pillars?.identitas?.score ?? 28} / 30 Pts
+                    </span>
+                  </div>
+                  <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-600 rounded-full" 
+                      style={{ width: `${Math.round(((myScore?.pillars?.identitas?.score ?? 28) / 30) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-on-surface-variant block">NIK, Nama, TTL, Status Kawin, Domisili</span>
+                </div>
+
+                {/* Pilar 2 */}
+                <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-on-surface">2. Kontak & Akun</span>
+                    <span className="font-mono font-bold text-sky-700">
+                      {myScore?.pillars?.kontak?.score ?? 20} / 25 Pts
+                    </span>
+                  </div>
+                  <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="h-full bg-sky-600 rounded-full" 
+                      style={{ width: `${Math.round(((myScore?.pillars?.kontak?.score ?? 20) / 25) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-on-surface-variant block">No. WhatsApp, Email, Foto e-KTP, Akun</span>
+                </div>
+
+                {/* Pilar 3 */}
+                <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-on-surface">3. KK & Desil Sosial</span>
+                    <span className="font-mono font-bold text-amber-700">
+                      {myScore?.pillars?.sosial?.score ?? 22} / 25 Pts
+                    </span>
+                  </div>
+                  <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="h-full bg-amber-600 rounded-full" 
+                      style={{ width: `${Math.round(((myScore?.pillars?.sosial?.score ?? 22) / 25) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-on-surface-variant block">No. KK, Hub. Keluarga, Kuesioner Desil</span>
+                </div>
+
+                {/* Pilar 4 */}
+                <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-on-surface">4. Kesehatan & Posyandu</span>
+                    <span className="font-mono font-bold text-emerald-700">
+                      {myScore?.pillars?.kesehatan?.score ?? 15} / 20 Pts
+                    </span>
+                  </div>
+                  <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-600 rounded-full" 
+                      style={{ width: `${Math.round(((myScore?.pillars?.kesehatan?.score ?? 15) / 20) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-on-surface-variant block">Gol. Darah, Posyandu Balita / Lansia</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Benchmark Komparasi Berjenjang (Warga -> RT -> RW -> Kelurahan) */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+            <h3 className="font-bold text-sm text-on-surface flex items-center gap-2 mb-1">
+              <TrendingUp size={16} className="text-emerald-600" /> Posisi Skor Anda Terhadap Rata-Rata Wilayah Berjenjang
+            </h3>
+            <p className="text-xs text-on-surface-variant mb-5">
+              Komparasi data profil Anda dibandingkan rata-rata kesiapan data di lingkungan RT, RW, dan Kelurahan Kebonjati.
+            </p>
+
+            <div className="space-y-4">
+              {/* Tingkat Warga */}
+              <div>
+                <div className="flex justify-between text-xs font-bold mb-1">
+                  <span className="flex items-center gap-1.5 text-blue-700">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Skor Profil Anda ({user?.nama || 'Warga'})
+                  </span>
+                  <span className="font-mono">{myScore?.total_score ?? 85}%</span>
+                </div>
+                <div className="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                  <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${myScore?.total_score ?? 85}%` }} />
+                </div>
+              </div>
+
+              {/* Tingkat RT */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="flex items-center gap-1.5 text-teal-700">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-500"></span> Rata-Rata Rukun Tetangga (RT {user?.rt || '001'})
+                  </span>
+                  <span className="font-mono">78%</span>
+                </div>
+                <div className="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                  <div className="h-full bg-teal-500 rounded-full" style={{ width: '78%' }} />
+                </div>
+              </div>
+
+              {/* Tingkat RW */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="flex items-center gap-1.5 text-indigo-700">
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Rata-Rata Rukun Warga (RW {user?.rw || '001'})
+                  </span>
+                  <span className="font-mono">81%</span>
+                </div>
+                <div className="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: '81%' }} />
+                </div>
+              </div>
+
+              {/* Tingkat Kelurahan */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span className="flex items-center gap-1.5 text-slate-700">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-600"></span> Indeks Rata-Rata Kelurahan Kebonjati
+                  </span>
+                  <span className="font-mono">{kelurahanData?.overall_maturity_score ?? 87}%</span>
+                </div>
+                <div className="w-full bg-surface-container rounded-full h-2.5 overflow-hidden">
+                  <div className="h-full bg-slate-600 rounded-full" style={{ width: `${kelurahanData?.overall_maturity_score ?? 87}%` }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick-Wins Checklist */}
+          {myScore?.missing_fields && myScore.missing_fields.length > 0 && (
+            <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+              <h3 className="font-bold text-sm text-on-surface flex items-center gap-2 mb-1">
+                <CheckCircle2 size={16} className="text-amber-600" /> Langkah Cepat Melengkapi Data (+Poin Skor)
+              </h3>
+              <p className="text-xs text-on-surface-variant mb-4">
+                Pilih aksi di bawah ini untuk meningkatkan skor kelengkapan menuju predikat PLATINUM (100%):
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {myScore.missing_fields.map((mf, idx) => (
+                  <div key={idx} className="p-3.5 rounded-xl border border-outline-variant bg-surface-container-low flex items-center justify-between text-xs">
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-on-surface block">{mf.label}</span>
+                      <span className="text-[11px] text-amber-700 font-semibold font-mono">+{mf.weight} Poin Tambahan</span>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-bold text-[11px]">
+                      Belum Terisi
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

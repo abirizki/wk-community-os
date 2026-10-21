@@ -106,6 +106,7 @@ export default function DashboardLayout() {
         { name: 'Pengesahan Surat (TTE / QR)', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Penetapan Definitif Bansos', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Pengesahan Desil & DTKS', path: '/dashboard/desil', icon: <Layers size={19} /> },
+        { name: 'Audit Kematangan Data', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
         { name: 'Monitoring Stunting Wilayah', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
         { name: 'Evaluasi Aduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP Kelurahan', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -120,6 +121,7 @@ export default function DashboardLayout() {
         { name: 'Kliring Bansos & Tiket QR', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Rekonsiliasi & Upload PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
         { name: 'Kelola Pengguna & Wilayah', path: '/dashboard/users', icon: <ShieldCheck size={19} /> },
+        { name: 'Kematangan Data & Wilayah', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
         { name: 'Gerbang Pesan WhatsApp', path: '/dashboard/whatsapp', icon: <MessageSquare size={19} /> },
         { name: 'Panduan SOP Operasional', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
       ];
@@ -131,6 +133,7 @@ export default function DashboardLayout() {
         { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Bantuan Sosial RW', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Verifikasi Desil RW', path: '/dashboard/desil', icon: <Layers size={19} /> },
+        { name: 'Kematangan Data RW', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
         { name: 'Kas & Keuangan RW', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Aduan Lingkungan RW', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP RW', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -143,6 +146,7 @@ export default function DashboardLayout() {
         { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Bantuan Sosial RT', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Ground Check Desil RT', path: '/dashboard/desil', icon: <Layers size={19} /> },
+        { name: 'Skor Kelengkapan RT', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
         { name: 'Kas & Iuran Warga', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Aduan Lingkungan RT', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
         { name: 'Panduan SOP RT', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
@@ -169,6 +173,7 @@ export default function DashboardLayout() {
       { name: 'Kartu Keluarga Digital', path: '/dashboard/kk', icon: <Users size={19} /> },
       { name: 'Informasi Bantuan Sosial', path: '/dashboard/bansos', icon: <Gift size={19} /> },
       { name: 'Data Desil & Cek Bansos', path: '/dashboard/desil', icon: <Layers size={19} /> },
+      { name: 'Kelengkapan Profil Warga', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
       { name: 'Kesehatan Keluarga & Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
       { name: 'Transparansi Kas & Iuran', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
       { name: 'Informasi Tagihan PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
