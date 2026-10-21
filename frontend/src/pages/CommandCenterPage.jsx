@@ -102,15 +102,15 @@ export default function CommandCenterPage() {
     }
   };
 
-  // Metrik Konfigurasi Analis Data
+  // Metrik Konfigurasi Analis Data (High-Contrast Enterprise Palette)
   const METRIC_CONFIG = {
     stunting: {
       label: 'Kasus Stunting Balita',
       unit: 'kasus',
-      color: 'bg-rose-500',
-      textColor: 'text-rose-600',
-      lightBg: 'bg-rose-50 border-rose-200',
-      barGradient: 'from-rose-500 to-rose-400',
+      color: 'bg-red-700',
+      textColor: 'text-red-700',
+      lightBg: 'bg-red-50 border-red-300',
+      barGradient: 'from-red-700 to-red-600',
       getValue: (k) => k.metrics.kasus_stunting,
       cityAvg: 3.2,
       storyInsight: 'Prioritas intervensi gizi terpadu untuk percepatan zero stunting.'
@@ -118,10 +118,10 @@ export default function CommandCenterPage() {
     desil: {
       label: 'Keluarga Desil 1–2 (Miskin Ekstrem)',
       unit: 'keluarga',
-      color: 'bg-amber-500',
-      textColor: 'text-amber-600',
-      lightBg: 'bg-amber-50 border-amber-200',
-      barGradient: 'from-amber-500 to-amber-400',
+      color: 'bg-amber-600',
+      textColor: 'text-amber-800',
+      lightBg: 'bg-amber-50 border-amber-300',
+      barGradient: 'from-amber-600 to-amber-500',
       getValue: (k) => k.metrics.kemiskinan_ekstrem_desil_1_2,
       cityAvg: 22.4,
       storyInsight: 'Basis alokasi bantuan sosial APBD dan jaring pengaman sosial.'
@@ -129,10 +129,10 @@ export default function CommandCenterPage() {
     sla: {
       label: 'Kecepatan Layanan Surat (SLA)',
       unit: 'jam',
-      color: 'bg-emerald-500',
-      textColor: 'text-emerald-600',
-      lightBg: 'bg-emerald-50 border-emerald-200',
-      barGradient: 'from-emerald-500 to-teal-400',
+      color: 'bg-emerald-700',
+      textColor: 'text-emerald-800',
+      lightBg: 'bg-emerald-50 border-emerald-300',
+      barGradient: 'from-emerald-700 to-teal-600',
       getValue: (k) => k.metrics.sla_proses_surat_jam,
       cityAvg: 1.8,
       storyInsight: 'Efisiensi birokrasi dan SLA penandatanganan surat digital TTE.'
@@ -140,10 +140,10 @@ export default function CommandCenterPage() {
     maturity: {
       label: 'Indeks Kematangan Data SPBE',
       unit: '%',
-      color: 'bg-sky-500',
-      textColor: 'text-sky-600',
-      lightBg: 'bg-sky-50 border-sky-200',
-      barGradient: 'from-sky-500 to-indigo-400',
+      color: 'bg-blue-800',
+      textColor: 'text-blue-900',
+      lightBg: 'bg-blue-50 border-blue-300',
+      barGradient: 'from-blue-800 to-indigo-700',
       getValue: (k) => k.metrics.indeks_kematangan_data,
       cityAvg: 81.2,
       storyInsight: 'Kesiapan validasi NIK dan kelengkapan basis data kependudukan.'
@@ -387,112 +387,108 @@ export default function CommandCenterPage() {
         </div>
       </div>
 
-      {/* 3. Navigation Controls & Chart Type Switcher */}
-      <div className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant shadow-sm space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          {/* Chart Type Tabs */}
-          <div className="flex items-center gap-1.5 p-1 bg-surface-container-low rounded-xl text-xs overflow-x-auto">
+      {/* 3. Navigation Controls & Unified Enterprise Command Bar */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* View Mode Segmented Controls */}
+          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl text-xs overflow-x-auto border border-slate-200">
             <button
               onClick={() => setActiveTab('ranking_bar')}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all whitespace-nowrap ${
                 activeTab === 'ranking_bar'
-                  ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-200/70'
               }`}
             >
               <BarChart3 size={15} />
-              <span>Grafik Batang (Ranking Kelurahan)</span>
+              <span>Ranking Kelurahan</span>
             </button>
 
             <button
               onClick={() => setActiveTab('kecamatan_group')}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all whitespace-nowrap ${
                 activeTab === 'kecamatan_group'
-                  ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-200/70'
               }`}
             >
               <Layers size={15} />
-              <span>Komparasi Antar-Kecamatan</span>
+              <span>Komparasi Kecamatan</span>
             </button>
 
             <button
               onClick={() => setActiveTab('matrix_table')}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all whitespace-nowrap ${
                 activeTab === 'matrix_table'
-                  ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-200/70'
               }`}
             >
               <FileText size={15} />
-              <span>Matriks Spasial Lengkap</span>
+              <span>Matriks Spasial</span>
             </button>
           </div>
 
-          {/* Metric Selector Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
-            <span className="text-[11px] font-bold text-on-surface-variant shrink-0 mr-1">Metrik Analisis:</span>
-            {Object.entries(METRIC_CONFIG).map(([key, config]) => (
-              <button
-                key={key}
-                onClick={() => setSelectedMetric(key)}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap text-xs ${
-                  selectedMetric === key
-                    ? `${config.color} text-white shadow-xs`
-                    : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                {config.label.includes('Stunting') ? 'Stunting' : config.label.includes('Desil') ? 'Desil 1-2' : config.label.includes('SLA') ? 'SLA Surat' : 'Kematangan SPBE'}
-              </button>
-            ))}
+          {/* Metric Selector Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto text-xs">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1">Metrik:</span>
+            {Object.entries(METRIC_CONFIG).map(([key, config]) => {
+              const isActive = selectedMetric === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setSelectedMetric(key)}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap text-xs border ${
+                    isActive
+                      ? `${config.color} text-white border-transparent shadow-sm`
+                      : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  {config.label.includes('Stunting') ? 'Kasus Stunting' : config.label.includes('Desil') ? 'Desil 1–2' : config.label.includes('SLA') ? 'SLA Surat' : 'Kematangan SPBE'}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Secondary Filter & Search Toolbar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-3 border-t border-outline-variant">
-          {/* Kecamatan Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 text-xs">
-            <button
-              onClick={() => setSelectedKecamatan('')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
-                selectedKecamatan === ''
-                  ? 'bg-sky-700 text-white'
-                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
-              }`}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
+          {/* Kecamatan Dropdown Selector */}
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <label className="text-xs font-bold text-slate-600 whitespace-nowrap flex items-center gap-1.5">
+              <MapPin size={14} className="text-blue-700" />
+              <span>Filter Wilayah:</span>
+            </label>
+            <select
+              value={selectedKecamatan}
+              onChange={(e) => setSelectedKecamatan(e.target.value)}
+              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-50 border border-slate-300 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer"
             >
-              Semua Kecamatan (7)
-            </button>
-            {kecamatanList.map((kec) => (
-              <button
-                key={kec.kode_kecamatan}
-                onClick={() => setSelectedKecamatan(kec.kode_kecamatan)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
-                  selectedKecamatan === kec.kode_kecamatan
-                    ? 'bg-sky-700 text-white'
-                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
-                }`}
-              >
-                {kec.nama_kecamatan}
-              </button>
-            ))}
+              <option value="">Semua Kecamatan (7 Kecamatan · 33 Kelurahan)</option>
+              {kecamatanList.map((kec) => (
+                <option key={kec.kode_kecamatan} value={kec.kode_kecamatan}>
+                  Kecamatan {kec.nama_kecamatan}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Search & Sort */}
           <div className="flex items-center gap-2.5 w-full md:w-auto">
-            <div className="relative flex-1 md:w-60">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+            <div className="relative flex-1 md:w-64">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Cari kelurahan..."
+                placeholder="Cari nama kelurahan / lurah..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-surface-container-low border border-outline-variant focus:outline-none focus:ring-1 focus:ring-sky-500"
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-900"
               />
             </div>
 
             <button
               onClick={() => setSortBy(sortBy === 'desc' ? 'asc' : 'desc')}
-              className="px-3 py-1.5 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-bold text-on-surface flex items-center gap-1.5 hover:bg-surface-container shrink-0"
+              className="px-3.5 py-1.5 rounded-xl border border-slate-300 bg-slate-50 text-xs font-bold text-slate-800 flex items-center gap-1.5 hover:bg-slate-100 shrink-0 cursor-pointer"
               title="Ganti Urutan"
             >
               <span>{sortBy === 'desc' ? 'Tertinggi ↓' : 'Terendah ↑'}</span>

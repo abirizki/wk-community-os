@@ -27,7 +27,10 @@ function requireAuth(req, res, next) {
   return res.status(401).json({ success: false, message: 'Unauthorized. Harap login terlebih dahulu.' });
 }
 
-function requireRole(allowedRoles = []) {
+function requireRole(...roles) {
+  // Dukung format array requireRole(['a', 'b']) maupun variadic requireRole('a', 'b')
+  const allowedRoles = roles.length === 1 && Array.isArray(roles[0]) ? roles[0] : roles.flat();
+
   return (req, res, next) => {
     if (!req.session || !req.session.user) {
       return res.status(401).json({ success: false, message: 'Unauthorized. Harap login terlebih dahulu.' });
@@ -36,13 +39,13 @@ function requireRole(allowedRoles = []) {
     const userRole = req.session.user.role;
     // Normalisasi role
     let normalizedRole = userRole;
-    if (userRole === 'admin' || userRole === 'lurah') normalizedRole = 'admin_kelurahan';
-    if (userRole === 'walikota') normalizedRole = 'superadmin';
+    if (userRole === 'admin') normalizedRole = 'admin_kelurahan';
 
     const isAllowed = allowedRoles.some(role => {
-      if (role === 'admin' && (normalizedRole === 'admin_kelurahan' || normalizedRole === 'superadmin' || normalizedRole === 'camat')) return true;
-      if (role === 'admin_kelurahan' && (normalizedRole === 'admin_kelurahan' || normalizedRole === 'superadmin' || normalizedRole === 'camat')) return true;
+      if (role === 'admin' && (normalizedRole === 'admin_kelurahan' || normalizedRole === 'superadmin')) return true;
+      if (role === 'admin_kelurahan' && (normalizedRole === 'admin_kelurahan' || normalizedRole === 'superadmin')) return true;
       if (role === 'superadmin' && normalizedRole === 'superadmin') return true;
+      if (role === 'pimpinan' && ['walikota', 'camat', 'lurah'].includes(normalizedRole)) return true;
       return role === normalizedRole;
     });
 
@@ -117,10 +120,65 @@ function canManageUserRole(req, res, next) {
   next();
 }
 
+/**
+ * Anti-IDOR Family & Citizen Scope Guard
+ * Memastikan warga hanya dapat mengakses NIK / KK miliknya sendiri,
+ * sedangkan RT/RW/Lurah berwenang mengakses data sesuai yurisdiksi.
+ */
+function requireFamilyOrStaffScope(paramType = 'noKk') {
+  return (req, res, next) => {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized. Harap login terlebih dahulu.' });
+    }
+
+    const currentUser = req.session.user;
+    const isStaff = ['superadmin', 'walikota', 'camat', 'lurah', 'admin_kelurahan', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt', 'kader_posyandu'].includes(currentUser.role);
+
+    if (isStaff) {
+      return next();
+    }
+
+    if (paramType === 'noKk') {
+      const requestedNoKk = String(req.params.noKk || req.query.noKk || '').trim();
+      const userNoKk = String(currentUser.no_kk || '').trim();
+
+      if (userNoKk && requestedNoKk && userNoKk === requestedNoKk) {
+        return next();
+      }
+
+      return res.status(403).json({
+        success: false,
+        message: 'Akses ditolak (Anti-IDOR). Anda hanya berhak mengakses dokumen keluarga Anda sendiri.'
+      });
+    }
+
+    if (paramType === 'nik') {
+      const requestedNik = String(req.params.nik || '').trim();
+      const userNik = String(currentUser.active_nik || currentUser.username || '').trim();
+
+      if (userNik && requestedNik && userNik === requestedNik) {
+        return next();
+      }
+
+      if (currentUser.family_members && currentUser.family_members.some(m => m.nik === requestedNik)) {
+        return next();
+      }
+
+      return res.status(403).json({
+        success: false,
+        message: 'Akses ditolak (Anti-IDOR). Anda hanya berhak mengakses data anggota keluarga Anda sendiri.'
+      });
+    }
+
+    next();
+  };
+}
+
 module.exports = {
   requireAuth,
   requireRole,
   requireAdmin,
+  requireFamilyOrStaffScope,
   canManageUserRole,
   ROLE_HIERARCHY
 };

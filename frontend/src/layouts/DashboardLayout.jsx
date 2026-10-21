@@ -152,6 +152,8 @@ export default function DashboardLayout() {
     if (isPosyandu) {
       return [
         { name: 'Beranda Posyandu', path: '/dashboard', icon: <Home size={19} /> },
+        { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
+        { name: 'Kartu Keluarga Digital', path: '/dashboard/kk', icon: <Users size={19} /> },
         { name: 'Buku KIA Balita', path: '/dashboard?tab=balita', icon: <Baby size={19} /> },
         { name: 'Kesehatan Lansia', path: '/dashboard?tab=lansia', icon: <HeartPulse size={19} /> },
         { name: 'Riwayat & Rekap', path: '/dashboard?tab=riwayat', icon: <FileText size={19} /> },
@@ -210,6 +212,7 @@ export default function DashboardLayout() {
     if (isPosyandu) {
       return [
         { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'Surat', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
         { name: 'Balita', path: '/dashboard?tab=balita', icon: <Baby size={18} /> },
         { name: 'Lansia', path: '/dashboard?tab=lansia', icon: <HeartPulse size={18} /> },
         { name: 'Riwayat', path: '/dashboard?tab=riwayat', icon: <FileText size={18} /> },

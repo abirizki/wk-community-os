@@ -313,7 +313,7 @@ export default function KartuKeluargaPage() {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Blanko Resmi
+                Ringkasan Profil KK
               </button>
               <button
                 onClick={() => setActiveTab('jaminan')}
@@ -343,13 +343,23 @@ export default function KartuKeluargaPage() {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white text-xs font-semibold shadow-sm transition-all"
             >
               <Printer className="w-4 h-4" />
-              <span>Cetak Blanko Resmi</span>
+              <span>Cetak Ringkasan KK</span>
             </button>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Official Civil Registry Disclaimer Alert */}
+        <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-900 text-xs flex items-start gap-3 print:border-amber-400">
+          <Info className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="font-bold text-amber-950 text-xs sm:text-sm">Ringkasan Profil Kependudukan Keluarga Digital</h4>
+            <p className="text-[11px] leading-relaxed text-amber-900">
+              Dokumen ini merupakan ringkasan digital profil kependudukan & jaring pengaman keluarga di platform <strong>Bumi Warga</strong> untuk mempermudah pelayanan mandiri warga, integrasi jaminan sosial (BPJS/KIS/KIP), dan pencatatan kesehatan posyandu. <strong>Bukan merupakan fisik Kartu Keluarga resmi yang diterbitkan oleh Dinas Kependudukan dan Pencatatan Sipil (Disdukcapil / Kemendagri).</strong>
+            </p>
+          </div>
+        </div>
         
         {/* 2. SUMMARY CARDS: JAMINAN SOSIAL & KESEJAHTERAAN (Hidden on Print) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 print:hidden">
@@ -423,14 +433,14 @@ export default function KartuKeluargaPage() {
             <div className="flex items-center justify-center gap-4 mb-2">
               <LambangGaruda className="w-20 h-20" />
             </div>
-            <h2 className="text-xl sm:text-2xl font-serif font-black tracking-widest text-slate-900 uppercase">
-              REPUBLIK INDONESIA
+            <h2 className="text-xs sm:text-sm font-bold tracking-widest text-slate-600 uppercase">
+              BUMI WARGA &bull; PORTAL KEPENDUDUKAN & KELUARGA
             </h2>
-            <h3 className="text-2xl sm:text-3xl font-serif font-black tracking-wider text-slate-900 uppercase mt-0.5">
-              KARTU KELUARGA
+            <h3 className="text-xl sm:text-2xl font-black tracking-wider text-slate-900 uppercase mt-0.5">
+              RINGKASAN DATA KARTU KELUARGA
             </h3>
-            <p className="text-base sm:text-lg font-mono font-bold tracking-widest text-slate-800 mt-1">
-              No. {activeKk.no_kk}
+            <p className="text-sm sm:text-base font-mono font-bold tracking-widest text-slate-700 mt-1">
+              Nomor KK: {activeKk.no_kk}
             </p>
           </div>
 

@@ -9,7 +9,7 @@ const crypto = require('crypto');
 const pool = require('../db/pool');
 const wilayahRepository = require('../repositories/wilayah.repository');
 
-// Native JWT Sign & Decode Helper (RFC 7519) - Zero External Dependencies
+// Native JWT Sign & Verify Helper (RFC 7519) - Zero External Dependencies
 function nativeDecodeToken(token) {
   if (!token || !token.includes('.')) return null;
   const parts = token.split('.');
@@ -22,6 +22,28 @@ function nativeDecodeToken(token) {
     }
   }
   return null;
+}
+
+function nativeVerifyToken(token, secret = process.env.JWT_SECRET || 'wk-community-os-super-secret-jwt-key-2026') {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [headerB64, bodyB64, signatureB64] = parts;
+  try {
+    const expectedSig = crypto.createHmac('sha256', secret).update(`${headerB64}.${bodyB64}`).digest('base64url');
+    const sigBuf = Buffer.from(signatureB64);
+    const expBuf = Buffer.from(expectedSig);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+    const payload = JSON.parse(Buffer.from(bodyB64, 'base64url').toString('utf8'));
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      return null; // Token expired
+    }
+    return payload;
+  } catch (e) {
+    return null;
+  }
 }
 
 function nativeSignToken(payload, secret = process.env.JWT_SECRET || 'wk-community-os-super-secret-jwt-key-2026') {
@@ -129,22 +151,28 @@ class SapawargaService {
     }
 
     let payload;
+    const isDev = process.env.NODE_ENV !== 'production';
+
     try {
-      // Decode atau verifikasi payload token
-      if (ssoToken.startsWith('spw_mock_') || ssoToken.includes('.')) {
-        // Jika format JWT atau mock token sandbox
-        if (ssoToken.includes('.')) {
-          payload = nativeDecodeToken(ssoToken);
-        } else {
-          // Token sandbox: spw_mock_3273010203850003
-          const nikFromToken = ssoToken.replace('spw_mock_', '');
-          payload = {
-            nik: nikFromToken || '3273010203850003',
-            nama: 'Budi Santoso',
-            email: 'budi.santoso@sapawarga.id',
-            source: 'SAPAWARGA_OIDC',
-            is_jabar_verified: true
-          };
+      if (ssoToken.startsWith('spw_mock_')) {
+        // Mock token sandbox hanya diizinkan pada mode non-produksi
+        if (!isDev && process.env.ALLOW_SANDBOX_LOGIN !== 'true') {
+          throw new Error('Sandbox mock token dinonaktifkan pada lingkungan produksi resmi.');
+        }
+        const nikFromToken = ssoToken.replace('spw_mock_', '');
+        payload = {
+          nik: nikFromToken || '3272030103810001',
+          nama: 'Budi Santoso',
+          email: 'budi.santoso@sapawarga.id',
+          source: 'SAPAWARGA_SANDBOX',
+          is_jabar_verified: true
+        };
+      } else if (ssoToken.includes('.')) {
+        // Wajib verifikasi tanda tangan kriptografis JWT OIDC
+        const ssoSecret = process.env.SAPAWARGA_JWT_SECRET || process.env.JWT_SECRET || 'wk-community-os-super-secret-jwt-key-2026';
+        payload = nativeVerifyToken(ssoToken, ssoSecret);
+        if (!payload) {
+          throw new Error('Tanda tangan (signature) token OIDC Sapawarga tidak valid atau telah kedaluwarsa.');
         }
       } else {
         throw new Error('Format token Sapawarga tidak valid');

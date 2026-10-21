@@ -6,7 +6,7 @@
 
 const express = require('express');
 const wargaService = require('../services/warga.service');
-const { requireAuth, requireRole } = require('../middleware/auth.middleware');
+const { requireAuth, requireRole, requireFamilyOrStaffScope } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
@@ -56,8 +56,8 @@ router.post('/bulk-import', requireAuth, requireRole('superadmin', 'admin_kelura
   }
 });
 
-// GET /api/warga/:nik - Detail profil warga
-router.get('/:nik', requireAuth, async (req, res) => {
+// GET /api/warga/:nik - Detail profil warga (Anti-IDOR: dilindungi Scope Guard)
+router.get('/:nik', requireAuth, requireFamilyOrStaffScope('nik'), async (req, res) => {
   try {
     const { nik } = req.params;
     const warga = await wargaService.getByNik(nik);

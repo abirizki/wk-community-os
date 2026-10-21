@@ -6,7 +6,7 @@
 
 const express = require('express');
 const kkService = require('../services/kk.service');
-const { requireAuth } = require('../middleware/auth.middleware');
+const { requireAuth, requireFamilyOrStaffScope } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
@@ -20,8 +20,8 @@ router.get(['/my/card', '/me', '/my'], requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/kk/:noKk - Cari KK spesifik (untuk petugas / admin)
-router.get('/:noKk', requireAuth, async (req, res) => {
+// GET /api/kk/:noKk - Cari KK spesifik (Anti-IDOR: dilindungi Scope Guard)
+router.get('/:noKk', requireAuth, requireFamilyOrStaffScope('noKk'), async (req, res) => {
   try {
     const { noKk } = req.params;
     const kk = await kkService.getByNoKk(noKk);

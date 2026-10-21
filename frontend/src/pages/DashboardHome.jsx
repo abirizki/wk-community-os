@@ -38,6 +38,7 @@ import DashboardKetuaRW from './dashboard/DashboardKetuaRW';
 import DashboardLurah from './dashboard/DashboardLurah';
 import DashboardAdminKelurahan from './dashboard/DashboardAdminKelurahan';
 import DashboardWarga from './dashboard/DashboardWarga';
+import DashboardWalikota from './dashboard/DashboardWalikota';
 
 export default function DashboardHome() {
   const { user } = useAuth();
@@ -64,7 +65,11 @@ export default function DashboardHome() {
   if (user?.role === 'admin_kelurahan' || user?.role === 'admin' || user?.role === 'staf_kelurahan') {
     return <DashboardAdminKelurahan />;
   }
-  // 6. Warga (Citizen Experience & Workflow Stepper)
+  // 6. Walikota (City-Level Executive Strategic Command)
+  if (user?.role === 'walikota') {
+    return <DashboardWalikota />;
+  }
+  // 7. Warga (Citizen Experience & Workflow Stepper)
   if (user?.role === 'warga' || user?.role === 'pengguna' || user?.role === 'user' || !user?.role) {
     return <DashboardWarga />;
   }
