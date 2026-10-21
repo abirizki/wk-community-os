@@ -39,7 +39,8 @@ import {
   Loader2,
   Save,
   MessageSquareWarning,
-  Copy
+  Copy,
+  Edit2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -79,6 +80,28 @@ export default function DashboardAdminKelurahan() {
   const [pbbSummary, setPbbSummary] = useState(null);
   const [posyanduList, setPosyanduList] = useState([]);
   const [dayaDukungSummary, setDayaDukungSummary] = useState(null);
+
+  // 1.1 Profil Wilayah & Pejabat Eksekutif Pemerintahan (Lurah, Camat, Walikota)
+  const [govProfile, setGovProfile] = useState(() => {
+    const saved = localStorage.getItem('bw_gov_profile');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      nama_kelurahan: 'Kebonjati',
+      nama_kecamatan: 'Sukabumi',
+      nama_kota: 'Kota Sukabumi',
+      nama_lurah: 'Drs. H. Mulyadi, M.Si',
+      nip_lurah: '19740512 199903 1 002',
+      nama_camat: 'Drs. H. Hendra, M.Si',
+      nip_camat: '19680914 199402 1 001',
+      nama_walikota: 'H. Achmad Fahmi, S.Ag, M.M.Pd',
+      wilayah_binaan: 'RW 001 s.d RW 006'
+    };
+  });
+  const [govModalOpen, setGovModalOpen] = useState(false);
+  const [govForm, setGovForm] = useState(govProfile);
+  const [savingGov, setSavingGov] = useState(false);
 
   // 2. User Management Form Modal
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -189,6 +212,18 @@ export default function DashboardAdminKelurahan() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Save Government Profile (Kelurahan, Lurah, Camat, Walikota)
+  const handleSaveGovProfile = (e) => {
+    e.preventDefault();
+    setSavingGov(true);
+    setGovProfile(govForm);
+    localStorage.setItem('bw_gov_profile', JSON.stringify(govForm));
+    setSavingGov(false);
+    setGovModalOpen(false);
+    setSuccessMsg(`Profil Pemerintahan Kelurahan ${govForm.nama_kelurahan} berhasil diperbarui!`);
+    setTimeout(() => setSuccessMsg(''), 4000);
   };
 
   // Save New User
@@ -434,19 +469,30 @@ export default function DashboardAdminKelurahan() {
             <span>Pusat Kendali Administrasi & Kliring Wilayah Kelurahan</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Meja Kerja Admin Kelurahan Kebonjati
+            Meja Kerja Admin Kelurahan {govProfile.nama_kelurahan}
           </h1>
           <p className="text-sm text-slate-300 leading-relaxed">
             Pengelolaan berjenjang akun aparatur RT/RW, orkestrasi posyandu teritorial, impor massal kependudukan, kliring sanggahan bansos, dan akselerasi kepatuhan PBB.
           </p>
           <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-sky-300 font-medium">
-            <span className="flex items-center gap-1.5"><MapPin size={14} className="text-rose-400" /> Kelurahan Kebonjati, Kec. Andir, Kota Bandung</span>
-            <span>&bull; Wilayah Binaan: <strong>RW 001 s.d RW 006</strong></span>
+            <span className="flex items-center gap-1.5"><MapPin size={14} className="text-rose-400" /> Kelurahan {govProfile.nama_kelurahan}, Kec. {govProfile.nama_kecamatan}, {govProfile.nama_kota}</span>
+            <span>&bull; Wilayah Binaan: <strong>{govProfile.wilayah_binaan}</strong></span>
             <span>&bull; Otoritas: <strong>Verifikator & Operasional SPBE</strong></span>
           </div>
         </div>
 
         <div className="relative z-10 flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+          <button
+            onClick={() => {
+              setGovForm(govProfile);
+              setGovModalOpen(true);
+            }}
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/15 transition-all shadow-sm"
+            title="Edit Profil Kelurahan, Lurah, Camat, & Walikota"
+          >
+            <Building2 size={14} className="text-amber-400" />
+            <span>Profil Wilayah</span>
+          </button>
           <button
             onClick={fetchAllDashboardData}
             disabled={refreshing}
@@ -835,6 +881,42 @@ export default function DashboardAdminKelurahan() {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 text-white font-bold text-xs hover:bg-sky-700 shadow-sm transition-colors"
             >
               <UserPlus size={15} /> Tambah Akun Baru
+            </button>
+          </div>
+
+          {/* Executive Government & Territorial Profile Card */}
+          <div className="p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl text-white border border-indigo-800 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="p-3 bg-white/10 rounded-xl text-amber-400 border border-white/10 shrink-0">
+                <Building2 size={26} />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold text-amber-300 tracking-wider uppercase px-2 py-0.5 rounded bg-amber-400/20 border border-amber-400/30">
+                    Pemerintahan Daerah & Wilayah Binaan
+                  </span>
+                  <span className="text-xs text-sky-200">
+                    {govProfile.wilayah_binaan}
+                  </span>
+                </div>
+                <h4 className="text-base font-black">
+                  Kelurahan {govProfile.nama_kelurahan}, Kec. {govProfile.nama_kecamatan}, {govProfile.nama_kota}
+                </h4>
+                <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-300">
+                  <span>Lurah: <strong className="text-white">{govProfile.nama_lurah}</strong> <span className="text-[10px] text-slate-400 font-mono">({govProfile.nip_lurah})</span></span>
+                  <span>&bull; Camat: <strong className="text-white">{govProfile.nama_camat}</strong></span>
+                  <span>&bull; Walikota: <strong className="text-white">{govProfile.nama_walikota}</strong></span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setGovForm(govProfile);
+                setGovModalOpen(true);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition flex items-center gap-2 shadow-sm shrink-0"
+            >
+              <Edit2 size={14} /> Edit Data Pejabat & Wilayah
             </button>
           </div>
 
@@ -1719,6 +1801,164 @@ export default function DashboardAdminKelurahan() {
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 0: PENGATURAN PROFIL WILAYAH & PEJABAT PEMERINTAHAN                   */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {govModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-outline-variant text-xs space-y-4"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                    <Building2 size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-on-surface">Profil Wilayah & Pejabat Eksekutif</h3>
+                    <p className="text-[11px] text-on-surface-variant">Konfigurasi nama kelurahan, kecamatan, kota, lurah, camat, dan walikota</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setGovModalOpen(false)}
+                  className="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveGovProfile} className="space-y-3.5">
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-on-surface mb-1">Nama Kelurahan</label>
+                    <input
+                      type="text"
+                      value={govForm.nama_kelurahan}
+                      onChange={(e) => setGovForm({ ...govForm, nama_kelurahan: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-on-surface mb-1">Kecamatan</label>
+                    <input
+                      type="text"
+                      value={govForm.nama_kecamatan}
+                      onChange={(e) => setGovForm({ ...govForm, nama_kecamatan: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-on-surface mb-1">Kota / Kabupaten</label>
+                    <input
+                      type="text"
+                      value={govForm.nama_kota}
+                      onChange={(e) => setGovForm({ ...govForm, nama_kota: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-on-surface mb-1">Nama Lurah</label>
+                    <input
+                      type="text"
+                      value={govForm.nama_lurah}
+                      onChange={(e) => setGovForm({ ...govForm, nama_lurah: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="Contoh: Drs. H. Mulyadi, M.Si"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-on-surface mb-1">NIP Lurah</label>
+                    <input
+                      type="text"
+                      value={govForm.nip_lurah}
+                      onChange={(e) => setGovForm({ ...govForm, nip_lurah: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="19740512 199903 1 002"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-on-surface mb-1">Nama Camat</label>
+                    <input
+                      type="text"
+                      value={govForm.nama_camat}
+                      onChange={(e) => setGovForm({ ...govForm, nama_camat: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="Contoh: Drs. H. Hendra, M.Si"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-on-surface mb-1">NIP Camat</label>
+                    <input
+                      type="text"
+                      value={govForm.nip_camat}
+                      onChange={(e) => setGovForm({ ...govForm, nip_camat: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="19680914 199402 1 001"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-on-surface mb-1">Nama Walikota / Pj. Walikota</label>
+                  <input
+                    type="text"
+                    value={govForm.nama_walikota}
+                    onChange={(e) => setGovForm({ ...govForm, nama_walikota: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    placeholder="Contoh: H. Achmad Fahmi, S.Ag, M.M.Pd"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-on-surface mb-1">Cakupan Wilayah Binaan RW</label>
+                  <input
+                    type="text"
+                    value={govForm.wilayah_binaan}
+                    onChange={(e) => setGovForm({ ...govForm, wilayah_binaan: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    placeholder="Contoh: RW 001 s.d RW 006"
+                    required
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2 border-t border-outline-variant">
+                  <button
+                    type="button"
+                    onClick={() => setGovModalOpen(false)}
+                    className="px-4 py-2 rounded-xl border border-outline-variant text-on-surface font-bold hover:bg-surface-container-low transition"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingGov}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold transition flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Save size={14} /> Simpan Profil
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ========================================================================= */}
       {/* MODAL 1: TAMBAH USER / PROVISIONING ROLE APARATUR                           */}
