@@ -18,6 +18,7 @@ import WhatsAppGatewayPage from './pages/WhatsAppGatewayPage';
 import WargaList from './pages/WargaList';
 import WargaDetail from './pages/WargaDetail';
 import KartuKeluargaPage from './pages/KartuKeluargaPage';
+import KontrakanPage from './pages/KontrakanPage';
 import UserManagementPage from './pages/UserManagementPage';
 import PanduanOperasionalPage from './pages/PanduanOperasionalPage';
 import ProfilePage from './pages/ProfilePage';
@@ -56,6 +57,7 @@ function App() {
             <Route path="whatsapp" element={<WhatsAppGatewayPage />} />
             <Route path="scanner" element={<ScannerPage />} />
             <Route path="kk" element={<KartuKeluargaPage />} />
+            <Route path="kontrakan" element={<KontrakanPage />} />
             <Route path="users" element={<UserManagementPage />} />
             <Route path="warga" element={<WargaList />} />
             <Route path="warga/:nik" element={<WargaDetail />} />

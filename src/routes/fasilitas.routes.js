@@ -266,7 +266,7 @@ router.get('/hunian-sewa', requireAuth, async (req, res) => {
 });
 
 // POST /api/fasilitas/hunian-sewa - Pendaftaran Rumah Kos / Kontrakan
-router.post('/hunian-sewa', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw'), async (req, res) => {
+router.post('/hunian-sewa', requireAuth, requireRole('superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw', 'warga'), async (req, res) => {
   try {
     const { nama_hunian, nama_pemilik, no_kontak_pemilik, alamat } = req.body;
     if (!nama_hunian || !nama_pemilik || !no_kontak_pemilik || !alamat) {

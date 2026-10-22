@@ -777,20 +777,54 @@ async function autoPatchDatabase() {
         await connection.query("ALTER TABLE users ADD COLUMN no_kk VARCHAR(16) NULL");
       } catch (e) {}
 
-      // Tambah KK Budi Santoso jika belum ada
+      // Tambah KK Asep Saepulloh dan Budi Santoso jika belum ada
       await connection.execute(`
         INSERT INTO \`kartu_keluarga\` 
           (\`no_kk\`, \`kepala_keluarga\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`)
         VALUES 
-          ('3273010101900001', 'Budi Santoso', 'Jl. Kebonjati No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Andir', 'Kota Bandung', 'Jawa Barat', '40181')
+          ('3272030101900102', 'Asep Saepulloh', 'Jl. Kebonjati Gg. Mesjid No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Sukabumi', 'Kota Sukabumi', 'Jawa Barat', '43111'),
+          ('3273010101900001', 'Budi Santoso', 'Jl. Kebonjati No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Sukabumi', 'Kota Sukabumi', 'Jawa Barat', '43111')
         ON DUPLICATE KEY UPDATE 
-          \`kepala_keluarga\` = 'Budi Santoso',
-          \`alamat\` = 'Jl. Kebonjati No. 12 RT 001/RW 001',
-          \`rt\` = '001',
-          \`rw\` = '001';
+          \`kepala_keluarga\` = VALUES(\`kepala_keluarga\`),
+          \`alamat\` = VALUES(\`alamat\`),
+          \`rt\` = VALUES(\`rt\`),
+          \`rw\` = VALUES(\`rw\`),
+          \`kelurahan\` = VALUES(\`kelurahan\`),
+          \`kecamatan\` = VALUES(\`kecamatan\`),
+          \`kota\` = VALUES(\`kota\`),
+          \`kode_pos\` = '43111';
       `);
 
-      // Pastikan tabel warga berisi anggota KK Budi Santoso
+      // Sinkronisasi otomatis data kartu keluarga dari seluruh kepala keluarga di tabel warga
+      try {
+        await connection.execute(`
+          INSERT IGNORE INTO \`kartu_keluarga\` 
+            (\`no_kk\`, \`kepala_keluarga\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`)
+          SELECT 
+            no_kk, nama, alamat, rt, rw, 'Kebonjati', 'Sukabumi', 'Kota Sukabumi', 'Jawa Barat', '43111'
+          FROM warga 
+          WHERE (status_hubungan_keluarga = 'Kepala Keluarga' OR hubungan_keluarga = 'Kepala Keluarga')
+            AND no_kk IS NOT NULL AND no_kk != ''
+          GROUP BY no_kk;
+        `);
+      } catch (syncKkErr) {}
+
+      // Pastikan tabel warga berisi anggota KK resmi Asep Saepulloh (3272030101900102)
+      try {
+        await connection.execute(`
+          INSERT INTO \`warga\` 
+            (nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, agama, pendidikan_terakhir, pekerjaan, status_perkawinan, status_hubungan_keluarga, golongan_darah, alamat, rt, rw, kategori_asuransi, nomor_asuransi)
+          VALUES 
+            ('3272030103820005', '3272030101900102', 'Asep Saepulloh', 'L', 'Sukabumi', '1985-03-06', 'Islam', 'SMA/SMK', 'Karyawan Swasta', 'Kawin', 'Kepala Keluarga', 'O', 'Jl. Kebonjati Gg. Mesjid No. 12 RT 001/RW 001', '001', '001', 'BPJS Kesehatan Mandiri', '0001000000005 (PPU)'),
+            ('3272034506870006', '3272030101900102', 'Dewi Sartika', 'P', 'Sukabumi', '1988-06-07', 'Islam', 'SMA/SMK', 'Ibu Rumah Tangga', 'Kawin', 'Istri', 'A', 'Jl. Kebonjati Gg. Mesjid No. 12 RT 001/RW 001', '001', '001', 'BPJS Kesehatan Mandiri', '0001000000005 (PPU Tanggungan)'),
+            ('3272031505100007', '3272030101900102', 'Zahra Amelia', 'P', 'Sukabumi', '2010-05-15', 'Islam', 'SMA/SMK', 'Pelajar / Mahasiswa', 'Belum Kawin', 'Anak', 'B', 'Jl. Kebonjati Gg. Mesjid No. 12 RT 001/RW 001', '001', '001', 'BPJS Kesehatan Mandiri', '0001000000007 (Anak)'),
+            ('3272031402240008', '3272030101900102', 'Balita Faris', 'L', 'Sukabumi', '2024-02-14', 'Islam', 'Belum Sekolah', 'Belum Bekerja', 'Belum Kawin', 'Anak', 'A', 'Jl. Kebonjati Gg. Mesjid No. 12 RT 001/RW 001', '001', '001', 'BPJS Kesehatan Mandiri', '0001000000008')
+          ON DUPLICATE KEY UPDATE
+            nama = VALUES(nama),
+            status_hubungan_keluarga = VALUES(status_hubungan_keluarga),
+            no_kk = VALUES(no_kk);
+        `);
+      } catch (wAsepErr) {}
       
       // Master Seeder: Periksa apakah 200 warga telah terisi di database
       try {

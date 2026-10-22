@@ -28,6 +28,7 @@ import {
   Baby,
   Database,
   Layers,
+  KeyRound,
 } from 'lucide-react';
 import OfflineIndicator from '../components/OfflineIndicator';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
@@ -133,6 +134,7 @@ export default function DashboardLayout() {
         { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Bantuan Sosial RW', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Verifikasi Desil RW', path: '/dashboard/desil', icon: <Layers size={19} /> },
+        { name: 'Rumah Sewa & Kontrakan', path: '/dashboard/kontrakan', icon: <KeyRound size={19} /> },
         { name: 'Kematangan Data RW', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
         { name: 'Kas & Keuangan RW', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Aduan Lingkungan RW', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
@@ -146,6 +148,7 @@ export default function DashboardLayout() {
         { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
         { name: 'Bantuan Sosial RT', path: '/dashboard/bansos', icon: <Gift size={19} /> },
         { name: 'Ground Check Desil RT', path: '/dashboard/desil', icon: <Layers size={19} /> },
+        { name: 'Rumah Sewa & Kontrakan', path: '/dashboard/kontrakan', icon: <KeyRound size={19} /> },
         { name: 'Skor Kelengkapan RT', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
         { name: 'Kas & Iuran Warga', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
         { name: 'Aduan Lingkungan RT', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
@@ -166,19 +169,18 @@ export default function DashboardLayout() {
       ];
     }
 
-    // Default: Warga Masyarakat
+    // Default: Warga Masyarakat (Fokus Kebutuhan Esensial & Mudah Dipahami)
     return [
       { name: 'Beranda Layanan Mandiri', path: '/dashboard', icon: <Home size={19} /> },
-      { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
       { name: 'Kartu Keluarga Digital', path: '/dashboard/kk', icon: <Users size={19} /> },
+      { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
       { name: 'Informasi Bantuan Sosial', path: '/dashboard/bansos', icon: <Gift size={19} /> },
-      { name: 'Data Desil & Cek Bansos', path: '/dashboard/desil', icon: <Layers size={19} /> },
-      { name: 'Kelengkapan Profil Warga', path: '/dashboard/data-maturity', icon: <Award size={19} /> },
-      { name: 'Kesehatan Keluarga & Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
+      { name: 'Rumah Sewa & Kontrakan', path: '/dashboard/kontrakan', icon: <KeyRound size={19} /> },
+      { name: 'Kesehatan & Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
       { name: 'Transparansi Kas & Iuran', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
-      { name: 'Informasi Tagihan PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
-      { name: 'Daftar Usaha & UMKM Warga', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
       { name: 'Lapor Pengaduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
+      { name: 'Informasi Tagihan PBB', path: '/dashboard/pbb', icon: <FileText size={19} /> },
+      { name: 'Kelengkapan Profil Saya', path: '/dashboard/profil', icon: <ShieldCheck size={19} /> },
       { name: 'Panduan Layanan Warga', path: '/dashboard/panduan', icon: <BookOpen size={19} /> }
     ];
   };
@@ -190,10 +192,10 @@ export default function DashboardLayout() {
     if (isWarga) {
       return [
         { name: 'Beranda', path: '/dashboard', icon: <Home size={18} /> },
+        { name: 'KK Digital', path: '/dashboard/kk', icon: <Users size={18} /> },
         { name: 'Surat', path: '/dashboard/dokumen', icon: <FileCheck size={18} /> },
         { name: 'Bansos', path: '/dashboard/bansos', icon: <Gift size={18} /> },
-        { name: 'Posyandu', path: '/dashboard/posyandu', icon: <HeartPulse size={18} /> },
-        { name: 'Kas', path: '/dashboard/keuangan', icon: <Wallet size={18} /> },
+        { name: 'Profil', path: '/dashboard/profil', icon: <ShieldCheck size={18} /> },
       ];
     }
     if (isRT) {

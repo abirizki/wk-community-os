@@ -152,3 +152,4 @@ module.exports = {
   BUMI_WARGA_SOP_REGISTRY,
   searchSop
 };
+

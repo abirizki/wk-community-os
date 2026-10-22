@@ -70,99 +70,265 @@ class KkService {
       console.warn('[KkService] findWithMembersByNoKk note:', e.message);
     }
     
-    // Jika data KK belum ada di database atau anggota kosong, sediakan struktur resmi lengkap keluarga Budi Santoso
+    // Jika data KK belum ada di database atau anggota kosong, sediakan struktur dinamis sesuai pengguna aktif
     if (!card || !card.anggota || card.anggota.length === 0) {
-      card = {
-        id: 1,
-        no_kk: noKk || '3273010101900001',
-        kepala_keluarga: currentUser?.nama && currentUser.nama.includes('Budi') ? currentUser.nama : 'Budi Santoso',
-        alamat: 'Jl. Kebonjati No. 12 RT 001/RW 001',
-        rt: currentUser?.rt || '001',
-        rw: currentUser?.rw || '001',
-        kelurahan: 'Kebonjati',
-        kecamatan: 'Sukabumi',
-        kota: 'Kota Sukabumi',
-        provinsi: 'Jawa Barat',
-        kode_pos: '40181',
-        anggota: [
-          {
-            id: 1,
-            nik: '3273010203850003',
-            nama: 'Budi Santoso',
-            jenis_kelamin: 'L',
-            tempat_lahir: 'Bandung',
-            tanggal_lahir: '1985-03-02',
-            agama: 'Islam',
-            status_hubungan_keluarga: 'Kepala Keluarga',
-            pekerjaan: 'Karyawan Swasta',
-            pendidikan_terakhir: 'S1',
-            golongan_darah: 'O',
-            bpjs_kesehatan: '0001234567891 (PPU)',
-            bpjs_kesehatan_status: 'Aktif',
-            bpjs_ketenagakerjaan: '19028374610 (Tenaga Kerja)',
-            bpjs_ketenagakerjaan_status: 'Aktif',
-            kip: null,
-            kis: 'KIS-PPU-3273'
-          },
-          {
-            id: 2,
-            nik: '3273014505880002',
-            nama: 'Siti Aminah',
-            jenis_kelamin: 'P',
-            tempat_lahir: 'Bandung',
-            tanggal_lahir: '1988-05-15',
-            agama: 'Islam',
-            status_hubungan_keluarga: 'Istri',
-            pekerjaan: 'Ibu Rumah Tangga',
-            pendidikan_terakhir: 'SMA/SMK',
-            golongan_darah: 'A',
-            bpjs_kesehatan: '0001234567892 (PPU Tanggungan)',
-            bpjs_kesehatan_status: 'Aktif',
-            bpjs_ketenagakerjaan: null,
-            bpjs_ketenagakerjaan_status: 'Non-PPU',
-            kip: null,
-            kis: 'KIS-PPU-3274'
-          },
-          {
-            id: 3,
-            nik: '3273010505240001',
-            nama: 'Muhammad Al-Fatih',
-            jenis_kelamin: 'L',
-            tempat_lahir: 'Bandung',
-            tanggal_lahir: '2024-05-05',
-            agama: 'Islam',
-            status_hubungan_keluarga: 'Anak',
-            pekerjaan: 'Belum/Tidak Bekerja',
-            pendidikan_terakhir: 'Belum Sekolah',
-            golongan_darah: 'O',
-            bpjs_kesehatan: '0001234567893 (PPU Anak)',
-            bpjs_kesehatan_status: 'Aktif',
-            bpjs_ketenagakerjaan: null,
-            bpjs_ketenagakerjaan_status: 'Non-PPU',
-            kip: 'KIP-2026-BDG-0812',
-            kis: 'KIS-PPU-3275'
-          },
-          {
-            id: 4,
-            nik: '3273010101550001',
-            nama: 'H. Suherman',
-            jenis_kelamin: 'L',
-            tempat_lahir: 'Bandung',
-            tanggal_lahir: '1955-01-01',
-            agama: 'Islam',
-            status_hubungan_keluarga: 'Orang Tua / Mertua',
-            pekerjaan: 'Pensiunan',
-            pendidikan_terakhir: 'D3/Akademi',
-            golongan_darah: 'B',
-            bpjs_kesehatan: '0001234567894 (PBI-JK Daerah)',
-            bpjs_kesehatan_status: 'Aktif',
-            bpjs_ketenagakerjaan: 'Taspen-Pensiun-5501',
-            bpjs_ketenagakerjaan_status: 'Pensiun',
-            kip: null,
-            kis: 'KIS-PBI-3276'
-          }
-        ]
-      };
+      const isAsep = (currentUser?.active_nik === '3272030103820005') || 
+                     (currentUser?.nama && currentUser.nama.toLowerCase().includes('asep')) ||
+                     (noKk === '3272030101900102');
+
+      const isBudi = (currentUser?.active_nik === '3272030103810001') || 
+                     (currentUser?.active_nik === '3273010203850003') || 
+                     (currentUser?.nama && currentUser.nama.toLowerCase().includes('budi')) ||
+                     (noKk === '3273010101900001');
+
+      if (isAsep) {
+        card = {
+          id: 2,
+          no_kk: noKk || '3272030101900102',
+          kepala_keluarga: 'Asep Saepulloh',
+          alamat: 'Jl. Kebonjati Gg. Mesjid No. 12 RT 001/RW 001',
+          rt: currentUser?.rt || '001',
+          rw: currentUser?.rw || '001',
+          kelurahan: 'Kebonjati',
+          kecamatan: 'Sukabumi',
+          kota: 'Kota Sukabumi',
+          provinsi: 'Jawa Barat',
+          kode_pos: '43111',
+          anggota: [
+            {
+              id: 1,
+              nik: '3272030103820005',
+              nama: 'Asep Saepulloh',
+              jenis_kelamin: 'L',
+              tempat_lahir: 'Sukabumi',
+              tanggal_lahir: '1985-03-06',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Kepala Keluarga',
+              status_perkawinan: 'Kawin',
+              pekerjaan: 'Karyawan Swasta',
+              pendidikan_terakhir: 'SMA/SMK',
+              golongan_darah: 'O',
+              nama_ayah: 'H. ENCEP SUKANDAR',
+              nama_ibu: 'HJ. SITI MARYAM',
+              bpjs_kesehatan: '0001000000005 (PPU)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: '18029384750 (Tenaga Kerja)',
+              bpjs_ketenagakerjaan_status: 'Aktif',
+              kip: null,
+              kis: null
+            },
+            {
+              id: 2,
+              nik: '3272034506870006',
+              nama: 'Dewi Sartika',
+              jenis_kelamin: 'P',
+              tempat_lahir: 'Sukabumi',
+              tanggal_lahir: '1988-06-07',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Istri',
+              status_perkawinan: 'Kawin',
+              pekerjaan: 'Ibu Rumah Tangga',
+              pendidikan_terakhir: 'SMA/SMK',
+              golongan_darah: 'A',
+              nama_ayah: 'DEDI KURNIAWAN',
+              nama_ibu: 'ENOK KOMARIAH',
+              bpjs_kesehatan: '0001000000005 (PPU Tanggungan)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: null,
+              kis: null
+            },
+            {
+              id: 3,
+              nik: '3272031505100007',
+              nama: 'Zahra Amelia',
+              jenis_kelamin: 'P',
+              tempat_lahir: 'Sukabumi',
+              tanggal_lahir: '2010-05-15',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Anak',
+              status_perkawinan: 'Belum Kawin',
+              pekerjaan: 'Pelajar / Mahasiswa',
+              pendidikan_terakhir: 'SMP / Sederajat',
+              golongan_darah: 'B',
+              nama_ayah: 'Asep Saepulloh',
+              nama_ibu: 'Dewi Sartika',
+              bpjs_kesehatan: '0001000000007 (Anak)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: 'KIP-2026-SKB-0192',
+              kis: null
+            },
+            {
+              id: 4,
+              nik: '3272031402240008',
+              nama: 'Balita Faris',
+              jenis_kelamin: 'L',
+              tempat_lahir: 'Sukabumi',
+              tanggal_lahir: '2024-02-14',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Anak',
+              status_perkawinan: 'Belum Kawin',
+              pekerjaan: 'Belum Bekerja',
+              pendidikan_terakhir: 'Belum Sekolah',
+              golongan_darah: 'A',
+              nama_ayah: 'Asep Saepulloh',
+              nama_ibu: 'Dewi Sartika',
+              bpjs_kesehatan: '0001000000008 (Anak)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: null,
+              kis: null
+            }
+          ]
+        };
+      } else if (isBudi) {
+        card = {
+          id: 1,
+          no_kk: noKk || '3273010101900001',
+          kepala_keluarga: 'Budi Santoso',
+          alamat: 'Jl. Kebonjati No. 12 RT 001/RW 001',
+          rt: currentUser?.rt || '001',
+          rw: currentUser?.rw || '001',
+          kelurahan: 'Kebonjati',
+          kecamatan: 'Sukabumi',
+          kota: 'Kota Sukabumi',
+          provinsi: 'Jawa Barat',
+          kode_pos: '43111',
+          anggota: [
+            {
+              id: 1,
+              nik: '3273010203850003',
+              nama: 'Budi Santoso',
+              jenis_kelamin: 'L',
+              tempat_lahir: 'Bandung',
+              tanggal_lahir: '1985-03-02',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Kepala Keluarga',
+              status_perkawinan: 'Kawin',
+              pekerjaan: 'Karyawan Swasta',
+              pendidikan_terakhir: 'S1',
+              golongan_darah: 'O',
+              nama_ayah: 'SUHERMAN',
+              nama_ibu: 'HARYATI',
+              bpjs_kesehatan: '0001234567891 (PPU)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: '19028374610 (Tenaga Kerja)',
+              bpjs_ketenagakerjaan_status: 'Aktif',
+              kip: null,
+              kis: 'KIS-PPU-3273'
+            },
+            {
+              id: 2,
+              nik: '3273014505880002',
+              nama: 'Siti Aminah',
+              jenis_kelamin: 'P',
+              tempat_lahir: 'Bandung',
+              tanggal_lahir: '1988-05-15',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Istri',
+              status_perkawinan: 'Kawin',
+              pekerjaan: 'Ibu Rumah Tangga',
+              pendidikan_terakhir: 'SMA/SMK',
+              golongan_darah: 'A',
+              nama_ayah: 'H. RACHMAT',
+              nama_ibu: 'RUKMINI',
+              bpjs_kesehatan: '0001234567892 (PPU Tanggungan)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: null,
+              kis: 'KIS-PPU-3274'
+            },
+            {
+              id: 3,
+              nik: '3273010505240001',
+              nama: 'Muhammad Al-Fatih',
+              jenis_kelamin: 'L',
+              tempat_lahir: 'Sukabumi',
+              tanggal_lahir: '2024-05-05',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Anak',
+              status_perkawinan: 'Belum Kawin',
+              pekerjaan: 'Belum/Tidak Bekerja',
+              pendidikan_terakhir: 'Belum Sekolah',
+              golongan_darah: 'O',
+              nama_ayah: 'Budi Santoso',
+              nama_ibu: 'Siti Aminah',
+              bpjs_kesehatan: '0001234567893 (PPU Anak)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: 'KIP-2026-SKB-0812',
+              kis: 'KIS-PPU-3275'
+            },
+            {
+              id: 4,
+              nik: '3273010101550001',
+              nama: 'H. Suherman',
+              jenis_kelamin: 'L',
+              tempat_lahir: 'Bandung',
+              tanggal_lahir: '1955-01-01',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Orang Tua / Mertua',
+              status_perkawinan: 'Cerai Mati',
+              pekerjaan: 'Pensiunan',
+              pendidikan_terakhir: 'D3/Akademi',
+              golongan_darah: 'B',
+              nama_ayah: 'WIRANATA',
+              nama_ibu: 'SITI AISYAH',
+              bpjs_kesehatan: '0001234567894 (PBI-JK Daerah)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: 'Taspen-Pensiun-5501',
+              bpjs_ketenagakerjaan_status: 'Pensiun',
+              kip: null,
+              kis: 'KIS-PBI-3276'
+            }
+          ]
+        };
+      } else {
+        // Fallback untuk profil warga dinamis lainnya (sesuai akun yang sedang login)
+        card = {
+          id: currentUser?.id || 1,
+          no_kk: noKk || '3272030101900100',
+          kepala_keluarga: currentUser?.nama || 'Warga Kebonjati',
+          alamat: currentUser?.alamat || 'Jl. Kebonjati RT 001/RW 001',
+          rt: currentUser?.rt || '001',
+          rw: currentUser?.rw || '001',
+          kelurahan: currentUser?.kelurahan || 'Kebonjati',
+          kecamatan: currentUser?.kecamatan || 'Sukabumi',
+          kota: currentUser?.kota || 'Kota Sukabumi',
+          provinsi: 'Jawa Barat',
+          kode_pos: '43111',
+          anggota: [
+            {
+              id: 1,
+              nik: currentUser?.active_nik || currentUser?.username || '3272030100000001',
+              nama: currentUser?.nama || 'Warga Kebonjati',
+              jenis_kelamin: 'L',
+              tempat_lahir: 'Sukabumi',
+              tanggal_lahir: '1990-01-01',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Kepala Keluarga',
+              status_perkawinan: 'Kawin',
+              pekerjaan: 'Wiraswasta',
+              pendidikan_terakhir: 'SMA/SMK',
+              golongan_darah: 'O',
+              nama_ayah: 'Orang Tua Laki-Laki',
+              nama_ibu: 'Orang Tua Perempuan',
+              bpjs_kesehatan: '0001000000001 (Aktif)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: null,
+              kis: null
+            }
+          ]
+        };
+      }
     }
 
     return card;
@@ -333,9 +499,10 @@ class KkService {
 
     // Jika tidak ditemukan di database, cek apakah fallback demo
     if (!card) {
-      if (cleanNoKk === '3273010101900001' || cleanNoKk.startsWith('3272') || cleanNoKk.startsWith('3273')) {
-        // Fallback untuk keluarga uji coba resmi Budi Santoso
-        card = await this.getMyFamilyCard({ no_kk: cleanNoKk, role: 'warga', nama: 'Budi Santoso' });
+      if (cleanNoKk === '3272030101900102' || cleanNoKk.startsWith('3272')) {
+        card = await this.getMyFamilyCard({ no_kk: cleanNoKk, role: 'warga', nama: 'Asep Saepulloh', active_nik: '3272030103820005' });
+      } else if (cleanNoKk === '3273010101900001' || cleanNoKk.startsWith('3273')) {
+        card = await this.getMyFamilyCard({ no_kk: cleanNoKk, role: 'warga', nama: 'Budi Santoso', active_nik: '3273010203850003' });
       }
     }
 

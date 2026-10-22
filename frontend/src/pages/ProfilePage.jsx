@@ -808,6 +808,78 @@ export default function ProfilePage() {
           )}
         </AnimatePresence>
 
+        {/* CHECKLIST KELENGKAPAN PROFIL WARGA (SIMPLE & INFORMATIF) */}
+        {warga && (
+          <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-sky-500/5 to-transparent border border-emerald-500/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-500/15">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-lg bg-emerald-500/20 text-emerald-700">
+                    <CheckCircle2 size={16} />
+                  </span>
+                  <h3 className="text-sm font-bold text-slate-900">Kelengkapan Data Profil Mandiri</h3>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Checklist 4 pilar data kependudukan untuk kemudahan pengajuan surat, verifikasi bansos, dan layanan RT
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-xl">
+                  {Math.round(
+                    ((Boolean(warga?.nik) ? 1 : 0) +
+                     (Boolean(warga?.no_kk) ? 1 : 0) +
+                     (Boolean(warga?.no_hp || warga?.telepon || user?.no_hp) ? 1 : 0) +
+                     (Boolean(warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? 1 : 0)) / 4 * 100
+                  )}% Lengkap
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3.5">
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
+                <div className={`p-1.5 rounded-lg ${warga?.nik ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                  {warga?.nik ? <Check size={14} /> : <AlertCircle size={14} />}
+                </div>
+                <div className="text-xs">
+                  <span className="font-semibold text-slate-800 block">KTP / NIK Warga</span>
+                  <span className="text-[10px] text-slate-500">{warga?.nik ? '16 Digit Valid' : 'Belum Ada NIK'}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
+                <div className={`p-1.5 rounded-lg ${warga?.no_kk ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                  {warga?.no_kk ? <Check size={14} /> : <AlertCircle size={14} />}
+                </div>
+                <div className="text-xs">
+                  <span className="font-semibold text-slate-800 block">Kartu Keluarga (KK)</span>
+                  <span className="text-[10px] text-slate-500">{warga?.no_kk ? 'Tersinkronisasi' : 'Belum Ada No KK'}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
+                <div className={`p-1.5 rounded-lg ${(warga?.no_hp || warga?.telepon || user?.no_hp) ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {(warga?.no_hp || warga?.telepon || user?.no_hp) ? <Check size={14} /> : <Clock size={14} />}
+                </div>
+                <div className="text-xs">
+                  <span className="font-semibold text-slate-800 block">Nomor WhatsApp</span>
+                  <span className="text-[10px] text-slate-500">{(warga?.no_hp || warga?.telepon || user?.no_hp) ? 'Notifikasi Aktif' : 'Disarankan Isi'}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
+                <div className={`p-1.5 rounded-lg ${(warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {(warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? <Check size={14} /> : <Clock size={14} />}
+                </div>
+                <div className="text-xs">
+                  <span className="font-semibold text-slate-800 block">BPJS / Jaminan</span>
+                  <span className="text-[10px] text-slate-500">{(warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? 'Terproteksi' : 'Bisa Diisi Mandiri'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* BENTO QUICK NAVIGATION HUB */}
         <div className="mt-6 pt-4 border-t border-outline-variant/60">
           <div className="flex items-center justify-between mb-3">

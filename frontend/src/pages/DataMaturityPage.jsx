@@ -202,54 +202,58 @@ export default function DataMaturityPage() {
             )}
           </button>
 
-          <button
-            onClick={() => setActiveTab('leaderboard')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'leaderboard'
-                ? 'bg-primary text-on-primary shadow-md'
-                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-            }`}
-          >
-            <Award size={16} />
-            <span>Peringkat RT (Leaderboard)</span>
-            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/20">
-              {leaderboard.length}
-            </span>
-          </button>
+          {!isWarga && (
+            <>
+              <button
+                onClick={() => setActiveTab('leaderboard')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'leaderboard'
+                    ? 'bg-primary text-on-primary shadow-md'
+                    : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                <Award size={16} />
+                <span>Peringkat RT (Leaderboard)</span>
+                <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/20">
+                  {leaderboard.length}
+                </span>
+              </button>
 
-          <button
-            onClick={() => setActiveTab('nudge')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'nudge'
-                ? 'bg-primary text-on-primary shadow-md'
-                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-            }`}
-          >
-            <Footprints size={16} />
-            <span>AI Door-to-Door Nudge</span>
-            {nudgeList.length > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-mono">
-                {nudgeList.length}
-              </span>
-            )}
-          </button>
+              <button
+                onClick={() => setActiveTab('nudge')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'nudge'
+                    ? 'bg-primary text-on-primary shadow-md'
+                    : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                <Footprints size={16} />
+                <span>AI Door-to-Door Nudge</span>
+                {nudgeList.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-mono">
+                    {nudgeList.length}
+                  </span>
+                )}
+              </button>
 
-          <button
-            onClick={() => setActiveTab('anomalies')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'anomalies'
-                ? 'bg-primary text-on-primary shadow-md'
-                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-            }`}
-          >
-            <AlertCircle size={16} />
-            <span>AI Data Guardian (Anomali)</span>
-            {anomalies.length > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500 text-white font-mono">
-                {anomalies.length}
-              </span>
-            )}
-          </button>
+              <button
+                onClick={() => setActiveTab('anomalies')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'anomalies'
+                    ? 'bg-primary text-on-primary shadow-md'
+                    : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                <AlertCircle size={16} />
+                <span>AI Data Guardian (Anomali)</span>
+                {anomalies.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500 text-white font-mono">
+                    {anomalies.length}
+                  </span>
+                )}
+              </button>
+            </>
+          )}
         </div>
 
         {/* Action Button: Recalculate */}
