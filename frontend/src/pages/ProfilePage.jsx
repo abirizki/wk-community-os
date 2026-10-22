@@ -41,7 +41,8 @@ import {
   Layers,
   Landmark,
   Users2,
-  Coins
+  Coins,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
