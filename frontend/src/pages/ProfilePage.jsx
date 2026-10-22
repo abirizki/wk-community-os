@@ -42,7 +42,9 @@ import {
   Landmark,
   Users2,
   Coins,
-  Sparkles
+  Sparkles,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -124,14 +126,73 @@ export default function ProfilePage() {
     }
   };
 
+  // Completeness Data (Skor Kelengkapan Profil Warga)
+  const [completenessData, setCompletenessData] = useState(null);
+
+  // Form Ubah Password Mandiri Warga
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
+
+  const handleSavePassword = async (e) => {
+    e.preventDefault();
+    setPasswordMsg({ type: '', text: '' });
+
+    if (!passwordForm.current_password || !passwordForm.new_password || !passwordForm.confirm_password) {
+      setPasswordMsg({ type: 'error', text: 'Semua kolom kata sandi wajib diisi.' });
+      return;
+    }
+
+    if (passwordForm.new_password.length < 6) {
+      setPasswordMsg({ type: 'error', text: 'Kata sandi baru minimal 6 karakter.' });
+      return;
+    }
+
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      setPasswordMsg({ type: 'error', text: 'Konfirmasi kata sandi baru tidak cocok.' });
+      return;
+    }
+
+    try {
+      setSavingPassword(true);
+      const res = await api.post('/auth/change-password', passwordForm);
+      setPasswordMsg({
+        type: 'success',
+        text: res.message || 'Kata sandi berhasil diperbarui! Silakan gunakan kata sandi baru untuk login selanjutnya.'
+      });
+      setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
+      setTimeout(() => setPasswordMsg({ type: '', text: '' }), 5000);
+    } catch (err) {
+      setPasswordMsg({
+        type: 'error',
+        text: err.message || 'Gagal memperbarui kata sandi. Pastikan kata sandi saat ini benar.'
+      });
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
   const fetchProfile = async () => {
     try {
       setLoading(true);
       setError('');
-      const res = await api.get('/users/profile-history');
-      if (res.data) {
-        setProfileData(res.data);
-        const w = res.data.warga;
+      const [res, scoreRes] = await Promise.allSettled([
+        api.get('/users/profile-history'),
+        api.get('/completeness/my-score')
+      ]);
+
+      if (res.status === 'fulfilled' && res.value?.data) {
+        setProfileData(res.value.data);
+        const w = res.value.data.warga;
         if (w) {
           setInsuranceForm({
             kategori_asuransi: w.kategori_asuransi || ASURANSI_OPTIONS[0],
@@ -140,6 +201,10 @@ export default function ProfilePage() {
             catatan_bansos_mandiri: w.catatan_bansos_mandiri || ''
           });
         }
+      }
+
+      if (scoreRes.status === 'fulfilled' && scoreRes.value?.data) {
+        setCompletenessData(scoreRes.value.data);
       }
     } catch (err) {
       setError(err.message || 'Gagal memuat profil dan riwayat layanan.');
@@ -809,75 +874,127 @@ export default function ProfilePage() {
           )}
         </AnimatePresence>
 
-        {/* CHECKLIST KELENGKAPAN PROFIL WARGA (SIMPLE & INFORMATIF) */}
+        {/* SKOR KELENGKAPAN PROFIL WARGA (DINAMIS DENGAN 4 PILAR & QUICK WINS) */}
         {warga && (
-          <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-sky-500/5 to-transparent border border-emerald-500/20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-500/15">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="p-1 rounded-lg bg-emerald-500/20 text-emerald-700">
-                    <CheckCircle2 size={16} />
+          <div className="mt-6 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-sky-500/5 to-transparent border border-emerald-500/20 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-emerald-500/15">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-700">
+                    <CheckCircle2 size={18} />
                   </span>
-                  <h3 className="text-sm font-bold text-slate-900">Kelengkapan Data Profil Mandiri</h3>
+                  <h3 className="text-base font-bold text-slate-900">Kelengkapan Data Profil Mandiri</h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wide">
+                    {completenessData?.tier ? `Kategori ${completenessData.tier}` : 'Standar Mandiri'}
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Checklist 4 pilar data kependudukan untuk kemudahan pengajuan surat, verifikasi bansos, dan layanan RT
+                <p className="text-xs text-slate-600 max-w-2xl">
+                  Pemenuhan 4 pilar data kependudukan untuk kemudahan pengajuan surat mandiri, verifikasi bansos, dan layanan administrasi RT/RW.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-xl">
-                  {Math.round(
-                    ((Boolean(warga?.nik) ? 1 : 0) +
-                     (Boolean(warga?.no_kk) ? 1 : 0) +
-                     (Boolean(warga?.no_hp || warga?.telepon || user?.no_hp) ? 1 : 0) +
-                     (Boolean(warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? 1 : 0)) / 4 * 100
-                  )}% Lengkap
+              <div className="flex items-center gap-3 self-start sm:self-auto">
+                <div className="text-right">
+                  <span className="text-2xl font-black text-emerald-700 font-mono leading-none block">
+                    {completenessData?.total_score ?? Math.round(
+                      ((Boolean(warga?.nik) ? 1 : 0) +
+                       (Boolean(warga?.no_kk) ? 1 : 0) +
+                       (Boolean(warga?.no_hp || warga?.telepon || user?.no_hp) ? 1 : 0) +
+                       (Boolean(warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? 1 : 0)) / 4 * 100
+                    )}%
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-500">
+                    {(completenessData?.total_score ?? 80) >= 80 ? 'Lengkap & Terverifikasi' : 'Perlu Dilengkapi'}
+                  </span>
+                </div>
+                <div className="w-11 h-11 rounded-2xl bg-white border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-xs">
+                  <Sparkles size={20} className="animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Bar Visual */}
+            <div className="w-full bg-slate-200/70 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="h-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-700 ease-out"
+                style={{
+                  width: `${Math.min(100, Math.max(5, completenessData?.total_score ?? Math.round(((Boolean(warga?.nik)?1:0)+(Boolean(warga?.no_kk)?1:0)+(Boolean(warga?.no_hp||warga?.telepon||user?.no_hp)?1:0)+(Boolean(warga?.kategori_asuransi&&warga.kategori_asuransi!=='Tidak Memiliki Asuransi Sama Sekali')?1:0))/4*100)))}%`
+                }}
+              />
+            </div>
+
+            {/* 4 Pilar Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Pilar 1: Identitas Pokok */}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/90 border border-slate-200/80 shadow-xs">
+                <div className={`p-2 rounded-xl ${(completenessData?.pillars?.pilar1?.percent ?? 100) >= 80 || warga?.nik ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                  {(completenessData?.pillars?.pilar1?.percent ?? 100) >= 80 || warga?.nik ? <Check size={16} /> : <AlertCircle size={16} />}
+                </div>
+                <div className="text-xs flex-1">
+                  <span className="font-bold text-slate-800 block">1. Identitas Pokok</span>
+                  <span className="text-[11px] text-slate-500">
+                    {completenessData?.pillars?.pilar1 ? `${completenessData.pillars.pilar1.score}/${completenessData.pillars.pilar1.max} Poin (${completenessData.pillars.pilar1.percent}%)` : (warga?.nik ? 'NIK 16 Digit Valid' : 'Belum Ada NIK')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pilar 2: Kontak & Akun */}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/90 border border-slate-200/80 shadow-xs">
+                <div className={`p-2 rounded-xl ${(completenessData?.pillars?.pilar2?.percent ?? 80) >= 70 || (warga?.no_hp || warga?.telepon || user?.no_hp) ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {(completenessData?.pillars?.pilar2?.percent ?? 80) >= 70 || (warga?.no_hp || warga?.telepon || user?.no_hp) ? <Check size={16} /> : <Clock size={16} />}
+                </div>
+                <div className="text-xs flex-1">
+                  <span className="font-bold text-slate-800 block">2. Kontak & Akun</span>
+                  <span className="text-[11px] text-slate-500">
+                    {completenessData?.pillars?.pilar2 ? `${completenessData.pillars.pilar2.score}/${completenessData.pillars.pilar2.max} Poin (${completenessData.pillars.pilar2.percent}%)` : ((warga?.no_hp || warga?.telepon || user?.no_hp) ? 'WhatsApp Terhubung' : 'Belum Ada No. WA')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pilar 3: Keluarga & Domisili */}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/90 border border-slate-200/80 shadow-xs">
+                <div className={`p-2 rounded-xl ${(completenessData?.pillars?.pilar3?.percent ?? 100) >= 70 || warga?.no_kk ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {(completenessData?.pillars?.pilar3?.percent ?? 100) >= 70 || warga?.no_kk ? <Check size={16} /> : <AlertCircle size={16} />}
+                </div>
+                <div className="text-xs flex-1">
+                  <span className="font-bold text-slate-800 block">3. Keluarga & Domisili</span>
+                  <span className="text-[11px] text-slate-500">
+                    {completenessData?.pillars?.pilar3 ? `${completenessData.pillars.pilar3.score}/${completenessData.pillars.pilar3.max} Poin (${completenessData.pillars.pilar3.percent}%)` : (warga?.no_kk ? 'KK Terdata di RW' : 'No. KK Belum Terdata')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pilar 4: Kesejahteraan & Jaminan */}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/90 border border-slate-200/80 shadow-xs">
+                <div className={`p-2 rounded-xl ${(completenessData?.pillars?.pilar4?.percent ?? 70) >= 50 || (warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {(completenessData?.pillars?.pilar4?.percent ?? 70) >= 50 || (warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? <Check size={16} /> : <Clock size={16} />}
+                </div>
+                <div className="text-xs flex-1">
+                  <span className="font-bold text-slate-800 block">4. BPJS / Jaminan Sosial</span>
+                  <span className="text-[11px] text-slate-500">
+                    {completenessData?.pillars?.pilar4 ? `${completenessData.pillars.pilar4.score}/${completenessData.pillars.pilar4.max} Poin (${completenessData.pillars.pilar4.percent}%)` : ((warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? 'Terproteksi BPJS' : 'Belum Diisi')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Wins / Rekomendasi Aksi Cepat (jika ada) */}
+            {completenessData?.quick_wins && completenessData.quick_wins.length > 0 && (
+              <div className="pt-2 flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
+                  <Sparkles size={12} className="text-amber-500" /> Saran Percepatan Skor:
                 </span>
+                {completenessData.quick_wins.map((qw, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-medium"
+                  >
+                    <span>{qw.action}</span>
+                    <strong className="text-amber-900 bg-amber-200/60 px-1 py-0.5 rounded font-bold">{qw.point}</strong>
+                  </span>
+                ))}
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3.5">
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
-                <div className={`p-1.5 rounded-lg ${warga?.nik ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                  {warga?.nik ? <Check size={14} /> : <AlertCircle size={14} />}
-                </div>
-                <div className="text-xs">
-                  <span className="font-semibold text-slate-800 block">KTP / NIK Warga</span>
-                  <span className="text-[10px] text-slate-500">{warga?.nik ? '16 Digit Valid' : 'Belum Ada NIK'}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
-                <div className={`p-1.5 rounded-lg ${warga?.no_kk ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                  {warga?.no_kk ? <Check size={14} /> : <AlertCircle size={14} />}
-                </div>
-                <div className="text-xs">
-                  <span className="font-semibold text-slate-800 block">Kartu Keluarga (KK)</span>
-                  <span className="text-[10px] text-slate-500">{warga?.no_kk ? 'Tersinkronisasi' : 'Belum Ada No KK'}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
-                <div className={`p-1.5 rounded-lg ${(warga?.no_hp || warga?.telepon || user?.no_hp) ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {(warga?.no_hp || warga?.telepon || user?.no_hp) ? <Check size={14} /> : <Clock size={14} />}
-                </div>
-                <div className="text-xs">
-                  <span className="font-semibold text-slate-800 block">Nomor WhatsApp</span>
-                  <span className="text-[10px] text-slate-500">{(warga?.no_hp || warga?.telepon || user?.no_hp) ? 'Notifikasi Aktif' : 'Disarankan Isi'}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs">
-                <div className={`p-1.5 rounded-lg ${(warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {(warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? <Check size={14} /> : <Clock size={14} />}
-                </div>
-                <div className="text-xs">
-                  <span className="font-semibold text-slate-800 block">BPJS / Jaminan</span>
-                  <span className="text-[10px] text-slate-500">{(warga?.kategori_asuransi && warga.kategori_asuransi !== 'Tidak Memiliki Asuransi Sama Sekali') ? 'Terproteksi' : 'Bisa Diisi Mandiri'}</span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -1165,70 +1282,194 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Form Jaminan Sosial Mandiri (BPJS / Asuransi & Bukti Bansos) */}
-              <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-                <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-                  <HeartPulse size={18} className="text-rose-500" /> Jaminan Kesehatan & Bansos
-                </h3>
-                <p className="text-[11px] text-on-surface-variant">
-                  Perbarui status kepesertaan BPJS atau asuransi Anda untuk sinkronisasi data perlindungan sosial kelurahan.
-                </p>
+              {/* Kolom Kanan: Form Jaminan Sosial (BPJS) & Pembaruan Kata Sandi */}
+              <div className="space-y-6">
+                {/* Form Jaminan Sosial Mandiri (BPJS / Asuransi & Bukti Bansos) */}
+                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+                  <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                    <HeartPulse size={18} className="text-rose-500" /> Jaminan Kesehatan & Bansos
+                  </h3>
+                  <p className="text-[11px] text-on-surface-variant">
+                    Perbarui status kepesertaan BPJS atau asuransi Anda untuk sinkronisasi data perlindungan sosial kelurahan.
+                  </p>
 
-                <form onSubmit={handleSaveInsurance} className="space-y-3 text-xs">
-                  <div>
-                    <label className="font-bold text-on-surface block mb-1">
-                      Kategori Jaminan Kesehatan / Asuransi:
-                    </label>
-                    <select
-                      value={insuranceForm.kategori_asuransi}
-                      onChange={(e) => setInsuranceForm({ ...insuranceForm, kategori_asuransi: e.target.value })}
-                      className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                  <form onSubmit={handleSaveInsurance} className="space-y-3 text-xs">
+                    <div>
+                      <label className="font-bold text-on-surface block mb-1">
+                        Kategori Jaminan Kesehatan / Asuransi:
+                      </label>
+                      <select
+                        value={insuranceForm.kategori_asuransi}
+                        onChange={(e) => setInsuranceForm({ ...insuranceForm, kategori_asuransi: e.target.value })}
+                        className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                      >
+                        {ASURANSI_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-on-surface block mb-1">
+                        Nomor Kartu BPJS / Polis Asuransi:
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: 0001234567890"
+                        value={insuranceForm.nomor_asuransi}
+                        onChange={(e) => setInsuranceForm({ ...insuranceForm, nomor_asuransi: e.target.value })}
+                        className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl font-mono focus:ring-2 focus:ring-primary focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-on-surface block mb-1">
+                        Catatan Kelayakan Mandiri / Kondisi Ekonomi:
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder="Catatan kondisi sosial ekonomi untuk pertimbangan bansos..."
+                        value={insuranceForm.catatan_bansos_mandiri}
+                        onChange={(e) => setInsuranceForm({ ...insuranceForm, catatan_bansos_mandiri: e.target.value })}
+                        className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none resize-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={savingInsurance}
+                      className="w-full py-2.5 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
                     >
-                      {ASURANSI_OPTIONS.map((opt) => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
-                  </div>
+                      {savingInsurance ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Save size={16} />
+                      )}
+                      <span>Simpan Data Jaminan Sosial</span>
+                    </button>
+                  </form>
+                </div>
 
-                  <div>
-                    <label className="font-bold text-on-surface block mb-1">
-                      Nomor Kartu BPJS / Polis Asuransi:
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Contoh: 0001234567890"
-                      value={insuranceForm.nomor_asuransi}
-                      onChange={(e) => setInsuranceForm({ ...insuranceForm, nomor_asuransi: e.target.value })}
-                      className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl font-mono focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                {/* Form Keamanan Akun & Pembaruan Kata Sandi Mandiri */}
+                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                      <Key size={18} className="text-amber-600" /> Keamanan Akun & Kata Sandi
+                    </h3>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold border border-amber-200">
+                      Mandiri 24 Jam
+                    </span>
                   </div>
+                  <p className="text-[11px] text-on-surface-variant">
+                    Ganti kata sandi login akun Anda secara berkala demi keamanan data kependudukan dan kenyamanan akses layanan digital.
+                  </p>
 
-                  <div>
-                    <label className="font-bold text-on-surface block mb-1">
-                      Catatan Kelayakan Mandiri / Kondisi Ekonomi:
-                    </label>
-                    <textarea
-                      rows={3}
-                      placeholder="Catatan kondisi sosial ekonomi untuk pertimbangan bansos..."
-                      value={insuranceForm.catatan_bansos_mandiri}
-                      onChange={(e) => setInsuranceForm({ ...insuranceForm, catatan_bansos_mandiri: e.target.value })}
-                      className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none resize-none"
-                    />
-                  </div>
+                  {passwordMsg.text && (
+                    <div
+                      className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+                        passwordMsg.type === 'success'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-rose-50 text-rose-800 border border-rose-200'
+                      }`}
+                    >
+                      {passwordMsg.type === 'success' ? (
+                        <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />
+                      ) : (
+                        <AlertCircle size={16} className="text-rose-600 flex-shrink-0" />
+                      )}
+                      <span>{passwordMsg.text}</span>
+                    </div>
+                  )}
 
-                  <button
-                    type="submit"
-                    disabled={savingInsurance}
-                    className="w-full py-2.5 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
-                  >
-                    {savingInsurance ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Save size={16} />
-                    )}
-                    <span>Simpan Data Jaminan Sosial</span>
-                  </button>
-                </form>
+                  <form onSubmit={handleSavePassword} className="space-y-3.5 text-xs">
+                    <div>
+                      <label className="font-bold text-on-surface block mb-1">
+                        Kata Sandi Saat Ini <span className="text-rose-500">*</span>:
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword.current ? 'text' : 'password'}
+                          value={passwordForm.current_password}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                          placeholder="Masukkan kata sandi saat ini"
+                          required
+                          className="w-full p-2.5 pr-10 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword({ ...showPassword, current: !showPassword.current })}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1"
+                          tabIndex={-1}
+                        >
+                          {showPassword.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-on-surface block mb-1">
+                        Kata Sandi Baru <span className="text-rose-500">*</span>:
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword.new ? 'text' : 'password'}
+                          value={passwordForm.new_password}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                          placeholder="Minimal 6 karakter kombinasi"
+                          minLength={6}
+                          required
+                          className="w-full p-2.5 pr-10 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1"
+                          tabIndex={-1}
+                        >
+                          {showPassword.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-on-surface block mb-1">
+                        Konfirmasi Kata Sandi Baru <span className="text-rose-500">*</span>:
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword.confirm ? 'text' : 'password'}
+                          value={passwordForm.confirm_password}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                          placeholder="Ulangi kata sandi baru Anda"
+                          minLength={6}
+                          required
+                          className="w-full p-2.5 pr-10 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1"
+                          tabIndex={-1}
+                        >
+                          {showPassword.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={savingPassword}
+                      className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-50"
+                    >
+                      {savingPassword ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Key size={16} />
+                      )}
+                      <span>Perbarui Kata Sandi</span>
+                    </button>
+                  </form>
+                </div>
               </div>
             </>
           ) : (
@@ -1303,54 +1544,177 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Ringkasan Kinerja Aparatur */}
-              <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-                <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-                  <Award size={18} className="text-amber-500" /> Ikhtisar Kinerja Pelayanan
-                </h3>
-                <p className="text-[11px] text-on-surface-variant">
-                  Pantau performa layanan dan pemenuhan target standar pelayanan minimal (SPM).
-                </p>
+              {/* Ringkasan Kinerja Aparatur & Keamanan Akun */}
+              <div className="space-y-6">
+                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+                  <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                    <Award size={18} className="text-amber-500" /> Ikhtisar Kinerja Pelayanan
+                  </h3>
+                  <p className="text-[11px] text-on-surface-variant">
+                    Pantau performa layanan dan pemenuhan target standar pelayanan minimal (SPM).
+                  </p>
 
-                {profileData?.rekapKinerja && (
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 bg-sky-50 rounded-xl border border-sky-200">
-                      <span className="text-sky-800 block text-[11px] font-semibold">Surat Diproses</span>
-                      <span className="text-xl font-bold text-sky-900 mt-1 block">
-                        {profileData.rekapKinerja.total_surat_diproses}
-                      </span>
-                    </div>
+                  {profileData?.rekapKinerja && (
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="p-3 bg-sky-50 rounded-xl border border-sky-200">
+                        <span className="text-sky-800 block text-[11px] font-semibold">Surat Diproses</span>
+                        <span className="text-xl font-bold text-sky-900 mt-1 block">
+                          {profileData.rekapKinerja.total_surat_diproses}
+                        </span>
+                      </div>
 
-                    <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
-                      <span className="text-emerald-800 block text-[11px] font-semibold">Bansos Disalurkan</span>
-                      <span className="text-xl font-bold text-emerald-900 mt-1 block">
-                        {profileData.rekapKinerja.total_bansos_diproses}
-                      </span>
-                    </div>
+                      <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                        <span className="text-emerald-800 block text-[11px] font-semibold">Bansos Disalurkan</span>
+                        <span className="text-xl font-bold text-emerald-900 mt-1 block">
+                          {profileData.rekapKinerja.total_bansos_diproses}
+                        </span>
+                      </div>
 
-                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
-                      <span className="text-amber-800 block text-[11px] font-semibold">Audit Sanggahan</span>
-                      <span className="text-xl font-bold text-amber-900 mt-1 block">
-                        {profileData.rekapKinerja.total_audit_sanggahan}
-                      </span>
-                    </div>
+                      <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                        <span className="text-amber-800 block text-[11px] font-semibold">Audit Sanggahan</span>
+                        <span className="text-xl font-bold text-amber-900 mt-1 block">
+                          {profileData.rekapKinerja.total_audit_sanggahan}
+                        </span>
+                      </div>
 
-                    <div className="p-3 bg-purple-50 rounded-xl border border-purple-200">
-                      <span className="text-purple-800 block text-[11px] font-semibold">Kepatuhan SLA</span>
-                      <span className="text-xl font-bold text-purple-900 mt-1 block">
-                        {profileData.rekapKinerja.kepatuhan_sla_persen}%
-                      </span>
+                      <div className="p-3 bg-purple-50 rounded-xl border border-purple-200">
+                        <span className="text-purple-800 block text-[11px] font-semibold">Kepatuhan SLA</span>
+                        <span className="text-xl font-bold text-purple-900 mt-1 block">
+                          {profileData.rekapKinerja.kepatuhan_sla_persen}%
+                        </span>
+                      </div>
                     </div>
+                  )}
+
+                  <button
+                    onClick={() => setActiveTab('kinerja')}
+                    className="w-full py-2.5 bg-surface-container-high text-on-surface rounded-xl font-semibold flex items-center justify-center gap-1.5 hover:bg-surface-container-highest transition-colors text-xs"
+                  >
+                    <span>Buka Tab Kinerja Lengkap</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+
+                {/* Form Keamanan Akun & Pembaruan Kata Sandi Mandiri (Aparatur) */}
+                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                      <Key size={18} className="text-amber-600" /> Keamanan Akun & Kata Sandi
+                    </h3>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold border border-amber-200">
+                      Mandiri 24 Jam
+                    </span>
                   </div>
-                )}
+                  <p className="text-[11px] text-on-surface-variant">
+                    Ganti kata sandi akun kedinasan Anda secara berkala demi integritas dan keamanan sistem SPBE kelurahan.
+                  </p>
 
-                <button
-                  onClick={() => setActiveTab('kinerja')}
-                  className="w-full py-2.5 bg-surface-container-high text-on-surface rounded-xl font-semibold flex items-center justify-center gap-1.5 hover:bg-surface-container-highest transition-colors text-xs"
-                >
-                  <span>Buka Tab Kinerja Lengkap</span>
-                  <ArrowRight size={14} />
-                </button>
+                  {passwordMsg.text && (
+                    <div
+                      className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+                        passwordMsg.type === 'success'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-rose-50 text-rose-800 border border-rose-200'
+                      }`}
+                    >
+                      {passwordMsg.type === 'success' ? (
+                        <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />
+                      ) : (
+                        <AlertCircle size={16} className="text-rose-600 flex-shrink-0" />
+                      )}
+                      <span>{passwordMsg.text}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSavePassword} className="space-y-3.5 text-xs">
+                    <div>
+                      <label className="font-bold text-on-surface block mb-1">
+                        Kata Sandi Saat Ini <span className="text-rose-500">*</span>:
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword.current ? 'text' : 'password'}
+                          value={passwordForm.current_password}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                          placeholder="Masukkan kata sandi saat ini"
+                          required
+                          className="w-full p-2.5 pr-10 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword({ ...showPassword, current: !showPassword.current })}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1"
+                          tabIndex={-1}
+                        >
+                          {showPassword.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-on-surface block mb-1">
+                        Kata Sandi Baru <span className="text-rose-500">*</span>:
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword.new ? 'text' : 'password'}
+                          value={passwordForm.new_password}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                          placeholder="Minimal 6 karakter kombinasi"
+                          minLength={6}
+                          required
+                          className="w-full p-2.5 pr-10 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1"
+                          tabIndex={-1}
+                        >
+                          {showPassword.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-on-surface block mb-1">
+                        Konfirmasi Kata Sandi Baru <span className="text-rose-500">*</span>:
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword.confirm ? 'text' : 'password'}
+                          value={passwordForm.confirm_password}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                          placeholder="Ulangi kata sandi baru Anda"
+                          minLength={6}
+                          required
+                          className="w-full p-2.5 pr-10 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1"
+                          tabIndex={-1}
+                        >
+                          {showPassword.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={savingPassword}
+                      className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-50"
+                    >
+                      {savingPassword ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Key size={16} />
+                      )}
+                      <span>Perbarui Kata Sandi</span>
+                    </button>
+                  </form>
+                </div>
               </div>
             </>
           )}

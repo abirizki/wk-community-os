@@ -781,4 +781,81 @@ router.post('/change-initial-password', async (req, res) => {
   }
 });
 
+// POST /api/auth/change-password (Pembaruan Kata Sandi Mandiri oleh Pengguna Kapan Saja)
+router.post('/change-password', async (req, res) => {
+  try {
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ success: false, message: 'Tidak ada sesi aktif. Silakan login kembali.' });
+    }
+
+    const { current_password, new_password, confirm_password } = req.body;
+    const sessionUser = req.session.user;
+    const userId = sessionUser.id;
+
+    if (!current_password || !new_password || !confirm_password) {
+      return res.status(400).json({ success: false, message: 'Kata sandi saat ini, kata sandi baru, dan konfirmasi wajib diisi.' });
+    }
+
+    if (new_password !== confirm_password) {
+      return res.status(400).json({ success: false, message: 'Konfirmasi kata sandi baru tidak cocok.' });
+    }
+
+    if (new_password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Kata sandi baru minimal 6 karakter.' });
+    }
+
+    // Ambil data user dari database untuk verifikasi password lama
+    let userRow = null;
+    if (userId) {
+      const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [userId]);
+      if (rows.length > 0) userRow = rows[0];
+    }
+
+    // Jika tidak ditemukan berdasarkan id, cari berdasarkan username
+    if (!userRow && (sessionUser.username || sessionUser.active_nik)) {
+      const uname = sessionUser.username || sessionUser.active_nik;
+      const [rows] = await pool.execute('SELECT * FROM users WHERE username = ?', [uname]);
+      if (rows.length > 0) userRow = rows[0];
+    }
+
+    // Verifikasi kata sandi saat ini (dukung password master BumiWarga@2026 atau hash bcrypt)
+    let isCurrentValid = false;
+    if (current_password === 'BumiWarga@2026') {
+      isCurrentValid = true;
+    } else if (userRow && userRow.password_hash) {
+      isCurrentValid = await bcrypt.compare(current_password, userRow.password_hash);
+    }
+
+    if (!isCurrentValid) {
+      return res.status(400).json({ success: false, message: 'Kata sandi saat ini yang Anda masukkan tidak sesuai.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(new_password, salt);
+
+    if (userRow) {
+      await pool.execute(
+        'UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = NOW() WHERE id = ?',
+        [passwordHash, userRow.id]
+      );
+    } else {
+      const uname = sessionUser.active_nik || sessionUser.username || `user_${Date.now()}`;
+      await pool.execute(
+        'INSERT INTO users (username, password_hash, nama, role, status, must_change_password) VALUES (?, ?, ?, ?, ?, 0)',
+        [uname, passwordHash, sessionUser.nama || uname, sessionUser.role || 'warga', 'active']
+      );
+    }
+
+    req.session.user.must_change_password = false;
+
+    return res.json({
+      success: true,
+      message: 'Kata sandi Anda berhasil diperbarui! Silakan gunakan kata sandi baru untuk login berikutnya.'
+    });
+  } catch (error) {
+    console.error('[Auth] change-password error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Gagal memperbarui kata sandi.' });
+  }
+});
+
 module.exports = router;
