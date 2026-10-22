@@ -39,7 +39,13 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", process.env.FRONTEND_ORIGIN || "http://localhost:5173", "http://localhost:3000"]
+      connectSrc: [
+        "'self'",
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com",
+        process.env.FRONTEND_ORIGIN || "http://localhost:5173",
+        "http://localhost:3000"
+      ]
     }
   }
 }));
