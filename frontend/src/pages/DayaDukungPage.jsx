@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Building2,
   GraduationCap,
@@ -28,10 +29,28 @@ import { api } from '../utils/api';
 
 export default function DayaDukungPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('pendidikan'); // 'pendidikan' | 'kesehatan' | 'ekonomi' | 'sanitasi'
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'pendidikan';
+  const [activeTab, setActiveTab] = useState(['pendidikan', 'kesehatan', 'ekonomi', 'sanitasi'].includes(initialTab) ? initialTab : 'pendidikan');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+
+  // Auto-detect URL parameters (tab & action modal pendaftaran usaha)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const actionParam = searchParams.get('action');
+    const modalParam = searchParams.get('modal');
+
+    if (tabParam && ['pendidikan', 'kesehatan', 'ekonomi', 'sanitasi'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+
+    if (actionParam === 'daftar-usaha' || actionParam === 'new-business' || modalParam === 'usaha') {
+      setActiveTab('ekonomi');
+      setShowBizModal(true);
+    }
+  }, [searchParams]);
 
   // Sektor States
   const [summaryData, setSummaryData] = useState(null);
@@ -1314,7 +1333,15 @@ export default function DayaDukungPage() {
       {showBizModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-surface rounded-3xl p-6 max-w-lg w-full border border-outline-variant shadow-xl">
-            <h3 className="text-lg font-bold text-on-surface mb-4">Pendaftaran Usaha Warga Mandiri</h3>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-base font-bold text-on-surface">Pendaftaran Usaha & UMKM Warga</h3>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                Direktori Ekonomi RW
+              </span>
+            </div>
+            <p className="text-xs text-on-surface-variant mb-4">
+              Daftarkan warung, toko, atau jasa Anda ke direktori ekonomi kelurahan. Untuk perizinan resmi bank/KUR, Anda juga dapat mengajukan <span className="font-semibold text-primary">Surat Keterangan Usaha (SKU)</span> di menu Dokumen.
+            </p>
             <form onSubmit={handleCreateBiz} className="space-y-3.5 text-xs">
               <div>
                 <label className="font-semibold block mb-1">Nama Usaha / Toko</label>

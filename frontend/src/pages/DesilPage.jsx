@@ -105,20 +105,37 @@ export default function DesilPage() {
   const isRW = ['ketua_rw', 'admin_rw'].includes(normalizedRole);
   const isKelurahan = ['superadmin', 'admin_kelurahan', 'lurah', 'admin', 'staf_kelurahan'].includes(normalizedRole);
 
-  // Load My Family Desil
+  // Load My Family Desil (Murni dari Database Resmi)
   const fetchMyFamilyDesil = async () => {
     try {
       setLoading(true);
       const res = await api.get('/desil/my-family');
-      if (res.data.success && res.data.data) {
-        setFamilyDesil(res.data.data);
+      const payload = res?.data !== undefined && res?.success !== undefined ? res : (res?.data || res);
+      if (payload?.success && payload?.data) {
+        const item = payload.data;
+        setFamilyDesil(item);
         setFormData(prev => ({
           ...prev,
-          ...res.data.data,
-          kepemilikan_mobil: !!res.data.data.kepemilikan_mobil,
-          ada_disabilitas_lansia_tunggal: !!res.data.data.ada_disabilitas_lansia_tunggal,
-          ada_anak_sekolah_pip: !!res.data.data.ada_anak_sekolah_pip,
-          sptjm_warga_accepted: !!res.data.data.sptjm_warga_accepted
+          daya_listrik: item.daya_listrik || prev.daya_listrik,
+          status_rumah: item.status_rumah || prev.status_rumah,
+          sumber_air: item.sumber_air || prev.sumber_air,
+          luas_lantai_kategori: item.luas_lantai_kategori || prev.luas_lantai_kategori,
+          bahan_bakar_memasak: item.bahan_bakar_memasak || prev.bahan_bakar_memasak,
+          kepemilikan_motor: item.kepemilikan_motor || prev.kepemilikan_motor,
+          dinding_terluas: item.dinding_terluas || prev.dinding_terluas,
+          lantai_terluas: item.lantai_terluas || prev.lantai_terluas,
+          foto_rumah_depan_url: item.foto_rumah_depan_url || '',
+          foto_rumah_dalam_url: item.foto_rumah_dalam_url || '',
+          foto_meteran_listrik_url: item.foto_meteran_listrik_url || '',
+          desil_resmi_pemerintah: item.desil_resmi_pemerintah || item.desil_saat_ini || '',
+          id_dtks_resmi: item.id_dtks_resmi || item.id_dtks_kemensos || '',
+          bansos_diterima_resmi: item.bansos_diterima_resmi || '',
+          bukti_kementerian_url: item.bukti_kementerian_url || '',
+          nomor_referensi_bukti: item.nomor_referensi_bukti || '',
+          kepemilikan_mobil: Boolean(item.kepemilikan_mobil === 1 || item.kepemilikan_mobil === true || item.kepemilikan_mobil === '1'),
+          ada_disabilitas_lansia_tunggal: Boolean(item.ada_disabilitas_lansia_tunggal === 1 || item.ada_disabilitas_lansia_tunggal === true),
+          ada_anak_sekolah_pip: Boolean(item.ada_anak_sekolah_pip === 1 || item.ada_anak_sekolah_pip === true),
+          sptjm_warga_accepted: Boolean(item.sptjm_warga_accepted === 1 || item.sptjm_warga_accepted === true)
         }));
       }
     } catch (err) {
@@ -137,8 +154,10 @@ export default function DesilPage() {
         api.get('/desil/list', { params: filters }),
         api.get('/desil/stats')
       ]);
-      if (listRes.data.success) setVerifikasiList(listRes.data.data);
-      if (statsRes.data.success) setStats(statsRes.data.data);
+      const listPayload = listRes?.data !== undefined && listRes?.success !== undefined ? listRes : (listRes?.data || listRes);
+      const statsPayload = statsRes?.data !== undefined && statsRes?.success !== undefined ? statsRes : (statsRes?.data || statsRes);
+      if (listPayload?.success) setVerifikasiList(listPayload.data || []);
+      if (statsPayload?.success) setStats(statsPayload.data || null);
     } catch (err) {
       console.error('Gagal memuat data verifikasi:', err.message);
     } finally {
@@ -266,7 +285,8 @@ export default function DesilPage() {
         ...formData,
         desil_usulan: previewDesil
       });
-      if (res.data.success) {
+      const payload = res?.data !== undefined && res?.success !== undefined ? res : (res?.data || res);
+      if (payload?.success) {
         alert('Draft usulan 11 indikator faktual berhasil disimpan!');
         fetchMyFamilyDesil();
       }
@@ -293,7 +313,8 @@ export default function DesilPage() {
         sptjm_warga_accepted: true,
         sptjm_warga_at: new Date().toISOString()
       });
-      if (res.data.success) {
+      const payload = res?.data !== undefined && res?.success !== undefined ? res : (res?.data || res);
+      if (payload?.success) {
         alert('Permohonan data desil dan SPTJM berhasil diajukan! Selanjutnya data akan diverifikasi faktual (ground checking) oleh Ketua RT/RW setempat.');
         fetchMyFamilyDesil();
       }
@@ -316,7 +337,8 @@ export default function DesilPage() {
     try {
       setLoading(true);
       const res = await api.patch(`/desil/${selectedItem.id}/ground-check`, groundCheckForm);
-      if (res.data.success) {
+      const payload = res?.data !== undefined && res?.success !== undefined ? res : (res?.data || res);
+      if (payload?.success) {
         alert('Hasil verifikasi lapangan (ground checking) berhasil dicatat dan diteruskan ke Kelurahan!');
         setGroundCheckModalOpen(false);
         fetchVerifikasiList();
@@ -336,7 +358,8 @@ export default function DesilPage() {
     try {
       setLoading(true);
       const res = await api.patch(`/desil/${selectedItem.id}/reconcile`, reconcileForm);
-      if (res.data.success) {
+      const payload = res?.data !== undefined && res?.success !== undefined ? res : (res?.data || res);
+      if (payload?.success) {
         alert('Data pembanding resmi dan status sinkronisasi berhasil diperbarui!');
         setReconcileModalOpen(false);
         fetchVerifikasiList();
@@ -358,7 +381,8 @@ export default function DesilPage() {
         desilFinal: finalDesil,
         catatan: catatanVerifikasi
       });
-      if (res.data.success) {
+      const payload = res?.data !== undefined && res?.success !== undefined ? res : (res?.data || res);
+      if (payload?.success) {
         alert(`Status desil berhasil diperbarui menjadi ${status}`);
         setVerifyModalOpen(false);
         fetchVerifikasiList();
@@ -701,40 +725,50 @@ export default function DesilPage() {
             </form>
           </div>
 
-          {/* Panel Estimasi Desil Mandiri */}
+          {/* Panel Estimasi / Status Desil Resmi Mandiri */}
           <div className="space-y-4">
             <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
               <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Estimasi Desil Usulan Awal
+                {familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' 
+                  ? 'Status Desil Terverifikasi Resmi' 
+                  : 'Estimasi Desil Usulan Awal'}
               </h3>
 
               <div className="text-center py-4 bg-slate-50 rounded-xl border border-slate-100">
                 <div className="inline-block mb-2">
-                  {getDesilBadge(previewDesil)}
+                  {getDesilBadge(
+                    (familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' && familyDesil?.desil_saat_ini) 
+                      ? Number(familyDesil.desil_saat_ini) 
+                      : previewDesil
+                  )}
                 </div>
-                <p className="text-3xl font-black text-slate-900">Desil {previewDesil}</p>
+                <p className="text-3xl font-black text-slate-900">
+                  Desil {(familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' && familyDesil?.desil_saat_ini) ? familyDesil.desil_saat_ini : previewDesil}
+                </p>
                 <p className="text-xs text-slate-500 mt-1">
-                  {previewDesil <= 4 ? 'Kategori 40% Terbawah (Prioritas Bansos)' : 'Kategori Non-Bansos Reguler'}
+                  {((familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' && familyDesil?.desil_saat_ini) ? Number(familyDesil.desil_saat_ini) : previewDesil) <= 4 
+                    ? 'Kategori 40% Terbawah (Prioritas Bansos)' 
+                    : 'Kategori Non-Bansos Reguler'}
                 </p>
               </div>
 
               <div className="space-y-2 text-xs text-slate-600">
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span>Status Verifikasi:</span>
-                  <span className="font-bold text-amber-600">
+                  <span className={`font-bold ${familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' ? 'text-emerald-700' : 'text-amber-600'}`}>
                     {familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' ? 'Terverifikasi Kelurahan' : 'Draft Usulan Mandiri'}
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span>Kelayakan PKH / Sembako:</span>
-                  <span className={`font-bold ${previewDesil <= 4 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                    {previewDesil <= 4 ? 'Berhak Diusulkan' : 'Tidak Berhak'}
+                  <span className={`font-bold ${((familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' && familyDesil?.desil_saat_ini) ? Number(familyDesil.desil_saat_ini) : previewDesil) <= 4 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {((familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' && familyDesil?.desil_saat_ini) ? Number(familyDesil.desil_saat_ini) : previewDesil) <= 4 ? 'Berhak Diusulkan' : 'Tidak Berhak'}
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span>Kelayakan PBI-JK (BPJS):</span>
-                  <span className={`font-bold ${previewDesil <= 5 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                    {previewDesil <= 5 ? 'Berhak Diusulkan' : 'Tidak Berhak'}
+                  <span className={`font-bold ${((familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' && familyDesil?.desil_saat_ini) ? Number(familyDesil.desil_saat_ini) : previewDesil) <= 5 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {((familyDesil?.status_verifikasi === 'VERIFIED_KELURAHAN' && familyDesil?.desil_saat_ini) ? Number(familyDesil.desil_saat_ini) : previewDesil) <= 5 ? 'Berhak Diusulkan' : 'Tidak Berhak'}
                   </span>
                 </div>
               </div>

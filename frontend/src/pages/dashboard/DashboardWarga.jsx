@@ -54,7 +54,9 @@ import {
   MapPin,
   Check,
   UserCheck,
-  Award
+  Award,
+  Store,
+  KeyRound
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -475,206 +477,248 @@ export default function DashboardWarga() {
       )}
 
       {/* ========================================================================= */}
-      {/* 4. SUPER APPS QUICK LAUNCHER (8 FITUR UTAMA BER-BADGE NOTIFIKASI)        */}
+      {/* 4. LAYANAN MANDIRI BENTO GRID TERSTRUKTUR (3 KLUSTER UTAMA)               */}
       {/* ========================================================================= */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-              Layanan Utama Mandiri Warga
-            </h2>
+      <div className="space-y-5">
+        {/* KLUSTER A: KEPENDUDUKAN & ADMINISTRASI RESMI */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Administrasi & Identitas Warga
+              </h2>
+            </div>
+            <span className="text-[11px] text-slate-500 font-medium">Layanan Dukcapil & Surat Mandiri</span>
           </div>
-          <span className="text-xs text-slate-500 font-medium">8 Fitur Terintegrasi</span>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {/* KK Digital */}
+            <Link
+              to="/dashboard/kk"
+              className="p-4 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Users size={20} />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                  Resmi SIAK
+                </span>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Kartu Keluarga Digital</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Daftar Anggota & Salin NIK</p>
+              </div>
+            </Link>
+
+            {/* Pengajuan Surat */}
+            <Link
+              to="/dashboard/dokumen"
+              className="p-4 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <FileText size={20} />
+                </div>
+                {activeDocs.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                    {activeDocs.length} Proses
+                  </span>
+                )}
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Pengajuan Surat Mandiri</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">SKTM, SKU, Domisili, Nikah</p>
+              </div>
+            </Link>
+
+            {/* Profil & Skor Kelengkapan */}
+            <Link
+              to="/dashboard/profil"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3 col-span-2 sm:col-span-1"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <ShieldCheck size={20} />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800">
+                  4 Pilar
+                </span>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Profil & Keamanan Akun</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Skor Data & Ganti Sandi</p>
+              </div>
+            </Link>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* 1. Pengajuan Surat */}
-          <Link
-            to="/dashboard/dokumen"
-            className="p-4 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <FileText size={22} />
+        {/* KLUSTER B: PERLINDUNGAN SOSIAL & PEMBERDAYAAN EKONOMI */}
+        <div className="space-y-2.5 pt-1">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Bantuan Sosial & Ekonomi Warga
+              </h2>
+            </div>
+            <span className="text-[11px] text-slate-500 font-medium">DTKS Kemensos & UMKM Kelurahan</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Bansos & Tiket QR */}
+            <Link
+              to="/dashboard/bansos"
+              className="p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Gift size={20} />
+                </div>
+                {myTickets.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
+                    Tiket QR Siap
+                  </span>
+                )}
               </div>
-              {activeDocs.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
-                  {activeDocs.length} Proses
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Bantuan Sosial & Tiket QR</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Jadwal Penyaluran & Kuota</p>
+              </div>
+            </Link>
+
+            {/* Desil Kesejahteraan DTSEN */}
+            <Link
+              to="/dashboard/desil"
+              className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Layers size={20} />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">
+                  DTSEN
                 </span>
-              )}
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Pengajuan Surat</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">SKU, SKTM, Kematian, Nikah</p>
-            </div>
-          </Link>
-
-          {/* 2. Bansos & Tiket QR */}
-          <Link
-            to="/dashboard/bansos"
-            className="p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Gift size={22} />
               </div>
-              {myTickets.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
-                  Tiket QR Siap
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Desil Kesejahteraan DTSEN</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Status Desil 1–10 & Cek Bansos</p>
+              </div>
+            </Link>
+
+            {/* Daftarkan Usaha Warga (DIRECT ACTION KE FORM) */}
+            <Link
+              to="/dashboard/daya-dukung?tab=ekonomi&action=daftar-usaha"
+              className="p-4 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200 hover:border-teal-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Store size={20} />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800">
+                  Daftar Langsung
                 </span>
-              )}
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Bansos & Tiket QR</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Jadwal & Meja Penyaluran</p>
-            </div>
-          </Link>
-
-          {/* 3. Desil & Cek Bansos */}
-          <Link
-            to="/dashboard/desil"
-            className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Sparkles size={22} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800">
-                11 Indikator
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Data Desil DTSEN</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Cek Bansos & Ajuan Mandiri</p>
-            </div>
-          </Link>
-
-          {/* 4. Kartu Keluarga Digital */}
-          <Link
-            to="/dashboard/kk"
-            className="p-4 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Users size={22} />
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Daftarkan Usaha Warga</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Buka Form Registrasi UMKM/Toko</p>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                Resmi SIAK
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Kartu Keluarga Digital</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Blanko Kemendagri & NIK</p>
-            </div>
-          </Link>
+            </Link>
+          </div>
+        </div>
 
-          {/* 5. Buku KIA Balita */}
-          <button
-            type="button"
-            onClick={() => {
-              setHealthActiveTab('balita');
-              const el = document.getElementById('section-kesehatan-keluarga');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="p-4 rounded-2xl bg-white hover:bg-pink-50/50 border border-slate-200 hover:border-pink-300 shadow-sm transition-all group flex flex-col justify-between space-y-3 text-left"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Baby size={22} />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-pink-100 text-pink-800">
-                KMS Digital
-              </span>
+        {/* KLUSTER C: LINGKUNGAN, KEUANGAN & ASPIRASI */}
+        <div className="space-y-2.5 pt-1">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Lingkungan, Keuangan & Aspirasi RT/RW
+              </h2>
             </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Buku KIA Balita</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Grafik Timbang & Tumbuh</p>
-            </div>
-          </button>
+            <span className="text-[11px] text-slate-500 font-medium">Transparansi Wilayah & Pajak</span>
+          </div>
 
-          {/* 6. Kesehatan Lansia */}
-          <button
-            type="button"
-            onClick={() => {
-              setHealthActiveTab('lansia');
-              const el = document.getElementById('section-kesehatan-keluarga');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="p-4 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200 hover:border-teal-300 shadow-sm transition-all group flex flex-col justify-between space-y-3 text-left"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <HeartPulse size={22} />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Tagihan PBB */}
+            <Link
+              to="/dashboard/pbb"
+              className="p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <FileText size={20} />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                  Bapenda
+                </span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800">
-                Posbindu
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Kesehatan Lansia</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Pantauan Tensi & Gula Darah</p>
-            </div>
-          </button>
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Informasi Tagihan PBB</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Cek NOP & Status Pajak</p>
+              </div>
+            </Link>
 
-          {/* 7. Kas & Iuran RT */}
-          <Link
-            to="/dashboard/keuangan"
-            className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Coins size={22} />
+            {/* Kas & Iuran RT */}
+            <Link
+              to="/dashboard/keuangan"
+              className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Coins size={20} />
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                  iuranStatus.isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                }`}>
+                  {iuranStatus.label}
+                </span>
               </div>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                iuranStatus.isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-              }`}>
-                {iuranStatus.label}
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Kas & Iuran Warga</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Transparansi Keuangan RT</p>
-            </div>
-          </Link>
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Kas & Iuran Warga</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Transparansi Lingkungan</p>
+              </div>
+            </Link>
 
-          {/* 8. Lapor Pengaduan */}
-          <Link
-            to="/dashboard/pengaduan"
-            className="p-4 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200 hover:border-purple-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <MessageSquareWarning size={22} />
+            {/* Rumah Sewa & Kontrakan */}
+            <Link
+              to="/dashboard/kontrakan"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <KeyRound size={20} />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800">
+                  Hunian
+                </span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
-                Aspirasi
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Lapor Pengaduan</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Sampaikan Keluhan RT/RW</p>
-            </div>
-          </Link>
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Rumah Sewa & Kost</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Lapor Hunian Sementara</p>
+              </div>
+            </Link>
 
-          {/* 9. Daftarkan Usaha & UMKM */}
-          <Link
-            to="/dashboard/daya-dukung"
-            className="p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 shadow-sm transition-all group flex flex-col justify-between space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Building2 size={22} />
+            {/* Lapor Pengaduan */}
+            <Link
+              to="/dashboard/pengaduan"
+              className="p-4 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200 hover:border-purple-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <MessageSquareWarning size={20} />
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
+                  Aspirasi
+                </span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
-                Mandiri
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-xs">Daftarkan Usaha Warga</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Warung, UMKM & Toko</p>
-            </div>
-          </Link>
+              <div>
+                <h3 className="font-bold text-slate-900 text-xs">Lapor Pengaduan</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Aspirasi & Keluhan RT</p>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
 
