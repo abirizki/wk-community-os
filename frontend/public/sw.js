@@ -99,12 +99,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Static Assets (/assets/*, fonts, icons, styles, scripts) -> Stale-While-Revalidate with Safe Fallback
+  // 2. Pass-through Google Fonts directly to native browser handling
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    return;
+  }
+
+  // Static Assets (/assets/*, icons, styles, scripts) -> Stale-While-Revalidate with Safe Fallback
   const isStaticAsset = (
     url.pathname.startsWith('/assets/') ||
     url.pathname.startsWith('/icons/') ||
-    url.hostname === 'fonts.googleapis.com' ||
-    url.hostname === 'fonts.gstatic.com' ||
     request.destination === 'style' ||
     request.destination === 'script' ||
     request.destination === 'image' ||

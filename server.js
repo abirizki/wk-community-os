@@ -43,6 +43,10 @@ app.use(helmet({
         "'self'",
         "https://fonts.googleapis.com",
         "https://fonts.gstatic.com",
+        "https://*.googleapis.com",
+        "https://*.gstatic.com",
+        "https://bumiwarga.online",
+        "https://*.bumiwarga.online",
         process.env.FRONTEND_ORIGIN || "http://localhost:5173",
         "http://localhost:3000"
       ]

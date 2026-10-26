@@ -220,12 +220,12 @@ export default function DashboardKetuaRT() {
         api.get(`/keuangan/iuran?rt=${rtNomor}&rw=${rwNomor}`),
         api.get('/bansos/audit-sanggahan'),
         api.get(`/posyandu/balita/stats?rt=${rtNomor}`),
-        api.get(`/analytics/demografi?rt=${rtNomor}&rw=${rwNomor}`),
         api.get(`/fasilitas/keagamaan?rt=${rtNomor}`),
         api.get(`/fasilitas/hunian-sewa?rt=${rtNomor}`),
         api.get(`/fasilitas/kesehatan?rt=${rtNomor}`),
         api.get(`/fasilitas/pendidikan?rt=${rtNomor}`),
-        api.get(`/fasilitas/kelompok-rentan?rt=${rtNomor}`)
+        api.get(`/fasilitas/kelompok-rentan?rt=${rtNomor}`),
+        api.get(`/analytics/demografi?rt=${rtNomor}&rw=${rwNomor}`)
       ]);
 
       // Handle Dokumen Antrean
@@ -293,8 +293,11 @@ export default function DashboardKetuaRT() {
       }
 
       // Handle Kelompok Rentan
-      if (rentanRes.status === 'fulfilled' && rentanRes.value?.data) {
-        setKelompokRentanList(rentanRes.value.data || []);
+      if (rentanRes.status === 'fulfilled' && rentanRes.value) {
+        const raw = rentanRes.value.data;
+        setKelompokRentanList(Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []));
+      } else {
+        setKelompokRentanList([]);
       }
 
     } catch (err) {
@@ -334,12 +337,10 @@ export default function DashboardKetuaRT() {
   // Kelompok Rentan Filtered
   const filteredRentan = useMemo(() => {
     if (rentanFilter === 'yatim') {
-      return kelompokRentanList.filter((k) =>
-        ['ANAK_YATIM', 'ANAK_PIATU', 'ANAK_YATIM_PIATU'].includes(k.kategori)
-      );
+      return (Array.isArray(kelompokRentanList) ? kelompokRentanList : []).filter((k) => k && ['ANAK_YATIM', 'ANAK_PIATU', 'ANAK_YATIM_PIATU'].includes(k.kategori));
     }
     if (rentanFilter === 'lansia') {
-      return kelompokRentanList.filter((k) => k.kategori === 'LANSIA_SEBATANG_KARA');
+      return (Array.isArray(kelompokRentanList) ? kelompokRentanList : []).filter((k) => k && k.kategori === 'LANSIA_SEBATANG_KARA');
     }
     return kelompokRentanList;
   }, [kelompokRentanList, rentanFilter]);
@@ -560,7 +561,7 @@ export default function DashboardKetuaRT() {
     });
 
     // 2. Lansia Sebatang Kara Pemantauan
-    const lansiaRentanCount = kelompokRentanList.filter((k) => k.kategori === 'LANSIA_SEBATANG_KARA').length;
+    const lansiaRentanCount = (Array.isArray(kelompokRentanList) ? kelompokRentanList : []).filter((k) => k && k.kategori === 'LANSIA_SEBATANG_KARA').length;
     if (lansiaRentanCount > 0) {
       list.push({
         id: 'act-lansia-rentan',
@@ -812,189 +813,7 @@ export default function DashboardKetuaRT() {
         </button>
       </div>
 
-      {/* TAB 1: MEJA ANTREAN VERIFIKASI SURAT RT (ACTION-FIRST WORKSPACE) */}
-      {activeTab === 'surat' && (
-        <div className="space-y-6 mb-6">
-        <div id="antrean-verifikasi-rt" className="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-card overflow-hidden">
-          {/* Header Seksi & Kontrol Sorting */}
-          <div className="p-4 sm:p-5 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/30">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-extrabold text-on-surface">
-                  Antrean Permohonan Pengantar Warga
-                </h3>
-                <span className="px-2.5 py-0.5 text-xs font-bold font-mono tabular-nums rounded-full bg-primary/10 text-primary">
-                  {pendingDocs.length} berkas
-                </span>
-              </div>
-              <p className="text-xs text-on-surface-variant mt-0.5">
-                Verifikasi faktual domisili dan kelengkapan berkas sebelum pengesahan berjenjang ke RW & Kelurahan.
-              </p>
-            </div>
-
-            {/* Controls Bar: Search & SLA Aging */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-                <input
-                  type="text"
-                  value={docSearch}
-                  onChange={(e) => setDocSearch(e.target.value)}
-                  placeholder="Cari pemohon / NIK / no. reg..."
-                  className="pl-8 pr-7 py-1.5 rounded-lg text-xs bg-surface-container-low border border-outline-variant focus:border-primary outline-none text-on-surface"
-                />
-                {docSearch && (
-                  <button
-                    onClick={() => setDocSearch('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSortBy((prev) => (prev === 'aging_desc' ? 'aging_asc' : 'aging_desc'))}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-colors cursor-pointer"
-                title="Ubah urutan antrean berdasarkan waktu tunggu (aging)"
-              >
-                <ArrowUpDown size={14} className="text-primary" />
-                <span>
-                  {sortBy === 'aging_desc' ? 'Paling Lama Diajukan' : 'Paling Baru Diajukan'}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={loadRTData}
-                disabled={refreshing}
-                className="p-1.5 rounded-lg border border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
-                title="Muat ulang antrean"
-              >
-                <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-              </button>
-            </div>
-          </div>
-
-          {/* Tabel / Daftar Antrean Surat */}
-          {sortedDocs.length === 0 ? (
-            <div className="py-12 px-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 border border-emerald-200">
-                <CheckCircle2 size={24} />
-              </div>
-              <h4 className="text-sm font-bold text-on-surface">Semua Berkas Surat RT Selesai Diverifikasi!</h4>
-              <p className="text-xs text-on-surface-variant mt-1 max-w-sm mx-auto">
-                Tidak ada permohonan surat warga yang tertahan di tingkat RT {rtNomor}. Kepatuhan pelayanan prima terjaga.
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-outline-variant/60">
-              {sortedDocs.map((doc) => {
-                const isProcessingThis = processingId === doc.id;
-                const docTitle = doc.jenis_surat || doc.jenis_dokumen || 'Surat Pengantar';
-                const createdDate = doc.rt_received_at || doc.created_at;
-
-                return (
-                  <div
-                    key={doc.id}
-                    className="p-4 sm:p-5 hover:bg-surface-container-low/40 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
-                  >
-                    {/* Info Dokumen & Pemohon */}
-                    <div className="space-y-1.5 flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 tabular-nums">
-                          {doc.nomor_registrasi || `REG-${doc.id}`}
-                        </span>
-                        <StatusBadge status="PENDING_RT" />
-                        <SLABadge
-                          deadline={doc.sla_deadline}
-                          createdAt={createdDate}
-                          status={doc.status}
-                        />
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          Iuran RT: Lunas
-                        </span>
-                      </div>
-
-                      <h4 className="text-sm sm:text-base font-extrabold text-on-surface tracking-tight">
-                        {docTitle}
-                      </h4>
-
-                      <div className="text-xs text-on-surface-variant flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span className="inline-flex items-center gap-1"><strong>Pemohon:</strong> {doc.nama_pemohon || 'Warga'} (NIK: <MaskedField value={doc.nik_pemohon} type="nik" className="tabular-nums" />)</span>
-                        <span>•</span>
-                        <span><strong>Keperluan:</strong> {doc.keperluan || '-'}</span>
-                        <span>•</span>
-                        <span>Diajukan: {createdDate ? new Date(createdDate).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</span>
-                      </div>
-                    </div>
-
-                    {/* SOP 3-WAY ACTIONS (Tinjau Berkas, Tolak/Revisi, Setujui) */}
-                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 pt-2 lg:pt-0 w-full sm:w-auto justify-end">
-                      {/* Tinjau Berkas */}
-                      <button
-                        type="button"
-                        onClick={() => setInspectDoc(doc)}
-                        className="px-3 py-2 min-h-[40px] rounded-xl border border-outline-variant text-on-surface hover:bg-surface-container active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                        title="Tinjau kelengkapan berkas & KTP pemohon"
-                      >
-                        <Eye size={15} />
-                        <span>Tinjau</span>
-                      </button>
-
-                      {/* Catatan Revisi */}
-                      <button
-                        type="button"
-                        disabled={isProcessingThis}
-                        onClick={() => {
-                          setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' });
-                        }}
-                        className="px-3 py-2 min-h-[40px] rounded-xl border border-amber-200 text-amber-800 bg-amber-50 hover:bg-amber-100 active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                        title="Minta pemohon untuk melengkapi perbaikan berkas"
-                      >
-                        <RotateCcw size={15} />
-                        <span>Revisi</span>
-                      </button>
-
-                      {/* Tolak */}
-                      <button
-                        type="button"
-                        disabled={isProcessingThis}
-                        onClick={() => {
-                          setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' });
-                        }}
-                        className="px-3 py-2 min-h-[40px] rounded-xl border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                        title="Tolak permohonan surat"
-                      >
-                        <XCircle size={15} />
-                        <span>Tolak</span>
-                      </button>
-
-                      {/* One-Touch Setujui */}
-                      <button
-                        type="button"
-                        disabled={isProcessingThis}
-                        onClick={() => handleQuickApprove(doc.id, docTitle)}
-                        className="px-4 py-2 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                        title="Verifikasi dengan satu klik dan teruskan ke RW"
-                      >
-                        {isProcessingThis ? (
-                          <RefreshCw size={15} className="animate-spin" />
-                        ) : (
-                          <CheckCircle2 size={15} />
-                        )}
-                        <span>Setujui (Teruskan RW)</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-      {/* 2. Super Apps Bento Quick Launcher */}
+            {/* 2. Super Apps Bento Quick Launcher */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -1184,6 +1003,190 @@ export default function DashboardKetuaRT() {
           </Link>
         </div>
       </div>
+
+      {/* TAB 1: MEJA ANTREAN VERIFIKASI SURAT RT (ACTION-FIRST WORKSPACE) */}
+      {activeTab === 'surat' && (
+        <div className="space-y-6 mb-6">
+        <div id="antrean-verifikasi-rt" className="bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-card overflow-hidden">
+          {/* Header Seksi & Kontrol Sorting */}
+          <div className="p-4 sm:p-5 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/30">
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-extrabold text-on-surface">
+                  Antrean Permohonan Pengantar Warga
+                </h3>
+                <span className="px-2.5 py-0.5 text-xs font-bold font-mono tabular-nums rounded-full bg-primary/10 text-primary">
+                  {pendingDocs.length} berkas
+                </span>
+              </div>
+              <p className="text-xs text-on-surface-variant mt-0.5">
+                Verifikasi faktual domisili dan kelengkapan berkas sebelum pengesahan berjenjang ke RW & Kelurahan.
+              </p>
+            </div>
+
+            {/* Controls Bar: Search & SLA Aging */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+                <input
+                  type="text"
+                  value={docSearch}
+                  onChange={(e) => setDocSearch(e.target.value)}
+                  placeholder="Cari pemohon / NIK / no. reg..."
+                  className="pl-8 pr-7 py-1.5 rounded-lg text-xs bg-surface-container-low border border-outline-variant focus:border-primary outline-none text-on-surface"
+                />
+                {docSearch && (
+                  <button
+                    onClick={() => setDocSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSortBy((prev) => (prev === 'aging_desc' ? 'aging_asc' : 'aging_desc'))}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-colors cursor-pointer"
+                title="Ubah urutan antrean berdasarkan waktu tunggu (aging)"
+              >
+                <ArrowUpDown size={14} className="text-primary" />
+                <span>
+                  {sortBy === 'aging_desc' ? 'Paling Lama Diajukan' : 'Paling Baru Diajukan'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={loadRTData}
+                disabled={refreshing}
+                className="p-1.5 rounded-lg border border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors"
+                title="Muat ulang antrean"
+              >
+                <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+              </button>
+            </div>
+          </div>
+
+          {/* Tabel / Daftar Antrean Surat */}
+          {sortedDocs.length === 0 ? (
+            <div className="py-12 px-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 border border-emerald-200">
+                <CheckCircle2 size={24} />
+              </div>
+              <h4 className="text-sm font-bold text-on-surface">Semua Berkas Surat RT Selesai Diverifikasi!</h4>
+              <p className="text-xs text-on-surface-variant mt-1 max-w-sm mx-auto">
+                Tidak ada permohonan surat warga yang tertahan di tingkat RT {rtNomor}. Kepatuhan pelayanan prima terjaga.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-outline-variant/60">
+              {sortedDocs.map((doc) => {
+                const isProcessingThis = processingId === doc.id;
+                const docTitle = doc.jenis_surat || doc.jenis_dokumen || 'Surat Pengantar';
+                const createdDate = doc.rt_received_at || doc.created_at;
+
+                return (
+                  <div
+                    key={doc.id}
+                    className="p-4 sm:p-5 hover:bg-surface-container-low/40 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                  >
+                    {/* Info Dokumen & Pemohon */}
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 tabular-nums">
+                          {doc.nomor_registrasi || `REG-${doc.id}`}
+                        </span>
+                        <StatusBadge status="PENDING_RT" />
+                        <SLABadge
+                          deadline={doc.sla_deadline}
+                          createdAt={createdDate}
+                          status={doc.status}
+                        />
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          Iuran RT: Lunas
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm sm:text-base font-extrabold text-on-surface tracking-tight">
+                        {docTitle}
+                      </h4>
+
+                      <div className="text-xs text-on-surface-variant flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="inline-flex items-center gap-1"><strong>Pemohon:</strong> {doc.nama_pemohon || 'Warga'} (NIK: <MaskedField value={doc.nik_pemohon} type="nik" className="tabular-nums" />)</span>
+                        <span>•</span>
+                        <span><strong>Keperluan:</strong> {doc.keperluan || '-'}</span>
+                        <span>•</span>
+                        <span>Diajukan: {createdDate ? new Date(createdDate).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</span>
+                      </div>
+                    </div>
+
+                    {/* SOP 3-WAY ACTIONS (Tinjau Berkas, Tolak/Revisi, Setujui) */}
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 pt-2 lg:pt-0 w-full sm:w-auto justify-end">
+                      {/* Tinjau Berkas */}
+                      <button
+                        type="button"
+                        onClick={() => setInspectDoc(doc)}
+                        className="px-3 py-2 min-h-[40px] rounded-xl border border-outline-variant text-on-surface hover:bg-surface-container active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        title="Tinjau kelengkapan berkas & KTP pemohon"
+                      >
+                        <Eye size={15} />
+                        <span>Tinjau</span>
+                      </button>
+
+                      {/* Catatan Revisi */}
+                      <button
+                        type="button"
+                        disabled={isProcessingThis}
+                        onClick={() => {
+                          setActionModal({ isOpen: true, type: 'REVISE', doc, reason: '' });
+                        }}
+                        className="px-3 py-2 min-h-[40px] rounded-xl border border-amber-200 text-amber-800 bg-amber-50 hover:bg-amber-100 active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        title="Minta pemohon untuk melengkapi perbaikan berkas"
+                      >
+                        <RotateCcw size={15} />
+                        <span>Revisi</span>
+                      </button>
+
+                      {/* Tolak */}
+                      <button
+                        type="button"
+                        disabled={isProcessingThis}
+                        onClick={() => {
+                          setActionModal({ isOpen: true, type: 'REJECT', doc, reason: '' });
+                        }}
+                        className="px-3 py-2 min-h-[40px] rounded-xl border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        title="Tolak permohonan surat"
+                      >
+                        <XCircle size={15} />
+                        <span>Tolak</span>
+                      </button>
+
+                      {/* One-Touch Setujui */}
+                      <button
+                        type="button"
+                        disabled={isProcessingThis}
+                        onClick={() => handleQuickApprove(doc.id, docTitle)}
+                        className="px-4 py-2 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        title="Verifikasi dengan satu klik dan teruskan ke RW"
+                      >
+                        {isProcessingThis ? (
+                          <RefreshCw size={15} className="animate-spin" />
+                        ) : (
+                          <CheckCircle2 size={15} />
+                        )}
+                        <span>Setujui (Teruskan RW)</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+
 
       {/* ========================================================================= */}
       
@@ -1458,7 +1461,7 @@ export default function DashboardKetuaRT() {
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
                 <span className="text-[10px] text-slate-500 font-bold block">Lansia Binaan RT</span>
                 <span className="text-lg font-black text-slate-800 font-mono">
-                  {kelompokRentanList.filter(k => k.kategori === 'LANSIA_SEBATANG_KARA').length} Jiwa
+                  {(Array.isArray(kelompokRentanList) ? kelompokRentanList : []).filter(k => k && k.kategori === 'LANSIA_SEBATANG_KARA').length} Jiwa
                 </span>
                 <span className="text-[10px] text-amber-600 font-medium block mt-0.5">Prioritas Posbindu Lansia</span>
               </div>
@@ -1839,7 +1842,7 @@ export default function DashboardKetuaRT() {
                   : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
               }`}
             >
-              Anak Yatim / Piatu ({kelompokRentanList.filter((k) => ['ANAK_YATIM', 'ANAK_PIATU', 'ANAK_YATIM_PIATU'].includes(k.kategori)).length})
+              Anak Yatim / Piatu ({(Array.isArray(kelompokRentanList) ? kelompokRentanList : []).filter((k) => k && ['ANAK_YATIM', 'ANAK_PIATU', 'ANAK_YATIM_PIATU'].includes(k.kategori)).length})
             </button>
             <button
               type="button"
@@ -1850,7 +1853,7 @@ export default function DashboardKetuaRT() {
                   : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
               }`}
             >
-              Lansia Sebatang Kara ({kelompokRentanList.filter((k) => k.kategori === 'LANSIA_SEBATANG_KARA').length})
+              Lansia Sebatang Kara ({(Array.isArray(kelompokRentanList) ? kelompokRentanList : []).filter((k) => k && k.kategori === 'LANSIA_SEBATANG_KARA').length})
             </button>
           </div>
 

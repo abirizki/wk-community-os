@@ -260,6 +260,157 @@ export default function DashboardWalikota() {
         </KPIGrid>
       </div>
 
+      {/* 2.5. SUPER APPS BENTO GRID MEJA KERJA WALIKOTA */}
+      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
+            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">
+              Pintasan Meja Kerja Eksekutif Pimpinan Kota
+            </h3>
+          </div>
+          <span className="text-[11px] text-slate-400 font-mono">8 Layanan Strategis</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          {/* 1. Command Center Spasial */}
+          <Link
+            to="/dashboard/command-center"
+            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 hover:from-blue-50 hover:to-blue-100/60 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <Landmark size={18} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-100 text-blue-800">33 Kel</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-700">Command Center</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Peta Spasial 7 Kecamatan</p>
+            </div>
+          </Link>
+
+          {/* 2. Monitoring Zero Stunting */}
+          <Link
+            to="/dashboard/posyandu"
+            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-rose-50/40 hover:from-rose-50 hover:to-rose-100/60 border border-slate-200/80 hover:border-rose-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <HeartPulse size={18} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 text-rose-800">SPM</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-rose-700">Zero Stunting Terpadu</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">KIA Posyandu & Puskesmas</p>
+            </div>
+          </Link>
+
+          {/* 3. Desil & DTKS Kemiskinan Ekstrem */}
+          <Link
+            to="/dashboard/desil"
+            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-amber-50/40 hover:from-amber-50 hover:to-amber-100/60 border border-slate-200/80 hover:border-amber-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <Users size={18} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-100 text-amber-800">Desil 1-2</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-amber-700">Kemiskinan Ekstrem</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Penetapan Bansos & Pangan</p>
+            </div>
+          </Link>
+
+          {/* 4. Kepatuhan SLA Pelayanan */}
+          <Link
+            to="/dashboard/data-maturity"
+            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-emerald-50/40 hover:from-emerald-50 hover:to-emerald-100/60 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <Clock size={18} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800">SOP 2 Jam</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700">Kepatuhan SLA SPBE</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Audit Kecepatan Pelayanan</p>
+            </div>
+          </Link>
+
+          {/* 5. Realisasi Fiskal PBB-P2 */}
+          <Link
+            to="/dashboard/pbb"
+            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/40 hover:from-indigo-50 hover:to-indigo-100/60 border border-slate-200/80 hover:border-indigo-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <FileText size={18} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-100 text-indigo-800">PAD</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-indigo-700">Realisasi Pajak PBB</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Penerimaan & Kepatuhan</p>
+            </div>
+          </Link>
+
+          {/* 6. Aduan & Aspirasi Publik */}
+          <Link
+            to="/dashboard/pengaduan"
+            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-rose-50/40 hover:from-rose-50 hover:to-rose-100/60 border border-slate-200/80 hover:border-rose-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <AlertTriangle size={18} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 text-rose-800">Warga</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-rose-700">Aduan Publik Sukabumi</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Monitoring Disposisi Camat</p>
+            </div>
+          </Link>
+
+          {/* 7. Kelola Pengguna & Aparatur */}
+          <Link
+            to="/dashboard/users"
+            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-sky-50/40 hover:from-sky-50 hover:to-sky-100/60 border border-slate-200/80 hover:border-sky-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <ShieldCheck size={18} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">Aparatur</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Aparatur & Pejabat</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Hierarki Akun Wilayah</p>
+            </div>
+          </Link>
+
+          {/* 8. Panduan Eksekutif Kota */}
+          <Link
+            to="/dashboard/panduan"
+            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-purple-50/40 hover:from-purple-50 hover:to-purple-100/60 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <BookOpen size={18} />
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-100 text-purple-800">SOP</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-purple-700">Panduan Eksekutif</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Regulasi & Tata Kelola</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
       {/* 3. Komparasi Kinerja Wilayah Berjenjang: 7 Kecamatan di Kota Sukabumi */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">

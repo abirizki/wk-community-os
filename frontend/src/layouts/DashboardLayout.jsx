@@ -102,6 +102,7 @@ export default function DashboardLayout() {
         {
           category: 'Eksekutif Kota',
           items: [
+            { name: 'Dashboard Walikota', path: '/dashboard', icon: <Home size={19} /> },
             { name: 'Command Center Kota', path: '/dashboard/command-center', icon: <Landmark size={19} /> }
           ]
         },
@@ -126,6 +127,7 @@ export default function DashboardLayout() {
         {
           category: 'Pemerintahan Kecamatan',
           items: [
+            { name: 'Dashboard Camat', path: '/dashboard', icon: <Home size={19} /> },
             { name: 'Command Center Wilayah', path: '/dashboard/command-center', icon: <Landmark size={19} /> },
             { name: 'Monitoring Pelayanan Surat', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> }
           ]
