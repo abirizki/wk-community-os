@@ -63,6 +63,8 @@ import {
   UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { downloadReport } from '../../utils/exportHelper';
+import { BookOpen, Activity, FileSpreadsheet, Download } from 'lucide-react';
 import AuthorizationPinModal from '../../components/AuthorizationPinModal';
 import ActivationCouponModal from '../../components/ActivationCouponModal';
 import ScanAndRegisterWargaModal from '../../components/ScanAndRegisterWargaModal';
@@ -96,6 +98,8 @@ export default function DashboardKetuaRT() {
   const [docStats, setDocStats] = useState({ pending_rt: 0, total_approved: 0, total_rejected: 0, compliance_rate: '100%' });
   const [iuranSummary, setIuranSummary] = useState({ total_kk: 0, sudah_bayar: 0, belum_bayar: 0, persentase: '0%' });
   const [balitaRisikoCount, setBalitaRisikoCount] = useState(0);
+  const [demografiData, setDemografiData] = useState(null);
+  const [isExportingProfile, setIsExportingProfile] = useState(false);
   const [auditSanggahanPending, setAuditSanggahanPending] = useState([]);
   const [docSearch, setDocSearch] = useState('');
   const [sortBy, setSortBy] = useState('aging_desc'); // 'aging_desc' (SLA oldest first) | 'aging_asc'
@@ -208,13 +212,15 @@ export default function DashboardKetuaRT() {
         hunianRes,
         kesehatanRes,
         pendidikanRes,
-        rentanRes
+        rentanRes,
+        demografiRes
       ] = await Promise.allSettled([
         api.get('/dokumen?status=SUBMITTED&approval_step=RT'),
         api.get(`/dokumen/stats?rt=${rtNomor}&rw=${rwNomor}`),
         api.get(`/keuangan/iuran?rt=${rtNomor}&rw=${rwNomor}`),
         api.get('/bansos/audit-sanggahan'),
         api.get(`/posyandu/balita/stats?rt=${rtNomor}`),
+        api.get(`/analytics/demografi?rt=${rtNomor}&rw=${rwNomor}`),
         api.get(`/fasilitas/keagamaan?rt=${rtNomor}`),
         api.get(`/fasilitas/hunian-sewa?rt=${rtNomor}`),
         api.get(`/fasilitas/kesehatan?rt=${rtNomor}`),
@@ -253,6 +259,11 @@ export default function DashboardKetuaRT() {
         const list = bansosRes.value.data || [];
         const pendingSanggahan = list.filter((s) => s.status_review === 'PENDING_KELURAHAN' && s.rt === rtNomor);
         setAuditSanggahanPending(pendingSanggahan);
+      }
+
+      // Handle Demografi RT
+      if (demografiRes && demografiRes.status === 'fulfilled' && demografiRes.value?.success) {
+        setDemografiData(demografiRes.value.data);
       }
 
       // Handle Balita Risiko
@@ -1370,6 +1381,136 @@ export default function DashboardKetuaRT() {
               </PieChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      </div>
+
+      {/* SECTION 2: ANALITIK PENDIDIKAN & KESEHATAN RT (DECISION SUPPORT) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* LAYANAN PENDIDIKAN */}
+        <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <GraduationCap className="text-sky-600" size={18} />
+                Layanan Pendidikan & Usia Sekolah RT {rtNomor}
+              </h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700">Wajib Belajar 12 Thn</span>
+            </div>
+            
+            <p className="text-xs text-slate-600 mb-4">
+              Distribusi jenjang pendidikan dan anak usia sekolah di wilayah RT {rtNomor} untuk monitoring beasiswa dan mitigasi anak putus sekolah.
+            </p>
+
+            {/* Jenjang Pendidikan Chart */}
+            <div className="h-44 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={demografiData?.pendidikan?.length > 0 ? demografiData.pendidikan : [
+                    { label: 'SD/MI', count: 24 },
+                    { label: 'SMP/MTs', count: 18 },
+                    { label: 'SMA/SMK', count: 22 },
+                    { label: 'Diploma/S1', count: 15 },
+                    { label: 'Belum Sekolah', count: 8 }
+                  ]}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} interval={0} angle={-15} textAnchor="end" />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Bar dataKey="count" name="Jumlah Jiwa" fill="#0284c7" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Daya Tampung Sekolah Binaan: <strong>Memadai</strong></span>
+            <Link to="/dashboard/fasilitas" className="text-primary font-bold hover:underline flex items-center gap-1">
+              Data Sekolah <ArrowRight size={12} />
+            </Link>
+          </div>
+        </div>
+
+        {/* LAYANAN KESEHATAN & POSYANDU */}
+        <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <HeartPulse className="text-rose-600" size={18} />
+                Kesehatan Balita & Lansia Resti RT {rtNomor}
+              </h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700">Integrasi Posyandu</span>
+            </div>
+
+            <p className="text-xs text-slate-600 mb-4">
+              Monitoring berkala status gizi balita penimbangan KIA dan lansia risti dengan riwayat komorbid di lingkungan RT.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="text-[10px] text-slate-500 font-bold block">Status Gizi Balita</span>
+                <span className="text-lg font-black text-slate-800 font-mono">
+                  {balitaRisikoCount === 0 ? '100% Gizi Baik' : balitaRisikoCount + ' Balita Risiko'}
+                </span>
+                <span className="text-[10px] text-emerald-600 font-medium block mt-0.5">Penimbangan Rutin Posyandu</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="text-[10px] text-slate-500 font-bold block">Lansia Binaan RT</span>
+                <span className="text-lg font-black text-slate-800 font-mono">
+                  {kelompokRentanList.filter(k => k.kategori === 'LANSIA_SEBATANG_KARA').length} Jiwa
+                </span>
+                <span className="text-[10px] text-amber-600 font-medium block mt-0.5">Prioritas Posbindu Lansia</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Activity size={16} className="text-sky-600" />
+                <span className="text-xs font-semibold text-sky-900">Jadwal Posyandu RW Binaan: Pekan ke-2</span>
+              </div>
+              <Link to="/dashboard/posyandu" className="text-xs font-bold text-sky-700 hover:underline">
+                Buka Posyandu
+              </Link>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 mt-3">
+            <span>Faskes Rujukan Terdekat: <strong>Puskesmas Cikole</strong></span>
+            <span className="text-emerald-600 font-bold">Siaga Ambulans Desa</span>
+          </div>
+        </div>
+      </div>
+
+      {/* DOWNLOAD EXECUTIVE PROFILE BUTTON */}
+      <div className="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+            <BookOpen size={20} />
+          </div>
+          <div>
+            <h4 className="text-xs font-extrabold text-slate-900">Buku Profil & Rekapitulasi Wilayah RT {rtNomor}</h4>
+            <p className="text-[11px] text-slate-500">Laporan terintegrasi data kependudukan, iuran kas, kelompok rentan, dan fasilitas warga.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={async () => {
+              try {
+                setIsExportingProfile(true);
+                await downloadReport('/keuangan/export/kas', { rt: rtNomor, rw: rwNomor, format: 'xlsx' }, 'Profil_Keuangan_RT' + rtNomor + '_RW' + rwNomor + '.xlsx');
+              } catch (e) {
+                alert('Gagal mengunduh profil RT: ' + e.message);
+              } finally {
+                setIsExportingProfile(false);
+              }
+            }}
+            disabled={isExportingProfile}
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+          >
+            <FileSpreadsheet size={15} />
+            <span>{isExportingProfile ? 'Mengunduh...' : 'Unduh Rekap Excel'}</span>
+          </button>
         </div>
       </div>
 

@@ -111,6 +111,19 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/dokumen/export/register-surat - Ekspor Buku Register Surat (XLSX / CSV)
+router.get('/export/register-surat', requireAuth, async (req, res) => {
+  try {
+    const format = req.query.format === 'csv' ? 'csv' : 'xlsx';
+    const result = await dokumenService.exportRegisterSurat(req.query, req.session.user, format);
+    res.setHeader('Content-Type', result.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.content);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/dokumen - Operator/RT/RW/Admin melihat permohonan surat sesuai hierarki
 router.get('/', requireAuth, async (req, res) => {
   try {

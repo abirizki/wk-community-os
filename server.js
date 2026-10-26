@@ -134,13 +134,21 @@ if (process.env.NODE_ENV !== 'test') {
   }
 }
 
+const isProduction = process.env.NODE_ENV === 'production';
+const fallbackSecret = 'wk-community-os-super-secret-key-2026';
+
+if (isProduction && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === fallbackSecret || process.env.SESSION_SECRET.trim().length < 32)) {
+  console.error('[CRITICAL SECURITY ERROR] Production environment requires process.env.SESSION_SECRET to be configured with a strong secret key (min. 32 chars). Halting server startup.');
+  process.exit(1);
+}
+
 const sessionConfig = {
   key: 'wk_session_id',
-  secret: process.env.SESSION_SECRET || 'wk-community-os-super-secret-key-2026',
+  secret: process.env.SESSION_SECRET || fallbackSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax'

@@ -7,6 +7,7 @@
 const express = require('express');
 const pool = require('../db/pool');
 const { requireAuth, requireRole } = require('../middleware/auth.middleware');
+const { generateCsv, generateExcelXml } = require('../utils/export.util');
 
 const router = express.Router();
 
@@ -128,6 +129,58 @@ router.get('/rekap-rt', requireAuth, requireRole('ketua_rw', 'admin_rw', 'supera
       const kamarTerisi = Number(sewaStats?.kamar_terisi || 0);
       const occupancyRate = kamarTotal > 0 ? Math.round((kamarTerisi / kamarTotal) * 100) : 0;
 
+      // f. Kesehatan & Stunting Balita
+      let stuntingBalita = 0;
+      let totalBalita = 0;
+      try {
+        const [[posyanduStats]] = await pool.query(
+          `SELECT 
+             COUNT(p.id) as total_balita,
+             SUM(CASE WHEN p.status_gizi IN ('Gizi Kurang', 'Gizi Buruk') THEN 1 ELSE 0 END) as total_stunting
+           FROM posyandu p
+           LEFT JOIN warga w ON p.nik_warga = w.nik
+           WHERE w.rw = ? AND w.rt = ?`,
+          [targetRW, rt]
+        );
+        totalBalita = Number(posyanduStats?.total_balita || 0);
+        stuntingBalita = Number(posyanduStats?.total_stunting || 0);
+      } catch (e) {
+        // Fallback
+      }
+
+      // g. Pendidikan & Anak Usia Sekolah (7-18 tahun)
+      let usiaSekolah = 0;
+      let anakBalita = 0;
+      try {
+        const [[eduStats]] = await pool.query(
+          `SELECT 
+             SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 7 AND 18 THEN 1 ELSE 0 END) as usia_sekolah,
+             SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 7 THEN 1 ELSE 0 END) as balita
+           FROM warga
+           WHERE rw = ? AND rt = ? AND status_kependudukan != 'Meninggal'`,
+          [targetRW, rt]
+        );
+        usiaSekolah = Number(eduStats?.usia_sekolah || 0);
+        anakBalita = Number(eduStats?.balita || 0);
+      } catch (e) {
+        // Fallback
+      }
+
+      // h. Desil 1 & 2 Kemiskinan Ekstrem
+      let desilCount = 0;
+      try {
+        const [[dStats]] = await pool.query(
+          `SELECT COUNT(DISTINCT w.no_kk) as total
+           FROM desil_keluarga dk
+           JOIN warga w ON dk.no_kk = w.no_kk
+           WHERE w.rw = ? AND w.rt = ? AND COALESCE(dk.desil_saat_ini, dk.desil_usulan) IN (1, 2)`,
+          [targetRW, rt]
+        );
+        desilCount = Number(dStats?.total || 0);
+      } catch (e) {
+        // Fallback
+      }
+
       return {
         rt,
         rw: targetRW,
@@ -143,6 +196,20 @@ router.get('/rekap-rt', requireAuth, requireRole('ketua_rw', 'admin_rw', 'supera
           pending_rw: Number(docStats?.pending_rw || 0),
           pending_rt: Number(docStats?.pending_rt || 0),
           total_surat: Number(docStats?.total_surat_masuk || 0)
+        },
+        kesehatan: {
+          total_balita: totalBalita,
+          stunting: stuntingBalita,
+          lansia_total: Number(wargaStats?.lansia_total || 0)
+        },
+        pendidikan: {
+          usia_sekolah: usiaSekolah,
+          anak_balita: anakBalita
+        },
+        kesejahteraan: {
+          desil_1_2: desilCount,
+          total_yatim: Number(rentanStats?.total_yatim || 0),
+          total_lansia_rentan: Number(rentanStats?.total_lansia_rentan || 0)
         },
         sosial: {
           total_yatim: Number(rentanStats?.total_yatim || 0),
@@ -167,6 +234,126 @@ router.get('/rekap-rt', requireAuth, requireRole('ketua_rw', 'admin_rw', 'supera
   } catch (error) {
     console.error('Error fetching RW scorecard:', error.message);
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * GET /api/rw/export/scorecard
+ * Ekspor Buku Putih Rekapitulasi RT se-RW ke XLSX / CSV
+ */
+router.get('/export/scorecard', requireAuth, requireRole('ketua_rw', 'admin_rw', 'superadmin', 'admin_kelurahan', 'lurah', 'admin'), async (req, res) => {
+  try {
+    const targetRW = resolveRWScope(req, res);
+    if (!targetRW) return;
+
+    const format = (req.query.format || 'xlsx').toLowerCase();
+
+    // Ambil daftar RT
+    let [rtRows] = await pool.query(
+      `SELECT DISTINCT rt FROM warga WHERE rw = ? AND rt IS NOT NULL AND rt != '' ORDER BY rt ASC`,
+      [targetRW]
+    );
+    let rtList = rtRows.map(r => r.rt);
+    if (rtList.length === 0) rtList = ['001', '002', '003'];
+
+    const headers = [
+      'No',
+      'Wilayah RT',
+      'Ketua RT',
+      'Total Jiwa',
+      'Total KK',
+      'Anak Usia Sekolah',
+      'Balita Posyandu',
+      'Kasus Stunting',
+      'Lansia',
+      'Keluarga Desil 1-2',
+      'Surat Pending RT/RW',
+      'Hunian Sewa / Kos'
+    ];
+
+    const rows = await Promise.all(rtList.map(async (rt, idx) => {
+      const [[wargaStats]] = await pool.query(
+        `SELECT 
+           COUNT(*) as total_warga,
+           COUNT(DISTINCT no_kk) as total_kk,
+           SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 7 AND 18 THEN 1 ELSE 0 END) as usia_sekolah,
+           SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60 THEN 1 ELSE 0 END) as lansia_total
+         FROM warga WHERE rw = ? AND rt = ?`,
+        [targetRW, rt]
+      );
+
+      const [[posyanduStats]] = await pool.query(
+        `SELECT 
+           COUNT(p.id) as total_balita,
+           SUM(CASE WHEN p.status_gizi IN ('Gizi Kurang', 'Gizi Buruk') THEN 1 ELSE 0 END) as total_stunting
+         FROM posyandu p
+         LEFT JOIN warga w ON p.nik_warga = w.nik
+         WHERE w.rw = ? AND w.rt = ?`,
+        [targetRW, rt]
+      ).catch(() => [[{ total_balita: 0, total_stunting: 0 }]]);
+
+      const [[dStats]] = await pool.query(
+        `SELECT COUNT(DISTINCT w.no_kk) as total
+         FROM desil_keluarga dk
+         JOIN warga w ON dk.no_kk = w.no_kk
+         WHERE w.rw = ? AND w.rt = ? AND COALESCE(dk.desil_saat_ini, dk.desil_usulan) IN (1, 2)`,
+        [targetRW, rt]
+      ).catch(() => [[{ total: 0 }]]);
+
+      const [[docStats]] = await pool.query(
+        `SELECT COUNT(*) as pending FROM dokumen_request WHERE rw = ? AND rt = ? AND status != 'APPROVED' AND status != 'REJECTED'`,
+        [targetRW, rt]
+      ).catch(() => [[{ pending: 0 }]]);
+
+      const [[sewaStats]] = await pool.query(
+        `SELECT COUNT(*) as total_hunian FROM hunian_sewa WHERE rw = ? AND rt = ?`,
+        [targetRW, rt]
+      ).catch(() => [[{ total_hunian: 0 }]]);
+
+      const [ketuaRows] = await pool.query(
+        `SELECT u.nama FROM users u WHERE u.role = 'ketua_rt' AND u.rw = ? AND u.rt = ? LIMIT 1`,
+        [targetRW, rt]
+      );
+      const namaKetua = ketuaRows.length > 0 ? (ketuaRows[0].nama || `Ketua RT ${rt}`) : `Ketua RT ${rt}`;
+
+      return [
+        idx + 1,
+        `RT ${rt}`,
+        namaKetua,
+        { value: Number(wargaStats?.total_warga || 0), type: 'Number' },
+        { value: Number(wargaStats?.total_kk || 0), type: 'Number' },
+        { value: Number(wargaStats?.usia_sekolah || 0), type: 'Number' },
+        { value: Number(posyanduStats?.total_balita || 0), type: 'Number' },
+        { value: Number(posyanduStats?.total_stunting || 0), type: 'Number' },
+        { value: Number(wargaStats?.lansia_total || 0), type: 'Number' },
+        { value: Number(dStats?.total || 0), type: 'Number' },
+        { value: Number(docStats?.pending || 0), type: 'Number' },
+        { value: Number(sewaStats?.total_hunian || 0), type: 'Number' }
+      ];
+    }));
+
+    if (format === 'csv') {
+      const csvRows = rows.map(r => r.map(c => typeof c === 'object' && c !== null ? c.value : c));
+      const csv = generateCsv(headers, csvRows);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=Buku_Putih_RW${targetRW}_${Date.now()}.csv`);
+      return res.send(csv);
+    }
+
+    const xml = generateExcelXml(`Buku Putih Rekapitulasi RW ${targetRW}`, [
+      {
+        name: `Buku Putih RW ${targetRW}`,
+        headers,
+        rows
+      }
+    ]);
+
+    res.setHeader('Content-Type', 'application/vnd.ms-excel');
+    res.setHeader('Content-Disposition', `attachment; filename=Buku_Putih_RW${targetRW}_${Date.now()}.xls`);
+    return res.send(xml);
+  } catch (err) {
+    console.error('Error exporting RW scorecard:', err);
+    res.status(500).json({ success: false, message: 'Gagal mengekspor data buku putih RW' });
   }
 });
 

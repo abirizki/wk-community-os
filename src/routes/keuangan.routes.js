@@ -20,6 +20,32 @@ router.get('/summary', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/keuangan/export/kas - Ekspor Buku Kas Umum (XLSX / CSV)
+router.get('/export/kas', requireAuth, async (req, res) => {
+  try {
+    const format = req.query.format === 'csv' ? 'csv' : 'xlsx';
+    const result = await keuanganService.exportKas(req.query, req.session.user, format);
+    res.setHeader('Content-Type', result.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.content);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/keuangan/export/iuran - Ekspor Rekonsiliasi Iuran Warga (XLSX / CSV)
+router.get('/export/iuran', requireAuth, async (req, res) => {
+  try {
+    const format = req.query.format === 'csv' ? 'csv' : 'xlsx';
+    const result = await keuanganService.exportIuran(req.query, req.session.user, format);
+    res.setHeader('Content-Type', result.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.content);
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/keuangan/transaksi - Daftar riwayat kas masuk & keluar
 router.get('/transaksi', requireAuth, async (req, res) => {
   try {

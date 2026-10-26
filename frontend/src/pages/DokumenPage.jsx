@@ -31,9 +31,12 @@ import {
   Image,
   FileUp,
   ExternalLink,
-  RotateCcw
+  RotateCcw,
+  Download,
+  FileSpreadsheet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { downloadReport } from '../utils/exportHelper';
 
 export const JENIS_SURAT_CONFIG = {
   'Surat Keterangan Domisili': {
@@ -186,6 +189,21 @@ export default function DokumenPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportRegister = async (format = 'xlsx') => {
+    try {
+      setIsExporting(true);
+      const params = {};
+      if (isRT) { params.rt = user.rt; params.rw = user.rw; }
+      else if (isRW) { params.rw = user.rw; }
+      await downloadReport('/dokumen/export/register-surat', params, `Register_Surat_${format.toUpperCase()}.${format}`);
+    } catch (err) {
+      setError('Gagal mengunduh register surat: ' + (err.message || 'Error'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Tab State
   const initialMode = searchParams.get('mode');
@@ -620,16 +638,41 @@ export default function DokumenPage() {
           </p>
         </div>
 
-        <button
+        <div className="flex items-center gap-2 flex-wrap">
+          {isOfficer && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handleExportRegister('xlsx')}
+                disabled={isExporting}
+                className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 px-3.5 py-2.5 rounded-xl font-semibold hover:bg-emerald-100 transition-all text-xs cursor-pointer disabled:opacity-50"
+                title="Unduh Buku Register Surat dalam format Microsoft Excel"
+              >
+                <FileSpreadsheet size={16} className="text-emerald-600" />
+                <span>{isExporting ? 'Mengunduh...' : 'Ekspor Excel'}</span>
+              </button>
+              <button
+                onClick={() => handleExportRegister('csv')}
+                disabled={isExporting}
+                className="flex items-center gap-1.5 bg-surface-container text-on-surface border border-outline-variant px-3 py-2.5 rounded-xl font-semibold hover:bg-surface-container-high transition-all text-xs cursor-pointer disabled:opacity-50"
+                title="Unduh format CSV"
+              >
+                <Download size={14} />
+                <span>CSV</span>
+              </button>
+            </div>
+          )}
+
+          <button
             onClick={() => {
               setSubjekPemohon('self');
               setShowModal(true);
             }}
-            className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 cursor-pointer text-xs sm:text-sm"
           >
             <Plus size={18} />
             <span>Ajukan Surat Baru (Mandiri)</span>
           </button>
+        </div>
       </div>
 
       {/* ALERTS */}

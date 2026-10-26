@@ -30,9 +30,12 @@ import {
   X,
   CreditCard,
   Building,
-  Users
+  Users,
+  Download,
+  FileSpreadsheet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { downloadReport } from '../utils/exportHelper';
 
 const KATEGORI_MASUK = [
   'Iuran Kebersihan & Sampah',
@@ -442,17 +445,41 @@ export default function KeuanganPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Filter size={15} className="text-on-surface-variant" />
-              <select
-                value={filterTipe}
-                onChange={(e) => setFilterTipe(e.target.value)}
-                className="px-3 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Semua Tipe Kas</option>
-                <option value="MASUK">Pemasukan (Kas Masuk)</option>
-                <option value="KELUAR">Pengeluaran (Kas Keluar)</option>
-              </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Filter size={15} className="text-on-surface-variant" />
+                <select
+                  value={filterTipe}
+                  onChange={(e) => setFilterTipe(e.target.value)}
+                  className="px-3 py-2 text-xs bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Semua Tipe Kas</option>
+                  <option value="MASUK">Pemasukan (Kas Masuk)</option>
+                  <option value="KELUAR">Pengeluaran (Kas Keluar)</option>
+                </select>
+              </div>
+
+              {/* Tombol Unduh Laporan Kas */}
+              <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
+                <button
+                  type="button"
+                  onClick={() => downloadReport(`/keuangan/export/kas?format=xlsx&tipe=${filterTipe}`, `Buku_Kas_${Date.now()}.xls`)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 text-xs font-semibold transition"
+                  title="Unduh Buku Kas format Excel"
+                >
+                  <FileSpreadsheet size={14} className="text-emerald-600" />
+                  <span>Unduh (.xlsx)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadReport(`/keuangan/export/kas?format=csv&tipe=${filterTipe}`, `Buku_Kas_${Date.now()}.csv`)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 hover:bg-sky-100 text-xs font-semibold transition"
+                  title="Unduh Data Mentah CSV"
+                >
+                  <Download size={14} className="text-sky-600" />
+                  <span>CSV</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -590,6 +617,33 @@ export default function KeuanganPage() {
               <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl">
                 <Clock size={24} />
               </div>
+            </div>
+          </div>
+
+          {/* Action Bar: Export Iuran */}
+          <div className="flex items-center justify-between bg-surface-container-lowest p-3 rounded-xl border border-outline-variant">
+            <span className="text-xs font-semibold text-on-surface">
+              Rekapitulasi Iuran Warga Periode {periodeBulan}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => downloadReport(`/keuangan/export/iuran?format=xlsx&periode_bulan=${periodeBulan}`, `Rekap_Iuran_${periodeBulan}.xls`)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 text-xs font-semibold transition"
+                title="Unduh Rekap Iuran format Excel"
+              >
+                <FileSpreadsheet size={14} className="text-emerald-600" />
+                <span>Unduh (.xlsx)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => downloadReport(`/keuangan/export/iuran?format=csv&periode_bulan=${periodeBulan}`, `Rekap_Iuran_${periodeBulan}.csv`)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 hover:bg-sky-100 text-xs font-semibold transition"
+                title="Unduh Data Mentah CSV"
+              >
+                <Download size={14} className="text-sky-600" />
+                <span>CSV</span>
+              </button>
             </div>
           </div>
 

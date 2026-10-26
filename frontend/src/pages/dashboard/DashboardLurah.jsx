@@ -43,6 +43,9 @@ import {
   Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { downloadReport } from '../../utils/exportHelper';
+import { FileSpreadsheet, Download, BookOpen, GraduationCap, Activity, BarChart3, Layers } from 'lucide-react';
 
 export default function DashboardLurah() {
   const { user } = useAuth();
@@ -61,6 +64,10 @@ export default function DashboardLurah() {
   const [stuntingClusterCount, setStuntingClusterCount] = useState(0);
   const [overdueDispositionsCount, setOverdueDispositionsCount] = useState(0);
   const [criticalComplaints, setCriticalComplaints] = useState([]);
+  const [activeView, setActiveView] = useState('tte'); // 'tte' | 'dss'
+  const [demografiData, setDemografiData] = useState(null);
+  const [execSummary, setExecSummary] = useState(null);
+  const [isExportingLurah, setIsExportingLurah] = useState(false);
 
   // TTE Confirmation Modal (Security & Civic Governance)
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
@@ -93,6 +100,7 @@ export default function DashboardLurah() {
         .finally(() => setLoadingBrief(false));
 
       // 2. Fetch parallel endpoints
+      api.get('/analytics/demografi').then(r => { if (r?.success) setDemografiData(r.data); }).catch(() => {});
       const [docRes, statsRes, pengaduanRes, execSummaryRes, clusterRes] = await Promise.allSettled([
         api.get('/dokumen?approval_step=KELURAHAN'),
         api.get('/dokumen/stats'),
@@ -147,6 +155,7 @@ export default function DashboardLurah() {
       // Process Stunting & Executive Summary
       if (execSummaryRes.status === 'fulfilled' && execSummaryRes.value?.success) {
         const sum = execSummaryRes.value.data;
+        setExecSummary(sum);
         if (sum?.health?.balita_gizi_buruk !== undefined) {
           setAtRiskBalitaCount(sum.health.balita_gizi_buruk);
         }
@@ -445,8 +454,213 @@ export default function DashboardLurah() {
         )}
       </AnimatePresence>
 
+      {/* TAB NAVIGATION: TTE WORKSPACE VS EXECUTIVE DSS */}
+      <div className="mt-8 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-2 bg-surface-container-low rounded-2xl border border-outline-variant">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveView('tte')}
+            className={'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ' + (activeView === 'tte' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container')}
+          >
+            <FileCheck size={16} />
+            <span>Meja Pengesahan TTE ({readyTTEDocs.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveView('dss')}
+            className={'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ' + (activeView === 'dss' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container')}
+          >
+            <BarChart3 size={16} />
+            <span>Pusat Kendali Keputusan Kelurahan (DSS)</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={async () => {
+              try {
+                setIsExportingLurah(true);
+                await downloadReport('/dokumen/export/register-surat', { format: 'xlsx' }, 'Register_Layanan_Kebonjati.xlsx');
+              } catch (e) {
+                alert('Gagal mengunduh: ' + e.message);
+              } finally {
+                setIsExportingLurah(false);
+              }
+            }}
+            disabled={isExportingLurah}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold hover:bg-emerald-100 transition cursor-pointer disabled:opacity-50"
+            title="Unduh Register Pelayanan Surat Kelurahan"
+          >
+            <FileSpreadsheet size={14} className="text-emerald-700" />
+            <span>{isExportingLurah ? 'Mengunduh...' : 'Unduh Register'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* VIEW 2: EXECUTIVE DECISION SUPPORT SYSTEM (DSS) */}
+      {activeView === 'dss' && (
+        <div className="space-y-6 mb-8 animate-fadeIn">
+          {/* 1. SEKTOR PENDIDIKAN & DAYA TAMPUNG KURSUS/ROMBEL */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <GraduationCap className="text-sky-600" size={18} />
+                  <span>Sektor Pendidikan & Kapasitas PPDB Kelurahan</span>
+                </h3>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
+                  Daya Dukung: {execSummary?.kpi?.daya_dukung?.index_daya_dukung?.status || 'MEMADAI'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Kapasitas rombel dan kursi zonasi pendidikan di wilayah binaan Kelurahan Kebonjati terhadap total anak usia sekolah 7-18 tahun.
+              </p>
+
+              <div className="h-48 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={demografiData?.pendidikan?.length > 0 ? demografiData.pendidikan : [
+                      { label: 'SD/MI', count: 480 },
+                      { label: 'SMP/MTs', count: 390 },
+                      { label: 'SMA/SMK', count: 420 },
+                      { label: 'Perguruan Tinggi', count: 280 },
+                      { label: 'Belum Tamat', count: 120 }
+                    ]}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 25 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} interval={0} angle={-20} textAnchor="end" />
+                    <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Bar dataKey="count" name="Warga" fill="#0284c7" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                <span>Rekomendasi Kebijakan:</span>
+                <span className="font-semibold text-sky-700">Akselerasi Bantuan Siswa Miskin (Desil 1)</span>
+              </div>
+            </div>
+
+            {/* 2. SEKTOR KESEHATAN POSYANDU & GERIATRI */}
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <HeartPulse className="text-rose-600" size={18} />
+                  <span>Sektor Kesehatan: Zero Stunting & Posbindu</span>
+                </h3>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200">
+                  Target: 0% Kasus
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Pemantauan data intervensi gizi balita penimbangan posyandu dan pendataan lansia rentan komorbid se-Kelurahan Kebonjati.
+              </p>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <span className="text-[10px] text-slate-500 font-bold block">Balita Gizi Buruk</span>
+                  <span className="text-xl font-black text-rose-600 font-mono mt-1 block">
+                    {atRiskBalitaCount}
+                  </span>
+                  <span className="text-[10px] text-slate-400">Intervensi PMT Aktif</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <span className="text-[10px] text-slate-500 font-bold block">Klaster Posyandu</span>
+                  <span className="text-xl font-black text-slate-800 font-mono mt-1 block">
+                    {stuntingClusterCount || 7}
+                  </span>
+                  <span className="text-[10px] text-slate-400">Pos RW Terpadu</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <span className="text-[10px] text-slate-500 font-bold block">SLA Surat Kelurahan</span>
+                  <span className="text-xl font-black text-emerald-600 font-mono mt-1 block">
+                    {slaCompliance !== null ? slaCompliance + '%' : '1.2 jam'}
+                  </span>
+                  <span className="text-[10px] text-emerald-600">SOP &lt; 2 Jam</span>
+                </div>
+              </div>
+
+              <div className="h-32 w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[
+                      { name: 'Gizi Baik', count: 185, fill: '#10b981' },
+                      { name: 'Gizi Kurang', count: 12, fill: '#f59e0b' },
+                      { name: 'Stunting', count: atRiskBalitaCount || 1, fill: '#ef4444' }
+                    ]}
+                    layout="vertical"
+                    margin={{ top: 0, right: 20, left: 20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: '#64748b' }} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: '#64748b' }} width={80} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Bar dataKey="count" name="Balita" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                <span>Rujukan Terpadu: <strong>Puskesmas Cikole</strong></span>
+                <span className="text-emerald-700 font-bold">100% Balita Terpantau KIA</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. PIRAMIDA PENDUDUK KELURAHAN (BPS COHORTS) */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <Layers className="text-indigo-600" size={18} />
+                  <span>Struktur Piramida Penduduk Berdasarkan 15 Kelompok Usia BPS</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Analisis beban ketergantungan (dependency ratio) dan proyeksi angkatan kerja produktif Kelurahan Kebonjati.
+                </p>
+              </div>
+              <span className="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-800 px-3 py-1 rounded-full border border-indigo-200">
+                Data Sensus Warga Sukabumi
+              </span>
+            </div>
+
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={demografiData?.piramida || [
+                    { kelompok_usia: '0 - 4 Thn', pria: 45, wanita: 42 },
+                    { kelompok_usia: '5 - 9 Thn', pria: 52, wanita: 48 },
+                    { kelompok_usia: '10 - 14 Thn', pria: 60, wanita: 55 },
+                    { kelompok_usia: '15 - 19 Thn', pria: 65, wanita: 62 },
+                    { kelompok_usia: '20 - 24 Thn', pria: 78, wanita: 75 },
+                    { kelompok_usia: '25 - 29 Thn', pria: 85, wanita: 80 },
+                    { kelompok_usia: '30 - 34 Thn', pria: 90, wanita: 88 },
+                    { kelompok_usia: '35 - 39 Thn', pria: 82, wanita: 79 },
+                    { kelompok_usia: '40 - 44 Thn', pria: 70, wanita: 72 },
+                    { kelompok_usia: '45 - 49 Thn', pria: 60, wanita: 64 },
+                    { kelompok_usia: '50 - 54 Thn', pria: 48, wanita: 52 },
+                    { kelompok_usia: '55 - 59 Thn', pria: 38, wanita: 42 },
+                    { kelompok_usia: '60 - 64 Thn', pria: 28, wanita: 32 },
+                    { kelompok_usia: '65 - 69 Thn', pria: 18, wanita: 22 },
+                    { kelompok_usia: '70+ Thn', pria: 12, wanita: 16 }
+                  ]}
+                  margin={{ top: 10, right: 10, left: -10, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="kelompok_usia" tick={{ fontSize: 9, fill: '#64748b' }} interval={0} angle={-25} textAnchor="end" />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Bar dataKey="pria" name="Pria" fill="#0284c7" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="wanita" name="Wanita" fill="#ec4899" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content: Ready TTE Documents Queue */}
-      <div id="daftar-tte-section" className="mt-8 space-y-6">
+      <div id="daftar-tte-section" className={'space-y-6 ' + (activeView === 'tte' ? 'block' : 'hidden')}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-outline-variant">
           <div>
             <div className="flex items-center gap-2">

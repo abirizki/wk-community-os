@@ -12,6 +12,7 @@ const wargaRepository = require('../repositories/warga.repository');
 const completenessService = require('./completeness.service');
 const completenessRepository = require('../repositories/completeness.repository');
 const fasilitasRepository = require('../repositories/fasilitas.repository');
+const { generateCsv, generateExcelXml, maskPii } = require('../utils/export.util');
 
 class DokumenService {
   /**
@@ -602,6 +603,89 @@ class DokumenService {
       success: true,
       status: 'REVISION',
       message: 'Permohonan surat berhasil dikembalikan ke pemohon dengan instruksi perbaikan.'
+    };
+  }
+
+  /**
+   * Ekspor Buku Register Surat Pelayanan SPBE ke format XLSX / CSV
+   */
+  async exportRegisterSurat(filters = {}, currentUser, format = 'xlsx') {
+    const docs = await this.listByScope(currentUser, filters);
+
+    const headers = [
+      'No',
+      'Nomor Registrasi',
+      'Nomor Surat Dinas',
+      'Tanggal Pengajuan',
+      'Tanggal Disahkan',
+      'Jenis Surat Pelayanan',
+      'Nama Pemohon',
+      'NIK Pemohon',
+      'Wilayah RT/RW',
+      'Keperluan',
+      'Status Dokumen',
+      'Tahap Approval',
+      'Hash TTE / QR Code'
+    ];
+
+    const isAuthorized = ['superadmin', 'admin', 'admin_kelurahan', 'lurah', 'ketua_rw', 'admin_rw', 'ketua_rt'].includes(currentUser.role);
+
+    const rows = docs.map((d, idx) => {
+      const maskedNik = isAuthorized ? (d.nik_pemohon || '-') : maskPii(d.nik_pemohon);
+      return [
+        idx + 1,
+        d.nomor_registrasi || '-',
+        d.nomor_surat || '(Belum terbit)',
+        d.created_at ? new Date(d.created_at).toISOString().slice(0, 10) : '-',
+        d.approved_at ? new Date(d.approved_at).toISOString().slice(0, 10) : '-',
+        d.jenis_dokumen || d.jenis_surat || '-',
+        d.nama_pemohon || '-',
+        maskedNik,
+        `RT ${d.rt || '-'}/RW ${d.rw || '-'}`,
+        d.keperluan || '-',
+        d.status || '-',
+        d.approval_step || '-',
+        d.qr_code_hash ? `${d.qr_code_hash.slice(0, 12)}...` : '-'
+      ];
+    });
+
+    const kelurahan = currentUser.kelurahan || 'Kebonjati';
+
+    if (format === 'csv') {
+      const csvRows = docs.map((d, idx) => [
+        idx + 1,
+        d.nomor_registrasi || '-',
+        d.nomor_surat || '-',
+        d.created_at ? new Date(d.created_at).toISOString().slice(0, 10) : '-',
+        d.approved_at ? new Date(d.approved_at).toISOString().slice(0, 10) : '-',
+        d.jenis_dokumen || d.jenis_surat || '-',
+        d.nama_pemohon || '-',
+        isAuthorized ? (d.nik_pemohon || '-') : maskPii(d.nik_pemohon),
+        `RT ${d.rt || '-'}/RW ${d.rw || '-'}`,
+        d.keperluan || '-',
+        d.status || '-',
+        d.approval_step || '-',
+        d.qr_code_hash || '-'
+      ]);
+      return {
+        filename: `Register_Surat_${kelurahan}_${Date.now()}.csv`,
+        mimeType: 'text/csv; charset=utf-8',
+        content: generateCsv(headers, csvRows)
+      };
+    }
+
+    const xml = generateExcelXml(`Register Surat SPBE Kelurahan ${kelurahan}`, [
+      {
+        name: `Register Pelayanan Surat`,
+        headers,
+        rows
+      }
+    ]);
+
+    return {
+      filename: `Register_Surat_${kelurahan}_${Date.now()}.xls`,
+      mimeType: 'application/vnd.ms-excel',
+      content: xml
     };
   }
 }

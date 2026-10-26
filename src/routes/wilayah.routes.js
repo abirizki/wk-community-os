@@ -7,6 +7,7 @@
 const express = require('express');
 const { requireAuth, requireRole } = require('../middleware/auth.middleware');
 const wilayahRepository = require('../repositories/wilayah.repository');
+const { generateCsv, generateExcelXml } = require('../utils/export.util');
 
 const router = express.Router();
 
@@ -68,6 +69,76 @@ router.get('/command-center', requireAuth, requireRole('superadmin', 'walikota',
   } catch (err) {
     console.error('Error fetching command center heatmap:', err);
     res.status(500).json({ success: false, message: 'Gagal memuat peta komando eksekutif' });
+  }
+});
+
+// GET /api/wilayah/export/command-center - Ekspor Profil Makro Wilayah Kota / Kecamatan
+router.get('/export/command-center', requireAuth, requireRole('superadmin', 'walikota', 'camat', 'lurah', 'admin_kelurahan', 'admin'), async (req, res) => {
+  try {
+    let { kode_kecamatan, format = 'xlsx' } = req.query;
+    const currentUser = req.session.user;
+
+    if (currentUser.role === 'camat') {
+      kode_kecamatan = currentUser.kode_kecamatan || '32.72.03';
+    } else if (['lurah', 'admin_kelurahan'].includes(currentUser.role)) {
+      kode_kecamatan = currentUser.kode_kecamatan || '32.72.03';
+    }
+
+    const result = await wilayahRepository.getCommandCenterHeatmap(kode_kecamatan);
+    const heatmap = result?.heatmap || [];
+
+    const headers = [
+      'No',
+      'Kode Kelurahan',
+      'Kelurahan',
+      'Kecamatan',
+      'Jumlah RW',
+      'Total Penduduk',
+      'Total KK',
+      'Kasus Stunting (Balita)',
+      'Status Stunting',
+      'Kemiskinan Ekstrem (Desil 1-2)',
+      'Rerata SLA Layanan (Jam)',
+      'Kategori Data Provenance'
+    ];
+
+    const rows = heatmap.map((k, idx) => [
+      idx + 1,
+      k.kode_kelurahan,
+      k.nama_kelurahan,
+      k.nama_kecamatan,
+      { value: k.jumlah_rw || 0, type: 'Number' },
+      { value: k.metrics?.total_penduduk || 0, type: 'Number' },
+      { value: k.metrics?.total_kk || 0, type: 'Number' },
+      { value: k.metrics?.kasus_stunting || 0, type: 'Number' },
+      k.status_stunting?.label || 'RENDAH',
+      { value: k.metrics?.kemiskinan_ekstrem_desil_1_2 || 0, type: 'Number' },
+      { value: k.metrics?.sla_proses_surat_jam || 0, type: 'Number' },
+      k.data_provenance || (k.is_pilot_hub ? 'LIVE_TRANSACTIONAL' : 'BASELINE_PROYEKSI_SDI')
+    ]);
+
+    if (format === 'csv') {
+      const csvRows = rows.map(r => r.map(c => typeof c === 'object' && c !== null ? c.value : c));
+      const csv = generateCsv(headers, csvRows);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=Profil_Makro_Kota_Sukabumi_${Date.now()}.csv`);
+      return res.send(csv);
+    }
+
+    const xml = generateExcelXml('Profil Pembangunan Kota Sukabumi', [
+      {
+        name: 'Matriks Kelurahan',
+        headers,
+        rows
+      }
+    ]);
+
+    res.setHeader('Content-Type', 'application/vnd.ms-excel');
+    res.setHeader('Content-Disposition', `attachment; filename=Profil_Pembangunan_Kota_Sukabumi_${Date.now()}.xls`);
+    return res.send(xml);
+  } catch (err) {
+    console.error('Error exporting command center data:', err);
+    res.status(500).json({ success: false, message: 'Gagal mengekspor profil makro kota' });
   }
 });
 
