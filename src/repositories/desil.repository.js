@@ -1,7 +1,7 @@
 /**
  * src/repositories/desil.repository.js
  * Data Access Layer for Desil Kesejahteraan (DTSEN BPS & Kemensos)
- * Kelurahan Kebonjati, Kec. Andir, Kota Bandung - Jabar Pintar Digital
+ * Kelurahan Kebonjati, Kec. Cikole, Kota Sukabumi - Jabar Pintar Digital
  */
 
 const pool = require('../db/pool');

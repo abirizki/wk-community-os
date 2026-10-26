@@ -64,7 +64,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const loginSapawarga = useCallback(async (ssoToken = 'spw_mock_3273010203850003') => {
+  const loginSapawarga = useCallback(async (ssoToken) => {
+    if (!ssoToken) {
+      throw new Error('Token SSO Sapawarga diperlukan.');
+    }
     setIsLoading(true);
     try {
       const response = await api.post('/integrasi/sapawarga/sso', { sso_token: ssoToken });

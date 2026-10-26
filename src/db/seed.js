@@ -13,7 +13,7 @@ const pool = require('./pool');
 async function seedDatabase() {
   console.log('\n======================================================');
   console.log('  BUMI WARGA — AUTOMATED DATABASE SEEDER (MYSQL)');
-  console.log('  Jabar Pintar Digital · Lingkup: Kebonjati, Andir');
+  console.log('  Jabar Pintar Digital · Lingkup: Kelurahan Kebonjati, Kecamatan Cikole, Kota Sukabumi');
   console.log('======================================================\n');
 
   const seedFilePath = path.join(__dirname, '../../database/seed.sql');

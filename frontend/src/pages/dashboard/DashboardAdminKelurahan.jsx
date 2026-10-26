@@ -162,6 +162,7 @@ export default function DashboardAdminKelurahan() {
   const [selectedRwPbb, setSelectedRwPbb] = useState('');
   const [pbbPushText, setPbbPushText] = useState('');
   const [submittingPbbPush, setSubmittingPbbPush] = useState(false);
+  const [dokumenList, setDokumenList] = useState([]);
 
   // Initial Data Fetching
   const fetchAllDashboardData = async () => {
@@ -169,14 +170,15 @@ export default function DashboardAdminKelurahan() {
       setRefreshing(true);
       setErrorMsg('');
 
-      const [execRes, usersRes, bansosRes, auditRes, pbbRes, faskesRes, dayaDukungRes] = await Promise.allSettled([
+      const [execRes, usersRes, bansosRes, auditRes, pbbRes, faskesRes, dayaDukungRes, docRes] = await Promise.allSettled([
         api.get('/analytics/executive-summary'),
         api.get('/users'),
         api.get('/bansos'),
         api.get('/bansos/audit-sanggahan'),
         api.get('/pbb/summary'),
         api.get('/fasilitas/kesehatan'),
-        api.get('/fasilitas/summary')
+        api.get('/fasilitas/summary'),
+        api.get('/dokumen')
       ]);
 
       if (execRes.status === 'fulfilled' && execRes.value?.success) setExecutiveData(execRes.value.data);
@@ -188,6 +190,7 @@ export default function DashboardAdminKelurahan() {
         setPosyanduList(faskesRes.value.data.inventory.filter(f => f.jenis_faskes === 'Posyandu' || f.nama_faskes?.toLowerCase().includes('posyandu')));
       }
       if (dayaDukungRes.status === 'fulfilled' && dayaDukungRes.value?.data) setDayaDukungSummary(dayaDukungRes.value.data);
+      if (docRes.status === 'fulfilled' && docRes.value?.data) setDokumenList(docRes.value.data);
     } catch (err) {
       console.error('Error fetching admin kelurahan data:', err);
       setErrorMsg('Gagal memuat beberapa data operasional kelurahan.');
@@ -200,6 +203,69 @@ export default function DashboardAdminKelurahan() {
   useEffect(() => {
     fetchAllDashboardData();
   }, []);
+
+  // Agregasi Dinamis Laporan SLA Permohonan Surat dari Data Nyata Database
+  const slaReportData = useMemo(() => {
+    if (!dokumenList || dokumenList.length === 0) return [];
+    const grouped = {};
+    dokumenList.forEach(doc => {
+      const type = doc.jenis_dokumen || 'Surat Keterangan';
+      if (!grouped[type]) {
+        grouped[type] = {
+          jenis: type,
+          masuk: 0,
+          verif_rt_rw: 0,
+          selesai: 0,
+          durasiTotalMin: 0,
+          durasiCount: 0
+        };
+      }
+      grouped[type].masuk += 1;
+      if (['RW', 'KELURAHAN'].includes(doc.approval_step) || doc.status === 'APPROVED') {
+        grouped[type].verif_rt_rw += 1;
+      }
+      if (doc.status === 'APPROVED') {
+        grouped[type].selesai += 1;
+        if (doc.created_at && doc.updated_at) {
+          const diffMin = Math.max(1, Math.round((new Date(doc.updated_at) - new Date(doc.created_at)) / 60000));
+          grouped[type].durasiTotalMin += diffMin;
+          grouped[type].durasiCount += 1;
+        }
+      }
+    });
+
+    return Object.values(grouped).map(g => {
+      const avgMin = g.durasiCount > 0 ? Math.round(g.durasiTotalMin / g.durasiCount) : 15;
+      const pct = g.masuk > 0 ? ((g.selesai / g.masuk) * 100).toFixed(1) : '100.0';
+      return {
+        ...g,
+        rata_durasi: `${avgMin} Menit`,
+        kepatuhan_pct: `${pct}%`
+      };
+    });
+  }, [dokumenList]);
+
+  // Agregasi Dinamis Berita Acara Rekapitulasi Bansos & Sanggahan per RW
+  const bansosReportData = useMemo(() => {
+    const rws = ['001', '002', '003', '004', '005', '006'];
+    return rws.map(rwNum => {
+      const listInRW = (bansosList || []).filter(b => b.rw === rwNum);
+      const auditInRW = (auditList || []).filter(a => a.rw === rwNum);
+      const kuota = listInRW.length;
+      const sanggahan = auditInRW.length;
+      const disetujui = auditInRW.filter(a => a.status === 'DISETUJUI' || a.status_rekomendasi === 'DISETUJUI').length;
+      const tiket = Math.max(0, kuota - disetujui);
+      return {
+        rw: rwNum,
+        kuota,
+        calon: kuota,
+        sanggahan,
+        disetujui,
+        tiket,
+        status: kuota > 0 ? 'Siap Salur' : 'Belum Ada Usulan'
+      };
+    });
+  }, [bansosList, auditList]);
 
   // Helper: In-Browser CSV Exporter for Executive Reports
   const downloadCSV = (filename, headers, rows) => {
@@ -464,7 +530,7 @@ export default function DashboardAdminKelurahan() {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-slate-900 via-sky-950 to-blue-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden border border-sky-900/50">
         <div className="absolute -right-12 -bottom-12 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sky-200 text-xs font-semibold backdrop-blur-md border border-white/10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sky-200 text-xs font-semibold border border-white/10">
             <Sparkles size={14} className="text-amber-400" />
             <span>Pusat Kendali Administrasi & Kliring Wilayah Kelurahan</span>
           </div>
@@ -487,7 +553,7 @@ export default function DashboardAdminKelurahan() {
               setGovForm(govProfile);
               setGovModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/15 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold border border-white/15 transition-all shadow-sm"
             title="Edit Profil Kelurahan, Lurah, Camat, & Walikota"
           >
             <Building2 size={14} className="text-amber-400" />
@@ -496,7 +562,7 @@ export default function DashboardAdminKelurahan() {
           <button
             onClick={fetchAllDashboardData}
             disabled={refreshing}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/15 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold border border-white/15 transition-all shadow-sm"
             title="Segarkan Seluruh Data"
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
@@ -876,33 +942,42 @@ export default function DashboardAdminKelurahan() {
                 Pengesahan akses digital berjenjang: Staf Kelurahan, Ketua RW, Ketua RT, dan Kader Posyandu.
               </p>
             </div>
-            <button
-              onClick={() => setUserModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 text-white font-bold text-xs hover:bg-sky-700 shadow-sm transition-colors"
-            >
-              <UserPlus size={15} /> Tambah Akun Baru
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to="/dashboard/users"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-colors"
+              >
+                <ShieldCheck size={15} className="text-sky-600" />
+                <span>Manajemen Pengguna Lengkap</span>
+              </Link>
+              <button
+                onClick={() => setUserModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-600 text-white font-bold text-xs hover:bg-sky-700 shadow-sm transition-colors"
+              >
+                <UserPlus size={15} /> Tambah Akun Baru
+              </button>
+            </div>
           </div>
 
-          {/* Executive Government & Territorial Profile Card */}
-          <div className="p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl text-white border border-indigo-800 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          {/* Executive Government & Territorial Profile Card (Soft Sky Civic Utility) */}
+          <div className="p-5 bg-slate-900 rounded-2xl text-white border border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="p-3 bg-white/10 rounded-xl text-amber-400 border border-white/10 shrink-0">
-                <Building2 size={26} />
+              <div className="p-3 bg-sky-950/80 rounded-xl text-sky-400 border border-sky-800/60 shrink-0">
+                <Building2 size={24} />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-extrabold text-amber-300 tracking-wider uppercase px-2 py-0.5 rounded bg-amber-400/20 border border-amber-400/30">
+                  <span className="text-[10px] font-extrabold text-amber-300 tracking-wider uppercase px-2 py-0.5 rounded bg-amber-950/60 border border-amber-800/60">
                     Pemerintahan Daerah & Wilayah Binaan
                   </span>
                   <span className="text-xs text-sky-200">
                     {govProfile.wilayah_binaan}
                   </span>
                 </div>
-                <h4 className="text-base font-black">
+                <h4 className="text-base font-bold text-white">
                   Kelurahan {govProfile.nama_kelurahan}, Kec. {govProfile.nama_kecamatan}, {govProfile.nama_kota}
                 </h4>
-                <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-300">
+                <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-300">
                   <span>Lurah: <strong className="text-white">{govProfile.nama_lurah}</strong> <span className="text-[10px] text-slate-400 font-mono">({govProfile.nip_lurah})</span></span>
                   <span>&bull; Camat: <strong className="text-white">{govProfile.nama_camat}</strong></span>
                   <span>&bull; Walikota: <strong className="text-white">{govProfile.nama_walikota}</strong></span>
@@ -914,9 +989,9 @@ export default function DashboardAdminKelurahan() {
                 setGovForm(govProfile);
                 setGovModalOpen(true);
               }}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition flex items-center gap-2 shadow-sm shrink-0"
+              className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-colors flex items-center gap-2 shadow-sm shrink-0"
             >
-              <Edit2 size={14} /> Edit Data Pejabat & Wilayah
+              <Edit2 size={14} /> Edit Pejabat & Wilayah
             </button>
           </div>
 
@@ -1483,15 +1558,19 @@ export default function DashboardAdminKelurahan() {
               </div>
               <button
                 onClick={() => {
+                  if (slaReportData.length === 0) {
+                    alert('Belum ada data pelayanan surat masuk untuk diekspor.');
+                    return;
+                  }
                   const headers = ["Jenis Layanan", "Permohonan Masuk", "Diproses RT/RW", "Disetujui Kelurahan", "Rata-rata SLA", "Tingkat Kepatuhan SLA"];
-                  const rows = [
-                    ["Surat Keterangan Usaha (SKU)", 48, 48, 46, "18 Menit", "95.8%"],
-                    ["Surat Keterangan Tidak Mampu (SKTM)", 32, 32, 32, "14 Menit", "100.0%"],
-                    ["Pengantar Nikah (N1-N4)", 12, 12, 11, "25 Menit", "91.6%"],
-                    ["Surat Keterangan Kematian", 8, 8, 8, "10 Menit", "100.0%"],
-                    ["Surat Keterangan Domisili", 64, 64, 61, "15 Menit", "95.3%"],
-                    ["TOTAL / RATA-RATA", 164, 164, 158, "16.4 Menit", "96.5%"]
-                  ];
+                  const rows = slaReportData.map(r => [
+                    r.jenis,
+                    r.masuk,
+                    r.verif_rt_rw,
+                    r.selesai,
+                    r.rata_durasi,
+                    r.kepatuhan_pct
+                  ]);
                   downloadCSV(`Laporan_SLA_Pelayanan_Kelurahan_${new Date().toISOString().split('T')[0]}.csv`, headers, rows);
                 }}
                 className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0"
@@ -1513,56 +1592,28 @@ export default function DashboardAdminKelurahan() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant text-on-surface">
-                  <tr className="hover:bg-surface-container-low/50">
-                    <td className="p-3 font-semibold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-blue-600"></span> SKU (Surat Keterangan Usaha)
-                    </td>
-                    <td className="p-3 text-center font-mono">48</td>
-                    <td className="p-3 text-center font-mono text-emerald-700">48 (100%)</td>
-                    <td className="p-3 text-center font-mono font-bold">46</td>
-                    <td className="p-3 text-center font-mono">18 Menit</td>
-                    <td className="p-3 text-right font-mono font-bold text-emerald-700">95.8%</td>
-                  </tr>
-                  <tr className="hover:bg-surface-container-low/50">
-                    <td className="p-3 font-semibold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-600"></span> SKTM (Keterangan Tidak Mampu)
-                    </td>
-                    <td className="p-3 text-center font-mono">32</td>
-                    <td className="p-3 text-center font-mono text-emerald-700">32 (100%)</td>
-                    <td className="p-3 text-center font-mono font-bold">32</td>
-                    <td className="p-3 text-center font-mono">14 Menit</td>
-                    <td className="p-3 text-right font-mono font-bold text-emerald-700">100.0%</td>
-                  </tr>
-                  <tr className="hover:bg-surface-container-low/50">
-                    <td className="p-3 font-semibold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-purple-600"></span> Pengantar Nikah (N1-N4)
-                    </td>
-                    <td className="p-3 text-center font-mono">12</td>
-                    <td className="p-3 text-center font-mono text-emerald-700">12 (100%)</td>
-                    <td className="p-3 text-center font-mono font-bold">11</td>
-                    <td className="p-3 text-center font-mono">25 Menit</td>
-                    <td className="p-3 text-right font-mono font-bold text-emerald-700">91.6%</td>
-                  </tr>
-                  <tr className="hover:bg-surface-container-low/50">
-                    <td className="p-3 font-semibold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-rose-600"></span> Surat Keterangan Kematian
-                    </td>
-                    <td className="p-3 text-center font-mono">8</td>
-                    <td className="p-3 text-center font-mono text-emerald-700">8 (100%)</td>
-                    <td className="p-3 text-center font-mono font-bold">8</td>
-                    <td className="p-3 text-center font-mono">10 Menit</td>
-                    <td className="p-3 text-right font-mono font-bold text-emerald-700">100.0%</td>
-                  </tr>
-                  <tr className="hover:bg-surface-container-low/50">
-                    <td className="p-3 font-semibold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-teal-600"></span> Surat Keterangan Domisili
-                    </td>
-                    <td className="p-3 text-center font-mono">64</td>
-                    <td className="p-3 text-center font-mono text-emerald-700">64 (100%)</td>
-                    <td className="p-3 text-center font-mono font-bold">61</td>
-                    <td className="p-3 text-center font-mono">15 Menit</td>
-                    <td className="p-3 text-right font-mono font-bold text-emerald-700">95.3%</td>
-                  </tr>
+                  {slaReportData.length > 0 ? (
+                    slaReportData.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-surface-container-low/50">
+                        <td className="p-3 font-semibold flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-600"></span> {row.jenis}
+                        </td>
+                        <td className="p-3 text-center font-mono">{row.masuk}</td>
+                        <td className="p-3 text-center font-mono text-emerald-700">{row.verif_rt_rw}</td>
+                        <td className="p-3 text-center font-mono font-bold">{row.selesai}</td>
+                        <td className="p-3 text-center font-mono">{row.rata_durasi}</td>
+                        <td className="p-3 text-right font-mono font-bold text-emerald-700">{row.kepatuhan_pct}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-on-surface-variant">
+                        <FileText size={24} className="mx-auto mb-2 opacity-40 text-blue-600" />
+                        <p className="font-bold text-xs">Belum Ada Permohonan Surat Masuk</p>
+                        <p className="text-[11px] opacity-75 mt-0.5">Permohonan surat warga dari RT/RW akan terdata otomatis secara dinamis di sini.</p>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1585,15 +1636,15 @@ export default function DashboardAdminKelurahan() {
               <button
                 onClick={() => {
                   const headers = ["RW Sasaran", "Alokasi Kuota", "Penerima Terdaftar", "Sanggahan Warga", "Sanggahan Diterima Kelurahan", "Tiket QR Terbit", "Status Penyaluran"];
-                  const rows = [
-                    ["RW 001", 30, 29, 2, 1, 28, "Siap Salur"],
-                    ["RW 002", 25, 25, 1, 1, 24, "Siap Salur"],
-                    ["RW 003", 35, 35, 3, 2, 33, "Siap Salur"],
-                    ["RW 004", 20, 20, 0, 0, 20, "Siap Salur"],
-                    ["RW 005", 25, 25, 1, 0, 25, "Siap Salur"],
-                    ["RW 006", 25, 24, 2, 1, 23, "Siap Salur"],
-                    ["TOTAL", 160, 158, 9, 5, 153, "Terjadwal"]
-                  ];
+                  const rows = bansosReportData.map(r => [
+                    `RW ${r.rw}`,
+                    r.kuota,
+                    r.calon,
+                    r.sanggahan,
+                    r.disetujui,
+                    r.tiket,
+                    r.status
+                  ]);
                   downloadCSV(`Berita_Acara_Bansos_Muskel_${new Date().toISOString().split('T')[0]}.csv`, headers, rows);
                 }}
                 className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0"
@@ -1607,7 +1658,7 @@ export default function DashboardAdminKelurahan() {
                 <thead className="bg-surface-container-low text-on-surface-variant uppercase font-bold text-[10px] tracking-wider border-b border-outline-variant">
                   <tr>
                     <th className="p-3">Wilayah RW</th>
-                    <th className="p-3 text-center">Kuota Muskel</th>
+                    <th className="p-3 text-center">Kuota Terdata</th>
                     <th className="p-3 text-center">Calon Penerima</th>
                     <th className="p-3 text-center">Sanggahan Masuk</th>
                     <th className="p-3 text-center">Sanggahan Disetujui</th>
@@ -1616,27 +1667,25 @@ export default function DashboardAdminKelurahan() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant text-on-surface">
-                  {['001', '002', '003', '004', '005', '006'].map(rwNum => {
-                    const kuota = rwNum === '003' ? 35 : (rwNum === '001' ? 30 : 25);
-                    const sanggahan = rwNum === '003' ? 3 : (rwNum === '001' || rwNum === '006' ? 2 : 1);
-                    const disetujui = rwNum === '003' ? 2 : (rwNum === '005' ? 0 : 1);
-                    const tiket = kuota - disetujui;
-                    return (
-                      <tr key={rwNum} className="hover:bg-surface-container-low/50">
-                        <td className="p-3 font-semibold">RW {rwNum}</td>
-                        <td className="p-3 text-center font-mono">{kuota} KK</td>
-                        <td className="p-3 text-center font-mono">{kuota} KK</td>
-                        <td className="p-3 text-center font-mono text-amber-700 font-bold">{sanggahan}</td>
-                        <td className="p-3 text-center font-mono text-rose-700 font-bold">{disetujui}</td>
-                        <td className="p-3 text-center font-mono font-bold text-emerald-700">{tiket} Lembar QR</td>
-                        <td className="p-3 text-right">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            Siap Salur
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {bansosReportData.map(r => (
+                    <tr key={r.rw} className="hover:bg-surface-container-low/50">
+                      <td className="p-3 font-semibold">RW {r.rw}</td>
+                      <td className="p-3 text-center font-mono">{r.kuota} KK</td>
+                      <td className="p-3 text-center font-mono">{r.calon} KK</td>
+                      <td className="p-3 text-center font-mono text-amber-700 font-bold">{r.sanggahan}</td>
+                      <td className="p-3 text-center font-mono text-rose-700 font-bold">{r.disetujui}</td>
+                      <td className="p-3 text-center font-mono font-bold text-emerald-700">{r.tiket} Lembar QR</td>
+                      <td className="p-3 text-right">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                          r.kuota > 0 
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}>
+                          {r.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -1658,15 +1707,13 @@ export default function DashboardAdminKelurahan() {
                 </div>
                 <button
                   onClick={() => {
+                    const list = pbbSummary?.rekap_per_rw || [];
+                    if (list.length === 0) {
+                      alert('Belum ada data rekapitulasi PBB untuk diekspor.');
+                      return;
+                    }
                     const headers = ["Wilayah RW", "Total NOP", "NOP Lunas", "Kepatuhan (%)", "Potensi Baku (Rp)", "Realisasi (Rp)"];
-                    const rows = (pbbSummary?.rekap_per_rw || [
-                      { rw: '001', total_nop: 120, total_lunas: 102, total_potensi_rupiah: 38400000 },
-                      { rw: '002', total_nop: 95, total_lunas: 78, total_potensi_rupiah: 30400000 },
-                      { rw: '003', total_nop: 140, total_lunas: 119, total_potensi_rupiah: 44800000 },
-                      { rw: '004', total_nop: 88, total_lunas: 74, total_potensi_rupiah: 28160000 },
-                      { rw: '005', total_nop: 110, total_lunas: 89, total_potensi_rupiah: 35200000 },
-                      { rw: '006', total_nop: 105, total_lunas: 87, total_potensi_rupiah: 33600000 }
-                    ]).map(r => {
+                    const rows = list.map(r => {
                       const total = Number(r.total_nop) || 1;
                       const lunas = Number(r.total_lunas) || 0;
                       const pct = Math.round((lunas / total) * 100);
@@ -1693,32 +1740,33 @@ export default function DashboardAdminKelurahan() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-outline-variant text-on-surface">
-                    {(pbbSummary?.rekap_per_rw || [
-                      { rw: '001', total_nop: 120, total_lunas: 102, total_potensi_rupiah: 38400000 },
-                      { rw: '002', total_nop: 95, total_lunas: 78, total_potensi_rupiah: 30400000 },
-                      { rw: '003', total_nop: 140, total_lunas: 119, total_potensi_rupiah: 44800000 },
-                      { rw: '004', total_nop: 88, total_lunas: 74, total_potensi_rupiah: 28160000 },
-                      { rw: '005', total_nop: 110, total_lunas: 89, total_potensi_rupiah: 35200000 },
-                      { rw: '006', total_nop: 105, total_lunas: 87, total_potensi_rupiah: 33600000 }
-                    ]).map(r => {
-                      const total = Number(r.total_nop) || 1;
-                      const lunas = Number(r.total_lunas) || 0;
-                      const pct = Math.round((lunas / total) * 100);
-                      return (
-                        <tr key={r.rw} className="hover:bg-surface-container-low/50">
-                          <td className="p-2.5 font-bold">RW {r.rw}</td>
-                          <td className="p-2.5 text-center font-mono">{lunas} / {total}</td>
-                          <td className="p-2.5 text-center">
-                            <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold ${pct >= 85 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                              {pct}%
-                            </span>
-                          </td>
-                          <td className="p-2.5 text-right font-mono font-semibold">
-                            Rp {Number(r.total_potensi_rupiah || 0).toLocaleString('id-ID')}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {(pbbSummary?.rekap_per_rw && pbbSummary.rekap_per_rw.length > 0) ? (
+                      pbbSummary.rekap_per_rw.map(r => {
+                        const total = Number(r.total_nop) || 1;
+                        const lunas = Number(r.total_lunas) || 0;
+                        const pct = Math.round((lunas / total) * 100);
+                        return (
+                          <tr key={r.rw} className="hover:bg-surface-container-low/50">
+                            <td className="p-2.5 font-bold">RW {r.rw}</td>
+                            <td className="p-2.5 text-center font-mono">{lunas} / {total}</td>
+                            <td className="p-2.5 text-center">
+                              <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold ${pct >= 85 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                                {pct}%
+                              </span>
+                            </td>
+                            <td className="p-2.5 text-right font-mono font-semibold">
+                              Rp {Number(r.total_potensi_rupiah || 0).toLocaleString('id-ID')}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="p-6 text-center text-on-surface-variant text-xs">
+                          Belum ada data rekapitulasi PBB per RW.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1807,7 +1855,7 @@ export default function DashboardAdminKelurahan() {
       {/* ========================================================================= */}
       <AnimatePresence>
         {govModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1965,7 +2013,7 @@ export default function DashboardAdminKelurahan() {
       {/* ========================================================================= */}
       <AnimatePresence>
         {userModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -2096,7 +2144,7 @@ export default function DashboardAdminKelurahan() {
       {/* ========================================================================= */}
       <AnimatePresence>
         {posyanduModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -2207,7 +2255,7 @@ export default function DashboardAdminKelurahan() {
       {/* ========================================================================= */}
       <AnimatePresence>
         {reviewModalOpen && selectedAudit && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -2298,7 +2346,7 @@ export default function DashboardAdminKelurahan() {
       {/* ========================================================================= */}
       <AnimatePresence>
         {ticketModalOpen && selectedBansos && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -2407,7 +2455,7 @@ export default function DashboardAdminKelurahan() {
       {/* ========================================================================= */}
       <AnimatePresence>
         {pbbModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -2448,7 +2496,7 @@ export default function DashboardAdminKelurahan() {
                   <label className="font-bold text-on-surface block mb-1">Pesan Tambahan Broadcast:</label>
                   <textarea
                     rows={3}
-                    placeholder="Contoh: Manfaatkan pembebasan denda PBB dari Bapenda Kota Bandung sebelum tanggal jatuh tempo akhir bulan ini..."
+                    placeholder="Contoh: Manfaatkan pembebasan denda PBB dari Bapenda Kota Sukabumi sebelum tanggal jatuh tempo akhir bulan ini..."
                     value={pbbPushText}
                     onChange={(e) => setPbbPushText(e.target.value)}
                     className="w-full p-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"

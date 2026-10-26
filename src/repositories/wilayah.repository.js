@@ -107,15 +107,17 @@ class WilayahRepository {
 
   /**
    * Executive Command Center: Agregasi Matriks Perbandingan 33 Kelurahan
+   * Memisahkan data aktual pilot hub (Kebonjati) dari data proyeksi baseline SDI Kota Sukabumi.
    */
   async getCommandCenterHeatmap(kodeKecamatan = null) {
     const kelurahanList = await this.getAllKelurahan(kodeKecamatan);
 
-    // Ambil data riil Kebonjati dari database jika tersedia
+    // 1. Ambil data transaksi riil Kelurahan Kebonjati dari database jika online
     let realWargaCount = 1450;
     let realKKCount = 420;
     let realStuntingCount = 1;
     let realDesil12 = 14;
+    let realSlaJam = 1.2;
 
     try {
       const [wargaRows] = await pool.query(`SELECT COUNT(*) as total FROM warga WHERE status_kependudukan = 'Tetap'`);
@@ -129,6 +131,9 @@ class WilayahRepository {
 
       const [desilRows] = await pool.query(`SELECT COUNT(*) as total FROM desil_keluarga WHERE COALESCE(desil_saat_ini, desil_usulan) IN (1, 2)`);
       if (desilRows[0]?.total !== undefined) realDesil12 = desilRows[0].total;
+
+      const [slaRows] = await pool.query(`SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, updated_at))/60 as avg_sla FROM dokumen_request WHERE status = 'APPROVED'`);
+      if (slaRows[0]?.avg_sla) realSlaJam = Number(Number(slaRows[0].avg_sla).toFixed(1));
     } catch (e) {
       // Direct metrics fallback
     }
@@ -141,6 +146,7 @@ class WilayahRepository {
       const totalKK = isPilot ? realKKCount : Math.round(totalWarga / 3.4);
       const stuntingCount = isPilot ? realStuntingCount : base.stunting;
       const desilCount = isPilot ? realDesil12 : base.desil_1_2;
+      const slaJam = isPilot ? realSlaJam : base.sla_jam;
 
       // Status Stunting
       let stuntingStatus = 'RENDAH';
@@ -156,10 +162,10 @@ class WilayahRepository {
       // Kategori SLA Dokumen
       let slaStatus = 'CEPAT (< 2 Jam)';
       let slaColor = 'emerald';
-      if (base.sla_jam > 2.5) {
+      if (slaJam > 2.5) {
         slaStatus = 'LAMBAT (> 2.5 Jam)';
         slaColor = 'rose';
-      } else if (base.sla_jam > 1.8) {
+      } else if (slaJam > 1.8) {
         slaStatus = 'STANDAR (2-2.5 Jam)';
         slaColor = 'blue';
       }
@@ -173,6 +179,8 @@ class WilayahRepository {
         jumlah_rw: kel.jumlah_rw,
         jumlah_rt: kel.jumlah_rt,
         is_pilot_hub: isPilot,
+        data_provenance: isPilot ? 'LIVE_TRANSACTIONAL' : 'BASELINE_PROYEKSI_SDI',
+        quality_status: isPilot ? 'VERIFIED_PRODUCTION' : 'BASELINE_PROJECTION',
         metrics: {
           total_warga: totalWarga,
           total_kk: totalKK,
@@ -180,7 +188,7 @@ class WilayahRepository {
           stunting_status: stuntingStatus,
           stunting_color: stuntingColor,
           kemiskinan_ekstrem_desil_1_2: desilCount,
-          sla_proses_surat_jam: base.sla_jam,
+          sla_proses_surat_jam: slaJam,
           sla_status: slaStatus,
           sla_color: slaColor,
           indeks_kematangan_data: base.maturity,
@@ -189,13 +197,21 @@ class WilayahRepository {
       };
     });
 
-    // Ringkasan Agregat Tingkat Kota (Kota Sukabumi)
-    const totalWargaKota = heatmap.reduce((sum, h) => sum + h.metrics.total_warga, 0);
-    const totalKKKota = heatmap.reduce((sum, h) => sum + h.metrics.total_kk, 0);
-    const totalStuntingKota = heatmap.reduce((sum, h) => sum + h.metrics.kasus_stunting, 0);
-    const totalDesil12Kota = heatmap.reduce((sum, h) => sum + h.metrics.kemiskinan_ekstrem_desil_1_2, 0);
-    const avgMaturity = Math.round(heatmap.reduce((sum, h) => sum + h.metrics.indeks_kematangan_data, 0) / heatmap.length);
-    const avgSla = Number((heatmap.reduce((sum, h) => sum + h.metrics.sla_proses_surat_jam, 0) / heatmap.length).toFixed(1));
+    // 2. Pemisahan Agregat: Baseline Makro Kota vs Pilot Produksi Live
+    const baselineItems = heatmap.filter(h => !h.is_pilot_hub);
+    const pilotItem = heatmap.find(h => h.is_pilot_hub);
+
+    // Hitung Proyeksi Baseline SDI Makro Kota (33 Kelurahan)
+    const totalWargaEstimasi = heatmap.reduce((sum, h) => sum + h.metrics.total_warga, 0);
+    const totalKKEstimasi = heatmap.reduce((sum, h) => sum + h.metrics.total_kk, 0);
+    const totalStuntingEstimasi = heatmap.reduce((sum, h) => sum + h.metrics.kasus_stunting, 0);
+    const totalDesilEstimasi = heatmap.reduce((sum, h) => sum + h.metrics.kemiskinan_ekstrem_desil_1_2, 0);
+
+    // Rerata Berbobot / Agregat Baseline
+    const totalMaturity = heatmap.reduce((sum, h) => sum + h.metrics.indeks_kematangan_data, 0);
+    const avgMaturityBaseline = Math.round(totalMaturity / (heatmap.length || 1));
+    const totalSla = heatmap.reduce((sum, h) => sum + h.metrics.sla_proses_surat_jam, 0);
+    const avgSlaBaseline = Number((totalSla / (heatmap.length || 1)).toFixed(1));
 
     return {
       kota: {
@@ -204,13 +220,43 @@ class WilayahRepository {
         provinsi: 'Jawa Barat',
         total_kecamatan: 7,
         total_kelurahan: 33,
+        cakupan_integrasi: {
+          kelurahan_terintegrasi: pilotItem ? 1 : 0,
+          total_kelurahan: 33,
+          persentase_cakupan: '3.0%',
+          status: 'FASE_1_PILOT_HUB',
+          keterangan: 'Kelurahan Kebonjati adalah pilot hub live. 32 kelurahan lainnya menggunakan data baseline proyeksi SDI Kota Sukabumi.'
+        },
+        pilot_actual: {
+          kode_kelurahan: '32.72.03.1004',
+          nama_kelurahan: 'Kebonjati',
+          nama_kecamatan: 'Cikole',
+          total_warga: realWargaCount,
+          total_kk: realKKCount,
+          kasus_stunting: realStuntingCount,
+          kemiskinan_ekstrem_desil_1_2: realDesil12,
+          sla_proses_surat_jam: realSlaJam,
+          indeks_kematangan_data: 95,
+          data_provenance: 'LIVE_TRANSACTIONAL'
+        },
+        proyeksi_baseline_sdi: {
+          total_penduduk_proyeksi: totalWargaEstimasi,
+          total_kk_proyeksi: totalKKEstimasi,
+          total_kasus_stunting_proyeksi: totalStuntingEstimasi,
+          total_keluarga_desil_1_2_proyeksi: totalDesilEstimasi,
+          rerata_sla_proyeksi_jam: avgSlaBaseline,
+          rerata_kematangan_proyeksi: avgMaturityBaseline,
+          data_provenance: 'BASELINE_PROYEKSI_SDI',
+          keterangan: 'Proyeksi agregat Satu Data Indonesia (SDI) Kota Sukabumi.'
+        },
         kpi_agregat: {
-          total_penduduk: totalWargaKota,
-          total_kk: totalKKKota,
-          total_kasus_stunting: totalStuntingKota,
-          total_keluarga_desil_1_2: totalDesil12Kota,
-          rata_rata_kematangan_data: avgMaturity,
-          rata_rata_sla_jam: avgSla
+          total_penduduk: totalWargaEstimasi,
+          total_kk: totalKKEstimasi,
+          total_kasus_stunting: totalStuntingEstimasi,
+          total_keluarga_desil_1_2: totalDesilEstimasi,
+          rata_rata_kematangan_data: avgMaturityBaseline,
+          rata_rata_sla_jam: avgSlaBaseline,
+          provenance: 'PROYEKSI_BASELINE_SDI'
         }
       },
       heatmap

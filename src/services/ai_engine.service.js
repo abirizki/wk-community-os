@@ -1,7 +1,7 @@
 /**
  * src/services/ai_engine.service.js
  * Rule-Based AI Engine & Decision Support System (DSS)
- * Evidence-Based Governance for Kelurahan Kebonjati, Kec. Andir, Kota Bandung
+ * Evidence-Based Governance for Kelurahan Kebonjati, Kec. Cikole, Kota Sukabumi
  * Jabar Pintar Digital
  */
 
@@ -316,11 +316,18 @@ class AIEngineService {
   }
 
   /**
-   * Menentukan scope wilayah berdasarkan hak akses session user
+   * Menentukan scope wilayah berdasarkan hak akses session user.
+   * active_tenant hanya valid untuk superadmin, walikota, dan camat, dan tidak dapat memperluas cakupan peran lain.
    */
   resolveScope(user) {
     if (!user) return {};
-    if (user.active_tenant) {
+
+    // Active tenant HANYA berlaku untuk peran eksekutif pimpinan (superadmin, walikota, camat)
+    if (['superadmin', 'walikota', 'camat'].includes(user.role) && user.active_tenant) {
+      // Camat hanya boleh beralih ke kelurahan di dalam kecamatannya sendiri
+      if (user.role === 'camat' && user.kode_kecamatan && user.active_tenant.kode_kecamatan !== user.kode_kecamatan) {
+        return { kode_kecamatan: user.kode_kecamatan };
+      }
       return {
         kode_kecamatan: user.active_tenant.kode_kecamatan,
         kode_kelurahan: user.active_tenant.kode_kelurahan,
@@ -328,6 +335,7 @@ class AIEngineService {
         kecamatan: user.active_tenant.nama_kecamatan
       };
     }
+
     if (user.role === 'ketua_rt') {
       return { rt: user.rt || '001', rw: user.rw || '001', kode_kelurahan: user.kode_kelurahan || '32.72.03.1004' };
     }

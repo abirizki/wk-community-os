@@ -1510,7 +1510,7 @@ export default function DashboardKetuaRW() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setInspectDoc(null)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+              className="absolute inset-0 bg-slate-900/60 transition-opacity"
             />
 
             <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
@@ -1666,7 +1666,7 @@ export default function DashboardKetuaRW() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActionModal({ isOpen: false, type: '', doc: null, reason: '' })}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/60"
             />
 
             <motion.div
@@ -1741,7 +1741,7 @@ export default function DashboardKetuaRW() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAsetModal(false)}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/60"
             />
 
             <motion.div

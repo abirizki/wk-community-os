@@ -39,6 +39,42 @@ router.post('/', canManageUserRole, async (req, res) => {
   }
 });
 
+// GET /api/users/:id - Ambil detail pengguna
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await userService.getUserById(req.session.user, req.params.id);
+    res.json({ success: true, data: user });
+  } catch (error) {
+    res.status(404).json({ success: false, message: error.message || 'Pengguna tidak ditemukan' });
+  }
+});
+
+// PUT /api/users/:id - Update data profil & peran pengguna
+router.put('/:id', async (req, res) => {
+  try {
+    const updated = await userService.updateUser(req.session.user, req.params.id, req.body);
+    res.json({
+      success: true,
+      message: `Data pengguna '${updated.nama}' berhasil diperbarui.`,
+      data: updated
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(400).json({ success: false, message: error.message || 'Gagal memperbarui pengguna' });
+  }
+});
+
+// DELETE /api/users/:id - Hapus akun pengguna
+router.delete('/:id', async (req, res) => {
+  try {
+    const result = await userService.deleteUser(req.session.user, req.params.id);
+    res.json(result);
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(403).json({ success: false, message: error.message || 'Gagal menghapus pengguna' });
+  }
+});
+
 // PATCH /api/users/:id/status - Update status aktif/nonaktif
 router.patch('/:id/status', async (req, res) => {
   try {

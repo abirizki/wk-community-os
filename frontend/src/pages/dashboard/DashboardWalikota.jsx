@@ -10,7 +10,7 @@
  * Bumi Warga - Jabar Pintar Digital
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
@@ -74,15 +74,52 @@ export default function DashboardWalikota() {
     setTimeout(() => setToastMessage(''), 4000);
   };
 
-  const kecamatanSummary = [
-    { nama: 'Cikole', kelurahan: 6, stunting: 18, pbb_rate: '88.4%', sla_avg: '1.4 jam', status: 'Optimal' },
-    { nama: 'Citamiang', kelurahan: 5, stunting: 24, pbb_rate: '79.2%', sla_avg: '1.8 jam', status: 'Waspada Stunting' },
-    { nama: 'Warudoyong', kelurahan: 5, stunting: 21, pbb_rate: '82.1%', sla_avg: '1.6 jam', status: 'Optimal' },
-    { nama: 'Baros', kelurahan: 4, stunting: 29, pbb_rate: '71.5%', sla_avg: '2.1 jam', status: 'Perlu Akselerasi' },
-    { nama: 'Lembursitu', kelurahan: 5, stunting: 32, pbb_rate: '68.9%', sla_avg: '2.4 jam', status: 'Intervensi Khusus' },
-    { nama: 'Cibeureum', kelurahan: 4, stunting: 15, pbb_rate: '84.0%', sla_avg: '1.5 jam', status: 'Optimal' },
-    { nama: 'Gunungpuyuh', kelurahan: 4, stunting: 19, pbb_rate: '81.6%', sla_avg: '1.7 jam', status: 'Optimal' }
-  ];
+  // Agregasi Dinamis 7 Kecamatan dari Data Heatmap API (Bebas Hardcode)
+  const kecamatanSummary = useMemo(() => {
+    if (!data?.heatmap || data.heatmap.length === 0) return [];
+
+    const kecMap = {};
+    data.heatmap.forEach((kel) => {
+      const kecName = kel.nama_kecamatan;
+      if (!kecMap[kecName]) {
+        kecMap[kecName] = {
+          nama: kecName,
+          kode: kel.kode_kecamatan,
+          kelurahan: 0,
+          stunting: 0,
+          desil: 0,
+          total_sla: 0,
+          has_pilot: false
+        };
+      }
+      kecMap[kecName].kelurahan += 1;
+      kecMap[kecName].stunting += (kel.metrics?.kasus_stunting || 0);
+      kecMap[kecName].desil += (kel.metrics?.kemiskinan_ekstrem_desil_1_2 || 0);
+      kecMap[kecName].total_sla += (kel.metrics?.sla_proses_surat_jam || 0);
+      if (kel.is_pilot_hub) kecMap[kecName].has_pilot = true;
+    });
+
+    return Object.values(kecMap).map((kec) => {
+      const slaAvg = Number((kec.total_sla / (kec.kelurahan || 1)).toFixed(1));
+      let status = 'Optimal';
+      if (kec.stunting >= 25) {
+        status = 'Intervensi Khusus';
+      } else if (kec.stunting >= 20) {
+        status = 'Waspada Stunting';
+      } else if (slaAvg > 2.0) {
+        status = 'Perlu Akselerasi';
+      }
+      return {
+        nama: kec.nama,
+        kelurahan: kec.kelurahan,
+        stunting: kec.stunting,
+        desil: kec.desil,
+        sla_avg: `${slaAvg} jam`,
+        status,
+        has_pilot: kec.has_pilot
+      };
+    });
+  }, [data]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-24 font-sans">
@@ -107,7 +144,7 @@ export default function DashboardWalikota() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-sm">
+              <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 text-[10px] font-extrabold uppercase tracking-wider">
                 Dashboard Eksekutif Kepala Daerah
               </span>
               <span className="text-xs text-slate-300 font-mono">
@@ -156,46 +193,46 @@ export default function DashboardWalikota() {
         <KPIGrid columns={4}>
           <UnifiedStatCard
             label="Zero Stunting Terpadu"
-            value="158"
+            value={data?.kota?.proyeksi_baseline_sdi?.total_kasus_stunting_proyeksi ?? data?.kota?.pilot_actual?.kasus_stunting ?? '-'}
             unit="balita"
-            context="Turun 14.2% YoY (Target Kota ≤ 14%)"
+            context={`Pilot Hub Kebonjati: ${data?.kota?.pilot_actual?.kasus_stunting ?? 0} balita terverifikasi`}
             icon={<HeartPulse size={20} className="text-red-600" />}
             urgency="high"
-            trend={{ direction: 'down', isPositive: true, label: 'Tren membaik' }}
-            denominatorLabel="Target Intervensi: Lembursitu & Baros"
+            trend={data?.kota?.pilot_actual ? { direction: 'down', isPositive: true, label: 'Data Posyandu Terintegrasi' } : null}
+            denominatorLabel="Target Zero Stunting Kota Sukabumi"
           />
 
           <UnifiedStatCard
             label="Kepatuhan SLA Surat Kota"
-            value="1.7"
+            value={data?.kota?.pilot_actual?.sla_proses_surat_jam ? `${data.kota.pilot_actual.sla_proses_surat_jam}` : '1.2'}
             unit="jam"
             context="Standar SOP SPBE Maksimal 2.0 Jam"
             icon={<Clock size={20} className="text-emerald-700" />}
             urgency="low"
-            trend={{ direction: 'up', isPositive: true, label: '96.2% tepat waktu' }}
-            denominatorLabel="33 dari 33 Kelurahan TTE Aktif"
+            trend={{ direction: 'up', isPositive: true, label: 'Pilot Live TTE Cepat' }}
+            denominatorLabel="1 Kelurahan Pilot Live (Kebonjati)"
           />
 
           <UnifiedStatCard
-            label="Realisasi PBB-P2 Kota"
-            value="81.4%"
-            unit="terkumpul"
-            context="Rp 24,8 M dari Target Rp 30,5 M"
+            label="Cakupan Integrasi Digital"
+            value={data?.kota?.cakupan_integrasi?.persentase_cakupan || '3.0%'}
+            unit="terintegrasi"
+            context="1 dari 33 Kelurahan Live Produksi"
             icon={<Building2 size={20} className="text-blue-700" />}
             urgency="low"
-            trend={{ direction: 'up', isPositive: true, label: '+4.8% vs tahun lalu' }}
-            denominatorLabel="Cakupan 7 Kecamatan"
+            trend={{ direction: 'up', isPositive: true, label: 'Fase 1 Pilot Hub Sukabumi' }}
+            denominatorLabel="32 Kelurahan Terjadwal Integrasi SDI"
           />
 
           <UnifiedStatCard
             label="Kemiskinan Ekstrem (Desil 1)"
-            value="1.240"
-            unit="KK"
-            context="98.5% Telah Tercover Jaring Bansos"
+            value={data?.kota?.pilot_actual?.kemiskinan_ekstrem_desil_1_2 ?? 14}
+            unit="KK (Pilot)"
+            context={`Proyeksi Kota: ${data?.kota?.proyeksi_baseline_sdi?.total_keluarga_desil_1_2_proyeksi ?? '-'} KK`}
             icon={<Users size={20} className="text-amber-700" />}
             urgency="medium"
             trend={{ direction: 'down', isPositive: true, label: 'Verifikasi faktual' }}
-            denominatorLabel="Terpadu DTKS & Muskel"
+            denominatorLabel="Terpadu DTKS & DTSEN Mandiri"
           />
         </KPIGrid>
       </div>
@@ -229,7 +266,7 @@ export default function DashboardWalikota() {
                 <th className="py-3 px-4">Wilayah Kecamatan</th>
                 <th className="py-3 px-4">Jumlah Kelurahan</th>
                 <th className="py-3 px-4">Kasus Stunting</th>
-                <th className="py-3 px-4">Realisasi PBB-P2</th>
+                <th className="py-3 px-4">Keluarga Desil 1–2</th>
                 <th className="py-3 px-4">Rerata SLA Surat</th>
                 <th className="py-3 px-4">Status Kinerja</th>
                 <th className="py-3 px-4 text-right">Tindakan Walikota</th>
@@ -241,6 +278,11 @@ export default function DashboardWalikota() {
                   <td className="py-3.5 px-4 font-bold text-slate-900 flex items-center gap-2">
                     <MapPin size={14} className="text-blue-600" />
                     <span>Kecamatan {kec.nama}</span>
+                    {kec.has_pilot && (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200">
+                        Pilot Live Hub
+                      </span>
+                    )}
                   </td>
                   <td className="py-3.5 px-4 text-slate-600">{kec.kelurahan} Kelurahan</td>
                   <td className="py-3.5 px-4">
@@ -248,7 +290,7 @@ export default function DashboardWalikota() {
                       {kec.stunting} balita
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-slate-800">{kec.pbb_rate}</td>
+                  <td className="py-3.5 px-4 font-mono font-bold text-slate-800">{kec.desil} KK</td>
                   <td className="py-3.5 px-4 font-mono text-slate-700">{kec.sla_avg}</td>
                   <td className="py-3.5 px-4">
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
@@ -267,7 +309,7 @@ export default function DashboardWalikota() {
                         isOpen: true,
                         targetKecamatan: kec.nama,
                         subject: `Instruksi Percepatan Kinerja Kecamatan ${kec.nama}`,
-                        note: `Perhatian khusus untuk penanganan ${kec.stunting} balita stunting dan optimalisasi penagihan PBB (${kec.pbb_rate}).`
+                        note: `Perhatian khusus untuk penanganan ${kec.stunting} balita stunting dan pemantauan ${kec.desil} KK rentan.`
                       })}
                       className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold text-xs transition cursor-pointer"
                     >
@@ -284,7 +326,7 @@ export default function DashboardWalikota() {
       {/* Modal Terbitkan Instruksi Walikota */}
       <AnimatePresence>
         {instructionModal.isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

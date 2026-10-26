@@ -2099,7 +2099,7 @@ export default function ProfilePage() {
                     maxLength={6}
                     pattern="[0-9]*"
                     inputMode="numeric"
-                    placeholder="Contoh: 123456"
+                    placeholder="6 Digit Angka Acak"
                     value={pinModal.pin}
                     onChange={(e) => setPinModal({ ...pinModal, pin: e.target.value.replace(/\D/g, '').slice(0, 6), error: '' })}
                     required

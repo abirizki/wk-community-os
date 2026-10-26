@@ -121,7 +121,7 @@ export default function AuthorizationPinModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60">
         {/* Backdrop click to close */}
         <div className="absolute inset-0" onClick={onClose} />
 
@@ -190,7 +190,7 @@ export default function AuthorizationPinModal({
               </div>
             ) : (
               <p className="text-xs text-slate-400 mb-4 font-mono">
-                {isVerifying ? 'Memverifikasi kredensial TTE...' : 'Masukkan 6 digit PIN Anda (Default: 123456)'}
+                {isVerifying ? 'Memverifikasi kredensial TTE...' : 'Masukkan 6 digit PIN Otorisasi Jabatan Anda'}
               </p>
             )}
 

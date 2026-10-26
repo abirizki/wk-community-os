@@ -761,10 +761,10 @@ async function autoPatchDatabase() {
           \`rt\` VARCHAR(5) NOT NULL DEFAULT '001',
           \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
           \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
-          \`kecamatan\` VARCHAR(100) NOT NULL DEFAULT 'Andir',
-          \`kota\` VARCHAR(100) NOT NULL DEFAULT 'Bandung',
+          \`kecamatan\` VARCHAR(100) NOT NULL DEFAULT 'Cikole',
+          \`kota\` VARCHAR(100) NOT NULL DEFAULT 'Kota Sukabumi',
           \`provinsi\` VARCHAR(100) NOT NULL DEFAULT 'Jawa Barat',
-          \`kode_pos\` VARCHAR(10) NOT NULL DEFAULT '40181',
+          \`kode_pos\` VARCHAR(10) NOT NULL DEFAULT '43111',
           \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           INDEX \`idx_kk_no\` (\`no_kk\`),
@@ -782,8 +782,8 @@ async function autoPatchDatabase() {
         INSERT INTO \`kartu_keluarga\` 
           (\`no_kk\`, \`kepala_keluarga\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`)
         VALUES 
-          ('3272030101900102', 'Asep Saepulloh', 'Jl. Kebonjati Gg. Mesjid No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Sukabumi', 'Kota Sukabumi', 'Jawa Barat', '43111'),
-          ('3273010101900001', 'Budi Santoso', 'Jl. Kebonjati No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Sukabumi', 'Kota Sukabumi', 'Jawa Barat', '43111')
+          ('3272030101900102', 'Asep Saepulloh', 'Jl. Kebonjati Gg. Mesjid No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'Jawa Barat', '43111'),
+          ('3273010101900001', 'Budi Santoso', 'Jl. Kebonjati No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'Jawa Barat', '43111')
         ON DUPLICATE KEY UPDATE 
           \`kepala_keluarga\` = VALUES(\`kepala_keluarga\`),
           \`alamat\` = VALUES(\`alamat\`),
@@ -801,11 +801,23 @@ async function autoPatchDatabase() {
           INSERT IGNORE INTO \`kartu_keluarga\` 
             (\`no_kk\`, \`kepala_keluarga\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`)
           SELECT 
-            no_kk, nama, alamat, rt, rw, 'Kebonjati', 'Sukabumi', 'Kota Sukabumi', 'Jawa Barat', '43111'
+            no_kk, nama, alamat, rt, rw, 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'Jawa Barat', '43111'
           FROM warga 
           WHERE (status_hubungan_keluarga = 'Kepala Keluarga' OR hubungan_keluarga = 'Kepala Keluarga')
             AND no_kk IS NOT NULL AND no_kk != ''
           GROUP BY no_kk;
+        `);
+
+        // Rekonsiliasi data wilayah Bandung/Andir menjadi Cikole, Kota Sukabumi
+        await connection.execute(`
+          UPDATE \`kartu_keluarga\` 
+          SET \`kecamatan\` = 'Cikole', \`kota\` = 'Kota Sukabumi', \`kode_pos\` = '43111' 
+          WHERE \`kelurahan\` = 'Kebonjati' AND (\`kecamatan\` = 'Andir' OR \`kecamatan\` = 'Sukabumi' OR \`kota\` = 'Bandung');
+        `);
+        await connection.execute(`
+          UPDATE \`warga\` 
+          SET \`kecamatan\` = 'Cikole', \`kota\` = 'Kota Sukabumi' 
+          WHERE \`kelurahan\` = 'Kebonjati' AND (\`kecamatan\` = 'Andir' OR \`kota\` = 'Bandung');
         `);
       } catch (syncKkErr) {}
 

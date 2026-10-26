@@ -40,11 +40,26 @@ class WargaService {
     let targetRT = rt || null;
     let targetRW = rw || null;
 
-    // Terapkan isolasi wilayah
+    // Terapkan isolasi wilayah secara ketat (Anti-Tampering)
     if (currentUser.role === 'ketua_rt') {
+      if (rt && String(rt).padStart(3, '0') !== String(currentUser.rt).padStart(3, '0')) {
+        const err = new Error(`Akses ditolak: Anda hanya berwenang mengakses data RT ${currentUser.rt}.`);
+        err.status = 403;
+        throw err;
+      }
+      if (rw && String(rw).padStart(3, '0') !== String(currentUser.rw || '001').padStart(3, '0')) {
+        const err = new Error(`Akses ditolak: Anda hanya berwenang mengakses data RW ${currentUser.rw || '001'}.`);
+        err.status = 403;
+        throw err;
+      }
       targetRT = currentUser.rt;
-      targetRW = currentUser.rw;
+      targetRW = currentUser.rw || '001';
     } else if (currentUser.role === 'ketua_rw' || currentUser.role === 'admin_rw') {
+      if (rw && String(rw).padStart(3, '0') !== String(currentUser.rw).padStart(3, '0')) {
+        const err = new Error(`Akses ditolak: Anda hanya berwenang mengakses data RW ${currentUser.rw}.`);
+        err.status = 403;
+        throw err;
+      }
       targetRW = currentUser.rw;
     }
 

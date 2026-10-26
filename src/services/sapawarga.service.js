@@ -169,6 +169,9 @@ class SapawargaService {
         };
       } else if (ssoToken.includes('.')) {
         // Wajib verifikasi tanda tangan kriptografis JWT OIDC
+        if (!isDev && !process.env.SAPAWARGA_JWT_SECRET && !process.env.JWT_SECRET) {
+          throw new Error('SAPAWARGA_JWT_SECRET belum dikonfigurasi di server production.');
+        }
         const ssoSecret = process.env.SAPAWARGA_JWT_SECRET || process.env.JWT_SECRET || 'wk-community-os-super-secret-jwt-key-2026';
         payload = nativeVerifyToken(ssoToken, ssoSecret);
         if (!payload) {
@@ -181,7 +184,10 @@ class SapawargaService {
       throw new Error('Validasi token SSO Sapawarga gagal: ' + e.message);
     }
 
-    const nik = payload.nik || '3273010203850003';
+    if (!payload || !payload.nik) {
+      throw new Error('Payload token SSO Sapawarga tidak memuat NIK warga.');
+    }
+    const nik = String(payload.nik).trim();
 
     // Cari akun pengguna atau warga terkait
     let user = null;
@@ -193,9 +199,30 @@ class SapawargaService {
     } catch (e) {}
 
     if (!user) {
-      // Fallback: create mock session user untuk warga
+      try {
+        const [wRows] = await pool.query('SELECT * FROM warga WHERE nik = ? LIMIT 1', [nik]);
+        if (wRows && wRows.length > 0) {
+          const w = wRows[0];
+          user = {
+            id: w.user_id || 9000,
+            username: w.nik,
+            nama: w.nama,
+            role: 'warga',
+            rt: w.rt,
+            rw: w.rw,
+            status: 'active',
+            no_kk: w.no_kk
+          };
+        }
+      } catch (wErr) {}
+    }
+
+    if (!user) {
+      if (!isDev) {
+        throw new Error('Data kependudukan dengan NIK tersebut tidak ditemukan dalam pangkalan data resmi.');
+      }
       user = {
-        id: 6,
+        id: 9999,
         username: nik,
         nama: payload.nama || 'Warga Sapawarga Jabar',
         role: 'warga',

@@ -273,7 +273,7 @@ export default function WargaList() {
             Data Kependudukan Warga
           </h1>
           <p className="text-body-md text-on-surface-variant mt-1">
-            Basis data demografi terpadu Kelurahan Kebonjati, Kec. Andir, Kota Bandung.
+            Basis data demografi terpadu Kelurahan Kebonjati, Kec. Cikole, Kota Sukabumi.
           </p>
         </div>
 

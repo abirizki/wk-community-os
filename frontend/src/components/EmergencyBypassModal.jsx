@@ -29,7 +29,7 @@ export default function EmergencyBypassModal({ isOpen, onClose, onSuccess, doc }
     try {
       const res = await api.post(`/dokumen/${doc.id}/emergency-bypass`, {
         emergency_reason: reason.trim(),
-        pin: pin || '123456'
+        pin: pin.trim()
       });
 
       if (res.success) {
@@ -49,7 +49,7 @@ export default function EmergencyBypassModal({ isOpen, onClose, onSuccess, doc }
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
         <div className="fixed inset-0" onClick={!loading ? onClose : undefined} />
 
         <motion.div
@@ -137,12 +137,12 @@ export default function EmergencyBypassModal({ isOpen, onClose, onSuccess, doc }
                   maxLength={6}
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                  placeholder="PIN 6-digit (bawaan: 123456)"
+                  placeholder="Masukkan 6-digit PIN Otorisasi"
                   className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 text-xs font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-rose-500 font-bold"
                 />
                 <KeyRound size={16} className="absolute right-3.5 top-3 text-gray-400" />
               </div>
-              <span className="text-[10px] text-gray-400 block mt-1">Kosongkan jika ingin menggunakan PIN sesi aktif.</span>
+              <span className="text-[10px] text-gray-400 block mt-1">Masukkan PIN otorisasi pejabat untuk mengonfirmasi tindakan darurat.</span>
             </div>
 
             {/* Warning Audit Callout */}

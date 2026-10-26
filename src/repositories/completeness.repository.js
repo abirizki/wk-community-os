@@ -1,7 +1,7 @@
 /**
  * src/repositories/completeness.repository.js
  * Data Access Layer for Profiling Completeness & Multi-Role AI Assistants
- * Kelurahan Kebonjati, Kec. Andir, Kota Bandung - Jabar Pintar Digital
+ * Kelurahan Kebonjati, Kec. Cikole, Kota Sukabumi - Jabar Pintar Digital
  */
 
 const pool = require('../db/pool');

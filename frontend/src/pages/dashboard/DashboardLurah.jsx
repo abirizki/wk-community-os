@@ -56,7 +56,7 @@ export default function DashboardLurah() {
 
   // Lurah Data
   const [readyTTEDocs, setReadyTTEDocs] = useState([]);
-  const [slaCompliance, setSlaCompliance] = useState(96.4);
+  const [slaCompliance, setSlaCompliance] = useState(null);
   const [atRiskBalitaCount, setAtRiskBalitaCount] = useState(0);
   const [stuntingClusterCount, setStuntingClusterCount] = useState(0);
   const [overdueDispositionsCount, setOverdueDispositionsCount] = useState(0);
@@ -117,7 +117,9 @@ export default function DashboardLurah() {
       if (statsRes.status === 'fulfilled' && statsRes.value?.success) {
         const s = statsRes.value.data;
         if (s?.compliance_rate) {
-          setSlaCompliance(parseFloat(s.compliance_rate) || 96.4);
+          setSlaCompliance(parseFloat(s.compliance_rate));
+        } else {
+          setSlaCompliance(null);
         }
       }
 
@@ -361,7 +363,7 @@ export default function DashboardLurah() {
         <RoleHeader
           role="lurah"
           userName={user?.nama || 'Lurah Kebonjati'}
-          scopeLabel="Kelurahan Kebonjati, Kec. Andir, Kota Bandung"
+          scopeLabel="Kelurahan Kebonjati, Kec. Cikole, Kota Sukabumi"
           greeting="Pusat Komando & Pengesahan Eksekutif"
           onRefresh={loadLurahData}
           loading={refreshing}
@@ -391,12 +393,12 @@ export default function DashboardLurah() {
           />
           <KPICard
             label="Kepatuhan SLA Kelurahan"
-            value={`${slaCompliance}%`}
-            unit="tepat waktu"
+            value={slaCompliance !== null ? `${slaCompliance}%` : 'Belum Tersedia'}
+            unit={slaCompliance !== null ? "tepat waktu" : ""}
             icon={<Clock size={20} className="text-emerald-600" />}
-            urgency={slaCompliance >= 95 ? 'low' : slaCompliance >= 85 ? 'medium' : 'critical'}
-            context="Target minimum 95%"
-            trend={slaCompliance > 0 ? { direction: slaCompliance >= 90 ? 'up' : 'down', isPositive: slaCompliance >= 90, label: `${slaCompliance}% tercapai` } : null}
+            urgency={slaCompliance === null ? 'low' : slaCompliance >= 95 ? 'low' : slaCompliance >= 85 ? 'medium' : 'critical'}
+            context={slaCompliance !== null ? "Target minimum SOP: 95%" : "Belum ada permohonan terselesaikan"}
+            trend={slaCompliance !== null && slaCompliance > 0 ? { direction: slaCompliance >= 90 ? 'up' : 'down', isPositive: slaCompliance >= 90, label: `${slaCompliance}% tercapai` } : null}
           />
           <KPICard
             label="Balita Gizi Buruk Aktif"
@@ -559,7 +561,7 @@ export default function DashboardLurah() {
       {/* MODAL 1: Konfirmasi TTE Pejabat Lurah (Manual Passphrase / PIN) */}
       <AnimatePresence>
         {isSignModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -611,7 +613,7 @@ export default function DashboardLurah() {
                       autoFocus
                       value={signerPin}
                       onChange={(e) => setSignerPin(e.target.value)}
-                      placeholder="Masukkan PIN TTE (contoh: 123456)"
+                      placeholder="Masukkan PIN TTE Elektronik"
                       className="w-full px-3 py-2 text-sm rounded-lg border border-outline focus:ring-2 focus:ring-primary focus:border-transparent outline-none pl-9 font-mono tracking-widest"
                       onKeyDown={(e) => e.key === 'Enter' && handleConfirmSign()}
                     />
@@ -672,7 +674,7 @@ export default function DashboardLurah() {
       {/* MODAL 2: Penolakan Dokumen dengan Berita Acara */}
       <AnimatePresence>
         {rejectModalDoc && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

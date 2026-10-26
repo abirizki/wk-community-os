@@ -170,7 +170,7 @@ export default function DashboardHome() {
       ? `Wilayah Binaan RT ${user?.rt || '001'} / RW ${user?.rw || '001'}`
       : isRW
       ? `Wilayah Binaan RW ${user?.rw || '001'} (Kelurahan Kebonjati)`
-      : `Seluruh Wilayah Kelurahan Kebonjati (Kecamatan Andir)`;
+      : `Seluruh Wilayah Kelurahan Kebonjati (Kecamatan Cikole, Kota Sukabumi)`;
 
     return (
       <div className="max-w-max-width mx-auto space-y-8 pb-16">
@@ -658,7 +658,7 @@ export default function DashboardHome() {
         <div className="relative z-10 space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-semibold backdrop-blur-md">
             <Landmark size={14} />
-            <span>Kelurahan Kebonjati &bull; Kecamatan Andir, Kota Bandung</span>
+            <span>Kelurahan Kebonjati &bull; Kecamatan Cikole, Kota Sukabumi</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Selamat Datang, {user?.nama || 'Warga'}!

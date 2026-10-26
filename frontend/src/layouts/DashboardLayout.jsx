@@ -691,7 +691,7 @@ export default function DashboardLayout() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setMobileMenuOpen(false)}
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+                className="fixed inset-0 bg-slate-900/60 z-40 lg:hidden"
               />
               <motion.aside
                 initial={{ x: '-100%' }}
@@ -786,7 +786,7 @@ export default function DashboardLayout() {
 
         {/* Bottom Navigation Bar Khusus Mobile-First (Warga & RT/RW) */}
         {mobileBottomNav && (
-          <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-container-lowest/95 backdrop-blur-md border-t border-outline-variant flex items-center justify-around z-30 shadow-lg px-2 pb-safe">
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-container-lowest border-t border-outline-variant flex items-center justify-around z-30 shadow-lg px-2 pb-safe">
             {mobileBottomNav.map((item) => {
               const active = isCurrentActive(item.path);
               return (
@@ -811,7 +811,7 @@ export default function DashboardLayout() {
       {/* Family Member Profile Switcher Modal */}
       <AnimatePresence>
         {familyModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

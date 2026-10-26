@@ -1,7 +1,7 @@
 /**
  * src/repositories/fasilitas.repository.js
  * Repository Layer for Public Facilities, Carrying Capacity, and Local Economy Ecosystem
- * Kelurahan Kebonjati, Kec. Andir, Kota Bandung - Jabar Pintar Digital
+ * Kelurahan Kebonjati, Kec. Cikole, Kota Sukabumi - Jabar Pintar Digital
  */
 
 const pool = require('../db/pool');

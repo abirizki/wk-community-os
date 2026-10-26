@@ -99,7 +99,7 @@ export default function AssistedSubmissionModal({ isOpen, onClose, onSuccess, cu
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
         <div className="fixed inset-0" onClick={!loading ? onClose : undefined} />
 
         <motion.div

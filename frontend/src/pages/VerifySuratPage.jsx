@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   CheckCircle2, 
@@ -229,7 +229,7 @@ export default function VerifySuratPage() {
                       Tanda Tangan Elektronik Disahkan Secara Digital
                     </div>
                     <p className="text-xs text-emerald-800">
-                      Disahkan oleh <strong>Lurah Kebonjati</strong> menggunakan Sertifikat Elektronik BSrE / BSSN Republik Indonesia.
+                      Disahkan oleh <strong>Lurah Kebonjati</strong> dengan Integritas Dokumen Terverifikasi Digital (Segel Kriptografi SHA-256).
                     </p>
                     <div className="text-[11px] font-mono text-emerald-700 break-all pt-1">
                       SHA256: {doc.qr_code_hash || hash}

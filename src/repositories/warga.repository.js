@@ -43,10 +43,10 @@ class WargaRepository {
       rt,
       rw,
       kelurahan = 'Kebonjati',
-      kecamatan = 'Andir',
-      kota = 'Bandung',
+      kecamatan = 'Cikole',
+      kota = 'Kota Sukabumi',
       provinsi = 'Jawa Barat',
-      kode_pos = '40181'
+      kode_pos = '43111'
     } = data;
 
     const [result] = await pool.execute(
@@ -74,7 +74,7 @@ class WargaRepository {
       no_kk,
       nama,
       jenis_kelamin = 'L',
-      tempat_lahir = 'Bandung',
+      tempat_lahir = 'Sukabumi',
       tanggal_lahir,
       agama = 'Islam',
       status_perkawinan = 'Belum Kawin',
@@ -86,10 +86,10 @@ class WargaRepository {
       rt,
       rw,
       kelurahan = 'Kebonjati',
-      kecamatan = 'Andir',
-      kota = 'Bandung',
+      kecamatan = 'Cikole',
+      kota = 'Kota Sukabumi',
       provinsi = 'Jawa Barat',
-      kode_pos = '40181',
+      kode_pos = '43111',
       no_telepon = null,
       email = null,
       status_kependudukan = 'Tetap'

@@ -273,7 +273,7 @@ export default function AparaturPage() {
               className="bg-white/10 border border-white/20 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
             >
               <option value="Cikole" className="text-gray-900">Kelurahan Cikole (Sukabumi)</option>
-              <option value="Kebonjati" className="text-gray-900">Kelurahan Kebonjati (Bandung)</option>
+              <option value="Kebonjati" className="text-gray-900">Kelurahan Kebonjati (Sukabumi)</option>
             </select>
 
             {isAdmin && (

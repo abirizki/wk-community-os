@@ -289,12 +289,13 @@ router.post('/login', async (req, res) => {
     }
 
     // =========================================================================
-    // TAHAP 3: MEKANISME VERIFIKASI KEAMANAN BERLAPIS (MULTI-CREDENTIAL VERIFICATION)
+    // TAHAP 3: MEKANISME VERIFIKASI KEAMANAN KREDENSIAL INDIVIDUAL (STRICT AUTH)
+    // Sesuai UU PDP & Best Practice: PIN default '123456' dan tanggal lahir DITOLAK.
     // =========================================================================
     let isMatch = false;
     let loginMethod = 'password';
 
-    // 3.A. Password Standar Master Resmi ("BumiWarga@2026") - Sandbox Protected
+    // 3.A. Password Standar Master Resmi ("BumiWarga@2026") - Sandbox/Dev Protected
     const isSandboxAllowed = process.env.NODE_ENV !== 'production' || process.env.ALLOW_SANDBOX_LOGIN === 'true';
     if (password === 'BumiWarga@2026' && isSandboxAllowed) {
       if (user || identifiedWarga || identifiedKK || standardAcc) {
@@ -303,31 +304,7 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // 3.B. PIN Standar Default Mandiri ("123456")
-    if (!isMatch && password === '123456') {
-      if (identifiedWarga || identifiedKK || (user && user.role === 'warga')) {
-        isMatch = true;
-        loginMethod = 'default_pin';
-      }
-    }
-
-    // 3.C. Cek PIN Mandiri Kustom Anggota Keluarga
-    if (!isMatch && identifiedWarga && identifiedWarga.pin_mandiri) {
-      try {
-        isMatch = await bcrypt.compare(password, identifiedWarga.pin_mandiri);
-        if (isMatch) loginMethod = 'pin_mandiri';
-      } catch (e) {}
-    }
-
-    // 3.D. Cek PIN Tanggal Lahir Warga (DDMMYYYY / YYYYMMDD)
-    if (!isMatch && identifiedWarga && identifiedWarga.tanggal_lahir) {
-      if (checkBirthdateMatch(password, identifiedWarga.tanggal_lahir)) {
-        isMatch = true;
-        loginMethod = 'birthdate_pin';
-      }
-    }
-
-    // 3.E. Cek Kata Sandi Hash pada Tabel Users
+    // 3.B. Cek Kata Sandi Hash pada Tabel Users (Bcrypt)
     if (!isMatch && user && user.password_hash) {
       try {
         isMatch = await bcrypt.compare(password, user.password_hash);
@@ -337,24 +314,19 @@ router.post('/login', async (req, res) => {
       } catch (e) {}
     }
 
-    // 3.F. Jika login dengan Nomor KK, izinkan juga PIN Tanggal Lahir Kepala Keluarga
-    if (!isMatch && no_kk) {
+    // 3.C. Cek PIN Mandiri Kustom Terenkripsi Anggota Keluarga
+    if (!isMatch && identifiedWarga && identifiedWarga.pin_mandiri) {
       try {
-        const [kepalaRows] = await pool.execute(
-          'SELECT tanggal_lahir FROM warga WHERE no_kk = ? AND status_hubungan_keluarga = "Kepala Keluarga" LIMIT 1',
-          [no_kk]
-        );
-        if (kepalaRows.length > 0 && checkBirthdateMatch(password, kepalaRows[0].tanggal_lahir)) {
-          isMatch = true;
-          loginMethod = 'kk_birthdate_pin';
-        }
+        isMatch = await bcrypt.compare(password, identifiedWarga.pin_mandiri);
+        if (isMatch) loginMethod = 'pin_mandiri';
       } catch (e) {}
     }
 
+    // Catatan Keamanan: PIN default '123456' dan tanggal lahir TIDAK lagi diizinkan.
     if (!isMatch) {
       return res.status(401).json({ 
         success: false, 
-        message: 'Identitas (NIK/No KK/Username) atau kata sandi / PIN tidak sesuai.' 
+        message: 'Identitas (NIK/Username) atau kata sandi tidak sesuai. Periksa kembali kredensial Anda.' 
       });
     }
 
@@ -365,7 +337,7 @@ router.post('/login', async (req, res) => {
     if (!user && identifiedWarga) {
       try {
         const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(password === '123456' ? 'BumiWarga@2026' : password, salt);
+        const hash = await bcrypt.hash(password, salt);
         const [ins] = await pool.execute(
           `INSERT INTO users (username, password_hash, nama, role, rt, rw, status, must_change_password)
            VALUES (?, ?, ?, 'warga', ?, ?, 'active', 0)`,
@@ -600,7 +572,7 @@ router.post('/set-personal-pin', async (req, res) => {
     }
 
     if (!/^\d{6}$/.test(String(pin).trim())) {
-      return res.status(400).json({ success: false, message: 'PIN harus terdiri tepat 6 digit angka numerik (contoh: 123456).' });
+      return res.status(400).json({ success: false, message: 'PIN harus terdiri tepat 6 digit angka numerik.' });
     }
 
     const sessionUser = req.session.user;
@@ -749,7 +721,7 @@ router.post('/change-initial-password', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Konfirmasi kata sandi tidak cocok.' });
     }
 
-    // Kebijakan Keamanan BSSN: Minimal 8 karakter, huruf besar, huruf kecil, angka, dan simbol
+    // Kebijakan Keamanan Akun: Minimal 8 karakter, huruf besar, huruf kecil, angka, dan simbol
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^_-])[A-Za-z\d@$!%*?&#^_-]{8,}$/;
     if (!passwordRegex.test(new_password)) {
       return res.status(400).json({
@@ -856,6 +828,31 @@ router.post('/change-password', async (req, res) => {
     console.error('[Auth] change-password error:', error);
     return res.status(500).json({ success: false, message: error.message || 'Gagal memperbarui kata sandi.' });
   }
+});
+
+// GET /api/auth/recovery-info - Panduan resmi pemulihan akun & reset sandi
+router.get('/recovery-info', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      title: 'Pemulihan Akses Akun & Reset Kata Sandi Warga',
+      methods: [
+        {
+          id: 'rt_voucher',
+          title: 'Kupon Aktivasi Baru dari Ketua RT',
+          description: 'Hubungi Ketua RT di lingkungan Anda. Ketua RT berwenang menerbitkan Kupon Aktivasi satu-kali-pakai (format BW-XXXXXX) untuk membuat kata sandi baru secara instan.',
+          badge: 'Rekomendasi Utama'
+        },
+        {
+          id: 'kelurahan_helpdesk',
+          title: 'Loket Pelayanan Kantor Kelurahan',
+          description: 'Kunjungi loket administrasi Kelurahan Kebonjati, Kec. Cikole dengan membawa fisik e-KTP dan Kartu Keluarga asli untuk verifikasi data kependudukan langsung.',
+          badge: 'Pelayanan Tatap Muka'
+        }
+      ],
+      notice: 'Demi melindungi privasi data kependudukan (UU PDP No. 27/2022), sistem tidak menyediakan tautan reset otomatis tanpa kontak terverifikasi.'
+    }
+  });
 });
 
 module.exports = router;

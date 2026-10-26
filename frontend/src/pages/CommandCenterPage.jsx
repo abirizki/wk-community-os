@@ -102,8 +102,26 @@ export default function CommandCenterPage() {
     }
   };
 
+  // Filter & Sort Data Kelurahan
+  const rawList = useMemo(() => commandData?.heatmap || [], [commandData]);
+
+  // Agregasi Dinamis Rata-rata Kota dari Database / Baseline
+  const dynamicCityAverages = useMemo(() => {
+    if (rawList.length === 0) return { stunting: 0, desil: 0, sla: 0, maturity: 0 };
+    const totalStunting = rawList.reduce((sum, k) => sum + (k.metrics?.kasus_stunting || 0), 0);
+    const totalDesil = rawList.reduce((sum, k) => sum + (k.metrics?.kemiskinan_ekstrem_desil_1_2 || 0), 0);
+    const totalSla = rawList.reduce((sum, k) => sum + (k.metrics?.sla_proses_surat_jam || 0), 0);
+    const totalMaturity = rawList.reduce((sum, k) => sum + (k.metrics?.indeks_kematangan_data || 0), 0);
+    return {
+      stunting: Number((totalStunting / rawList.length).toFixed(1)),
+      desil: Number((totalDesil / rawList.length).toFixed(1)),
+      sla: Number((totalSla / rawList.length).toFixed(1)),
+      maturity: Number((totalMaturity / rawList.length).toFixed(1))
+    };
+  }, [rawList]);
+
   // Metrik Konfigurasi Analis Data (High-Contrast Enterprise Palette)
-  const METRIC_CONFIG = {
+  const METRIC_CONFIG = useMemo(() => ({
     stunting: {
       label: 'Kasus Stunting Balita',
       unit: 'kasus',
@@ -111,8 +129,8 @@ export default function CommandCenterPage() {
       textColor: 'text-red-700',
       lightBg: 'bg-red-50 border-red-300',
       barGradient: 'from-red-700 to-red-600',
-      getValue: (k) => k.metrics.kasus_stunting,
-      cityAvg: 3.2,
+      getValue: (k) => k.metrics?.kasus_stunting || 0,
+      cityAvg: dynamicCityAverages.stunting,
       storyInsight: 'Prioritas intervensi gizi terpadu untuk percepatan zero stunting.'
     },
     desil: {
@@ -122,8 +140,8 @@ export default function CommandCenterPage() {
       textColor: 'text-amber-800',
       lightBg: 'bg-amber-50 border-amber-300',
       barGradient: 'from-amber-600 to-amber-500',
-      getValue: (k) => k.metrics.kemiskinan_ekstrem_desil_1_2,
-      cityAvg: 22.4,
+      getValue: (k) => k.metrics?.kemiskinan_ekstrem_desil_1_2 || 0,
+      cityAvg: dynamicCityAverages.desil,
       storyInsight: 'Basis alokasi bantuan sosial APBD dan jaring pengaman sosial.'
     },
     sla: {
@@ -133,8 +151,8 @@ export default function CommandCenterPage() {
       textColor: 'text-emerald-800',
       lightBg: 'bg-emerald-50 border-emerald-300',
       barGradient: 'from-emerald-700 to-teal-600',
-      getValue: (k) => k.metrics.sla_proses_surat_jam,
-      cityAvg: 1.8,
+      getValue: (k) => k.metrics?.sla_proses_surat_jam || 0,
+      cityAvg: dynamicCityAverages.sla,
       storyInsight: 'Efisiensi birokrasi dan SLA penandatanganan surat digital TTE.'
     },
     maturity: {
@@ -144,16 +162,13 @@ export default function CommandCenterPage() {
       textColor: 'text-blue-900',
       lightBg: 'bg-blue-50 border-blue-300',
       barGradient: 'from-blue-800 to-indigo-700',
-      getValue: (k) => k.metrics.indeks_kematangan_data,
-      cityAvg: 81.2,
+      getValue: (k) => k.metrics?.indeks_kematangan_data || 0,
+      cityAvg: dynamicCityAverages.maturity,
       storyInsight: 'Kesiapan validasi NIK dan kelengkapan basis data kependudukan.'
     }
-  };
+  }), [dynamicCityAverages]);
 
   const currentMetric = METRIC_CONFIG[selectedMetric];
-
-  // Filter & Sort Data Kelurahan
-  const rawList = commandData?.heatmap || [];
 
   const filteredKelurahan = useMemo(() => {
     return rawList
@@ -189,11 +204,11 @@ export default function CommandCenterPage() {
         };
       }
       map[k.nama_kecamatan].jumlah_kelurahan += 1;
-      map[k.nama_kecamatan].total_stunting += k.metrics.kasus_stunting;
-      map[k.nama_kecamatan].total_desil += k.metrics.kemiskinan_ekstrem_desil_1_2;
-      map[k.nama_kecamatan].total_warga += k.metrics.total_warga;
-      map[k.nama_kecamatan].total_sla += k.metrics.sla_proses_surat_jam;
-      map[k.nama_kecamatan].total_maturity += k.metrics.indeks_kematangan_data;
+      map[k.nama_kecamatan].total_stunting += (k.metrics?.kasus_stunting || 0);
+      map[k.nama_kecamatan].total_desil += (k.metrics?.kemiskinan_ekstrem_desil_1_2 || 0);
+      map[k.nama_kecamatan].total_warga += (k.metrics?.total_warga || 0);
+      map[k.nama_kecamatan].total_sla += (k.metrics?.sla_proses_surat_jam || 0);
+      map[k.nama_kecamatan].total_maturity += (k.metrics?.indeks_kematangan_data || 0);
     });
 
     return Object.values(map).map((kec) => ({

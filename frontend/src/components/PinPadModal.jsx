@@ -98,7 +98,7 @@ export default function PinPadModal({ isOpen, onClose, onSuccess, title = 'PIN K
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
         {/* Backdrop click */}
         <div className="fixed inset-0" onClick={!loading ? onClose : undefined} />
 
@@ -115,7 +115,7 @@ export default function PinPadModal({ isOpen, onClose, onSuccess, title = 'PIN K
           className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-10"
         >
           {/* Header */}
-          <div className="bg-gradient-to-br from-blue-700 via-indigo-700 to-blue-900 text-white p-6 pb-8 text-center relative">
+          <div className="bg-gradient-to-br from-sky-700 via-sky-800 to-slate-900 text-white p-6 pb-8 text-center relative">
             <button
               onClick={onClose}
               disabled={loading}
@@ -165,7 +165,7 @@ export default function PinPadModal({ isOpen, onClose, onSuccess, title = 'PIN K
             ) : (
               <div className="flex items-center justify-center gap-1 text-[11px] text-gray-400 mt-2">
                 <KeyRound size={12} />
-                <span>PIN Bawaan Akun: <strong className="text-gray-600">123456</strong></span>
+                <span>Masukkan 6 digit PIN otorisasi jabatan terdaftar</span>
               </div>
             )}
           </div>
@@ -213,11 +213,11 @@ export default function PinPadModal({ isOpen, onClose, onSuccess, title = 'PIN K
             <div className="mt-4 text-center">
               <button
                 type="button"
-                onClick={() => handleVerify('123456')}
+                onClick={() => setErrorMsg('Hubungi Admin Kelurahan untuk mereset PIN otorisasi jabatan.')}
                 disabled={loading}
                 className="text-[11px] text-blue-600 hover:underline font-medium"
               >
-                Gunakan PIN Default (123456)
+                Hubungi Admin jika Lupa PIN
               </button>
             </div>
           </div>

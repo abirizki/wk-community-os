@@ -1815,7 +1815,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       <AnimatePresence>
         {showBalitaModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 p-0 sm:p-4">
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -2012,7 +2012,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       <AnimatePresence>
         {showBumilModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 p-0 sm:p-4">
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -2237,7 +2237,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       <AnimatePresence>
         {showLansiaModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 p-0 sm:p-4">
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -2452,7 +2452,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       <AnimatePresence>
         {showPmtModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -2569,7 +2569,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       <AnimatePresence>
         {showDaftarSasaranModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -2763,7 +2763,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       <AnimatePresence>
         {showWhatsAppModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

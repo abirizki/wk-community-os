@@ -13,6 +13,13 @@ const router = express.Router();
 // GET /api/warga - Daftar warga dengan pagination, pencarian, dan scoping terpadu
 router.get('/', requireAuth, async (req, res) => {
   try {
+    if (req.session.user.role === 'warga') {
+      return res.status(403).json({
+        success: false,
+        message: 'Akses ditolak: Akun warga mandiri hanya berwenang mengakses data keluarga sendiri melalui menu profil / KK.'
+      });
+    }
+
     const limit = parseInt(req.query.limit, 10) || 20;
     const offset = parseInt(req.query.offset, 10) || 0;
     const search = req.query.search || '';
@@ -23,7 +30,7 @@ router.get('/', requireAuth, async (req, res) => {
     res.json({ success: true, ...data });
   } catch (error) {
     console.error('Error fetching list warga:', error.message);
-    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server' });
+    res.status(error.status || 500).json({ success: false, message: error.message || 'Terjadi kesalahan pada server' });
   }
 });
 

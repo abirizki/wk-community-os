@@ -34,9 +34,35 @@ router.get('/kelurahan', requireAuth, async (req, res) => {
 });
 
 // GET /api/wilayah/command-center - Executive Command Center Heatmap 33 Kelurahan
-router.get('/command-center', requireAuth, async (req, res) => {
+router.get('/command-center', requireAuth, requireRole('superadmin', 'walikota', 'camat', 'lurah', 'admin_kelurahan', 'admin'), async (req, res) => {
   try {
-    const { kode_kecamatan } = req.query;
+    let { kode_kecamatan } = req.query;
+    const currentUser = req.session.user;
+
+    // 1. Otorisasi Scope Camat (Kecamatan yang melekat pada sesi)
+    if (currentUser.role === 'camat') {
+      const userKec = currentUser.kode_kecamatan || '32.72.03';
+      if (kode_kecamatan && kode_kecamatan !== userKec) {
+        return res.status(403).json({
+          success: false,
+          message: `Akses ditolak: Camat hanya berwenang mengakses wilayah kecamatan ${userKec}.`
+        });
+      }
+      kode_kecamatan = userKec;
+    }
+
+    // 2. Otorisasi Scope Lurah / Admin Kelurahan (Kecamatan tempat kelurahan berada)
+    if (['lurah', 'admin_kelurahan'].includes(currentUser.role)) {
+      const userKec = currentUser.kode_kecamatan || '32.72.03';
+      if (kode_kecamatan && kode_kecamatan !== userKec) {
+        return res.status(403).json({
+          success: false,
+          message: `Akses ditolak: Pihak kelurahan hanya berwenang melihat wilayah kecamatan ${userKec}.`
+        });
+      }
+      kode_kecamatan = userKec;
+    }
+
     const result = await wilayahRepository.getCommandCenterHeatmap(kode_kecamatan);
     res.json({ success: true, data: result });
   } catch (err) {

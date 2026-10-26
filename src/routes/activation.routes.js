@@ -2,10 +2,10 @@
  * src/routes/activation.routes.js
  * Endpoints for Secure Citizen Onboarding & One-Time Activation Coupons
  * Bumi Warga - Jabar Pintar Digital
- * Compliant with BSSN Cybersecurity Guidelines & UU PDP No. 27/2022
  */
 
 const express = require('express');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const pool = require('../db/pool');
 const { requireAuth, requireRole } = require('../middleware/auth.middleware');
@@ -43,14 +43,14 @@ function checkBirthdateMatch(inputDate, tanggalLahir) {
 }
 
 /**
- * Generate secure random 8-character token (format: BW-XXXXXX)
- * Uses unambiguous characters (no 0/O, 1/I)
+ * Generate cryptographically secure random 8-character token (format: BW-XXXXXX)
+ * Uses unambiguous characters (no 0/O, 1/I) via CSPRNG crypto.randomInt
  */
 function generateSecureToken() {
   const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
   let rand = '';
   for (let i = 0; i < 6; i++) {
-    rand += chars.charAt(Math.floor(Math.random() * chars.length));
+    rand += chars.charAt(crypto.randomInt(0, chars.length));
   }
   return `BW-${rand}`;
 }

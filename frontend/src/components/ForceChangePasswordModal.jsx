@@ -61,7 +61,7 @@ export default function ForceChangePasswordModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -75,7 +75,7 @@ export default function ForceChangePasswordModal() {
             </div>
             <div>
               <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 text-[10px] font-bold border border-amber-400/30 mb-1">
-                <Lock size={10} /> Kebijakan Keamanan BSSN
+                <Lock size={10} /> Standar Keamanan Sandi Akun
               </div>
               <h2 className="text-lg font-bold">Wajib Buat Kata Sandi Baru</h2>
               <p className="text-xs text-emerald-100/80 mt-0.5">

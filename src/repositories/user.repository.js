@@ -181,14 +181,17 @@ class UserRepository {
     const params = [];
 
     // Scope rules
-    if (normalizedRole === 'superadmin') {
+    if (normalizedRole === 'superadmin' || normalizedRole === 'walikota') {
       // Sees all users
-    } else if (normalizedRole === 'admin_kelurahan') {
-      // Sees all users except superadmin
-      query += ` AND u.role != 'superadmin'`;
+    } else if (normalizedRole === 'camat') {
+      // Camat sees users in their scope (excluding superadmin and walikota)
+      query += ` AND u.role NOT IN ('superadmin', 'walikota')`;
+    } else if (normalizedRole === 'admin_kelurahan' || normalizedRole === 'lurah') {
+      // Sees all users within kelurahan (excluding executives superadmin, walikota, camat)
+      query += ` AND u.role NOT IN ('superadmin', 'walikota', 'camat')`;
     } else if (normalizedRole === 'ketua_rw' || normalizedRole === 'admin_rw') {
-      // Only sees users in their RW, excluding superadmin and admin_kelurahan
-      query += ` AND u.rw = ? AND u.role NOT IN ('superadmin', 'admin_kelurahan')`;
+      // Only sees users in their RW, excluding higher ranks
+      query += ` AND u.rw = ? AND u.role NOT IN ('superadmin', 'walikota', 'camat', 'lurah', 'admin_kelurahan')`;
       params.push(userRW);
     } else if (normalizedRole === 'ketua_rt') {
       // Only sees users in their RT and RW
@@ -212,6 +215,10 @@ class UserRepository {
       query += ` AND u.rw = ?`;
       params.push(filters.rw);
     }
+    if (filters.status) {
+      query += ` AND u.status = ?`;
+      params.push(filters.status);
+    }
     if (filters.search) {
       query += ` AND (u.nama LIKE ? OR u.username LIKE ?)`;
       params.push(`%${filters.search}%`, `%${filters.search}%`);
@@ -221,6 +228,43 @@ class UserRepository {
 
     const [rows] = await pool.execute(query, params);
     return rows;
+  }
+
+  /**
+   * Update full profile details of a user
+   * @param {number} id 
+   * @param {Object} data 
+   */
+  async updateUser(id, data) {
+    const fields = [];
+    const params = [];
+
+    const allowedCols = ['username', 'nama', 'role', 'rt', 'rw', 'nama_posyandu', 'jabatan', 'nomor_sk', 'status', 'password_hash'];
+    for (const col of allowedCols) {
+      if (data[col] !== undefined) {
+        fields.push(`${col} = ?`);
+        params.push(data[col]);
+      }
+    }
+
+    if (fields.length === 0) return true;
+
+    params.push(id);
+    await pool.execute(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, params);
+    return true;
+  }
+
+  /**
+   * Delete a user account and safely decouple from warga table
+   * @param {number} id 
+   */
+  async deleteUser(id) {
+    try {
+      await pool.execute('UPDATE warga SET user_id = NULL WHERE user_id = ?', [id]);
+    } catch (e) {}
+
+    const [result] = await pool.execute('DELETE FROM users WHERE id = ?', [id]);
+    return result.affectedRows > 0;
   }
 
   /**

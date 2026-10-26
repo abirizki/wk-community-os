@@ -11,12 +11,43 @@ const { requireAuth, requireRole } = require('../middleware/auth.middleware');
 const router = express.Router();
 
 /**
+ * Helper: Resolve and enforce RW territorial scoping.
+ * - Ketua RW & Admin RW can ONLY access their own session RW.
+ * - Higher roles (superadmin, lurah, admin_kelurahan, camat, walikota, admin) may narrow via ?rw=
+ */
+function resolveRWScope(req, res) {
+  const user = req.session.user;
+  if (!user) {
+    res.status(401).json({ success: false, message: 'Autentikasi dibutuhkan' });
+    return null;
+  }
+
+  const isPrivileged = ['superadmin', 'admin_kelurahan', 'lurah', 'admin', 'camat', 'walikota'].includes(user.role);
+
+  if (!isPrivileged) {
+    // ketua_rw or admin_rw
+    if (req.query.rw && req.query.rw !== user.rw) {
+      res.status(403).json({
+        success: false,
+        message: `Akses ditolak: Anda hanya berwenang mengakses data wilayah RW ${user.rw}.`
+      });
+      return null;
+    }
+    return user.rw || '001';
+  }
+
+  // Privileged user can query specific RW or defaults to session RW or '001'
+  return req.query.rw || user.rw || '001';
+}
+
+/**
  * GET /api/rw/rekap-rt
  * Rekapitulasi agregat metrik komparatif per RT di bawah naungan RW
  */
 router.get('/rekap-rt', requireAuth, requireRole('ketua_rw', 'admin_rw', 'superadmin', 'admin_kelurahan', 'lurah', 'admin'), async (req, res) => {
   try {
-    const targetRW = req.query.rw || req.session.user.rw || '001';
+    const targetRW = resolveRWScope(req, res);
+    if (!targetRW) return; // Response handled by resolveRWScope
 
     // 1. Ambil daftar RT yang terdaftar di bawah RW ini
     let [rtRows] = await pool.query(
@@ -145,7 +176,8 @@ router.get('/rekap-rt', requireAuth, requireRole('ketua_rw', 'admin_rw', 'supera
  */
 router.get('/kpi', requireAuth, requireRole('ketua_rw', 'admin_rw', 'superadmin', 'admin_kelurahan', 'lurah', 'admin'), async (req, res) => {
   try {
-    const targetRW = req.query.rw || req.session.user.rw || '001';
+    const targetRW = resolveRWScope(req, res);
+    if (!targetRW) return;
 
     // Total RT
     const [rtRows] = await pool.query(
@@ -212,7 +244,8 @@ router.get('/kpi', requireAuth, requireRole('ketua_rw', 'admin_rw', 'superadmin'
  */
 router.get('/bansos-equity', requireAuth, requireRole('ketua_rw', 'admin_rw', 'superadmin', 'admin_kelurahan', 'lurah', 'admin'), async (req, res) => {
   try {
-    const targetRW = req.query.rw || req.session.user.rw || '001';
+    const targetRW = resolveRWScope(req, res);
+    if (!targetRW) return;
 
     const [rows] = await pool.query(
       `SELECT 
