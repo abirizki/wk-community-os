@@ -41,6 +41,7 @@ import { downloadReport } from '../../utils/exportHelper';
 import { FileSpreadsheet, Download, BookOpen, GraduationCap, Activity, BarChart3 } from 'lucide-react';
 import UnifiedStatCard from '../../components/design-system/UnifiedStatCard';
 import KPIGrid from '../../components/design-system/KPIGrid';
+import AIStrategyInsightEngine from '../../components/design-system/AIStrategyInsightEngine';
 
 export default function DashboardWalikota() {
   const { user } = useAuth();
@@ -259,6 +260,13 @@ export default function DashboardWalikota() {
           />
         </KPIGrid>
       </div>
+
+      {/* 2.2. AI STRATEGY & STRATEGIC DECISION SUPPORT ENGINE (TEPAT DI BAWAH HERO & KPI) */}
+      <AIStrategyInsightEngine
+        scope={{}}
+        title="Pusat Kendali AI Strategy: Rekomendasi Kebijakan Makro Kota Sukabumi"
+        subtitle="Analisis prediktif kohort tahun depan (T+1) vs kapasitas riil layanan pendidikan, kesehatan 1000 HPK, bansos desil, dan serapan kerja"
+      />
 
       {/* 2.5. SUPER APPS BENTO GRID MEJA KERJA WALIKOTA */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">

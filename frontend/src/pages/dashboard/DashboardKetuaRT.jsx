@@ -68,6 +68,7 @@ import { BookOpen, Activity, FileSpreadsheet, Download } from 'lucide-react';
 import AuthorizationPinModal from '../../components/AuthorizationPinModal';
 import ActivationCouponModal from '../../components/ActivationCouponModal';
 import ScanAndRegisterWargaModal from '../../components/ScanAndRegisterWargaModal';
+import AIStrategyInsightEngine from '../../components/design-system/AIStrategyInsightEngine';
 
 export default function DashboardKetuaRT() {
   const { user } = useAuth();
@@ -696,6 +697,14 @@ export default function DashboardKetuaRT() {
       </div>
 
       
+      {/* AI STRATEGY & STRATEGIC DECISION SUPPORT ENGINE (TEPAT DI BAWAH HERO & QUICK SHORTCUTS) */}
+      <AIStrategyInsightEngine
+        scope={{ rt: rtNomor, rw: rwNomor }}
+        title={`AI Strategy & Daya Dukung Wilayah RT ${rtNomor} / RW ${rwNomor}`}
+        subtitle="Analisis kohort demografi anak usia sekolah (T+1), kesiapan posyandu 1000 HPK balita, dan graduasi desil DTKS lingkungan RT"
+        className="mb-6"
+      />
+
       {/* 1. BENTO WORKSPACE PILLAR SWITCHER (ACTION-FIRST INFORMATION ARCHITECTURE) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {/* Tab 1: Meja Antrean Surat (Action Desk) */}

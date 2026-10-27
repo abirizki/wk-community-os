@@ -17,17 +17,41 @@ const router = express.Router();
 function resolveScope(user) {
   if (!user) return {};
   if (user.role === 'ketua_rt') {
-    return { rt: user.rt || '001', rw: user.rw || '001' };
+    return { rt: user.rt || '001', rw: user.rw || '001', kelurahan: user.kelurahan || 'Kebonjati' };
   }
   if (['ketua_rw', 'admin_rw'].includes(user.role)) {
-    return { rw: user.rw || '001' };
+    return { rw: user.rw || '001', kelurahan: user.kelurahan || 'Kebonjati' };
+  }
+  if (['lurah', 'admin_kelurahan', 'admin'].includes(user.role)) {
+    return { kelurahan: user.kelurahan || 'Kebonjati' };
+  }
+  if (user.role === 'camat') {
+    return { kecamatan: user.kecamatan || 'Cikole' };
   }
   return {};
 }
 
 // =========================================================================
-// 1. RINGKASAN DAYA DUKUNG KOMPREHENSIF
+// 1. RINGKASAN DAYA DUKUNG KOMPREHENSIF & AI STRATEGY ENGINE
 // =========================================================================
+
+// GET /api/fasilitas/ai-strategy - AI Strategy & Decision Support Engine (Insight di bawah Hero Section)
+router.get('/ai-strategy', requireAuth, async (req, res) => {
+  try {
+    const scope = resolveScope(req.session.user);
+    if (req.query.rw && ['superadmin', 'walikota', 'camat', 'lurah', 'admin_kelurahan', 'admin'].includes(req.session.user.role)) {
+      scope.rw = req.query.rw;
+    }
+    if (req.query.rt && ['superadmin', 'walikota', 'camat', 'lurah', 'admin_kelurahan', 'admin', 'ketua_rw'].includes(req.session.user.role)) {
+      scope.rt = req.query.rt;
+    }
+    const result = await dayaDukungService.getStrategicAiInsight(scope);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error fetching AI strategy insight:', error);
+    res.status(500).json({ success: false, message: 'Gagal memuat analitik AI strategy' });
+  }
+});
 
 // GET /api/fasilitas/summary - 4 Pilar Daya Dukung Wilayah
 router.get('/summary', requireAuth, async (req, res) => {

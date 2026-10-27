@@ -19,3 +19,5 @@ export { default as QuickSignTray } from './QuickSignTray';
 export { default as OfflineSyncBanner } from './OfflineSyncBanner';
 export { default as KartuKIADigital } from './KartuKIADigital';
 export { default as KartuLansiaDigital } from './KartuLansiaDigital';
+export { default as AIStrategyInsightEngine } from './AIStrategyInsightEngine';
+

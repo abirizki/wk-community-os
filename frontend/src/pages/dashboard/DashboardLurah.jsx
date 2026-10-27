@@ -19,7 +19,8 @@ import {
   ActionCenter,
   StatusBadge,
   SLABadge,
-  QuickSignTray
+  QuickSignTray,
+  AIStrategyInsightEngine
 } from '../../components/design-system';
 import {
   FileCheck,
@@ -439,6 +440,15 @@ export default function DashboardLurah() {
         />
       }
     >
+
+      {/* AI STRATEGY & STRATEGIC DECISION SUPPORT ENGINE (TEPAT DI BAWAH HERO & KPI) */}
+      <div className="mb-6">
+        <AIStrategyInsightEngine
+          scope={{ kelurahan: user?.kelurahan || 'Kebonjati' }}
+          title="AI Strategy: Rekomendasi Kebijakan & Daya Dukung Kelurahan"
+          subtitle="Pemetaan kohort usia sekolah (T+1), kesiapan 1000 HPK, stunting posyandu, dan graduasi desil DTKS 13 RW"
+        />
+      </div>
 
       {/* SUPER APPS BENTO GRID MEJA KERJA LURAH */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4 mb-6">

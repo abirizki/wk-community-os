@@ -43,9 +43,13 @@ class FasilitasRepository {
   /**
    * Agregasi kapasitas kursi sekolah vs populasi anak usia sekolah dari tabel warga
    */
+  /**
+   * Agregasi kapasitas kursi sekolah vs populasi anak usia sekolah dari tabel warga
+   * Termasuk Proyeksi Kohort Siswa Masuk Tahun Depan (T+1)
+   */
   async getPendidikanSummary(scope = {}) {
     // 1. Kapasitas kursi sekolah berdasarkan jenjang
-    const [sekolahStats] = await pool.query(`
+    let schoolQuery = `
       SELECT 
         jenjang,
         COUNT(*) as total_institusi,
@@ -53,17 +57,46 @@ class FasilitasRepository {
         COALESCE(SUM(total_kapasitas_murid), 0) as total_kapasitas,
         COALESCE(SUM(jumlah_rombel), 0) as total_rombel
       FROM fasilitas_pendidikan
-      GROUP BY jenjang
-    `);
+      WHERE 1=1
+    `;
+    const schoolParams = [];
+    if (scope.kelurahan) {
+      schoolQuery += ` AND kelurahan = ?`;
+      schoolParams.push(scope.kelurahan);
+    }
+    schoolQuery += ` GROUP BY jenjang`;
 
-    // 2. Populasi nyata anak usia sekolah dari tabel warga
-    // PAUD: 3-6 thn, SD: 7-12 thn, SMP: 13-15 thn, SMA/SMK: 16-18 thn
-    const [demografiAnak] = await pool.query(`
+    let [sekolahStats] = await pool.query(schoolQuery, schoolParams);
+    if (!sekolahStats || sekolahStats.length === 0) {
+      const [fallback] = await pool.query(`
+        SELECT 
+          jenjang,
+          COUNT(*) as total_institusi,
+          COALESCE(SUM(daya_tampung_kursi_baru), 0) as total_kursi_baru,
+          COALESCE(SUM(total_kapasitas_murid), 0) as total_kapasitas,
+          COALESCE(SUM(jumlah_rombel), 0) as total_rombel
+        FROM fasilitas_pendidikan
+        GROUP BY jenjang
+      `);
+      sekolahStats = fallback;
+    }
+
+    // 2. Populasi nyata anak usia sekolah dan Proyeksi Kohort T+1 dari tabel warga
+    let wargaQuery = `
       SELECT 
+        -- Usia Sekolah Tahun Berjalan (T)
         COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 3 AND 6 THEN 1 END) as usia_paud,
         COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 7 AND 12 THEN 1 END) as usia_sd,
         COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 13 AND 15 THEN 1 END) as usia_smp,
         COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 16 AND 18 THEN 1 END) as usia_sma,
+        
+        -- Proyeksi Kohort Tahun Yang Akan Datang (T+1)
+        COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 2 AND 3 THEN 1 END) as masuk_paud_t1,
+        COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) = 6 THEN 1 END) as masuk_sd_t1,
+        COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) = 12 THEN 1 END) as masuk_smp_t1,
+        COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) = 15 THEN 1 END) as masuk_sma_t1,
+        COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) = 18 THEN 1 END) as lulus_sekolah_ke_kerja_t1,
+
         -- Indikasi putus sekolah / belum sekolah pada usia wajib belajar (7-18 tahun)
         COUNT(CASE 
           WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 7 AND 18 
@@ -72,7 +105,22 @@ class FasilitasRepository {
         END) as potensi_anak_belum_sekolah
       FROM warga
       WHERE status_kependudukan = 'Tetap'
-    `);
+    `;
+    const wargaParams = [];
+    if (scope.rw) {
+      wargaQuery += ` AND rw = ?`;
+      wargaParams.push(scope.rw);
+    }
+    if (scope.rt) {
+      wargaQuery += ` AND rt = ?`;
+      wargaParams.push(scope.rt);
+    }
+    if (scope.kelurahan) {
+      wargaQuery += ` AND kelurahan = ?`;
+      wargaParams.push(scope.kelurahan);
+    }
+
+    const [demografiAnak] = await pool.query(wargaQuery, wargaParams);
 
     return {
       kapasitas_jenjang: sekolahStats,
@@ -81,6 +129,11 @@ class FasilitasRepository {
         usia_sd: 0,
         usia_smp: 0,
         usia_sma: 0,
+        masuk_paud_t1: 0,
+        masuk_sd_t1: 0,
+        masuk_smp_t1: 0,
+        masuk_sma_t1: 0,
+        lulus_sekolah_ke_kerja_t1: 0,
         potensi_anak_belum_sekolah: 0
       }
     };
@@ -144,9 +197,12 @@ class FasilitasRepository {
   /**
    * Agregasi daya dukung medis dan rasio terhadap penduduk
    */
+  /**
+   * Agregasi daya dukung medis, siklus hidup (Balita 1000 HPK & Lansia), serta proyeksi kelahiran (T+1)
+   */
   async getKesehatanSummary(scope = {}) {
-    // 1. Total tenaga medis & kapasitas
-    const [medisStats] = await pool.query(`
+    // 1. Total tenaga medis & kapasitas fasilitas kesehatan
+    let faskesQuery = `
       SELECT 
         COUNT(*) as total_faskes,
         COALESCE(SUM(jumlah_dokter), 0) as total_dokter,
@@ -156,17 +212,100 @@ class FasilitasRepository {
         COALESCE(SUM(kapasitas_tempat_tidur), 0) as total_tempat_tidur,
         COUNT(CASE WHEN jenis_faskes = 'Posyandu' THEN 1 END) as total_posyandu
       FROM fasilitas_kesehatan
-    `);
+      WHERE 1=1
+    `;
+    const faskesParams = [];
+    if (scope.kelurahan) {
+      faskesQuery += ` AND kelurahan = ?`;
+      faskesParams.push(scope.kelurahan);
+    }
+    let [medisStats] = await pool.query(faskesQuery, faskesParams);
+    if (!medisStats || medisStats.length === 0 || Number(medisStats[0]?.total_faskes) === 0) {
+      const [fallbackMedis] = await pool.query(`
+        SELECT 
+          COUNT(*) as total_faskes,
+          COALESCE(SUM(jumlah_dokter), 0) as total_dokter,
+          COALESCE(SUM(jumlah_bidan), 0) as total_bidan,
+          COALESCE(SUM(jumlah_perawat), 0) as total_perawat,
+          COALESCE(SUM(jumlah_ahli_gizi), 0) as total_ahli_gizi,
+          COALESCE(SUM(kapasitas_tempat_tidur), 0) as total_tempat_tidur,
+          COUNT(CASE WHEN jenis_faskes = 'Posyandu' THEN 1 END) as total_posyandu
+        FROM fasilitas_kesehatan
+      `);
+      medisStats = fallbackMedis;
+    }
 
-    // 2. Total populasi penduduk aktif
-    const [popStats] = await pool.query(`
+    // 2. Populasi nyata siklus hidup (Balita, Baduta 1000 HPK, Lansia) dari tabel warga
+    let wargaQuery = `
       SELECT 
         COUNT(*) as total_penduduk,
         COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 5 THEN 1 END) as total_balita,
-        COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60 THEN 1 END) as total_lansia
+        COUNT(CASE WHEN TIMESTAMPDIFF(MONTH, tanggal_lahir, CURDATE()) BETWEEN 0 AND 23 THEN 1 END) as baduta_1000hpk,
+        COUNT(CASE WHEN TIMESTAMPDIFF(MONTH, tanggal_lahir, CURDATE()) BETWEEN 24 AND 59 THEN 1 END) as balita_24_59bln,
+        COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60 THEN 1 END) as total_lansia,
+        COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 70 THEN 1 END) as lansia_risti
       FROM warga
       WHERE status_kependudukan = 'Tetap'
-    `);
+    `;
+    const wargaParams = [];
+    if (scope.rw) {
+      wargaQuery += ` AND rw = ?`;
+      wargaParams.push(scope.rw);
+    }
+    if (scope.rt) {
+      wargaQuery += ` AND rt = ?`;
+      wargaParams.push(scope.rt);
+    }
+    if (scope.kelurahan) {
+      wargaQuery += ` AND kelurahan = ?`;
+      wargaParams.push(scope.kelurahan);
+    }
+    const [popStats] = await pool.query(wargaQuery, wargaParams);
+
+    // 3. Ibu hamil & Proyeksi Kelahiran (T+1)
+    let bumilStats = [{ total_ibu_hamil: 0, ibu_hamil_risti: 0, proyeksi_kelahiran_t1: 0 }];
+    try {
+      let bumilQuery = `
+        SELECT 
+          COUNT(*) as total_ibu_hamil,
+          COUNT(CASE WHEN status_kek = 'Risiko KEK' OR status_risiko IN ('Risiko Tinggi', 'Sangat Tinggi') THEN 1 END) as ibu_hamil_risti,
+          COUNT(*) as proyeksi_kelahiran_t1
+        FROM posyandu_ibu_hamil
+        WHERE 1=1
+      `;
+      const bumilParams = [];
+      if (scope.rw) {
+        bumilQuery += ` AND rw = ?`;
+        bumilParams.push(scope.rw);
+      }
+      if (scope.rt) {
+        bumilQuery += ` AND rt = ?`;
+        bumilParams.push(scope.rt);
+      }
+      const [resBumil] = await pool.query(bumilQuery, bumilParams);
+      if (resBumil && resBumil.length > 0) bumilStats = resBumil;
+    } catch (e) {}
+
+    // 4. Lansia sebatang kara dari kelompok rentan
+    let lansiaRentanStats = [{ lansia_sebatang_kara: 0 }];
+    try {
+      let rentanQuery = `
+        SELECT COUNT(*) as lansia_sebatang_kara
+        FROM kelompok_rentan_rt
+        WHERE kategori = 'LANSIA_SEBATANG_KARA'
+      `;
+      const rentanParams = [];
+      if (scope.rw) {
+        rentanQuery += ` AND rw = ?`;
+        rentanParams.push(scope.rw);
+      }
+      if (scope.rt) {
+        rentanQuery += ` AND rt = ?`;
+        rentanParams.push(scope.rt);
+      }
+      const [resRentan] = await pool.query(rentanQuery, rentanParams);
+      if (resRentan && resRentan.length > 0) lansiaRentanStats = resRentan;
+    } catch (e) {}
 
     return {
       faskes: medisStats[0] || {
@@ -181,7 +320,18 @@ class FasilitasRepository {
       populasi: popStats[0] || {
         total_penduduk: 0,
         total_balita: 0,
-        total_lansia: 0
+        baduta_1000hpk: 0,
+        balita_24_59bln: 0,
+        total_lansia: 0,
+        lansia_risti: 0
+      },
+      ibu_hamil: bumilStats[0] || {
+        total_ibu_hamil: 0,
+        ibu_hamil_risti: 0,
+        proyeksi_kelahiran_t1: 0
+      },
+      lansia_rentan: lansiaRentanStats[0] || {
+        lansia_sebatang_kara: 0
       }
     };
   }
@@ -255,9 +405,12 @@ class FasilitasRepository {
   /**
    * Agregasi ekosistem usaha warga vs angkatan kerja produktif
    */
+  /**
+   * Agregasi ekosistem usaha warga vs angkatan kerja produktif dan pemuda masuk pasar kerja (T+1)
+   */
   async getEntitasUsahaSummary(scope = {}) {
     // 1. Total usaha & serapan naker
-    const [bizStats] = await pool.query(`
+    let bizQuery = `
       SELECT 
         COUNT(*) as total_umkm,
         COALESCE(SUM(jumlah_tenaga_kerja_lokal), 0) as total_serapan_naker,
@@ -265,41 +418,74 @@ class FasilitasRepository {
         COUNT(CASE WHEN sku_nomor_registrasi IS NOT NULL THEN 1 END) as total_terverifikasi_sku
       FROM entitas_usaha
       WHERE status_verifikasi = 'TERVERIFIKASI'
-    `);
+    `;
+    const bizParams = [];
+    if (scope.rw) {
+      bizQuery += ` AND rw = ?`;
+      bizParams.push(scope.rw);
+    }
+    if (scope.rt) {
+      bizQuery += ` AND rt = ?`;
+      bizParams.push(scope.rt);
+    }
+    const [bizStats] = await pool.query(bizQuery, bizParams);
 
-    // 2. Populasi usia produktif (15-64 tahun) & status pekerjaan
-    const [nakerStats] = await pool.query(`
+    // 2. Populasi usia produktif (15-64 tahun) & pemuda masuk angkatan kerja baru
+    let nakerQuery = `
       SELECT 
         COUNT(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 15 AND 64 THEN 1 END) as usia_produktif,
         COUNT(CASE 
           WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 15 AND 64 
                AND (pekerjaan IS NULL OR pekerjaan IN ('Belum/Tidak Bekerja', 'Tidak Bekerja', 'Mengurus Rumah Tangga')) 
           THEN 1 
-        END) as usia_produktif_belum_bekerja
+        END) as usia_produktif_belum_bekerja,
+        COUNT(CASE 
+          WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 17 AND 24 
+               AND (pekerjaan IS NULL OR pekerjaan IN ('Belum/Tidak Bekerja', 'Pelajar / Mahasiswa', 'Tidak Bekerja')) 
+          THEN 1 
+        END) as pemuda_siap_kerja_t1
       FROM warga
       WHERE status_kependudukan = 'Tetap'
-    `);
+    `;
+    const nakerParams = [];
+    if (scope.rw) {
+      nakerQuery += ` AND rw = ?`;
+      nakerParams.push(scope.rw);
+    }
+    if (scope.rt) {
+      nakerQuery += ` AND rt = ?`;
+      nakerParams.push(scope.rt);
+    }
+    const [nakerStats] = await pool.query(nakerQuery, nakerParams);
 
-    // 3. Jumlah keluarga Desil 1 & 2 per RW (Kebutuhan Akses Pangan Terjangkau)
-    const [desilRentan] = await pool.query(`
-      SELECT 
-        kk.rw,
-        COUNT(*) as total_keluarga_rentan
-      FROM desil_keluarga dk
-      JOIN kartu_keluarga kk ON dk.no_kk = kk.no_kk
-      WHERE COALESCE(dk.desil_saat_ini, dk.desil_usulan) IN (1, 2)
-      GROUP BY kk.rw
-    `);
+    // 3. Jumlah keluarga Desil 1 & 2 per RW (Kebutuhan Akses Pangan Terjangkau & Graduasi Mandiri)
+    let desilRentan = [];
+    try {
+      const [dr] = await pool.query(`
+        SELECT 
+          kk.rw,
+          COUNT(*) as total_keluarga_rentan
+        FROM desil_keluarga dk
+        JOIN kartu_keluarga kk ON dk.no_kk = kk.no_kk
+        WHERE COALESCE(dk.desil_saat_ini, dk.desil_usulan) IN (1, 2)
+        GROUP BY kk.rw
+      `);
+      desilRentan = dr;
+    } catch (e) {}
 
     // 4. Toko sembako murah per RW
-    const [tokoPanganPerRW] = await pool.query(`
-      SELECT 
-        rw,
-        COUNT(*) as jumlah_toko_pangan
-      FROM entitas_usaha
-      WHERE apakah_toko_pangan_murah = 1
-      GROUP BY rw
-    `);
+    let tokoPanganPerRW = [];
+    try {
+      const [tp] = await pool.query(`
+        SELECT 
+          rw,
+          COUNT(*) as jumlah_toko_pangan
+        FROM entitas_usaha
+        WHERE apakah_toko_pangan_murah = 1
+        GROUP BY rw
+      `);
+      tokoPanganPerRW = tp;
+    } catch (e) {}
 
     return {
       usaha: bizStats[0] || {
