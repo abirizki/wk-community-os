@@ -8,6 +8,7 @@ const express = require('express');
 const { requireAuth, requireRole } = require('../middleware/auth.middleware');
 const fasilitasRepository = require('../repositories/fasilitas.repository');
 const dayaDukungService = require('../services/daya_dukung.service');
+const { generateCsv, generateExcelXml } = require('../utils/export.util');
 
 const router = express.Router();
 
@@ -375,6 +376,95 @@ router.patch('/:kategori/:id/verify', requireAuth, requireRole('superadmin', 'ad
   } catch (error) {
     console.error('Error verifying fasilitas:', error);
     res.status(500).json({ success: false, message: error.message || 'Gagal memverifikasi fasilitas' });
+  }
+});
+
+// =========================================================================
+// 10. PUSAT UNDUH LAPORAN EKSEKUTIF MULTI-SEKTOR (EXCEL & CSV)
+// =========================================================================
+
+// GET /api/fasilitas/export/report - Ekspor Laporan Komprehensif Daya Dukung Wilayah
+router.get('/export/report', requireAuth, async (req, res) => {
+  try {
+    const { sector = 'semua', format = 'xlsx' } = req.query;
+    const scope = resolveScope(req.session.user);
+    if (req.query.rw) scope.rw = req.query.rw;
+    if (req.query.rt) scope.rt = req.query.rt;
+
+    const data = await dayaDukungService.getComprehensiveCarryingCapacity(scope);
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    // Sektor Pendidikan
+    const eduRows = (data.pendidikan?.cohorts || []).map(c => [
+      { value: c.jenjang_nama || c.jenjang_kode, type: 'String' },
+      { value: c.jumlah_anak_saat_ini || 0, type: 'Number' },
+      { value: c.proyeksi_masuk_t1 || 0, type: 'Number' },
+      { value: c.kursi_baru || 0, type: 'Number' },
+      { value: c.selisih_kursi || 0, type: 'Number' },
+      { value: c.status_kapasitas || 'MEMADAI', type: 'String' },
+      { value: c.rombel_defisit || 0, type: 'Number' }
+    ]);
+
+    // Sektor Kesehatan
+    const health = data.kesehatan || {};
+    const healthRows = [
+      [{ value: 'Total Penduduk Terlayani', type: 'String' }, { value: health.populasi_terlayani || 0, type: 'Number' }],
+      [{ value: 'Skor Kesiapan Kesehatan', type: 'String' }, { value: health.health_adequacy_score || 0, type: 'Number' }],
+      [{ value: 'Total Posyandu Aktif', type: 'String' }, { value: health.dukungan_layanan?.total_posyandu || 0, type: 'Number' }],
+      [{ value: 'Rasio Balita per Posyandu', type: 'String' }, { value: health.dukungan_layanan?.rasio_balita_per_posyandu || 0, type: 'Number' }],
+      [{ value: 'Total Balita Terdata', type: 'String' }, { value: health.demografi_kesehatan?.total_balita || 0, type: 'Number' }],
+      [{ value: 'Baduta 1000 HPK (0-23 Bulan)', type: 'String' }, { value: health.demografi_kesehatan?.baduta_1000hpk || 0, type: 'Number' }],
+      [{ value: 'Ibu Hamil Risiko Tinggi / KEK', type: 'String' }, { value: health.demografi_kesehatan?.ibu_hamil_risti || 0, type: 'Number' }],
+      [{ value: 'Proyeksi Kelahiran Baru (T+1)', type: 'String' }, { value: health.demografi_kesehatan?.proyeksi_kelahiran_t1 || 0, type: 'Number' }],
+      [{ value: 'Rasio Dokter per 1.000 Penduduk', type: 'String' }, { value: health.dukungan_layanan?.dokter?.rasio_per_1000 || 0, type: 'Number' }]
+    ];
+
+    // Sektor Ekonomi
+    const econ = data.ekonomi || {};
+    const econRows = [
+      [{ value: 'Skor Vitalitas Ekonomi', type: 'String' }, { value: econ.economic_vitality_score || 0, type: 'Number' }],
+      [{ value: 'Total UMKM Terdata', type: 'String' }, { value: econ.total_umkm || 0, type: 'Number' }],
+      [{ value: 'UMKM Ber-SKU Terverifikasi', type: 'String' }, { value: econ.total_terverifikasi_sku || 0, type: 'Number' }],
+      [{ value: 'Serapan Tenaga Kerja Warga', type: 'String' }, { value: econ.total_serapan_naker || 0, type: 'Number' }],
+      [{ value: 'Persentase Serapan Usia Produktif', type: 'String' }, { value: `${econ.rasio_serapan_persen || 0}%`, type: 'String' }]
+    ];
+
+    const sheets = [
+      {
+        name: 'Daya Tampung Pendidikan',
+        headers: ['Jenjang Pendidikan', 'Siswa Aktif (T)', 'Calon Masuk (T+1)', 'Kuota Kursi PPDB', 'Selisih (Surplus/Defisit)', 'Status Kapasitas', 'Kebutuhan Rombel Baru'],
+        rows: eduRows
+      },
+      {
+        name: 'Kesehatan & 1000 HPK',
+        headers: ['Indikator Layanan Kesehatan', 'Nilai Capaian'],
+        rows: healthRows
+      },
+      {
+        name: 'Ekonomi Kerakyatan & UMKM',
+        headers: ['Indikator Ekosistem Usaha', 'Nilai Capaian'],
+        rows: econRows
+      }
+    ];
+
+    if (format === 'csv') {
+      const csvData = generateCsv(
+        sheets[0].headers,
+        sheets[0].rows.map(r => r.map(c => c.value))
+      );
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="Laporan_Daya_Dukung_${dateStr}.csv"`);
+      return res.send(csvData);
+    }
+
+    // Default: Microsoft Excel XML SpreadsheetML (.xlsx compatible)
+    const xml = generateExcelXml(`Laporan Komprehensif Daya Dukung Wilayah - Kelurahan Kebonjati`, sheets);
+    res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="Laporan_Komprehensif_Daya_Dukung_${dateStr}.xls"`);
+    return res.send(xml);
+  } catch (error) {
+    console.error('Error generating daya dukung export report:', error);
+    res.status(500).json({ success: false, message: 'Gagal membuat berkas laporan daya dukung' });
   }
 });
 

@@ -46,6 +46,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import MaskedField from '../../components/MaskedField';
 import { KPIGrid, UnifiedStatCard } from '../../components/design-system';
+import { downloadReport } from '../../utils/exportHelper';
 
 const ROLE_DISPLAY = {
   superadmin: { label: 'Super Admin', bg: 'bg-purple-100 text-purple-800 border-purple-200' },
@@ -1685,15 +1686,67 @@ export default function DashboardAdminKelurahan() {
               </div>
               <h2 className="text-xl font-black tracking-tight">Pusat Laporan & Rekapitulasi Eksekutif Kelurahan</h2>
               <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                Ekspor data berkala untuk pertanggungjawaban musrenbangkel, evaluasi kinerja SLA kelurahan, berita acara bansos, dan pelaporan berkala ke Kantor Kecamatan & Walikota.
+                Ekspor data berkala untuk pertanggungjawaban musrenbangkel, evaluasi kinerja SLA kelurahan, daya dukung pendidikan & kesehatan, berita acara bansos, dan pelaporan berkala ke Kantor Kecamatan & Walikota.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await downloadReport('/fasilitas/export/report?format=xlsx', 'Laporan_Komprehensif_Daya_Dukung_Kelurahan.xls');
+                  } catch (e) {
+                    alert('Gagal mengunduh laporan: ' + e.message);
+                  }
+                }}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-emerald-600/20"
+              >
+                <Download size={15} /> Unduh Paket Eksekutif (Excel)
+              </button>
+              <button
+                type="button"
                 onClick={() => window.print()}
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 border border-white/20"
               >
                 <Printer size={15} /> Cetak Rekap (Print)
+              </button>
+            </div>
+          </div>
+
+          {/* Banner Eksekutif: Paket Laporan Komprehensif Daya Dukung Wilayah */}
+          <div className="bg-white rounded-2xl border border-sky-200 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-sky-50/70 via-white to-emerald-50/50">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Building2 size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">
+                  Paket Laporan Komprehensif Daya Dukung & Kohort Pendidikan Wilayah (Format Excel Multi-Sheet)
+                </h3>
+                <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                  Menyajikan 3 lembar kerja terstruktur: (1) Neraca Daya Tampung Sekolah PPDB T vs T+1, (2) Surveilans 1000 HPK & Posyandu, (3) Vitalitas UMKM Kerakyatan.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={async () => {
+                  await downloadReport('/fasilitas/export/report?format=xlsx', 'Laporan_Daya_Dukung_Kebonjati.xls');
+                }}
+                className="px-3.5 py-2 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+              >
+                <Download size={14} /> Unduh Excel Multi-Sheet
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await downloadReport('/fasilitas/export/report?format=csv', 'Laporan_Daya_Dukung_Pendidikan.csv');
+                }}
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+              >
+                <Download size={14} /> CSV Pendidikan
               </button>
             </div>
           </div>
