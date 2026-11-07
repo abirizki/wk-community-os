@@ -40,7 +40,9 @@ import {
   Save,
   MessageSquareWarning,
   Copy,
-  Edit2
+  Edit2,
+  Layers,
+  BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';

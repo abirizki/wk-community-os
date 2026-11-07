@@ -49,8 +49,9 @@ router.get('/ai-strategy', requireAuth, async (req, res) => {
     const result = await dayaDukungService.getStrategicAiInsight(scope);
     res.json({ success: true, data: result });
   } catch (error) {
-    console.error('Error fetching AI strategy insight:', error);
-    res.status(500).json({ success: false, message: 'Gagal memuat analitik AI strategy' });
+    console.warn('Fallback on AI strategy insight:', error.message);
+    const fallback = dayaDukungService.getFallbackStrategicAiInsight({ rw: req.query.rw, rt: req.query.rt });
+    res.json({ success: true, data: fallback, fallback: true });
   }
 });
 
