@@ -219,13 +219,20 @@ app.get('/health', async (req, res) => {
 // STATIC FRONTEND SERVING (MONOLITH)
 // ==========================================
 // Serve compiled Vite frontend from the public directory
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html') || filePath.endsWith('sw.js')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 // SPA Fallback Route - MUST be the last route before error handler
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) {
     return next(); // Skip SPA fallback for missing API endpoints
   }
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
