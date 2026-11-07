@@ -41,7 +41,8 @@ import {
   TrendingUp,
   X,
   Check,
-  Sparkles
+  Sparkles,
+  HeartPulse
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
