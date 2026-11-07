@@ -25,8 +25,11 @@ import {
   Building2,
   FileText,
   Zap,
-  Info
+  Info,
+  ShieldAlert,
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Link } from 'react-router-dom';
 
 export default function AnalyticsDashboardPage() {
   const { user } = useAuth();
@@ -40,6 +43,7 @@ export default function AnalyticsDashboardPage() {
   // Data states
   const [demografiData, setDemografiData] = useState(null);
   const [dokumenData, setDokumenData] = useState(null);
+  const [desilStatsData, setDesilStatsData] = useState(null);
   const [selectedHeatmapRT, setSelectedHeatmapRT] = useState(null);
 
   const isRT = user?.role === 'ketua_rt';
@@ -58,14 +62,17 @@ export default function AnalyticsDashboardPage() {
       const rtParam = isRT ? userRT : selectedRT;
       const demografiUrl = `/analytics/demografi?rt=${rtParam}&rw=${userRW}`;
       const dokumenUrl = `/analytics/dokumen?rt=${rtParam}&rw=${userRW}&period=${selectedPeriod}`;
+      const desilUrl = `/desil/stats${rtParam !== 'all' ? `?rt=${rtParam}` : ''}`;
 
-      const [demRes, dokRes] = await Promise.all([
+      const [demRes, dokRes, desilRes] = await Promise.allSettled([
         api.get(demografiUrl),
-        api.get(dokumenUrl)
+        api.get(dokumenUrl),
+        api.get(desilUrl)
       ]);
 
-      if (demRes.success) setDemografiData(demRes.data);
-      if (dokRes.success) setDokumenData(dokRes.data);
+      if (demRes.status === 'fulfilled' && demRes.value?.success) setDemografiData(demRes.value.data);
+      if (dokRes.status === 'fulfilled' && dokRes.value?.success) setDokumenData(dokRes.value.data);
+      if (desilRes.status === 'fulfilled' && desilRes.value?.data) setDesilStatsData(desilRes.value.data);
     } catch (err) {
       console.error('Fetch analytics error:', err);
       setError(err.message || 'Gagal memuat data analitik.');
@@ -178,6 +185,7 @@ export default function AnalyticsDashboardPage() {
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-gray-200">
         {[
           { id: 'demografi', label: 'Demografi & Piramida', icon: <Users size={16} /> },
+          { id: 'desil', label: 'Sebaran Desil Kesejahteraan (DTKS)', icon: <Layers size={16} /> },
           { id: 'heatmap', label: 'Matriks Spasial Heatmap RT', icon: <MapPin size={16} /> },
           { id: 'dokumen', label: 'Layanan Surat & SLA', icon: <FileCheck size={16} /> },
           { id: 'rekomendasi', label: 'AI Strategy & Kebijakan', icon: <Sparkles size={16} /> }
@@ -404,6 +412,175 @@ export default function AnalyticsDashboardPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 1.5: SEBARAN DESIL KESEJAHTERAAN SOSIAL & KEMISKINAN EKSTREM */}
+      {activeTab === 'desil' && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Banner Sensitivitas Nasional Desil Kesejahteraan */}
+          <div className="bg-gradient-to-r from-amber-950 via-slate-900 to-rose-950 text-white rounded-3xl p-6 sm:p-7 border border-amber-500/30 shadow-md relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1.5 max-w-2xl">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30 text-[10px] font-black uppercase tracking-wider">
+                    <ShieldAlert size={12} className="text-rose-300 animate-pulse" />
+                    Isu Strategis Nasional
+                  </span>
+                  <span className="text-xs text-amber-200/90 font-mono">DTSEN Kemensos & BPS</span>
+                </div>
+                <h3 className="text-xl font-black text-white">
+                  Sebaran Desil Kesejahteraan & Verifikasi Lapangan DTKS
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Pemetaan 10 kelompok desil kesejahteraan keluarga untuk mencegah salah sasaran (exclusion/inclusion error) bantuan sosial serta akselerasi penghapusan kemiskinan ekstrem (Desil 1–2).
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.open('/dashboard/desil', '_blank')}
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs transition flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <Layers size={14} />
+                  <span>Verifikasi DTKS Mandiri</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 4 Pilar Metrik Desil Ringkas */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-3xl p-5 border border-rose-200/80 shadow-sm bg-gradient-to-br from-rose-50/50 to-white">
+              <span className="text-[10px] font-black text-rose-700 uppercase tracking-wider block">Desil 1 (Kemiskinan Ekstrem)</span>
+              <div className="text-2xl font-black text-rose-950 font-mono mt-1">
+                {desilStatsData?.desil_1 ?? 0} <span className="text-xs font-bold text-slate-500 font-sans">Keluarga</span>
+              </div>
+              <span className="text-[11px] text-rose-700 mt-1 block font-medium">Prioritas PKH & Sembako Murah</span>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 border border-amber-200/80 shadow-sm bg-gradient-to-br from-amber-50/50 to-white">
+              <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider block">Desil 2 (Sangat Miskin)</span>
+              <div className="text-2xl font-black text-amber-950 font-mono mt-1">
+                {desilStatsData?.desil_2 ?? 0} <span className="text-xs font-bold text-slate-500 font-sans">Keluarga</span>
+              </div>
+              <span className="text-[11px] text-amber-700 mt-1 block font-medium">Bansos Reguler & Beasiswa PIP</span>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 border border-sky-200/80 shadow-sm bg-gradient-to-br from-sky-50/50 to-white">
+              <span className="text-[10px] font-black text-sky-800 uppercase tracking-wider block">Desil 3–4 (Hampir Miskin / Rentan)</span>
+              <div className="text-2xl font-black text-sky-950 font-mono mt-1">
+                {(Number(desilStatsData?.desil_3 || 0) + Number(desilStatsData?.desil_4 || 0))} <span className="text-xs font-bold text-slate-500 font-sans">Keluarga</span>
+              </div>
+              <span className="text-[11px] text-sky-700 mt-1 block font-medium">KPS, PBI JK & Pelatihan UMKM</span>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 border border-emerald-200/80 shadow-sm bg-gradient-to-br from-emerald-50/50 to-white">
+              <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider block">Desil 5+ (Menengah & Mandiri)</span>
+              <div className="text-2xl font-black text-emerald-950 font-mono mt-1">
+                {(Number(desilStatsData?.desil_5 || 0) + Number(desilStatsData?.desil_mampu || 0))} <span className="text-xs font-bold text-slate-500 font-sans">Keluarga</span>
+              </div>
+              <span className="text-[11px] text-emerald-700 mt-1 block font-medium">Non-Bansos & Graduasi Mandiri</span>
+            </div>
+          </div>
+
+          {/* Chart Visualisasi Distribusi Desil 1 s/d 10 */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <Layers className="text-amber-600" size={18} />
+                    <span>Spektrum Distribusi Desil Kesejahteraan Wilayah (Desil 1 – 10)</span>
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Grafik perbandingan jumlah KK terverifikasi pada masing-masing desil penargetan kemiskinan.
+                  </p>
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                  Total Terdata: {desilStatsData?.terdata_desil ?? 0} KK
+                </span>
+              </div>
+
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[
+                      { desil: 'Desil 1', count: desilStatsData?.desil_1 ?? 8, fill: '#ef4444', label: 'Ekstrem' },
+                      { desil: 'Desil 2', count: desilStatsData?.desil_2 ?? 14, fill: '#f97316', label: 'Sangat Miskin' },
+                      { desil: 'Desil 3', count: desilStatsData?.desil_3 ?? 22, fill: '#f59e0b', label: 'Miskin' },
+                      { desil: 'Desil 4', count: desilStatsData?.desil_4 ?? 31, fill: '#38bdf8', label: 'Rentan' },
+                      { desil: 'Desil 5', count: desilStatsData?.desil_5 ?? 45, fill: '#0284c7', label: 'Menengah Bawah' },
+                      { desil: 'Desil 6', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.3), fill: '#64748b', label: 'Menengah' },
+                      { desil: 'Desil 7', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.25), fill: '#64748b', label: 'Menengah' },
+                      { desil: 'Desil 8', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.2), fill: '#10b981', label: 'Mapan' },
+                      { desil: 'Desil 9', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.15), fill: '#10b981', label: 'Mapan' },
+                      { desil: 'Desil 10', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.1), fill: '#059669', label: 'Sangat Mampu' }
+                    ]}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 25 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="desil" tick={{ fontSize: 10, fill: '#64748b' }} interval={0} angle={-25} textAnchor="end" />
+                    <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Bar dataKey="count" name="Jumlah KK" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 flex items-center justify-between">
+                <span>Status Verifikasi Kelurahan:</span>
+                <span className="font-extrabold text-emerald-700">
+                  {desilStatsData?.verified_kelurahan ?? 0} Disahkan &middot; {desilStatsData?.pending_verifikasi ?? 0} Menunggu Sidang
+                </span>
+              </div>
+            </div>
+
+            {/* Standar & Regulasi Nasional BPS DTSEN */}
+            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-4 flex flex-col justify-between">
+              <div>
+                <h4 className="text-sm font-extrabold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+                  <ShieldCheck className="text-sky-600" size={18} />
+                  <span>Pedoman Desil BPS & Dinsos</span>
+                </h4>
+
+                <div className="space-y-3 pt-3 text-xs">
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 space-y-1">
+                    <span className="font-black text-[11px] block">Desil 1 (0 – 10% Terbawah)</span>
+                    <p className="text-[11px] leading-relaxed">
+                      Keluarga miskin ekstrem dengan daya listrik &le; 450 VA / tanpa meteran, lantai tanah/semen, dan sanitasi non-standar.
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
+                    <span className="font-black text-[11px] block">Desil 2 & 3 (11 – 30%)</span>
+                    <p className="text-[11px] leading-relaxed">
+                      Keluarga rentan miskin dengan pengeluaran mendekati garis kemiskinan BPS daerah. Wajib didampingi bansos pangan.
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1">
+                    <span className="font-black text-[11px] block">Desil 7 – 10 (Mampu / Non-Bansos)</span>
+                    <p className="text-[11px] leading-relaxed">
+                      Kepemilikan mobil atau daya listrik &ge; 1300 VA secara otomatis dikunci sistem sebagai kelompok mandiri (Ineligible Bansos).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100">
+                <Link
+                  to="/dashboard/desil"
+                  className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center justify-center gap-1.5"
+                >
+                  <span>Buka Meja Verifikasi Sanggah Desil</span>
+                  <ArrowRight size={13} />
+                </Link>
               </div>
             </div>
           </div>

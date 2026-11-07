@@ -30,6 +30,8 @@ import {
   Layers,
   KeyRound,
   Store,
+  BarChart3,
+  TrendingUp,
 } from 'lucide-react';
 import OfflineIndicator from '../components/OfflineIndicator';
 import PWAInstallPrompt from '../components/PWAInstallPrompt';
@@ -166,8 +168,10 @@ export default function DashboardLayout() {
           ]
         },
         {
-          category: 'Kesehatan & Lingkungan',
+          category: 'Data Visual & Daya Dukung',
           items: [
+            { name: 'Dashboard Analitik Lengkap', path: '/dashboard/analitik', icon: <BarChart3 size={19} /> },
+            { name: 'Daya Dukung Pendidikan & Faskes', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> },
             { name: 'Monitoring Stunting Wilayah', path: '/dashboard/posyandu', icon: <HeartPulse size={19} /> },
             { name: 'Evaluasi Aduan Warga', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
             { name: 'Audit Kematangan Data', path: '/dashboard/data-maturity', icon: <Award size={19} /> }
@@ -189,6 +193,13 @@ export default function DashboardLayout() {
           items: [
             { name: 'Beranda Operasional', path: '/dashboard', icon: <Home size={19} /> },
             { name: 'Verifikasi Pelayanan Surat', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> }
+          ]
+        },
+        {
+          category: 'Data Visual & Analitik',
+          items: [
+            { name: 'Pusat Analitik & Demografi', path: '/dashboard/analitik', icon: <BarChart3 size={19} /> },
+            { name: 'Daya Dukung & Fasilitas Wilayah', path: '/dashboard/daya-dukung', icon: <Building2 size={19} /> }
           ]
         },
         {
