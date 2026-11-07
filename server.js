@@ -101,9 +101,9 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+// Hardened Body Parser (Patched with inflate: false against decompression DoS)
+app.use(express.json({ limit: '15mb', inflate: false }));
+app.use(express.urlencoded({ extended: true, limit: '15mb', inflate: false }));
 
 // ==========================================
 // SESSION CONFIGURATION (MySQL-Backed with MemoryStore Fallback)
