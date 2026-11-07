@@ -524,6 +524,32 @@ export default function DashboardAdminKelurahan() {
     return bansosList.filter(b => b.status === 'APPROVED');
   }, [bansosList]);
 
+  // Operational Process Pipeline Stats
+  const operationalProcessStats = useMemo(() => {
+    // 1. Pipeline Surat
+    const totalSurat = dokumenList.length;
+    const pendingVerifSurat = dokumenList.filter(d => d.approval_step === 'KELURAHAN' && d.status !== 'APPROVED' && d.status !== 'REJECTED').length;
+    const readyTTESurat = dokumenList.filter(d => d.status === 'READY_TTE' || (d.approval_step === 'KELURAHAN' && d.status === 'PROCESSED')).length;
+    const approvedSurat = dokumenList.filter(d => d.status === 'APPROVED').length;
+
+    // 2. Pipeline Bansos & Sanggahan
+    const totalBansosKPM = bansosList.length;
+    const pendingSanggahan = auditList.filter(a => a.status_review === 'PENDING_KELURAHAN' || a.status === 'PENDING').length;
+    const ticketScheduledBansos = bansosList.filter(b => b.jadwal_pengambilan_tanggal || b.nomor_antrean || b.status === 'SCHEDULED' || b.status === 'APPROVED').length;
+
+    // 3. Pipeline PBB
+    const totalNOP = Number(pbbSummary?.summary?.total_nop || 0);
+    const lunasNOP = Number(pbbSummary?.summary?.total_lunas || 0);
+    const tertunggakNOP = Number(pbbSummary?.summary?.total_tertunggak || 0);
+    const persenPBB = pbbSummary?.summary?.persen_kepatuhan ?? 0;
+
+    return {
+      surat: { total: totalSurat, pending: pendingVerifSurat, readyTTE: readyTTESurat, approved: approvedSurat },
+      bansos: { total: totalBansosKPM, sanggahan: pendingSanggahan, ticketScheduled: ticketScheduledBansos },
+      pbb: { total: totalNOP, lunas: lunasNOP, tertunggak: tertunggakNOP, persen: persenPBB }
+    };
+  }, [dokumenList, bansosList, auditList, pbbSummary]);
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20">
       {/* 1. HERO OPERATIONAL BANNER */}
@@ -612,7 +638,7 @@ export default function DashboardAdminKelurahan() {
 
       {/* 2. BENTO NAVIGATION SWITCHER (6 PILAR UTAMA ADMIN KELURAHAN) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-        {/* Bento 1: Overview Makro */}
+        {/* Bento 1: Overview Operasional */}
         <button
           onClick={() => setActiveTab('overview')}
           className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
@@ -626,13 +652,13 @@ export default function DashboardAdminKelurahan() {
               <Activity size={18} />
             </div>
             <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${activeTab === 'overview' ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-800'}`}>
-              360°
+              Harian
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-xs font-bold block">Dashboard Makro</span>
+            <span className="text-xs font-bold block">Meja Kerja Harian</span>
             <span className={`text-[11px] block ${activeTab === 'overview' ? 'text-blue-100' : 'text-on-surface-variant'}`}>
-              Demografi & Wilayah
+              Alur Proses Layanan
             </span>
           </div>
         </button>
@@ -789,140 +815,270 @@ export default function DashboardAdminKelurahan() {
       </div>
 
       {/* ========================================================================= */}
-      {/* TAB CONTENT 1: OVERVIEW MAKRO (DEMOGRAFI, DAYA DUKUNG, METRIK KELURAHAN)   */}
+      {/* TAB CONTENT 1: MEJA KERJA OPERASIONAL & GRAFIK PIPELINE PROSES LAYANAN      */}
       {/* ========================================================================= */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Bento KPI Stats */}
+          {/* Papan 4 Indikator Cepat Antrean Pelayanan Harian */}
           <KPIGrid columns={4}>
             <UnifiedStatCard
-              label="Total Populasi Warga"
-              value={executiveData?.kpi?.demography?.total_jiwa || 0}
-              unit="Jiwa"
-              context="Tersebar di 6 RW & 38 RT"
-              icon={<Users size={20} className="text-sky-600" />}
-              urgency="low"
+              label="Antrean Verifikasi Surat"
+              value={operationalProcessStats.surat.pending}
+              unit="Berkas"
+              context="Menunggu verifikasi staf sebelum TTE"
+              icon={<FileCheck size={20} className="text-sky-600" />}
+              urgency={operationalProcessStats.surat.pending > 5 ? "high" : "low"}
+              onClick={() => navigate('/dashboard/dokumen')}
             />
             <UnifiedStatCard
-              label="Kartu Keluarga Terdata"
-              value={executiveData?.kpi?.demography?.total_kk || 0}
-              unit="KK"
-              context="Sinkronisasi SIAK & TTE"
-              icon={<Building2 size={20} className="text-emerald-600" />}
+              label="Surat Siap TTE Lurah"
+              value={operationalProcessStats.surat.readyTTE}
+              unit="Berkas"
+              context="Terverifikasi & antrean tanda tangan digital"
+              icon={<ShieldCheck size={20} className="text-emerald-600" />}
               urgency="success"
+              onClick={() => navigate('/dashboard/dokumen')}
             />
             <UnifiedStatCard
-              label="Bantuan Sosial APBD & APBN"
-              value={bansosList.length}
-              unit="KPM"
-              context={`${approvedBansos.length} Disahkan · ${pendingKelurahanBansos.length} Menunggu`}
+              label="Kliring Sanggahan Bansos"
+              value={operationalProcessStats.bansos.sanggahan}
+              unit="Kasus"
+              context="Aduan kelayakan desil warga belum disidang"
               icon={<Gift size={20} className="text-amber-600" />}
-              urgency={pendingKelurahanBansos.length > 0 ? "high" : "low"}
+              urgency={operationalProcessStats.bansos.sanggahan > 0 ? "high" : "low"}
               onClick={() => setActiveTab('bansos')}
             />
             <UnifiedStatCard
-              label="Realisasi Pajak PBB 2026"
-              value={`${pbbSummary?.summary?.persen_kepatuhan ?? 0}%`}
-              unit="Tercapai"
-              context={pbbSummary?.summary
-                ? `Rp ${((pbbSummary.summary.total_terealisasi_rupiah || 0) / 1000000).toFixed(1)} Jt Terealisasi`
-                : 'Belum ada data DHKP PBB'}
+              label="NOP PBB Tertunggak"
+              value={operationalProcessStats.pbb.tertunggak}
+              unit="NOP"
+              context={`${operationalProcessStats.pbb.persen}% kepatuhan lunas wilayah`}
               icon={<Landmark size={20} className="text-purple-600" />}
-              urgency={(pbbSummary?.summary?.persen_kepatuhan ?? 0) >= 80 ? "low" : "medium"}
+              urgency={operationalProcessStats.pbb.persen >= 80 ? "low" : "medium"}
               onClick={() => setActiveTab('pbb')}
             />
           </KPIGrid>
 
-          {/* Visualisasi Demografi & Daya Dukung */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Chart Kepatuhan PBB per RW */}
-            <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-                    <Landmark size={18} className="text-emerald-600" /> RW Mana yang Memerlukan Akselerasi Penagihan PBB-P2?
+          {/* 3 Bento Charts: Grafik Alur Proses Semua Fitur Layanan Utama */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Chart 1: Funnel Alur Pelayanan Surat Masuk & TTE */}
+            <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-sm space-y-4 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <FileCheck className="text-sky-600" size={18} />
+                    <span>Pipeline Alur Surat Warga</span>
                   </h3>
-                  <p className="text-[11px] text-on-surface-variant mt-0.5">
-                    Perbandingan jumlah NOP lunas dan tertunggak di wilayah binaan Kelurahan Kebonjati.
-                  </p>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
+                    {operationalProcessStats.surat.total} Total
+                  </span>
                 </div>
-                <button
-                  onClick={() => setPbbModalOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-emerald-100 flex items-center gap-1.5 transition-colors"
-                >
-                  <Send size={13} /> Push Reminder
-                </button>
+                <p className="text-xs text-slate-500 mt-2">
+                  Pemantauan kecepatan alur berkas: masuk dari RT/RW &rarr; verifikasi staf &rarr; siap TTE Lurah &rarr; selesai.
+                </p>
+
+                <div className="h-48 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        { tahap: 'Masuk', jumlah: operationalProcessStats.surat.total, fill: '#64748b' },
+                        { tahap: 'Verifikasi', jumlah: operationalProcessStats.surat.pending, fill: '#0284c7' },
+                        { tahap: 'Siap TTE', jumlah: operationalProcessStats.surat.readyTTE, fill: '#f59e0b' },
+                        { tahap: 'Selesai', jumlah: operationalProcessStats.surat.approved, fill: '#10b981' }
+                      ]}
+                      margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                      <XAxis dataKey="tahap" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                      <Bar dataKey="jumlah" name="Jumlah Berkas" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={pbbSummary?.per_rw || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                    <XAxis dataKey="rw" tickFormatter={(v) => `RW ${v}`} tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} allowDecimals={false} domain={[0, 'auto']} />
-                    <Tooltip
-                      formatter={(val, name) => [val, name === 'total_lunas' ? 'Lunas' : 'Tertunggak']}
-                      labelFormatter={(l) => `Rukun Warga (RW) ${l}`}
-                    />
-                    <Bar dataKey="total_lunas" name="total_lunas" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="total_tertunggak" name="total_tertunggak" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span className="text-slate-500">SLA Kelurahan: &lt; 2 Jam</span>
+                <Link to="/dashboard/dokumen" className="font-bold text-sky-600 hover:text-sky-800 flex items-center gap-1">
+                  Buka Loket <ChevronRight size={13} />
+                </Link>
               </div>
             </div>
 
-            {/* Daya Dukung Wilayah Kelurahan */}
-            <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-                    <HeartPulse size={18} className="text-sky-600" /> Daya Dukung Wilayah & Layanan Dasar
+            {/* Chart 2: Status Kliring Bansos & Penjadwalan Tiket QR */}
+            <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-sm space-y-4 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <Gift className="text-amber-600" size={18} />
+                    <span>Distribusi Bansos & Sanggahan</span>
                   </h3>
-                  <p className="text-[11px] text-on-surface-variant mt-0.5">
-                    Kapasitas sekolah (PPDB), tenaga kesehatan posyandu, dan ekonomi kerakyatan.
-                  </p>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                    {operationalProcessStats.bansos.total} KPM
+                  </span>
                 </div>
-                <Link
-                  to="/dashboard/daya-dukung"
-                  className="text-xs font-bold text-sky-600 hover:text-sky-800 flex items-center gap-1"
-                >
-                  Buka Detail <ChevronRight size={14} />
-                </Link>
+                <p className="text-xs text-slate-500 mt-2">
+                  Progres penetapan KPM, penanganan sanggahan warga, dan penjadwalan tiket pengambilan bansos.
+                </p>
+
+                <div className="h-48 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        { status: 'KPM Usulan', count: operationalProcessStats.bansos.total, fill: '#0284c7' },
+                        { status: 'Sanggahan', count: operationalProcessStats.bansos.sanggahan, fill: '#ef4444' },
+                        { status: 'Tiket QR', count: operationalProcessStats.bansos.ticketScheduled, fill: '#10b981' }
+                      ]}
+                      margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                      <XAxis dataKey="status" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                      <Bar dataKey="count" name="Jumlah Kasus/KPM" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3.5 bg-sky-50 rounded-xl border border-sky-200 space-y-1">
-                  <span className="text-sky-800 font-bold block">Fasilitas Pendidikan (Fasdik)</span>
-                  <div className="text-lg font-black text-sky-950">
-                    {dayaDukungSummary?.pendidikan?.total_daya_tampung || 320} Kursi
-                  </div>
-                  <span className="text-[10px] text-sky-700 block">Daya tampung kursi murid baru (PPDB)</span>
-                </div>
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span className="text-slate-500">Tiket Terbit: {operationalProcessStats.bansos.ticketScheduled} KPM</span>
+                <button onClick={() => setActiveTab('bansos')} className="font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1">
+                  Proses Bansos <ChevronRight size={13} />
+                </button>
+              </div>
+            </div>
 
-                <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1">
-                  <span className="text-emerald-800 font-bold block">Fasilitas Kesehatan (Faskes)</span>
-                  <div className="text-lg font-black text-emerald-950">
-                    {posyanduList.length} Posyandu &middot; 1 Puskesmas
-                  </div>
-                  <span className="text-[10px] text-emerald-700 block">Cakupan pos penimbangan per RW</span>
+            {/* Chart 3: Kepatuhan Realisasi PBB per RW */}
+            <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-sm space-y-4 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <Landmark className="text-purple-600" size={18} />
+                    <span>Realisasi Penagihan PBB</span>
+                  </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-800 border border-purple-200">
+                    {operationalProcessStats.pbb.persen}% Lunas
+                  </span>
                 </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Rasio NOP lunas vs tertunggak per Rukun Warga untuk panduan sasaran broadcast WhatsApp reminder.
+                </p>
 
-                <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 space-y-1">
-                  <span className="text-amber-800 font-bold block">Serapan Tenaga Kerja UMKM</span>
-                  <div className="text-lg font-black text-amber-950">
-                    {dayaDukungSummary?.ekonomi?.total_serapan_naker || 85} Pekerja
-                  </div>
-                  <span className="text-[10px] text-amber-700 block">Dari {dayaDukungSummary?.ekonomi?.total_umkm || 42} usaha warga</span>
-                </div>
-
-                <div className="p-3.5 bg-purple-50 rounded-xl border border-purple-200 space-y-1">
-                  <span className="text-purple-800 font-bold block">Indeks Daya Dukung SPBE</span>
-                  <div className="text-lg font-black text-purple-950">
-                    {dayaDukungSummary?.index_daya_dukung?.score || 88}%
-                  </div>
-                  <span className="text-[10px] text-purple-700 block">Status: PRIMA &amp; MANDIRI</span>
+                <div className="h-48 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={pbbSummary?.per_rw?.slice(0, 6) || []} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                      <XAxis dataKey="rw" tickFormatter={(v) => `RW ${v}`} tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                      <Tooltip
+                        formatter={(val, name) => [val, name === 'total_lunas' ? 'Lunas' : 'Tertunggak']}
+                        labelFormatter={(l) => `RW ${l}`}
+                      />
+                      <Bar dataKey="total_lunas" name="total_lunas" fill="#10b981" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="total_tertunggak" name="total_tertunggak" fill="#f43f5e" radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span className="text-slate-500">Tertunggak: {operationalProcessStats.pbb.tertunggak} NOP</span>
+                <button onClick={() => setPbbModalOpen(true)} className="font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1">
+                  <Send size={12} /> Broadcast Reminder
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Pintasan Meja Kerja Cepat (Quick Operational Action Center) */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-sky-600 animate-pulse" />
+                <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">
+                  Pintasan Tugas Harian Petugas Kelurahan
+                </h3>
+              </div>
+              <span className="text-[11px] text-slate-400 font-mono">Tugas Operasional Harian</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              <Link
+                to="/dashboard/dokumen"
+                className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-sky-50/50 hover:from-sky-50 hover:to-sky-100/70 border border-slate-200 hover:border-sky-300 transition-all text-left flex flex-col justify-between h-28 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <FileCheck size={18} />
+                  </div>
+                  {operationalProcessStats.surat.pending > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 text-rose-800 animate-pulse">
+                      {operationalProcessStats.surat.pending} antrean
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Verifikasi Surat</h4>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Pemeriksaan syarat berkas</p>
+                </div>
+              </Link>
+
+              <Link
+                to="/dashboard/desil"
+                className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-amber-50/50 hover:from-amber-50 hover:to-amber-100/70 border border-slate-200 hover:border-amber-300 transition-all text-left flex flex-col justify-between h-28 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Layers size={18} />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-100 text-amber-800">
+                    DTSEN
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-amber-700">Sidang Desil DTKS</h4>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Penetapan kemiskinan ekstrem</p>
+                </div>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('bulk_kk')}
+                className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-emerald-50/50 hover:from-emerald-50 hover:to-emerald-100/70 border border-slate-200 hover:border-emerald-300 transition-all text-left flex flex-col justify-between h-28 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Upload size={18} />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800">
+                    SIAK
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700">Impor KK Masal</h4>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Validasi format Kemendagri</p>
+                </div>
+              </button>
+
+              <Link
+                to="/dashboard/analitik"
+                className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-purple-50/50 hover:from-purple-50 hover:to-purple-100/70 border border-slate-200 hover:border-purple-300 transition-all text-left flex flex-col justify-between h-28 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <BarChart3 size={18} />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-100 text-purple-800">
+                    Piramida
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-purple-700">Pusat Analitik Lengkap</h4>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Demografi & Daya Dukung &rarr;</p>
+                </div>
+              </Link>
             </div>
           </div>
         </div>
