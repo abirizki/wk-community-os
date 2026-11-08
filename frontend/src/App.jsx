@@ -9,28 +9,88 @@ import VerifySuratPage from './pages/VerifySuratPage';
 import VerifyKkPage from './pages/VerifyKkPage';
 import ScannerPage from './pages/ScannerPage';
 
-// Code-split route pages (Lazy Loaded on Demand)
-const PBBPage = lazy(() => import('./pages/PBBPage'));
-const PosyanduPage = lazy(() => import('./pages/PosyanduPage'));
-const ComplaintPage = lazy(() => import('./pages/ComplaintPage'));
-const DokumenPage = lazy(() => import('./pages/DokumenPage'));
-const BansosPage = lazy(() => import('./pages/BansosPage'));
-const DesilPage = lazy(() => import('./pages/DesilPage'));
-const DataMaturityPage = lazy(() => import('./pages/DataMaturityPage'));
-const DayaDukungPage = lazy(() => import('./pages/DayaDukungPage'));
-const CommandCenterPage = lazy(() => import('./pages/CommandCenterPage'));
-const IntegrasiPage = lazy(() => import('./pages/IntegrasiPage'));
-const WhatsAppGatewayPage = lazy(() => import('./pages/WhatsAppGatewayPage'));
-const WargaList = lazy(() => import('./pages/WargaList'));
-const WargaDetail = lazy(() => import('./pages/WargaDetail'));
-const KartuKeluargaPage = lazy(() => import('./pages/KartuKeluargaPage'));
-const KontrakanPage = lazy(() => import('./pages/KontrakanPage'));
-const UserManagementPage = lazy(() => import('./pages/UserManagementPage'));
-const PanduanOperasionalPage = lazy(() => import('./pages/PanduanOperasionalPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const KeuanganPage = lazy(() => import('./pages/KeuanganPage'));
-const AparaturPage = lazy(() => import('./pages/AparaturPage'));
-const AnalyticsDashboardPage = lazy(() => import('./pages/AnalyticsDashboardPage'));
+// Resilient Lazy Loader: Automatically retries and refreshes cache on deployment chunk mismatch
+function lazyWithRetry(componentImport) {
+  return lazy(async () => {
+    const hasReloaded = window.sessionStorage.getItem('bw_chunk_reload');
+    try {
+      const module = await componentImport();
+      window.sessionStorage.removeItem('bw_chunk_reload');
+      return module;
+    } catch (error) {
+      if (!hasReloaded) {
+        window.sessionStorage.setItem('bw_chunk_reload', 'true');
+        window.location.reload();
+        return;
+      }
+      throw error;
+    }
+  });
+}
+
+// Code-split route pages (Lazy Loaded with Auto-Retry)
+const PBBPage = lazyWithRetry(() => import('./pages/PBBPage'));
+const PosyanduPage = lazyWithRetry(() => import('./pages/PosyanduPage'));
+const ComplaintPage = lazyWithRetry(() => import('./pages/ComplaintPage'));
+const DokumenPage = lazyWithRetry(() => import('./pages/DokumenPage'));
+const BansosPage = lazyWithRetry(() => import('./pages/BansosPage'));
+const DesilPage = lazyWithRetry(() => import('./pages/DesilPage'));
+const DataMaturityPage = lazyWithRetry(() => import('./pages/DataMaturityPage'));
+const DayaDukungPage = lazyWithRetry(() => import('./pages/DayaDukungPage'));
+const CommandCenterPage = lazyWithRetry(() => import('./pages/CommandCenterPage'));
+const IntegrasiPage = lazyWithRetry(() => import('./pages/IntegrasiPage'));
+const WhatsAppGatewayPage = lazyWithRetry(() => import('./pages/WhatsAppGatewayPage'));
+const WargaList = lazyWithRetry(() => import('./pages/WargaList'));
+const WargaDetail = lazyWithRetry(() => import('./pages/WargaDetail'));
+const KartuKeluargaPage = lazyWithRetry(() => import('./pages/KartuKeluargaPage'));
+const KontrakanPage = lazyWithRetry(() => import('./pages/KontrakanPage'));
+const UserManagementPage = lazyWithRetry(() => import('./pages/UserManagementPage'));
+const PanduanOperasionalPage = lazyWithRetry(() => import('./pages/PanduanOperasionalPage'));
+const ProfilePage = lazyWithRetry(() => import('./pages/ProfilePage'));
+const KeuanganPage = lazyWithRetry(() => import('./pages/KeuanganPage'));
+const AparaturPage = lazyWithRetry(() => import('./pages/AparaturPage'));
+const AnalyticsDashboardPage = lazyWithRetry(() => import('./pages/AnalyticsDashboardPage'));
+
+class RouteErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, info) {
+    console.warn('[RouteErrorBoundary] Caught error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
+          <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+            <h2 className="text-base font-semibold text-slate-900">Pembaruan Sistem Tersedia</h2>
+            <p className="mt-2 text-xs leading-5 text-slate-600">
+              Modul halaman telah diperbarui di server. Silakan klik tombol di bawah untuk menyinkronkan data terbaru.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                window.sessionStorage.clear();
+                window.location.reload();
+              }}
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 text-xs font-semibold text-white hover:bg-sky-700 transition"
+            >
+              Muat Ulang Halaman
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function PageFallback() {
   return (
@@ -44,8 +104,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Suspense fallback={<PageFallback />}>
-          <Routes>
+        <RouteErrorBoundary>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/verify-surat/:hash" element={<VerifySuratPage />} />
@@ -92,7 +153,8 @@ function App() {
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Suspense>
-      </AuthProvider>
+      </RouteErrorBoundary>
+    </AuthProvider>
     </BrowserRouter>
   );
 }
