@@ -54,15 +54,15 @@ const AnalyticsDashboardPage = lazyWithRetry(() => import('./pages/AnalyticsDash
 class RouteErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, info) {
-    console.warn('[RouteErrorBoundary] Caught error:', error, info);
+    console.error('[RouteErrorBoundary] Caught error:', error, info);
   }
 
   render() {
@@ -78,12 +78,27 @@ class RouteErrorBoundary extends React.Component {
               type="button"
               onClick={() => {
                 window.sessionStorage.clear();
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(reg => reg.update());
+                  });
+                }
                 window.location.reload();
               }}
               className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 text-xs font-semibold text-white hover:bg-sky-700 transition"
             >
               Muat Ulang Halaman
             </button>
+            {this.state.error?.message && (
+              <details className="mt-4 text-left">
+                <summary className="text-[11px] text-slate-400 cursor-pointer hover:text-slate-600">
+                  Rincian Teknis
+                </summary>
+                <pre className="mt-1.5 overflow-auto rounded bg-slate-100 p-2 text-[10px] text-slate-700 font-mono">
+                  {this.state.error.message}
+                </pre>
+              </details>
+            )}
           </div>
         </div>
       );

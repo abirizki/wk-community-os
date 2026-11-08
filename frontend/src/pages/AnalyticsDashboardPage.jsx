@@ -8,11 +8,13 @@ import {
   ChevronRight,
   ClipboardList,
   FileCheck2,
+  GraduationCap,
   HeartPulse,
   Layers3,
   MapPin,
   RefreshCw,
   ShieldCheck,
+  TrendingUp,
   Users,
 } from 'lucide-react';
 import {
@@ -20,6 +22,7 @@ import {
   BarChart,
   CartesianGrid,
   Legend,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
