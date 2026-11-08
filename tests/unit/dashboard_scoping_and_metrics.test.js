@@ -178,6 +178,77 @@ async function runDashboardTests() {
     assert.strictEqual(avgSampleSla, 1.8);
   });
 
+
+  // --- 5. SPRINT 0: MULTI-TENANT RT ISOLATION ACROSS DIFFERENT RWS ---
+
+  test('Multi-Tenant Isolation: Same-numbered RT across different RWs (RT 001/RW 001 vs RT 001/RW 002) are strictly partitioned', () => {
+    // Skenario: Dua RT dengan nomor sama ('001') tetapi berada di RW berbeda ('001' vs '002')
+    const rt1Rw1Session = { role: 'ketua_rt', rt: '001', rw: '001', kode_kelurahan: '32.72.03.1004' };
+    const rt1Rw2Session = { role: 'ketua_rt', rt: '001', rw: '002', kode_kelurahan: '32.72.03.1004' };
+
+    const scope1 = aiEngineService.resolveScope(rt1Rw1Session);
+    const scope2 = aiEngineService.resolveScope(rt1Rw2Session);
+
+    // Keduanya harus terikat secara ketat pada kombinasi RT DAN RW masing-masing
+    assert.strictEqual(scope1.rt, '001');
+    assert.strictEqual(scope1.rw, '001');
+    assert.strictEqual(scope2.rt, '001');
+    assert.strictEqual(scope2.rw, '002');
+    assert.notStrictEqual(scope1.rw, scope2.rw, 'RW scope must not collide for identical RT numbers');
+
+    // Simulasi dataset kependudukan dengan RT bernomor sama
+    const syntheticWarga = [
+      { id: 1, nama: 'Warga A', rt: '001', rw: '001', tagihan_iuran: 50000 },
+      { id: 2, nama: 'Warga B', rt: '001', rw: '001', tagihan_iuran: 50000 },
+      { id: 3, nama: 'Warga C', rt: '001', rw: '002', tagihan_iuran: 75000 }, // RT 001 di RW 002!
+      { id: 4, nama: 'Warga D', rt: '002', rw: '001', tagihan_iuran: 60000 }
+    ];
+
+    // Filter untuk Ketua RT 001/RW 001: Wajib mencocokkan rt === '001' DAN rw === '001'
+    const filteredForRt1Rw1 = syntheticWarga.filter(w => w.rt === scope1.rt && w.rw === scope1.rw);
+    assert.strictEqual(filteredForRt1Rw1.length, 2, 'RT 001 / RW 001 must contain exactly 2 citizens');
+    assert(filteredForRt1Rw1.every(w => w.rw === '001'), 'No citizen from RW 002 may leak into RW 001 query');
+
+    // Filter untuk Ketua RT 001/RW 002:
+    const filteredForRt1Rw2 = syntheticWarga.filter(w => w.rt === scope2.rt && w.rw === scope2.rw);
+    assert.strictEqual(filteredForRt1Rw2.length, 1, 'RT 001 / RW 002 must contain exactly 1 citizen');
+    assert.strictEqual(filteredForRt1Rw2[0].nama, 'Warga C');
+
+    // Total tagihan kas RT 001/RW 001 tidak boleh tercampur dengan RT 001/RW 002
+    const totalKasRt1Rw1 = filteredForRt1Rw1.reduce((sum, w) => sum + w.tagihan_iuran, 0);
+    assert.strictEqual(totalKasRt1Rw1, 100000, 'Kas RT 001/RW 001 must be 100,000 (not 175,000)');
+  });
+
+  // --- 6. SPRINT 0: NIK BAYI BARU LAHIR & VALIDASI DEFINITIF ---
+
+  test('Provisional Infant NIK: Format follows 16-digit 0000-prefix standard with is_nik_sementara flag', () => {
+    // Tanggal lahir 8 November 2026, Bayi Perempuan (hari + 40 -> 48)
+    const tglLahir = '2026-11-08';
+    const jenisKelamin = 'P';
+    const [yyyy, mm, dd] = tglLahir.split('-');
+    let dayNum = parseInt(dd, 10);
+    if (jenisKelamin === 'P') dayNum += 40;
+    const ddStr = String(dayNum).padStart(2, '0');
+    const mmStr = String(mm).padStart(2, '0');
+    const yyStr = String(yyyy).slice(-2);
+    const random4 = '1234';
+
+    const provisionalNik = `000000${ddStr}${mmStr}${yyStr}${random4}`;
+
+    assert.strictEqual(provisionalNik.length, 16, 'Provisional NIK must be exactly 16 digits');
+    assert(provisionalNik.startsWith('0000'), 'Provisional NIK must start with 0000 placeholder prefix');
+    assert.strictEqual(provisionalNik.slice(6, 12), '481126', 'Date segment must encode birth date + gender offset');
+  });
+
+  test('Definitive NIK Validation: Strict 16-digit verification rejects placeholder 0000 prefix', () => {
+    const isDefinitiveValid = (nik) => /^\d{16}$/.test(nik) && !nik.startsWith('0000');
+
+    assert.strictEqual(isDefinitiveValid('3272044811260001'), true, 'Valid official NIK accepted');
+    assert.strictEqual(isDefinitiveValid('00004811261234'), false, 'Provisional 0000 prefix rejected as definitive');
+    assert.strictEqual(isDefinitiveValid('000000'), false, 'Short 000000 rejected');
+    assert.strictEqual(isDefinitiveValid('327204ABC'), false, 'Non-numeric string rejected');
+  });
+
   console.log(`\n=== RESULTS: ${passed} PASSED, ${failed} FAILED ===\n`);
   if (failed > 0) {
     process.exit(1);

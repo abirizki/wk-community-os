@@ -262,6 +262,10 @@ class DesilRepository {
       whereClause += ' AND kk.rw = ?';
       params.push(userScope.rw);
     }
+    if (userScope.kelurahan) {
+      whereClause += ' AND kk.kelurahan = ?';
+      params.push(userScope.kelurahan);
+    }
 
     if (filters.rt) {
       whereClause += ' AND kk.rt = ?';
@@ -319,6 +323,10 @@ class DesilRepository {
       whereClause += ' AND kk.rw = ?';
       params.push(userScope.rw);
     }
+    if (userScope.kelurahan) {
+      whereClause += ' AND kk.kelurahan = ?';
+      params.push(userScope.kelurahan);
+    }
 
     const [rows] = await pool.execute(
       `SELECT 
@@ -331,7 +339,12 @@ class DesilRepository {
         SUM(CASE WHEN COALESCE(d.desil_saat_ini, d.desil_usulan) = 3 THEN 1 ELSE 0 END) AS desil_3,
         SUM(CASE WHEN COALESCE(d.desil_saat_ini, d.desil_usulan) = 4 THEN 1 ELSE 0 END) AS desil_4,
         SUM(CASE WHEN COALESCE(d.desil_saat_ini, d.desil_usulan) = 5 THEN 1 ELSE 0 END) AS desil_5,
-        SUM(CASE WHEN COALESCE(d.desil_saat_ini, d.desil_usulan) >= 6 THEN 1 ELSE 0 END) AS desil_mampu
+        SUM(CASE WHEN COALESCE(d.desil_saat_ini, d.desil_usulan) = 6 THEN 1 ELSE 0 END) AS desil_6,
+        SUM(CASE WHEN COALESCE(d.desil_saat_ini, d.desil_usulan) = 7 THEN 1 ELSE 0 END) AS desil_7,
+        SUM(CASE WHEN COALESCE(d.desil_saat_ini, d.desil_usulan) = 8 THEN 1 ELSE 0 END) AS desil_8,
+        SUM(CASE WHEN COALESCE(d.desil_saat_ini, d.desil_usulan) = 9 THEN 1 ELSE 0 END) AS desil_9,
+        SUM(CASE WHEN COALESCE(d.desil_saat_ini, d.desil_usulan) = 10 THEN 1 ELSE 0 END) AS desil_10,
+        SUM(CASE WHEN d.desil_saat_ini IS NULL AND d.status_verifikasi != 'VERIFIED_KELURAHAN' THEN 1 ELSE 0 END) AS belum_terverifikasi
        FROM kartu_keluarga kk
        LEFT JOIN desil_keluarga d ON kk.no_kk = d.no_kk
        ${whereClause}`,
@@ -348,10 +361,14 @@ class DesilRepository {
       desil_3: 0,
       desil_4: 0,
       desil_5: 0,
-      desil_mampu: 0
+      desil_6: 0,
+      desil_7: 0,
+      desil_8: 0,
+      desil_9: 0,
+      desil_10: 0,
+      belum_terverifikasi: 0
     };
   }
 }
 
 module.exports = new DesilRepository();
-

@@ -1,857 +1,844 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Activity,
+  AlertCircle,
+  BarChart3,
+  Baby,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardList,
+  FileCheck2,
+  HeartPulse,
+  Layers3,
+  MapPin,
+  RefreshCw,
+  ShieldCheck,
+  Users,
+} from 'lucide-react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  BarChart3,
-  Users,
-  PieChart,
-  Activity,
-  FileCheck,
-  TrendingUp,
-  MapPin,
-  Calendar,
-  Layers,
-  Sparkles,
-  RefreshCw,
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  ShieldCheck,
-  Filter,
-  ArrowRight,
-  Landmark,
-  Building2,
-  FileText,
-  Zap,
-  Info,
-  ShieldAlert,
-} from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Link } from 'react-router-dom';
+
+const numberFormat = new Intl.NumberFormat('id-ID');
+const tabs = [
+  { id: 'ringkasan', label: 'Ringkasan', icon: BarChart3 },
+  { id: 'penduduk', label: 'Penduduk & layanan', icon: Users },
+  { id: 'wilayah', label: 'Perbandingan wilayah', icon: MapPin },
+  { id: 'strategi', label: 'Strategi & prioritas', icon: Activity },
+];
+const periods = [
+  { id: '7d', label: '7 hari' },
+  { id: '30d', label: '30 hari' },
+  { id: 'q', label: '90 hari' },
+  { id: 'ytd', label: 'Tahun berjalan' },
+];
+
+function formatNumber(value) {
+  if (value === null || value === undefined || value === '') return '—';
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? numberFormat.format(parsed) : '—';
+}
+
+function formatPercent(value) {
+  if (value === null || value === undefined || value === '') return '—';
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? `${numberFormat.format(parsed)}%` : '—';
+}
+
+function Panel({ children, className = '' }) {
+  return <section className={`rounded-2xl border border-slate-200 bg-white ${className}`}>{children}</section>;
+}
+
+function MetricCard({ label, value, detail, icon: Icon, tone = 'blue' }) {
+  const tones = {
+    blue: 'bg-blue-50 text-blue-700',
+    teal: 'bg-teal-50 text-teal-700',
+    amber: 'bg-amber-50 text-amber-700',
+    rose: 'bg-rose-50 text-rose-700',
+  };
+
+  return (
+    <Panel className="p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{value}</p>
+          <p className="mt-1 text-xs text-slate-500">{detail}</p>
+        </div>
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tones[tone]}`}>
+          <Icon size={18} />
+        </span>
+      </div>
+    </Panel>
+  );
+}
+
+function SectionHeading({ eyebrow, title, description, action }) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        {eyebrow && <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-700">{eyebrow}</p>}
+        <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-950">{title}</h2>
+        {description && <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">{description}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function EmptyState({ title, message }) {
+  return (
+    <div className="flex min-h-36 flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 px-5 py-8 text-center">
+      <AlertCircle size={20} className="text-slate-400" />
+      <p className="mt-3 text-sm font-medium text-slate-700">{title}</p>
+      <p className="mt-1 max-w-md text-xs leading-5 text-slate-500">{message}</p>
+    </div>
+  );
+}
+
+function SourceStatus({ source, loading, label }) {
+  if (loading) {
+    return <p className="text-xs text-slate-500">Memuat {label.toLowerCase()}…</p>;
+  }
+  if (source?.error) {
+    return (
+      <div className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">
+        <AlertCircle size={15} className="mt-0.5 shrink-0" />
+        <span>{label} tidak tersedia: {source.error}</span>
+      </div>
+    );
+  }
+  return null;
+}
+
+function SeverityTag({ severity }) {
+  const normalized = String(severity || 'INFO').toUpperCase();
+  const styles = normalized === 'CRITICAL'
+    ? 'bg-rose-50 text-rose-800'
+    : normalized === 'WARNING'
+      ? 'bg-amber-50 text-amber-800'
+      : 'bg-blue-50 text-blue-800';
+
+  return <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${styles}`}>{normalized}</span>;
+}
+
+function formatScopeLabel(user, selectedRW, selectedRT, isRT, isRW) {
+  const area = user?.kelurahan || 'Wilayah tugas';
+  if (isRT) return `${area} · RW ${user?.rw || '—'} / RT ${user?.rt || '—'}`;
+  if (isRW) return `${area} · RW ${user?.rw || '—'}${selectedRT !== 'all' ? ` / RT ${selectedRT}` : ''}`;
+  const rwLabel = selectedRW === 'all' ? 'semua RW' : `RW ${selectedRW}`;
+  return `${area} · ${rwLabel}${selectedRT !== 'all' ? ` / RT ${selectedRT}` : ''}`;
+}
 
 export default function AnalyticsDashboardPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('rekomendasi'); // Default: Kanaya AI Strategic Policy Recommendations
-  const [selectedRT, setSelectedRT] = useState('all');
+  const [activeTab, setActiveTab] = useState('ringkasan');
+  const [selectedRW, setSelectedRW] = useState(user?.rw || 'all');
+  const [selectedRT, setSelectedRT] = useState(user?.role === 'ketua_rt' ? user.rt : 'all');
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
-
-  // Data states
-  const [demografiData, setDemografiData] = useState(null);
-  const [dokumenData, setDokumenData] = useState(null);
-  const [desilStatsData, setDesilStatsData] = useState(null);
-  const [selectedHeatmapRT, setSelectedHeatmapRT] = useState(null);
+  const [sources, setSources] = useState({
+    summary: null,
+    demographics: null,
+    documents: null,
+    desil: null,
+  });
 
   const isRT = user?.role === 'ketua_rt';
-  const isRW = user?.role === 'ketua_rw' || user?.role === 'admin_rw';
-  const isKelurahan = ['admin_kelurahan', 'lurah', 'superadmin', 'admin', 'camat', 'walikota'].includes(user?.role);
-
-  const userRT = user?.rt || '001';
-  const userRW = user?.rw || '001';
-
-  // Fetch Analytics Data
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      const rtParam = isRT ? userRT : selectedRT;
-      const demografiUrl = `/analytics/demografi?rt=${rtParam}&rw=${userRW}`;
-      const dokumenUrl = `/analytics/dokumen?rt=${rtParam}&rw=${userRW}&period=${selectedPeriod}`;
-      const desilUrl = `/desil/stats${rtParam !== 'all' ? `?rt=${rtParam}` : ''}`;
-
-      const [demRes, dokRes, desilRes] = await Promise.allSettled([
-        api.get(demografiUrl),
-        api.get(dokumenUrl),
-        api.get(desilUrl)
-      ]);
-
-      if (demRes.status === 'fulfilled' && demRes.value?.success) setDemografiData(demRes.value.data);
-      if (dokRes.status === 'fulfilled' && dokRes.value?.success) setDokumenData(dokRes.value.data);
-      if (desilRes.status === 'fulfilled' && desilRes.value?.data) setDesilStatsData(desilRes.value.data);
-    } catch (err) {
-      console.error('Fetch analytics error:', err);
-      setError(err.message || 'Gagal memuat data analitik.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  const isRW = ['ketua_rw', 'admin_rw'].includes(user?.role);
+  const lockedRW = isRT || isRW;
+  const effectiveRW = lockedRW ? (user?.rw || 'all') : selectedRW;
+  const effectiveRT = isRT ? (user?.rt || 'all') : selectedRT;
 
   useEffect(() => {
-    fetchData();
-  }, [selectedRT, selectedPeriod]);
+    if (user?.rw && selectedRW === 'all' && lockedRW) setSelectedRW(user.rw);
+    if (isRT && user?.rt) setSelectedRT(user.rt);
+  }, [user?.rw, user?.rt, lockedRW, isRT, selectedRW]);
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchData();
-  };
-
-  // Helper Piramida: cari nilai maksimum untuk skala proporsional
-  const maxPyramidValue = useMemo(() => {
-    if (!demografiData?.piramida || demografiData.piramida.length === 0) return 100;
-    let max = 0;
-    demografiData.piramida.forEach(item => {
-      if (item.pria > max) max = item.pria;
-      if (item.wanita > max) max = item.wanita;
+  useEffect(() => {
+    let active = true;
+    const params = new URLSearchParams({
+      rw: effectiveRW,
+      rt: effectiveRT,
+      period: selectedPeriod,
     });
-    return Math.max(max, 10);
-  }, [demografiData]);
 
-  // Total Gender & Agama
-  const genderStats = useMemo(() => {
-    if (!demografiData?.piramida) return { pria: 0, wanita: 0, total: 0, rasioPria: 50, rasioWanita: 50 };
-    let pria = 0;
-    let wanita = 0;
-    demografiData.piramida.forEach(p => {
-      pria += p.pria;
-      wanita += p.wanita;
+    setLoading(true);
+    Promise.allSettled([
+      api.get(`/analytics/executive-summary?${params}`),
+      api.get(`/analytics/demografi?${params}`),
+      api.get(`/analytics/dokumen?${params}`),
+      api.get(`/desil/stats?${params}`),
+    ]).then((results) => {
+      if (!active) return;
+      const keys = ['summary', 'demographics', 'documents', 'desil'];
+      const nextSources = {};
+
+      results.forEach((result, index) => {
+        const key = keys[index];
+        if (result.status === 'fulfilled' && result.value?.success) {
+          nextSources[key] = { data: result.value.data, error: null };
+        } else {
+          const error = result.status === 'rejected'
+            ? result.reason?.message
+            : result.value?.message;
+          nextSources[key] = {
+            data: null,
+            error: error || 'Respons data tidak valid.',
+          };
+        }
+      });
+
+      setSources(nextSources);
+      setLoading(false);
+    }).catch((error) => {
+      if (!active) return;
+      setSources({
+        summary: { data: null, error: error.message || 'Gagal memuat ringkasan.' },
+        demographics: null,
+        documents: null,
+        desil: null,
+      });
+      setLoading(false);
     });
-    const total = pria + wanita;
-    return {
-      pria,
-      wanita,
-      total,
-      rasioPria: total > 0 ? Math.round((pria / total) * 100) : 50,
-      rasioWanita: total > 0 ? Math.round((wanita / total) * 100) : 50
+
+    return () => {
+      active = false;
     };
-  }, [demografiData]);
+  }, [effectiveRW, effectiveRT, selectedPeriod, refreshVersion]);
 
-  return (
-    <div className="space-y-6 max-w-7xl mx-auto px-2 sm:px-4 py-4">
-      {/* Top Header Card */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-        {/* Background Ambient Glow */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+  const summary = sources.summary?.data;
+  const demographics = sources.demographics?.data;
+  const documents = sources.documents?.data;
+  const desil = sources.desil?.data;
+  const kpi = summary?.kpi;
+  const population = kpi?.demography;
+  const docPipeline = documents?.pipeline;
+  const vulnerableHouseholds = Number(desil?.desil_1 || 0) + Number(desil?.desil_2 || 0);
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-semibold mb-3">
-              <BarChart3 size={14} className="text-cyan-400" />
-              <span>Executive Decision Support System (DSS)</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-            </div>
+  const comparisonRows = useMemo(() => {
+    const rowsByKey = new Map();
+    const getRow = (rw, rt) => {
+      const key = `${rw || '—'}-${rt || '—'}`;
+      if (!rowsByKey.has(key)) {
+        rowsByKey.set(key, {
+          key,
+          rw,
+          rt,
+          penduduk: 0,
+          balita: 0,
+          lansia: 0,
+          desilRentan: 0,
+          kasusGizi: 0,
+          suratProses: 0,
+          pengaduanTerbuka: 0,
+          pbb: null,
+        });
+      }
+      return rowsByKey.get(key);
+    };
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Dashboard Data Analitik {isRT ? `RT ${userRT}` : isRW ? `RW ${userRW}` : 'Kewilayahan'}
-            </h1>
-            <p className="text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Analisis demografi berbasis piramida penduduk, matriks spasial RT, dan visualisasi kinerja pelayanan surat untuk perumusan kebijakan publik yang presisi.
-            </p>
-          </div>
+    demographics?.spatial_heatmap?.forEach((item) => {
+      const row = getRow(item.rw, item.rt);
+      row.penduduk = Number(item.total_warga || 0);
+      row.balita = Number(item.balita || 0);
+      row.lansia = Number(item.lansia || 0);
+      row.desilRentan = Number(item.desil_rentan_kk || 0);
+      row.pbb = item.pbb_kepatuhan_persen;
+    });
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/15 transition-all shadow-sm active:scale-95"
-            >
-              <RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />
-              <span>Segarkan Data</span>
-            </button>
-          </div>
-        </div>
+    summary?.rt_risk_matrix?.forEach((item) => {
+      const row = getRow(item.rw, item.rt);
+      row.kasusGizi = Number(item.stunting?.kasus_rawan || 0);
+      row.pengaduanTerbuka = Number(item.pengaduan?.belum_selesai || 0);
+    });
 
-        {/* Multi-RT Scope Pills (Untuk RW & Kelurahan) */}
-        {!isRT && (
-          <div className="mt-6 pt-6 border-t border-white/10 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 mr-1">
-              <Filter size={13} className="text-blue-400" /> Filter Cakupan RT:
-            </span>
+    documents?.by_rt?.forEach((item) => {
+      const row = getRow(item.rw, item.rt);
+      row.suratProses = Number(item.dalam_proses || 0);
+    });
 
-            {['all', '001', '002', '003', '004', '005'].map((rt) => (
-              <button
-                key={rt}
-                onClick={() => setSelectedRT(rt)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  selectedRT === rt
-                    ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-300/50'
-                    : 'bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10'
-                }`}
-              >
-                {rt === 'all' ? `Semua RT (RW ${userRW})` : `RT ${rt}`}
-              </button>
-            ))}
-          </div>
-        )}
+    return [...rowsByKey.values()].sort((a, b) => (
+      String(a.rw).localeCompare(String(b.rw)) || String(a.rt).localeCompare(String(b.rt))
+    ));
+  }, [demographics, documents, summary]);
+
+  const ageRows = useMemo(() => {
+    if (!population) return [];
+    return [
+      { kelompok: 'Balita 0–4', jumlah: Number(population.total_balita || 0) },
+      { kelompok: 'Anak 5–17', jumlah: Number(population.total_anak || 0) },
+      { kelompok: 'Produktif 18–59', jumlah: Number(population.total_produktif || 0) },
+      { kelompok: 'Lansia 60+', jumlah: Number(population.total_lansia || 0) },
+    ];
+  }, [population]);
+
+  const areaLabel = formatScopeLabel(user, effectiveRW, effectiveRT, isRT, isRW);
+  const lastUpdated = summary?.timestamp ? new Date(summary.timestamp).toLocaleString('id-ID') : null;
+  const hasSourceError = Object.values(sources).some((source) => source?.error);
+
+  const renderTopFilters = () => (
+    <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="text-xs font-medium text-slate-500" htmlFor="analytics-rw">Cakupan</label>
+        <select
+          id="analytics-rw"
+          value={effectiveRW}
+          disabled={lockedRW}
+          onChange={(event) => {
+            setSelectedRW(event.target.value);
+            setSelectedRT('all');
+          }}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-50"
+        >
+          <option value="all">Semua RW</option>
+          {(demographics?.rw_options || []).map((rw) => <option key={rw} value={rw}>RW {rw}</option>)}
+        </select>
+        <label className="sr-only" htmlFor="analytics-rt">Filter RT</label>
+        <select
+          id="analytics-rt"
+          value={effectiveRT}
+          disabled={isRT}
+          onChange={(event) => setSelectedRT(event.target.value)}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-50"
+        >
+          <option value="all">Semua RT</option>
+          {(demographics?.rt_options || []).map((rt) => <option key={rt} value={rt}>RT {rt}</option>)}
+        </select>
       </div>
-
-      {/* Super App Segmented Navigation Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-gray-200">
-        {[
-          { id: 'demografi', label: 'Demografi & Piramida', icon: <Users size={16} /> },
-          { id: 'desil', label: 'Sebaran Desil Kesejahteraan (DTKS)', icon: <Layers size={16} /> },
-          { id: 'heatmap', label: 'Matriks Spasial Heatmap RT', icon: <MapPin size={16} /> },
-          { id: 'dokumen', label: 'Layanan Surat & SLA', icon: <FileCheck size={16} /> },
-          { id: 'rekomendasi', label: 'AI Strategy & Kebijakan', icon: <Sparkles size={16} /> }
-        ].map((tab) => (
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="mr-1 text-xs text-slate-500">Periode layanan</span>
+        {periods.map((period) => (
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === tab.id
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
-                : 'bg-white hover:bg-gray-100 text-gray-600 border border-gray-200'
+            key={period.id}
+            type="button"
+            onClick={() => setSelectedPeriod(period.id)}
+            aria-pressed={selectedPeriod === period.id}
+            className={`rounded-lg px-3 py-2 text-xs font-medium transition ${
+              selectedPeriod === period.id
+                ? 'bg-slate-900 text-white'
+                : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            {tab.icon}
-            <span>{tab.label}</span>
+            {period.label}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setRefreshVersion((version) => version + 1)}
+          disabled={loading}
+          className="ml-1 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+        >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+          Perbarui
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderSummary = () => (
+    <div className="space-y-6">
+      {hasSourceError && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" role="status">
+          Sebagian sumber data belum tersedia. Panel yang gagal dimuat ditandai, dan nilainya tidak diganti dengan angka nol.
+        </div>
+      )}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Penduduk aktif"
+          value={formatNumber(population?.total_warga_aktif)}
+          detail={`${formatNumber(population?.total_laki)} laki-laki · ${formatNumber(population?.total_perempuan)} perempuan`}
+          icon={Users}
+          tone="blue"
+        />
+        <MetricCard
+          label="Kepala keluarga"
+          value={formatNumber(population?.total_kk)}
+          detail={`${formatNumber(population?.status_tetap)} penduduk berstatus tetap`}
+          icon={Layers3}
+          tone="teal"
+        />
+        <MetricCard
+          label="Surat dalam proses"
+          value={formatNumber(docPipeline ? Number(docPipeline.pending_rt || 0) + Number(docPipeline.pending_rw || 0) + Number(docPipeline.pending_kelurahan || 0) : null)}
+          detail={`${formatNumber(docPipeline?.total_pengajuan)} pengajuan pada ${selectedPeriod === 'ytd' ? 'tahun berjalan' : `periode ${periods.find(p => p.id === selectedPeriod)?.label || ''}`}`}
+          icon={FileCheck2}
+          tone="amber"
+        />
+        <MetricCard
+          label="Keluarga Desil 1–2"
+          value={desil ? formatNumber(vulnerableHouseholds) : '—'}
+          detail={desil ? `${formatPercent(desil.total_kk > 0 ? Math.round((vulnerableHouseholds / Number(desil.total_kk)) * 100) : 0)} dari KK terdata` : 'Statistik desil belum tersedia'}
+          icon={HeartPulse}
+          tone="rose"
+        />
       </div>
 
-      {/* TAB 1: DEMOGRAFI & PIRAMIDA PENDUDUK */}
-      {activeTab === 'demografi' && (
-        <div className="space-y-6">
-          {/* Quick Metrics KPI Bento */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0">
-                <Users size={24} />
-              </div>
-              <div>
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Total Penduduk</span>
-                <span className="text-2xl font-black text-gray-900 font-mono">{genderStats.total}</span>
-                <span className="text-[11px] text-gray-500 block">Warga Terdata Aktif</span>
-              </div>
+      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+        <Panel className="p-4 sm:p-5">
+          <SectionHeading
+            eyebrow="Profil kependudukan"
+            title="Struktur usia warga"
+            description="Jumlah warga aktif per kelompok usia. Gunakan untuk membaca kebutuhan layanan lintas siklus hidup."
+          />
+          <SourceStatus source={sources.summary} loading={loading && !summary} label="Profil penduduk" />
+          {ageRows.length ? (
+            <div className="mt-5 h-64" role="img" aria-label="Grafik jumlah penduduk berdasarkan kelompok usia">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={ageRows} margin={{ top: 8, right: 12, left: -18, bottom: 8 }}>
+                  <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="kelompok" tick={{ fontSize: 11, fill: '#475569' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#64748b' }} allowDecimals={false} />
+                  <Tooltip formatter={(value) => [formatNumber(value), 'Penduduk']} />
+                  <Bar dataKey="jumlah" name="Penduduk" fill="#2563eb" radius={[5, 5, 0, 0]} maxBarSize={54} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
+          ) : (
+            <div className="mt-5"><EmptyState title="Profil penduduk belum tersedia" message="Periksa status sumber analitik atau pilih cakupan yang memiliki data." /></div>
+          )}
+        </Panel>
 
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0">
-                <Activity size={24} />
+        <Panel className="p-4 sm:p-5">
+          <SectionHeading
+            eyebrow="Pemantauan layanan"
+            title="Snapshot lintas sektor"
+            description="Indikator operasional yang dapat membantu menentukan tindak lanjut awal."
+          />
+          <div className="mt-4 divide-y divide-slate-100">
+            <div className="flex items-center justify-between gap-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className="rounded-lg bg-teal-50 p-2 text-teal-700"><Baby size={17} /></span>
+                <div><p className="text-sm font-medium text-slate-800">Balita terdata</p><p className="text-xs text-slate-500">Sasaran siklus hidup</p></div>
               </div>
-              <div>
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Laki-laki</span>
-                <span className="text-2xl font-black text-indigo-900 font-mono">{genderStats.pria}</span>
-                <span className="text-[11px] text-indigo-600 font-bold block">{genderStats.rasioPria}% Proporsi</span>
-              </div>
+              <span className="text-sm font-semibold text-slate-900">{formatNumber(population?.total_balita)}</span>
             </div>
-
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold shrink-0">
-                <PieChart size={24} />
+            <div className="flex items-center justify-between gap-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className="rounded-lg bg-violet-50 p-2 text-violet-700"><HeartPulse size={17} /></span>
+                <div><p className="text-sm font-medium text-slate-800">Lansia terdata</p><p className="text-xs text-slate-500">Usia 60 tahun ke atas</p></div>
               </div>
-              <div>
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Perempuan</span>
-                <span className="text-2xl font-black text-rose-900 font-mono">{genderStats.wanita}</span>
-                <span className="text-[11px] text-rose-600 font-bold block">{genderStats.rasioWanita}% Proporsi</span>
-              </div>
+              <span className="text-sm font-semibold text-slate-900">{formatNumber(population?.total_lansia)}</span>
             </div>
-
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
-                <TrendingUp size={24} />
+            <div className="flex items-center justify-between gap-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className="rounded-lg bg-amber-50 p-2 text-amber-700"><ClipboardList size={17} /></span>
+                <div><p className="text-sm font-medium text-slate-800">Verifikasi desil</p><p className="text-xs text-slate-500">Terdata / seluruh KK</p></div>
               </div>
-              <div>
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Sex Ratio</span>
-                <span className="text-2xl font-black text-emerald-900 font-mono">
-                  {genderStats.wanita > 0 ? Math.round((genderStats.pria / genderStats.wanita) * 100) : 100}
-                </span>
-                <span className="text-[11px] text-emerald-700 font-semibold block">Pria per 100 Wanita</span>
-              </div>
+              <span className="text-sm font-semibold text-slate-900">
+                {desil ? `${formatNumber(desil.terdata_desil)} / ${formatNumber(desil.total_kk)}` : '—'}
+              </span>
             </div>
-          </div>
-
-          {/* Piramida Penduduk Interaktif */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-100 gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-black text-gray-900 tracking-tight">Piramida Penduduk Kohort Usia</h3>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                    BPS Standard
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Distribusi struktur usia dan gender warga untuk pemetaan bonus demografi dan beban ketergantungan (dependency ratio).
-                </p>
+            <div className="flex items-center justify-between gap-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className="rounded-lg bg-blue-50 p-2 text-blue-700"><CheckCircle2 size={17} /></span>
+                <div><p className="text-sm font-medium text-slate-800">Surat diselesaikan</p><p className="text-xs text-slate-500">Dalam periode terpilih</p></div>
               </div>
-
-              {/* Legend */}
-              <div className="flex items-center gap-4 text-xs font-semibold">
-                <div className="flex items-center gap-2">
-                  <span className="w-3.5 h-3.5 rounded-md bg-blue-600 shadow-sm" />
-                  <span className="text-gray-700">Laki-laki</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3.5 h-3.5 rounded-md bg-rose-500 shadow-sm" />
-                  <span className="text-gray-700">Perempuan</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Pyramid Chart Bars (Diverging Axis) */}
-            <div className="py-6 space-y-3.5 max-w-4xl mx-auto">
-              {demografiData?.piramida?.length > 0 ? (
-                demografiData.piramida.map((item, index) => {
-                  const priaPct = Math.min(100, Math.round((item.pria / maxPyramidValue) * 100));
-                  const wanitaPct = Math.min(100, Math.round((item.wanita / maxPyramidValue) * 100));
-
-                  return (
-                    <div key={index} className="grid grid-cols-12 items-center gap-2 sm:gap-4 text-xs">
-                      {/* Bar Laki-Laki (Left, Aligned to Right) */}
-                      <div className="col-span-5 flex items-center justify-end gap-2">
-                        <span className="font-mono font-bold text-gray-700 text-[11px] shrink-0">{item.pria} jiwa</span>
-                        <div className="w-full bg-gray-50 rounded-xl h-6 flex justify-end overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${priaPct}%` }}
-                            transition={{ duration: 0.6, delay: index * 0.05 }}
-                            className="bg-gradient-to-l from-blue-600 to-indigo-500 h-full rounded-l-lg shadow-sm"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Center Age Label */}
-                      <div className="col-span-2 text-center">
-                        <span className="px-2 py-1 rounded-lg bg-gray-100 text-gray-700 font-bold text-[11px] block truncate border border-gray-200">
-                          {item.kelompok_usia}
-                        </span>
-                      </div>
-
-                      {/* Bar Perempuan (Right, Aligned to Left) */}
-                      <div className="col-span-5 flex items-center justify-start gap-2">
-                        <div className="w-full bg-gray-50 rounded-xl h-6 flex justify-start overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${wanitaPct}%` }}
-                            transition={{ duration: 0.6, delay: index * 0.05 }}
-                            className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-r-lg shadow-sm"
-                          />
-                        </div>
-                        <span className="font-mono font-bold text-gray-700 text-[11px] shrink-0">{item.wanita} jiwa</span>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="py-12 text-center text-gray-400">
-                  <Users size={32} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-xs">Data kohort umur kependudukan belum tersedia di wilayah ini.</p>
-                </div>
-              )}
-            </div>
-
-            <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
-              <span>Sumbu Tengah: Klasifikasi Kelompok Umur</span>
-              <span>Skala Dinamis Maksimum: {maxPyramidValue} Jiwa</span>
+              <span className="text-sm font-semibold text-slate-900">{formatNumber(docPipeline?.step_selesai)}</span>
             </div>
           </div>
+        </Panel>
+      </div>
 
-          {/* Grid Dua Kolom: Sebaran Pekerjaan & Agama */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Top Pekerjaan Warga */}
-            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                <h3 className="text-sm font-black text-gray-900 tracking-tight">Top Profesi & Pekerjaan Warga</h3>
-                <span className="text-[11px] text-gray-400 font-medium">8 Terbanyak</span>
-              </div>
-
-              <div className="py-4 space-y-3">
-                {demografiData?.pekerjaan?.length > 0 ? (
-                  demografiData.pekerjaan.map((item, idx) => {
-                    const totalPekerjaan = demografiData.pekerjaan.reduce((acc, c) => acc + c.count, 0) || 1;
-                    const pct = Math.round((item.count / totalPekerjaan) * 100);
-                    return (
-                      <div key={idx} className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-bold text-gray-700 truncate max-w-[200px]">{item.label}</span>
-                          <span className="font-mono font-semibold text-gray-500">{item.count} orang ({pct}%)</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${pct}%` }}
-                            transition={{ duration: 0.5 }}
-                            className="bg-indigo-600 h-full rounded-full"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-xs text-gray-400 text-center py-6">Belum ada data profesi.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Sebaran Agama & Pendidikan */}
-            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-6">
-              <div>
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                  <h3 className="text-sm font-black text-gray-900 tracking-tight">Sebaran Keagamaan Warga</h3>
-                  <span className="text-[11px] text-gray-400 font-medium">Harmoni Sosial</span>
+      <Panel className="p-4 sm:p-5">
+        <SectionHeading
+          eyebrow="Keputusan berbasis bukti"
+          title="Prioritas yang memerlukan perhatian"
+          description="Sinyal berasal dari aturan analitik yang dapat dijelaskan. Validasi data lapangan sebelum menetapkan bantuan atau intervensi."
+          action={<button onClick={() => setActiveTab('strategi')} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900">Lihat strategi <ChevronRight size={14} /></button>}
+        />
+        <SourceStatus source={sources.summary} loading={loading && !summary} label="Analisis strategi" />
+        {summary?.ai_insights?.length ? (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {summary.ai_insights.slice(0, 4).map((insight) => (
+              <article key={insight.id} className="rounded-xl border border-slate-200 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-sm font-semibold leading-5 text-slate-900">{insight.title}</h3>
+                  <SeverityTag severity={insight.severity} />
                 </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3">
-                  {demografiData?.agama?.map((item, idx) => (
-                    <div key={idx} className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                      <span className="text-[11px] font-bold text-slate-500 block">{item.label}</span>
-                      <span className="text-base font-black text-slate-800 font-mono block mt-0.5">{item.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                  <h3 className="text-sm font-black text-gray-900 tracking-tight">Jenjang Pendidikan Terakhir</h3>
-                  <span className="text-[11px] text-gray-400 font-medium">Indeks Modal Manusia</span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3">
-                  {demografiData?.pendidikan?.map((item, idx) => (
-                    <div key={idx} className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 text-center">
-                      <span className="text-[11px] font-bold text-blue-700 block truncate">{item.label}</span>
-                      <span className="text-base font-black text-blue-950 font-mono block mt-0.5">{item.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{insight.summary}</p>
+              </article>
+            ))}
           </div>
+        ) : !loading && !sources.summary?.error ? (
+          <div className="mt-4"><EmptyState title="Belum ada prioritas berbasis bukti" message="Tidak ada rule yang terpicu pada cakupan ini, atau data belum cukup untuk menyusun sinyal." /></div>
+        ) : null}
+      </Panel>
+    </div>
+  );
+
+  const renderPopulation = () => {
+    const coverage = kpi?.daya_dukung?.kesehatan;
+    const education = kpi?.daya_dukung?.pendidikan;
+    const economy = kpi?.daya_dukung?.ekonomi;
+    const maturity = kpi?.data_maturity;
+    const educationInstitutions = education?.cohorts?.reduce(
+      (total, cohort) => total + Number(cohort.institusi || 0),
+      0
+    );
+    const newEducationSeats = education?.cohorts?.reduce(
+      (total, cohort) => total + Number(cohort.kursi_baru || 0),
+      0
+    );
+    const approvedBansos = summary?.rt_risk_matrix?.reduce(
+      (total, item) => total + Number(item.bansos?.disahkan || 0),
+      0
+    );
+
+    return (
+      <div className="space-y-5">
+        <Panel className="p-4 sm:p-5">
+          <SectionHeading
+            eyebrow="Penduduk dibanding kebutuhan layanan"
+            title="Kohort warga dan kapasitas layanan"
+            description="Baca jumlah kelompok sasaran bersama kapasitas layanan yang tersedia. Nilai kapasitas tidak tersedia ditampilkan sebagai kosong, bukan dianggap tidak ada layanan."
+          />
+          <SourceStatus source={sources.summary} loading={loading && !summary} label="Ringkasan lintas sektor" />
+          {kpi ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricCard label="Balita" value={formatNumber(population?.total_balita)} detail="Penduduk usia 0–4 tahun" icon={Baby} tone="teal" />
+              <MetricCard label="Lansia" value={formatNumber(population?.total_lansia)} detail="Penduduk usia 60 tahun ke atas" icon={HeartPulse} tone="rose" />
+              <MetricCard label="Posyandu" value={formatNumber(coverage?.dukungan_layanan?.total_posyandu)} detail="Fasilitas terdata pada cakupan ini" icon={Activity} tone="blue" />
+              <MetricCard label="Fasilitas pendidikan" value={formatNumber(educationInstitutions)} detail={`Kapasitas kursi baru ${formatNumber(newEducationSeats)}`} icon={Layers3} tone="amber" />
+            </div>
+          ) : (
+            <div className="mt-4"><EmptyState title="Data lintas sektor belum tersedia" message={sources.summary?.error || 'Coba segarkan data atau periksa koneksi layanan.'} /></div>
+          )}
+        </Panel>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Panel className="p-4 sm:p-5">
+            <h3 className="text-sm font-semibold text-slate-900">Kesehatan siklus hidup</h3>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Jumlah sasaran dibanding dukungan fasilitas.</p>
+            <div className="mt-4 space-y-3">
+              <DataLine label="Baduta 0–23 bulan" value={formatNumber(coverage?.demografi_kesehatan?.baduta_1000hpk)} />
+              <DataLine label="Ibu hamil risiko tinggi" value={formatNumber(coverage?.demografi_kesehatan?.ibu_hamil_risti)} />
+              <DataLine label="Lansia berisiko tinggi" value={formatNumber(coverage?.demografi_kesehatan?.lansia_risti)} />
+              <DataLine label="Tenaga kesehatan tercatat" value={formatNumber(coverage?.faskes_stats?.total_nakes?.jumlah)} />
+            </div>
+            <Link to="/dashboard/posyandu" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900">Buka layanan kesehatan <ChevronRight size={14} /></Link>
+          </Panel>
+
+          <Panel className="p-4 sm:p-5">
+            <h3 className="text-sm font-semibold text-slate-900">Perlindungan sosial & ekonomi</h3>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Kebutuhan keluarga rentan dibanding ekosistem dukungan lokal.</p>
+            <div className="mt-4 space-y-3">
+              <DataLine label="KK Desil 1–2" value={desil ? formatNumber(vulnerableHouseholds) : '—'} />
+              <DataLine label="Bansos disahkan (tercatat)" value={formatNumber(approvedBansos)} />
+              <DataLine label="UMKM terverifikasi" value={formatNumber(economy?.total_umkm)} />
+              <DataLine label="Penyerapan tenaga kerja lokal" value={formatNumber(economy?.total_serapan_naker)} />
+            </div>
+            <Link to="/dashboard/bansos" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900">Buka meja bansos <ChevronRight size={14} /></Link>
+          </Panel>
+
+          <Panel className="p-4 sm:p-5">
+            <h3 className="text-sm font-semibold text-slate-900">Mutu dan cakupan data</h3>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Gunakan sebagai indikator kelayakan data untuk keputusan.</p>
+            <div className="mt-4 space-y-3">
+              <DataLine label="Skor kematangan data" value={maturity ? formatPercent(maturity.overall_maturity_score) : '—'} />
+              <DataLine label="Cakupan nomor kontak" value={formatPercent(maturity?.coverage?.phone_percentage)} />
+              <DataLine label="Cakupan akun warga" value={formatPercent(maturity?.coverage?.account_percentage)} />
+              <DataLine label="SLA rata-rata surat" value={docPipeline?.rata_sla_jam == null ? '—' : `${formatNumber(docPipeline.rata_sla_jam)} jam`} />
+            </div>
+            <Link to="/dashboard/data-maturity" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900">Tinjau kematangan data <ChevronRight size={14} /></Link>
+          </Panel>
         </div>
-      )}
 
-      {/* TAB 1.5: SEBARAN DESIL KESEJAHTERAAN SOSIAL & KEMISKINAN EKSTREM */}
-      {activeTab === 'desil' && (
-        <div className="space-y-6 animate-fadeIn">
-          {/* Banner Sensitivitas Nasional Desil Kesejahteraan */}
-          <div className="bg-gradient-to-r from-amber-950 via-slate-900 to-rose-950 text-white rounded-3xl p-6 sm:p-7 border border-amber-500/30 shadow-md relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1.5 max-w-2xl">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30 text-[10px] font-black uppercase tracking-wider">
-                    <ShieldAlert size={12} className="text-rose-300 animate-pulse" />
-                    Isu Strategis Nasional
-                  </span>
-                  <span className="text-xs text-amber-200/90 font-mono">DTSEN Kemensos & BPS</span>
-                </div>
-                <h3 className="text-xl font-black text-white">
-                  Sebaran Desil Kesejahteraan & Verifikasi Lapangan DTKS
-                </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Pemetaan 10 kelompok desil kesejahteraan keluarga untuk mencegah salah sasaran (exclusion/inclusion error) bantuan sosial serta akselerasi penghapusan kemiskinan ekstrem (Desil 1–2).
-                </p>
-              </div>
+        {hasSourceError && (
+          <Panel className="p-4">
+            <div className="space-y-2">
+              <SourceStatus source={sources.demographics} loading={loading} label="Demografi" />
+              <SourceStatus source={sources.documents} loading={loading} label="Layanan surat" />
+              <SourceStatus source={sources.desil} loading={loading} label="Kesejahteraan" />
+              <SourceStatus source={sources.summary} loading={loading} label="Kesehatan, ekonomi, aduan, dan kematangan data" />
+            </div>
+          </Panel>
+        )}
+      </div>
+    );
+  };
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => window.open('/dashboard/desil', '_blank')}
-                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs transition flex items-center justify-center gap-1.5 shadow-sm"
+  const renderArea = () => (
+    <div className="space-y-5">
+      <Panel className="p-4 sm:p-5">
+        <SectionHeading
+          eyebrow="Pemerataan layanan per RT"
+          title="Penduduk, kerentanan, dan beban layanan"
+          description="Bandingkan jumlah penduduk dan sinyal layanan pada cakupan filter yang sama. Nilai adalah jumlah, bukan skor risiko; gunakan persentase/denominator saat mengambil keputusan."
+        />
+        <SourceStatus source={sources.demographics} loading={loading && !demographics} label="Matriks demografi" />
+        {comparisonRows.length ? (
+          <>
+            <div className="mt-5 h-80" role="img" aria-label="Perbandingan jumlah warga, balita, lansia, keluarga rentan dan surat dalam proses per RT">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={comparisonRows} margin={{ top: 8, right: 16, left: -14, bottom: 32 }}>
+                  <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="rt" tickFormatter={(value, index) => `RW ${comparisonRows[index]?.rw} · ${value}`} interval={0} angle={-20} textAnchor="end" height={54} tick={{ fontSize: 10, fill: '#475569' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#64748b' }} allowDecimals={false} />
+                  <Tooltip
+                    labelFormatter={(value, items) => {
+                      const row = items?.[0]?.payload;
+                      return row ? `RW ${row.rw} · RT ${row.rt}` : `RT ${value}`;
+                    }}
+                    formatter={(value, name) => [formatNumber(value), name]}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="penduduk" name="Penduduk" fill="#2563eb" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="balita" name="Balita" fill="#0f766e" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="lansia" name="Lansia" fill="#7c3aed" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="desilRentan" name="KK Desil 1–2" fill="#d97706" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="suratProses" name="Surat diproses" fill="#64748b" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-left text-xs">
+                <thead className="border-y border-slate-200 bg-slate-50 text-slate-600">
+                  <tr>
+                    <th className="px-3 py-2.5 font-semibold">Wilayah</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Penduduk</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Balita</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Lansia</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">KK Desil 1–2</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Surat proses</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">PBB</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {comparisonRows.map((row) => (
+                    <tr key={row.key} className="text-slate-700">
+                      <td className="px-3 py-3 font-medium text-slate-900">RW {row.rw} · RT {row.rt}</td>
+                      <td className="px-3 py-3 text-right">{formatNumber(row.penduduk)}</td>
+                      <td className="px-3 py-3 text-right">{formatNumber(row.balita)}</td>
+                      <td className="px-3 py-3 text-right">{formatNumber(row.lansia)}</td>
+                      <td className="px-3 py-3 text-right">{formatNumber(row.desilRentan)}</td>
+                      <td className="px-3 py-3 text-right">{formatNumber(row.suratProses)}</td>
+                      <td className="px-3 py-3 text-right">{row.pbb == null ? 'Tidak tersedia' : formatPercent(row.pbb)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="mt-5"><EmptyState title="Belum ada data wilayah untuk dibandingkan" message={sources.demographics?.error || 'Periksa filter wilayah, pemetaan RW/RT, atau ketersediaan data warga.'} /></div>
+        )}
+      </Panel>
+
+      <Panel className="p-4 sm:p-5">
+        <SectionHeading
+          eyebrow="Pemerataan sosial"
+          title="Sebaran Desil keluarga"
+          description="Distribusi desil berdasarkan nilai yang tersedia di basis data. Usulan dan status terverifikasi perlu dibaca bersama status verifikasinya."
+        />
+        <SourceStatus source={sources.desil} loading={loading && !desil} label="Sebaran desil" />
+        {desil ? (
+          <>
+            <div className="mt-4 h-64" role="img" aria-label="Grafik sebaran sepuluh desil kesejahteraan keluarga">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={Array.from({ length: 10 }, (_, index) => ({
+                    desil: `D${index + 1}`,
+                    jumlah: Number(desil[`desil_${index + 1}`] || 0),
+                  }))}
+                  margin={{ top: 8, right: 12, left: -18, bottom: 8 }}
                 >
-                  <Layers size={14} />
-                  <span>Verifikasi DTKS Mandiri</span>
-                </button>
-              </div>
+                  <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="desil" tick={{ fontSize: 11, fill: '#475569' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#64748b' }} allowDecimals={false} />
+                  <Tooltip formatter={(value) => [formatNumber(value), 'Keluarga']} />
+                  <Bar dataKey="jumlah" name="Keluarga" fill="#b45309" radius={[4, 4, 0, 0]} maxBarSize={44} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+              <span>Terdata: <strong className="text-slate-900">{formatNumber(desil.terdata_desil)}</strong> / {formatNumber(desil.total_kk)} KK</span>
+              <span>Terverifikasi: <strong className="text-slate-900">{formatNumber(desil.verified_kelurahan)}</strong></span>
+              <span>Menunggu: <strong className="text-slate-900">{formatNumber(desil.pending_verifikasi)}</strong></span>
+              <span>Belum terverifikasi: <strong className="text-slate-900">{formatNumber(desil.belum_terverifikasi)}</strong></span>
+            </div>
+          </>
+        ) : (
+          <div className="mt-4"><EmptyState title="Sebaran belum tersedia" message={sources.desil?.error || 'Data desil belum tersedia pada cakupan ini.'} /></div>
+        )}
+      </Panel>
+    </div>
+  );
+
+  const renderStrategies = () => {
+    const insights = summary?.ai_insights || [];
+    const fidelity = summary?.data_fidelity;
+
+    return (
+      <div className="space-y-5">
+        <Panel className="border-slate-800 bg-slate-950 p-5 text-white sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-300">Decision support · {areaLabel}</p>
+              <h2 className="mt-2 text-xl font-semibold tracking-tight">Strategi berbasis bukti, bukan prediksi otomatis</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                Insight dibentuk dari aturan yang dapat diperiksa. Gunakan temuan sebagai prioritas verifikasi dan koordinasi; penetapan program tetap memerlukan validasi petugas.
+              </p>
+            </div>
+            <div className="min-w-40 rounded-xl border border-white/15 p-3">
+              <div className="flex items-center gap-2 text-slate-300"><ShieldCheck size={16} /><span className="text-xs">Kelayakan data</span></div>
+              <p className="mt-2 text-xl font-semibold">{fidelity?.confidence_score == null ? '—' : formatPercent(fidelity.confidence_score)}</p>
+              <p className="mt-1 text-[11px] text-slate-400">{fidelity?.level || 'Belum dinilai'}</p>
             </div>
           </div>
+        </Panel>
 
-          {/* 4 Pilar Metrik Desil Ringkas */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-3xl p-5 border border-rose-200/80 shadow-sm bg-gradient-to-br from-rose-50/50 to-white">
-              <span className="text-[10px] font-black text-rose-700 uppercase tracking-wider block">Desil 1 (Kemiskinan Ekstrem)</span>
-              <div className="text-2xl font-black text-rose-950 font-mono mt-1">
-                {desilStatsData?.desil_1 ?? 0} <span className="text-xs font-bold text-slate-500 font-sans">Keluarga</span>
-              </div>
-              <span className="text-[11px] text-rose-700 mt-1 block font-medium">Prioritas PKH & Sembako Murah</span>
-            </div>
+        <SourceStatus source={sources.summary} loading={loading && !summary} label="Analisis strategi" />
+        {insights.length ? (
+          <div className="space-y-3">
+            {insights.map((insight, index) => {
+              const evidence = Object.entries(insight.evidence || {})
+                .filter(([, value]) => ['string', 'number'].includes(typeof value) && value !== null)
+                .slice(0, 4);
+              const targetLink = insight.category === 'KESEHATAN_BALITA' || insight.category === 'GERIATRI_LANSIA'
+                ? '/dashboard/posyandu'
+                : insight.category === 'LAYANAN_DOKUMEN'
+                  ? '/dashboard/dokumen'
+                  : '/dashboard/bansos';
 
-            <div className="bg-white rounded-3xl p-5 border border-amber-200/80 shadow-sm bg-gradient-to-br from-amber-50/50 to-white">
-              <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider block">Desil 2 (Sangat Miskin)</span>
-              <div className="text-2xl font-black text-amber-950 font-mono mt-1">
-                {desilStatsData?.desil_2 ?? 0} <span className="text-xs font-bold text-slate-500 font-sans">Keluarga</span>
-              </div>
-              <span className="text-[11px] text-amber-700 mt-1 block font-medium">Bansos Reguler & Beasiswa PIP</span>
-            </div>
-
-            <div className="bg-white rounded-3xl p-5 border border-sky-200/80 shadow-sm bg-gradient-to-br from-sky-50/50 to-white">
-              <span className="text-[10px] font-black text-sky-800 uppercase tracking-wider block">Desil 3–4 (Hampir Miskin / Rentan)</span>
-              <div className="text-2xl font-black text-sky-950 font-mono mt-1">
-                {(Number(desilStatsData?.desil_3 || 0) + Number(desilStatsData?.desil_4 || 0))} <span className="text-xs font-bold text-slate-500 font-sans">Keluarga</span>
-              </div>
-              <span className="text-[11px] text-sky-700 mt-1 block font-medium">KPS, PBI JK & Pelatihan UMKM</span>
-            </div>
-
-            <div className="bg-white rounded-3xl p-5 border border-emerald-200/80 shadow-sm bg-gradient-to-br from-emerald-50/50 to-white">
-              <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider block">Desil 5+ (Menengah & Mandiri)</span>
-              <div className="text-2xl font-black text-emerald-950 font-mono mt-1">
-                {(Number(desilStatsData?.desil_5 || 0) + Number(desilStatsData?.desil_mampu || 0))} <span className="text-xs font-bold text-slate-500 font-sans">Keluarga</span>
-              </div>
-              <span className="text-[11px] text-emerald-700 mt-1 block font-medium">Non-Bansos & Graduasi Mandiri</span>
-            </div>
-          </div>
-
-          {/* Chart Visualisasi Distribusi Desil 1 s/d 10 */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div>
-                  <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                    <Layers className="text-amber-600" size={18} />
-                    <span>Spektrum Distribusi Desil Kesejahteraan Wilayah (Desil 1 – 10)</span>
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Grafik perbandingan jumlah KK terverifikasi pada masing-masing desil penargetan kemiskinan.
-                  </p>
-                </div>
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                  Total Terdata: {desilStatsData?.terdata_desil ?? 0} KK
-                </span>
-              </div>
-
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={[
-                      { desil: 'Desil 1', count: desilStatsData?.desil_1 ?? 8, fill: '#ef4444', label: 'Ekstrem' },
-                      { desil: 'Desil 2', count: desilStatsData?.desil_2 ?? 14, fill: '#f97316', label: 'Sangat Miskin' },
-                      { desil: 'Desil 3', count: desilStatsData?.desil_3 ?? 22, fill: '#f59e0b', label: 'Miskin' },
-                      { desil: 'Desil 4', count: desilStatsData?.desil_4 ?? 31, fill: '#38bdf8', label: 'Rentan' },
-                      { desil: 'Desil 5', count: desilStatsData?.desil_5 ?? 45, fill: '#0284c7', label: 'Menengah Bawah' },
-                      { desil: 'Desil 6', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.3), fill: '#64748b', label: 'Menengah' },
-                      { desil: 'Desil 7', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.25), fill: '#64748b', label: 'Menengah' },
-                      { desil: 'Desil 8', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.2), fill: '#10b981', label: 'Mapan' },
-                      { desil: 'Desil 9', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.15), fill: '#10b981', label: 'Mapan' },
-                      { desil: 'Desil 10', count: Math.round((desilStatsData?.desil_mampu || 100) * 0.1), fill: '#059669', label: 'Sangat Mampu' }
-                    ]}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 25 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="desil" tick={{ fontSize: 10, fill: '#64748b' }} interval={0} angle={-25} textAnchor="end" />
-                    <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Bar dataKey="count" name="Jumlah KK" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 flex items-center justify-between">
-                <span>Status Verifikasi Kelurahan:</span>
-                <span className="font-extrabold text-emerald-700">
-                  {desilStatsData?.verified_kelurahan ?? 0} Disahkan &middot; {desilStatsData?.pending_verifikasi ?? 0} Menunggu Sidang
-                </span>
-              </div>
-            </div>
-
-            {/* Standar & Regulasi Nasional BPS DTSEN */}
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-4 flex flex-col justify-between">
-              <div>
-                <h4 className="text-sm font-extrabold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
-                  <ShieldCheck className="text-sky-600" size={18} />
-                  <span>Pedoman Desil BPS & Dinsos</span>
-                </h4>
-
-                <div className="space-y-3 pt-3 text-xs">
-                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 space-y-1">
-                    <span className="font-black text-[11px] block">Desil 1 (0 – 10% Terbawah)</span>
-                    <p className="text-[11px] leading-relaxed">
-                      Keluarga miskin ekstrem dengan daya listrik &le; 450 VA / tanpa meteran, lantai tanah/semen, dan sanitasi non-standar.
-                    </p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
-                    <span className="font-black text-[11px] block">Desil 2 & 3 (11 – 30%)</span>
-                    <p className="text-[11px] leading-relaxed">
-                      Keluarga rentan miskin dengan pengeluaran mendekati garis kemiskinan BPS daerah. Wajib didampingi bansos pangan.
-                    </p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1">
-                    <span className="font-black text-[11px] block">Desil 7 – 10 (Mampu / Non-Bansos)</span>
-                    <p className="text-[11px] leading-relaxed">
-                      Kepemilikan mobil atau daya listrik &ge; 1300 VA secara otomatis dikunci sistem sebagai kelompok mandiri (Ineligible Bansos).
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100">
-                <Link
-                  to="/dashboard/desil"
-                  className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center justify-center gap-1.5"
-                >
-                  <span>Buka Meja Verifikasi Sanggah Desil</span>
-                  <ArrowRight size={13} />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 2: MATRIKS HEATMAP SPASIAL RT */}
-      {activeTab === 'heatmap' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-100 gap-4">
-              <div>
-                <h3 className="text-lg font-black text-gray-900 tracking-tight">Matriks Heatmap Spasial Wilayah RT</h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  Komparasi densitas kependudukan, kelompok rentan (Desil 1-2 & Lansia/Balita), dan rasio kepatuhan PBB per Rukun Tetangga.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-gray-400 font-medium">Gradien Intensitas:</span>
-                <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold">Optimal / Patuh</span>
-                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold">Sedang</span>
-                <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 font-bold">Prioritas / Rentan</span>
-              </div>
-            </div>
-
-            {/* Heatmap Grid Cards (RT 001 - RT 005) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pt-6">
-              {demografiData?.spatial_heatmap?.map((rtItem) => {
-                const compliance = rtItem.pbb_kepatuhan_persen;
-                const isSelected = selectedHeatmapRT?.rt === rtItem.rt;
-
-                let complianceBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                if (compliance < 50) complianceBadge = 'bg-rose-50 text-rose-700 border-rose-200';
-                else if (compliance < 75) complianceBadge = 'bg-amber-50 text-amber-700 border-amber-200';
-
-                return (
-                  <motion.div
-                    key={rtItem.rt}
-                    whileHover={{ y: -4 }}
-                    onClick={() => setSelectedHeatmapRT(isSelected ? null : rtItem)}
-                    className={`cursor-pointer rounded-3xl p-5 border transition-all ${
-                      isSelected
-                        ? 'border-blue-600 bg-blue-50/40 shadow-lg ring-2 ring-blue-500/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 shadow-sm'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-blue-500/30">
-                          RT {rtItem.rt}
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-gray-900 block">Rukun Tetangga {rtItem.rt}</span>
-                          <span className="text-[10px] text-gray-400 block">Wilayah RW {rtItem.rw}</span>
-                        </div>
-                      </div>
-
-                      <span className={`px-2.5 py-1 rounded-xl text-xs font-black font-mono border ${complianceBadge}`}>
-                        PBB {compliance}%
+              return (
+                <Panel key={insight.id || index} className="p-4 sm:p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                        {insight.severity === 'CRITICAL' ? <AlertCircle size={17} /> : <Activity size={17} />}
                       </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 py-4 text-xs">
-                      <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100">
-                        <span className="text-[10px] text-gray-400 font-semibold block uppercase">Total Warga</span>
-                        <span className="text-base font-black text-gray-800 font-mono">{rtItem.total_warga} jiwa</span>
-                        <span className="text-[10px] text-gray-500 block">{rtItem.total_kk} Kartu Keluarga</span>
-                      </div>
-
-                      <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100">
-                        <span className="text-[10px] text-gray-400 font-semibold block uppercase">Komposisi Gender</span>
-                        <span className="text-xs font-bold text-gray-700 font-mono block mt-1">
-                          L: {rtItem.pria} | P: {rtItem.wanita}
-                        </span>
-                        <span className="text-[10px] text-gray-400 block">Keseimbangan</span>
-                      </div>
-
-                      <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100">
-                        <span className="text-[10px] text-amber-700 font-bold block uppercase">Balita & Lansia</span>
-                        <span className="text-xs font-black text-amber-900 font-mono block mt-1">
-                          👶 {rtItem.balita} | 🧓 {rtItem.lansia}
-                        </span>
-                        <span className="text-[10px] text-amber-700 block">Target Posyandu</span>
-                      </div>
-
-                      <div className="p-2.5 rounded-xl bg-rose-50/70 border border-rose-100">
-                        <span className="text-[10px] text-rose-700 font-bold block uppercase">Desil 1-2 Rentan</span>
-                        <span className="text-base font-black text-rose-900 font-mono">{rtItem.desil_rentan_kk} KK</span>
-                        <span className="text-[10px] text-rose-700 block">Prioritas Bansos</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-blue-600 font-semibold">
-                      <span>{isSelected ? 'Tutup Rincian' : 'Klik untuk Analisis Presisi'}</span>
-                      <ArrowRight size={13} />
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: LAYANAN DOKUMEN & SLA */}
-      {activeTab === 'dokumen' && (
-        <div className="space-y-6">
-          {/* Filter Periode Pills */}
-          <div className="flex items-center justify-between bg-white rounded-2xl p-3 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Calendar size={16} className="text-blue-600" />
-              <span className="text-xs font-bold text-gray-700">Periode Waktu Pengajuan:</span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              {[
-                { id: '7d', label: '7 Hari Terakhir' },
-                { id: '30d', label: '30 Hari Terakhir' },
-                { id: 'q', label: 'Triwulan (90 Hari)' },
-                { id: 'ytd', label: '1 Tahun Penuh' }
-              ].map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedPeriod(p.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    selectedPeriod === p.id
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* KPI Funnel Overview */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total Masuk</span>
-                <span className="p-2 rounded-xl bg-blue-50 text-blue-600"><FileText size={18} /></span>
-              </div>
-              <span className="text-2xl font-black text-gray-900 font-mono">
-                {dokumenData?.pipeline?.total_pengajuan || 0}
-              </span>
-              <span className="text-[11px] text-gray-500 block mt-0.5">Surat Diajukan Warga</span>
-            </div>
-
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Disahkan Selesai</span>
-                <span className="p-2 rounded-xl bg-emerald-50 text-emerald-600"><CheckCircle2 size={18} /></span>
-              </div>
-              <span className="text-2xl font-black text-emerald-700 font-mono">
-                {dokumenData?.pipeline?.step_selesai || 0}
-              </span>
-              <span className="text-[11px] text-emerald-600 font-semibold block mt-0.5">TTE Resmi Kelurahan</span>
-            </div>
-
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Loket Dampingan</span>
-                <span className="p-2 rounded-xl bg-purple-50 text-purple-600"><Users size={18} /></span>
-              </div>
-              <span className="text-2xl font-black text-purple-900 font-mono">
-                {dokumenData?.pipeline?.total_assisted_submission || 0}
-              </span>
-              <span className="text-[11px] text-purple-700 font-semibold block mt-0.5">Bantuan Offline/Lansia</span>
-            </div>
-
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Bypass Darurat RW</span>
-                <span className="p-2 rounded-xl bg-amber-50 text-amber-600"><Zap size={18} /></span>
-              </div>
-              <span className="text-2xl font-black text-amber-900 font-mono">
-                {dokumenData?.pipeline?.total_emergency_bypass || 0}
-              </span>
-              <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">Jalur Kedaruratan (ICU/RS)</span>
-            </div>
-          </div>
-
-          {/* Breakdown 10 Kategori Surat & SLA Rata-rata */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between pb-6 border-b border-gray-100">
-              <div>
-                <h3 className="text-lg font-black text-gray-900 tracking-tight">Kategori Dokumen & Kecepatan Layanan (SLA)</h3>
-                <p className="text-xs text-gray-500 mt-1">Volume permohonan surat dan rata-rata durasi penyelesaian hingga pengesahan TTE.</p>
-              </div>
-              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-                Target SLA: &lt; 24 Jam
-              </span>
-            </div>
-
-            <div className="pt-6 space-y-4">
-              {dokumenData?.kategori?.length > 0 ? (
-                dokumenData.kategori.map((kat, index) => {
-                  const maxCount = dokumenData.kategori[0]?.count || 1;
-                  const pct = Math.round((kat.count / maxCount) * 100);
-
-                  return (
-                    <div key={index} className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-gray-800">{kat.kategori}</span>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-gray-900">{kat.count} surat</span>
-                          <span className="font-mono text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                            ⏱️ Rata: {kat.rata_jam > 0 ? `${kat.rata_jam} jam` : '< 1 jam'}
-                          </span>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <SeverityTag severity={insight.severity} />
+                          {insight.badge_label && <span className="text-[11px] text-slate-500">{insight.badge_label}</span>}
                         </div>
-                      </div>
-
-                      <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden flex">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.6 }}
-                          className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full"
-                        />
+                        <h3 className="mt-2 text-base font-semibold leading-6 text-slate-950">{insight.title}</h3>
+                        <p className="mt-1.5 text-sm leading-6 text-slate-600">{insight.summary}</p>
+                        {evidence.length > 0 && (
+                          <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                            {evidence.map(([label, value]) => (
+                              <div key={label} className="rounded-lg bg-slate-50 px-3 py-2">
+                                <dt className="text-[11px] capitalize text-slate-500">{label.replaceAll('_', ' ')}</dt>
+                                <dd className="mt-0.5 text-xs font-semibold text-slate-800">{typeof value === 'number' ? formatNumber(value) : value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        )}
+                        {insight.action_directives?.length > 0 && (
+                          <div className="mt-4 rounded-lg border-l-2 border-blue-500 bg-blue-50/60 px-3 py-2.5">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-800">Langkah tindak lanjut</p>
+                            <ul className="mt-1 list-inside list-disc space-y-1 text-xs leading-5 text-slate-700">
+                              {insight.action_directives.slice(0, 2).map((action) => <li key={action}>{action}</li>)}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  );
-                })
-              ) : (
-                <p className="text-xs text-gray-400 text-center py-8">Belum ada pengajuan surat dalam periode ini.</p>
-              )}
-            </div>
+                    <div className="flex shrink-0 items-center gap-2 lg:flex-col lg:items-end">
+                      {insight.impact_score != null && <span className="text-[11px] text-slate-500">Prioritas relatif {formatNumber(insight.impact_score)}</span>}
+                      <Link to={targetLink} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                        Tindak lanjuti <ChevronRight size={14} />
+                      </Link>
+                    </div>
+                  </div>
+                </Panel>
+              );
+            })}
           </div>
-        </div>
-      )}
+        ) : !loading && !sources.summary?.error ? (
+          <EmptyState title="Belum ada insight yang memenuhi aturan" message="Data atau ambang keputusan belum cukup untuk memunculkan prioritas pada wilayah ini." />
+        ) : null}
 
-      {/* TAB 4: REKOMENDASI KEBIJAKAN & AI STRATEGY */}
-      {activeTab === 'rekomendasi' && (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl">
-            <div className="flex items-center gap-2 mb-2 text-cyan-300 text-xs font-bold uppercase tracking-wider">
-              <Sparkles size={16} />
-              <span>Kanaya AI Strategic Policy Recommendations</span>
-            </div>
-            <h3 className="text-xl font-black">Rekomendasi Berbasis Data Analitik Wilayah</h3>
-            <p className="text-xs text-blue-200 mt-1 max-w-2xl leading-relaxed">
-              Hasil inferensi algoritma analisis multi-dimensi (Piramida Kependudukan, Rasio Desil 1-2, dan Tren Pelayanan).
+        <Panel className="p-4 sm:p-5">
+          <h3 className="text-sm font-semibold text-slate-900">Cara membaca prioritas</h3>
+          <div className="mt-3 grid gap-3 text-xs leading-5 text-slate-600 md:grid-cols-3">
+            <p><strong className="text-slate-800">Bukti:</strong> cek wilayah, jumlah kasus, denominator, dan waktu pembaruan sebelum bertindak.</p>
+            <p><strong className="text-slate-800">Validasi:</strong> bedakan hasil pemeriksaan, usulan desil, status resmi, dan data yang belum terverifikasi.</p>
+            <p><strong className="text-slate-800">Tindak lanjut:</strong> tetapkan penanggung jawab, tenggat, dan ukuran hasil; tinjau ulang pada periode berikutnya.</p>
+          </div>
+        </Panel>
+      </div>
+    );
+  };
+
+  const tabContent = activeTab === 'ringkasan'
+    ? renderSummary()
+    : activeTab === 'penduduk'
+      ? renderPopulation()
+      : activeTab === 'wilayah'
+        ? renderArea()
+        : renderStrategies();
+
+  return (
+    <main className="mx-auto max-w-[1440px] space-y-5 px-3 py-5 sm:px-6 lg:px-8">
+      <header className="rounded-2xl bg-slate-950 px-5 py-6 text-white sm:px-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-300">Pusat analitik · decision support</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Dashboard Analitik Wilayah</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+              Hubungkan profil penduduk dengan pemerataan kesehatan, perlindungan sosial, dan kinerja layanan untuk menentukan prioritas kerja.
             </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-                <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider block mb-1">Fokus Demografi Balita</span>
-                <p className="text-xs text-white leading-relaxed font-medium">
-                  Prioritaskan PMT (Pemberian Makanan Tambahan) di RT dengan populasi balita tinggi untuk mencegah stunting sejak dini.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider block mb-1">Optimasi Penerimaan PBB</span>
-                <p className="text-xs text-white leading-relaxed font-medium">
-                  RT dengan kepatuhan di bawah 70% disarankan mengaktifkan layanan jemput bola pembayaran QRIS/BJB di Pos Ronda atau Balai Warga.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-                <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider block mb-1">Akselerasi Layanan Publik</span>
-                <p className="text-xs text-white leading-relaxed font-medium">
-                  Tingkatkan sosialisasi Loket Dampingan untuk warga lansia dan minim akses gadget agar tidak terjadi ketertinggalan pengurusan administrasi kependudukan.
-                </p>
-              </div>
-            </div>
+          </div>
+          <div className="flex flex-col gap-1 text-xs text-slate-300 lg:items-end">
+            <span className="inline-flex items-center gap-2"><MapPin size={14} />{areaLabel}</span>
+            <span>{lastUpdated ? `Ringkasan diperbarui ${lastUpdated}` : 'Waktu pembaruan belum tersedia'}</span>
           </div>
         </div>
-      )}
+      </header>
+
+      {renderTopFilters()}
+
+      <nav className="flex gap-1 overflow-x-auto border-b border-slate-200" aria-label="Bagian dashboard analitik">
+        {tabs.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setActiveTab(id)}
+            aria-current={activeTab === id ? 'page' : undefined}
+            className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm font-medium transition ${
+              activeTab === id
+                ? 'border-blue-600 text-blue-800'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Icon size={16} />
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {loading && !summary && !demographics && !documents && !desil ? (
+        <Panel className="flex min-h-64 items-center justify-center p-8">
+          <div className="flex items-center gap-3 text-sm text-slate-600"><RefreshCw size={17} className="animate-spin" />Memuat data wilayah…</div>
+        </Panel>
+      ) : tabContent}
+
+      <footer className="flex flex-col gap-1 border-t border-slate-200 pt-4 text-[11px] leading-5 text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <span>Angka bersifat agregat dan mengikuti cakupan pengguna aktif.</span>
+        <span>Pastikan definisi, denominator, dan status verifikasi sebelum keputusan final.</span>
+      </footer>
+    </main>
+  );
+}
+
+function DataLine({ label, value }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2.5 last:border-0 last:pb-0">
+      <span className="text-xs text-slate-600">{label}</span>
+      <span className="text-sm font-semibold text-slate-900">{value}</span>
     </div>
   );
 }

@@ -64,22 +64,17 @@ class FasilitasRepository {
       schoolQuery += ` AND kelurahan = ?`;
       schoolParams.push(scope.kelurahan);
     }
+    if (scope.rw) {
+      schoolQuery += ` AND rw = ?`;
+      schoolParams.push(scope.rw);
+    }
+    if (scope.rt) {
+      schoolQuery += ` AND rt = ?`;
+      schoolParams.push(scope.rt);
+    }
     schoolQuery += ` GROUP BY jenjang`;
 
-    let [sekolahStats] = await pool.query(schoolQuery, schoolParams);
-    if (!sekolahStats || sekolahStats.length === 0) {
-      const [fallback] = await pool.query(`
-        SELECT 
-          jenjang,
-          COUNT(*) as total_institusi,
-          COALESCE(SUM(daya_tampung_kursi_baru), 0) as total_kursi_baru,
-          COALESCE(SUM(total_kapasitas_murid), 0) as total_kapasitas,
-          COALESCE(SUM(jumlah_rombel), 0) as total_rombel
-        FROM fasilitas_pendidikan
-        GROUP BY jenjang
-      `);
-      sekolahStats = fallback;
-    }
+    const [sekolahStats] = await pool.query(schoolQuery, schoolParams);
 
     // 2. Populasi nyata anak usia sekolah dan Proyeksi Kohort T+1 dari tabel warga
     let wargaQuery = `
@@ -219,21 +214,15 @@ class FasilitasRepository {
       faskesQuery += ` AND kelurahan = ?`;
       faskesParams.push(scope.kelurahan);
     }
-    let [medisStats] = await pool.query(faskesQuery, faskesParams);
-    if (!medisStats || medisStats.length === 0 || Number(medisStats[0]?.total_faskes) === 0) {
-      const [fallbackMedis] = await pool.query(`
-        SELECT 
-          COUNT(*) as total_faskes,
-          COALESCE(SUM(jumlah_dokter), 0) as total_dokter,
-          COALESCE(SUM(jumlah_bidan), 0) as total_bidan,
-          COALESCE(SUM(jumlah_perawat), 0) as total_perawat,
-          COALESCE(SUM(jumlah_ahli_gizi), 0) as total_ahli_gizi,
-          COALESCE(SUM(kapasitas_tempat_tidur), 0) as total_tempat_tidur,
-          COUNT(CASE WHEN jenis_faskes = 'Posyandu' THEN 1 END) as total_posyandu
-        FROM fasilitas_kesehatan
-      `);
-      medisStats = fallbackMedis;
+    if (scope.rw) {
+      faskesQuery += ` AND rw = ?`;
+      faskesParams.push(scope.rw);
     }
+    if (scope.rt) {
+      faskesQuery += ` AND rt = ?`;
+      faskesParams.push(scope.rt);
+    }
+    const [medisStats] = await pool.query(faskesQuery, faskesParams);
 
     // 2. Populasi nyata siklus hidup (Balita, Baduta 1000 HPK, Lansia) dari tabel warga
     let wargaQuery = `
@@ -282,6 +271,13 @@ class FasilitasRepository {
         bumilQuery += ` AND rt = ?`;
         bumilParams.push(scope.rt);
       }
+      if (scope.kelurahan) {
+        bumilQuery += ` AND EXISTS (
+          SELECT 1 FROM warga w
+          WHERE w.nik = posyandu_ibu_hamil.nik AND w.kelurahan = ?
+        )`;
+        bumilParams.push(scope.kelurahan);
+      }
       const [resBumil] = await pool.query(bumilQuery, bumilParams);
       if (resBumil && resBumil.length > 0) bumilStats = resBumil;
     } catch (e) {}
@@ -302,6 +298,10 @@ class FasilitasRepository {
       if (scope.rt) {
         rentanQuery += ` AND rt = ?`;
         rentanParams.push(scope.rt);
+      }
+      if (scope.kelurahan) {
+        rentanQuery += ` AND kelurahan = ?`;
+        rentanParams.push(scope.kelurahan);
       }
       const [resRentan] = await pool.query(rentanQuery, rentanParams);
       if (resRentan && resRentan.length > 0) lansiaRentanStats = resRentan;
@@ -428,6 +428,10 @@ class FasilitasRepository {
       bizQuery += ` AND rt = ?`;
       bizParams.push(scope.rt);
     }
+    if (scope.kelurahan) {
+      bizQuery += ` AND kelurahan = ?`;
+      bizParams.push(scope.kelurahan);
+    }
     const [bizStats] = await pool.query(bizQuery, bizParams);
 
     // 2. Populasi usia produktif (15-64 tahun) & pemuda masuk angkatan kerja baru
@@ -456,6 +460,10 @@ class FasilitasRepository {
       nakerQuery += ` AND rt = ?`;
       nakerParams.push(scope.rt);
     }
+    if (scope.kelurahan) {
+      nakerQuery += ` AND kelurahan = ?`;
+      nakerParams.push(scope.kelurahan);
+    }
     const [nakerStats] = await pool.query(nakerQuery, nakerParams);
 
     // 3. Jumlah keluarga Desil 1 & 2 per RW (Kebutuhan Akses Pangan Terjangkau & Graduasi Mandiri)
@@ -468,8 +476,11 @@ class FasilitasRepository {
         FROM desil_keluarga dk
         JOIN kartu_keluarga kk ON dk.no_kk = kk.no_kk
         WHERE COALESCE(dk.desil_saat_ini, dk.desil_usulan) IN (1, 2)
+          AND (? IS NULL OR kk.kelurahan = ?)
+          AND (? IS NULL OR kk.rw = ?)
+          AND (? IS NULL OR kk.rt = ?)
         GROUP BY kk.rw
-      `);
+      `, [scope.kelurahan || null, scope.kelurahan || null, scope.rw || null, scope.rw || null, scope.rt || null, scope.rt || null]);
       desilRentan = dr;
     } catch (e) {}
 
@@ -482,8 +493,11 @@ class FasilitasRepository {
           COUNT(*) as jumlah_toko_pangan
         FROM entitas_usaha
         WHERE apakah_toko_pangan_murah = 1
+          AND (? IS NULL OR kelurahan = ?)
+          AND (? IS NULL OR rw = ?)
+          AND (? IS NULL OR rt = ?)
         GROUP BY rw
-      `);
+      `, [scope.kelurahan || null, scope.kelurahan || null, scope.rw || null, scope.rw || null, scope.rt || null, scope.rt || null]);
       tokoPanganPerRW = tp;
     } catch (e) {}
 
@@ -586,8 +600,22 @@ class FasilitasRepository {
   /**
    * Profil sanitasi lingkungan per RT dan korelasi kasus balita stunting
    */
-  async getSanitasiSummaryByRT() {
+  async getSanitasiSummaryByRT(scope = {}) {
     // 1. Data agregasi sanitasi dari desil_keluarga
+    let sanitasiWhere = 'WHERE 1=1';
+    const sanitasiParams = [];
+    if (scope.kelurahan) {
+      sanitasiWhere += ' AND kk.kelurahan = ?';
+      sanitasiParams.push(scope.kelurahan);
+    }
+    if (scope.rw) {
+      sanitasiWhere += ' AND kk.rw = ?';
+      sanitasiParams.push(scope.rw);
+    }
+    if (scope.rt) {
+      sanitasiWhere += ' AND kk.rt = ?';
+      sanitasiParams.push(scope.rt);
+    }
     const [sanitasiRows] = await pool.query(`
       SELECT 
         kk.rt,
@@ -600,11 +628,26 @@ class FasilitasRepository {
         COUNT(CASE WHEN dk.pembuangan_limbah = 'Septic Tank Standar' THEN 1 END) as limbah_standar
       FROM kartu_keluarga kk
       LEFT JOIN desil_keluarga dk ON kk.no_kk = dk.no_kk
+      ${sanitasiWhere}
       GROUP BY kk.rt, kk.rw
       ORDER BY kk.rw ASC, kk.rt ASC
-    `);
+    `, sanitasiParams);
 
     // 2. Data balita gizi kurang / stunting per RT dari posyandu
+    let stuntingWhere = "WHERE p.status_gizi IN ('Gizi Buruk', 'Gizi Kurang')";
+    const stuntingParams = [];
+    if (scope.kelurahan) {
+      stuntingWhere += ' AND w.kelurahan = ?';
+      stuntingParams.push(scope.kelurahan);
+    }
+    if (scope.rw) {
+      stuntingWhere += ' AND w.rw = ?';
+      stuntingParams.push(scope.rw);
+    }
+    if (scope.rt) {
+      stuntingWhere += ' AND w.rt = ?';
+      stuntingParams.push(scope.rt);
+    }
     const [stuntingRows] = await pool.query(`
       SELECT 
         w.rt,
@@ -612,9 +655,9 @@ class FasilitasRepository {
         COUNT(DISTINCT p.id) as kasus_stunting_balita
       FROM posyandu p
       JOIN warga w ON p.nik_warga = w.nik
-      WHERE p.status_gizi IN ('Gizi Buruk', 'Gizi Kurang')
+      ${stuntingWhere}
       GROUP BY w.rt, w.rw
-    `);
+    `, stuntingParams);
 
     return {
       sanitasi_rt: sanitasiRows,
@@ -903,4 +946,3 @@ class FasilitasRepository {
 }
 
 module.exports = new FasilitasRepository();
-

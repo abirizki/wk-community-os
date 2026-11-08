@@ -22,48 +22,89 @@ function resolveAnalyticsScope(req, res) {
     return null;
   }
 
+  const allowedRoles = ['admin_kelurahan', 'admin', 'staf_kelurahan', 'lurah', 'ketua_rt', 'ketua_rw', 'admin_rw', 'camat', 'walikota', 'superadmin'];
+  if (!allowedRoles.includes(user.role)) {
+    res.status(403).json({ success: false, message: 'Akses analitik hanya tersedia untuk petugas wilayah.' });
+    return null;
+  }
+
+  const areaScope = user.kelurahan ? { kelurahan: user.kelurahan } : {};
+  const requestedRW = req.query.rw && req.query.rw !== 'all' ? String(req.query.rw) : null;
+  const requestedRT = req.query.rt && req.query.rt !== 'all' ? String(req.query.rt) : null;
+
   // 1. Ketua RT: terkunci hanya pada RT & RW sesi
   if (user.role === 'ketua_rt') {
-    if (req.query.rt && req.query.rt !== 'all' && req.query.rt !== user.rt) {
+    if (!user.rt || !user.rw) {
+      res.status(403).json({ success: false, message: 'Cakupan RT/RW tidak tersedia pada sesi pengguna.' });
+      return null;
+    }
+    if (requestedRT && requestedRT !== user.rt) {
       res.status(403).json({
         success: false,
         message: `Akses ditolak: Anda hanya berwenang mengakses data analitik RT ${user.rt}.`
       });
       return null;
     }
-    if (req.query.rw && req.query.rw !== user.rw) {
+    if (requestedRW && requestedRW !== user.rw) {
       res.status(403).json({
         success: false,
         message: `Akses ditolak: Anda hanya berwenang mengakses data analitik RW ${user.rw}.`
       });
       return null;
     }
-    return { rt: user.rt || '001', rw: user.rw || '001' };
+    return { ...areaScope, rt: user.rt, rw: user.rw };
   }
 
   // 2. Ketua RW / Admin RW: terkunci hanya pada RW sesi. Boleh mempersempit RT.
   if (['ketua_rw', 'admin_rw'].includes(user.role)) {
-    if (req.query.rw && req.query.rw !== user.rw) {
+    if (!user.rw) {
+      res.status(403).json({ success: false, message: 'Cakupan RW tidak tersedia pada sesi pengguna.' });
+      return null;
+    }
+    if (requestedRW && requestedRW !== user.rw) {
       res.status(403).json({
         success: false,
         message: `Akses ditolak: Anda hanya berwenang mengakses data analitik RW ${user.rw}.`
       });
       return null;
     }
-    const targetRT = (req.query.rt && req.query.rt !== 'all') ? req.query.rt : null;
-    return { rt: targetRT, rw: user.rw || '001' };
+    return { ...areaScope, rt: requestedRT, rw: user.rw };
   }
 
-  // 3. Admin Kelurahan, Lurah, Camat, Walikota, Superadmin
-  const targetRT = (req.query.rt && req.query.rt !== 'all') ? req.query.rt : null;
-  const targetRW = req.query.rw || user.rw || '001';
-  return { rt: targetRT, rw: targetRW };
+  // 3. Petugas kelurahan may filter within their session kelurahan.
+  if (['admin_kelurahan', 'admin', 'staf_kelurahan', 'lurah'].includes(user.role)) {
+    if (!user.kelurahan) {
+      res.status(403).json({ success: false, message: 'Cakupan kelurahan tidak tersedia pada sesi pengguna.' });
+      return null;
+    }
+    return { ...areaScope, rt: requestedRT, rw: requestedRW };
+  }
+
+  // 4. Executive roles remain bounded by their active tenant / kecamatan.
+  if (user.role === 'camat') {
+    if (!user.kelurahan) {
+      res.status(403).json({ success: false, message: 'Pilih cakupan kelurahan sebelum membuka analitik.' });
+      return null;
+    }
+    return { ...areaScope, rt: requestedRT, rw: requestedRW };
+  }
+  if (user.active_tenant?.kode_kelurahan) {
+    return {
+      ...areaScope,
+      kelurahan: user.active_tenant.nama_kelurahan || user.kelurahan,
+      rt: requestedRT,
+      rw: requestedRW
+    };
+  }
+  return { rt: requestedRT, rw: requestedRW };
 }
 
 // GET /api/analytics/executive-summary - Ringkasan Eksekutif & Matriks Kewilayahan
 router.get('/executive-summary', requireAuth, async (req, res) => {
   try {
-    const summary = await aiEngineService.getExecutiveSummary(req.session.user);
+    const scope = resolveAnalyticsScope(req, res);
+    if (!scope) return;
+    const summary = await aiEngineService.getExecutiveSummary(req.session.user, scope);
     res.json({
       success: true,
       data: summary
@@ -79,7 +120,9 @@ router.get('/executive-summary', requireAuth, async (req, res) => {
 // GET /api/analytics/ai-insights - Rekomendasi Cerdas AI Terperinci
 router.get('/ai-insights', requireAuth, async (req, res) => {
   try {
-    const insights = await aiEngineService.getAIInsights(req.session.user);
+    const scope = resolveAnalyticsScope(req, res);
+    if (!scope) return;
+    const insights = await aiEngineService.getAIInsights(req.session.user, scope);
     res.json({
       success: true,
       data: insights
@@ -95,7 +138,9 @@ router.get('/ai-insights', requireAuth, async (req, res) => {
 // GET /api/analytics/role-brief - Ringkasan Harian Berbasis Peran (Role-Scoped AI Brief)
 router.get('/role-brief', requireAuth, async (req, res) => {
   try {
-    const brief = await aiEngineService.getRoleScopedBrief(req.session.user);
+    const scope = resolveAnalyticsScope(req, res);
+    if (!scope) return;
+    const brief = await aiEngineService.getRoleScopedBrief(req.session.user, scope);
     res.json({
       success: true,
       data: brief
@@ -117,6 +162,10 @@ router.get('/demografi', requireAuth, async (req, res) => {
     let whereWarga = "WHERE status_kependudukan != 'Meninggal'";
     const paramsWarga = [];
 
+    if (scope.kelurahan) {
+      whereWarga += " AND kelurahan = ?";
+      paramsWarga.push(scope.kelurahan);
+    }
     if (scope.rw) {
       whereWarga += " AND rw = ?";
       paramsWarga.push(scope.rw);
@@ -191,14 +240,47 @@ router.get('/demografi', requireAuth, async (req, res) => {
     );
 
     // Matriks Heatmap Spasial RT
-    const [rtRows] = await pool.query(
-      `SELECT DISTINCT rt FROM warga WHERE rw = ? AND rt IS NOT NULL AND rt != '' ORDER BY rt ASC`,
-      [scope.rw || '001']
+    let territoryWhere = "WHERE status_kependudukan != 'Meninggal' AND rt IS NOT NULL AND rt != ''";
+    const territoryParams = [];
+    if (scope.kelurahan) {
+      territoryWhere += " AND kelurahan = ?";
+      territoryParams.push(scope.kelurahan);
+    }
+    const [rwRows] = await pool.query(
+      `SELECT DISTINCT rw FROM warga ${territoryWhere} ORDER BY rw ASC`,
+      territoryParams
     );
-    let rtList = rtRows.map(r => r.rt);
-    if (rtList.length === 0) rtList = ['001', '002', '003', '004', '005'];
 
-    const spatial_heatmap = await Promise.all(rtList.map(async (rt) => {
+    let rtOptionsWhere = territoryWhere;
+    const rtOptionsParams = [...territoryParams];
+    if (scope.rw) {
+      rtOptionsWhere += " AND rw = ?";
+      rtOptionsParams.push(scope.rw);
+    }
+    const [rtOptionRows] = await pool.query(
+      `SELECT DISTINCT rt FROM warga ${rtOptionsWhere} ORDER BY rt ASC`,
+      rtOptionsParams
+    );
+
+    let rtWhere = rtOptionsWhere;
+    const rtParams = [...rtOptionsParams];
+    if (scope.rt) {
+      rtWhere += " AND rt = ?";
+      rtParams.push(scope.rt);
+    }
+    const [rtDataRows] = await pool.query(
+      `SELECT DISTINCT rw, rt FROM warga ${rtWhere} ORDER BY rw ASC, rt ASC`,
+      rtParams
+    );
+    const rtList = rtDataRows.map(r => ({ rw: r.rw, rt: r.rt }));
+
+    const spatial_heatmap = await Promise.all(rtList.map(async ({ rw, rt }) => {
+      let whereRT = "WHERE rt = ? AND rw = ? AND status_kependudukan != 'Meninggal'";
+      const paramsRT = [rt, rw];
+      if (scope.kelurahan) {
+        whereRT += " AND kelurahan = ?";
+        paramsRT.push(scope.kelurahan);
+      }
       const [[wStats]] = await pool.query(
         `SELECT 
            COUNT(*) as total_warga,
@@ -207,48 +289,53 @@ router.get('/demografi', requireAuth, async (req, res) => {
            SUM(CASE WHEN jenis_kelamin = 'P' THEN 1 ELSE 0 END) as wanita,
            SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 5 THEN 1 ELSE 0 END) as balita,
            SUM(CASE WHEN TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60 THEN 1 ELSE 0 END) as lansia
-         FROM warga WHERE rw = ? AND rt = ? AND status_kependudukan != 'Meninggal'`,
-        [scope.rw || '001', rt]
+         FROM warga ${whereRT}`,
+        paramsRT
       );
 
-      let desilCount = 0;
-      try {
-        const [[dStats]] = await pool.query(
-          `SELECT COUNT(DISTINCT w.no_kk) as total 
-           FROM desil_keluarga dk 
-           JOIN warga w ON dk.no_kk = w.no_kk 
-           WHERE w.rw = ? AND w.rt = ? AND COALESCE(dk.desil_saat_ini, dk.desil_usulan) IN (1, 2)`,
-          [scope.rw || '001', rt]
-        );
-        desilCount = dStats?.total || 0;
-      } catch (e) {
-        // Fallback
+      let whereKK = "WHERE kk.rt = ? AND kk.rw = ? AND COALESCE(dk.desil_saat_ini, dk.desil_usulan) IN (1, 2)";
+      const paramsKK = [rt, rw];
+      if (scope.kelurahan) {
+        whereKK += " AND kk.kelurahan = ?";
+        paramsKK.push(scope.kelurahan);
       }
+      const [[dStats]] = await pool.query(
+        `SELECT COUNT(DISTINCT kk.no_kk) as total
+         FROM desil_keluarga dk
+         JOIN kartu_keluarga kk ON dk.no_kk = kk.no_kk
+         ${whereKK}`,
+        paramsKK
+      );
 
-      let pbbKepatuhan = 0;
+      let pbbKepatuhan = null;
       try {
         const [[pStats]] = await pool.query(
-          `SELECT COUNT(*) as total_nop, SUM(CASE WHEN status_pembayaran = 'Lunas' THEN 1 ELSE 0 END) as total_lunas 
-           FROM pbb_sppt WHERE rw = ? AND rt = ?`,
-          [scope.rw || '001', rt]
+          `SELECT COUNT(*) as total_nop,
+                  SUM(CASE WHEN p.status_pembayaran = 'PAID' THEN 1 ELSE 0 END) as total_lunas
+           FROM pbb p
+           LEFT JOIN warga w ON p.nik_warga = w.nik
+           WHERE COALESCE(p.rt, w.rt) = ?
+             AND (? IS NULL OR COALESCE(p.rw, w.rw) = ?)
+             AND (? IS NULL OR w.kelurahan = ?)`,
+          [rt, rw, rw, scope.kelurahan || null, scope.kelurahan || null]
         );
         if (pStats?.total_nop > 0) {
           pbbKepatuhan = Math.round((Number(pStats.total_lunas || 0) / Number(pStats.total_nop)) * 100);
         }
       } catch (e) {
-        // Fallback
+        console.warn('[Analytics] PBB summary unavailable:', e.message);
       }
 
       return {
         rt,
-        rw: scope.rw || '001',
+        rw,
         total_warga: Number(wStats?.total_warga || 0),
         total_kk: Number(wStats?.total_kk || 0),
         pria: Number(wStats?.pria || 0),
         wanita: Number(wStats?.wanita || 0),
         balita: Number(wStats?.balita || 0),
         lansia: Number(wStats?.lansia || 0),
-        desil_rentan_kk: Number(desilCount),
+        desil_rentan_kk: Number(dStats?.total || 0),
         pbb_kepatuhan_persen: pbbKepatuhan
       };
     }));
@@ -261,7 +348,9 @@ router.get('/demografi', requireAuth, async (req, res) => {
         pekerjaan: pekerjaanRows,
         agama: agamaRows,
         pendidikan: pendidikanRows,
-        spatial_heatmap
+        spatial_heatmap,
+        rw_options: rwRows.map(r => r.rw),
+        rt_options: rtOptionRows.map(r => r.rt)
       }
     });
   } catch (error) {
@@ -279,50 +368,85 @@ router.get('/dokumen', requireAuth, async (req, res) => {
     let whereDoc = "WHERE 1=1";
     const paramsDoc = [];
     if (scope.rw) {
-      whereDoc += " AND rw = ?";
+      whereDoc += " AND d.rw = ?";
       paramsDoc.push(scope.rw);
     }
     if (scope.rt) {
-      whereDoc += " AND rt = ?";
+      whereDoc += " AND d.rt = ?";
       paramsDoc.push(scope.rt);
     }
+    if (scope.kelurahan) {
+      whereDoc += " AND w.kelurahan = ?";
+      paramsDoc.push(scope.kelurahan);
+    }
 
-    const period = req.query.period || '30d';
+    const validPeriods = ['7d', '30d', 'q', 'ytd'];
+    const period = validPeriods.includes(req.query.period) ? req.query.period : '30d';
     if (period === '7d') {
-      whereDoc += " AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+      whereDoc += " AND d.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
     } else if (period === '30d') {
-      whereDoc += " AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+      whereDoc += " AND d.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
     } else if (period === 'q') {
-      whereDoc += " AND created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)";
+      whereDoc += " AND d.created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)";
     } else if (period === 'ytd') {
-      whereDoc += " AND created_at >= DATE_SUB(NOW(), INTERVAL 365 DAY)";
+      whereDoc += " AND YEAR(d.created_at) = YEAR(CURDATE())";
     }
 
     const [[docSummary]] = await pool.query(
       `SELECT 
          COUNT(*) as total_pengajuan,
-         SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) as step_selesai,
-         SUM(CASE WHEN approval_step = 'RT' THEN 1 ELSE 0 END) as pending_rt,
-         SUM(CASE WHEN approval_step = 'RW' THEN 1 ELSE 0 END) as pending_rw,
-         SUM(CASE WHEN approval_step = 'KELURAHAN' THEN 1 ELSE 0 END) as pending_kelurahan,
-         AVG(CASE WHEN status = 'APPROVED' THEN TIMESTAMPDIFF(MINUTE, created_at, updated_at)/60 ELSE NULL END) as avg_sla_jam
-       FROM dokumen_request ${whereDoc}`,
+         SUM(CASE WHEN d.status IN ('APPROVED', 'COMPLETED') THEN 1 ELSE 0 END) as step_selesai,
+         SUM(CASE WHEN d.status = 'REJECTED' THEN 1 ELSE 0 END) as ditolak,
+         SUM(CASE WHEN d.status NOT IN ('APPROVED', 'COMPLETED', 'REJECTED') AND d.approval_step = 'RT' THEN 1 ELSE 0 END) as pending_rt,
+         SUM(CASE WHEN d.status NOT IN ('APPROVED', 'COMPLETED', 'REJECTED') AND d.approval_step = 'RW' THEN 1 ELSE 0 END) as pending_rw,
+         SUM(CASE WHEN d.status NOT IN ('APPROVED', 'COMPLETED', 'REJECTED') AND d.approval_step = 'KELURAHAN' THEN 1 ELSE 0 END) as pending_kelurahan,
+         AVG(CASE WHEN d.status IN ('APPROVED', 'COMPLETED') THEN TIMESTAMPDIFF(MINUTE, d.created_at, d.updated_at)/60 ELSE NULL END) as avg_sla_jam
+       FROM dokumen_request d
+       LEFT JOIN warga w ON d.nik_pemohon = w.nik
+       ${whereDoc}`,
       paramsDoc
     );
 
     let assistedCount = 0;
     try {
       const [[assistRow]] = await pool.query(
-        `SELECT COUNT(*) as total FROM dokumen_request ${whereDoc} AND (keperluan LIKE '%dampingan%' OR keperluan LIKE '%offline%')`,
+        `SELECT COUNT(*) as total FROM dokumen_request d
+         LEFT JOIN warga w ON d.nik_pemohon = w.nik
+         ${whereDoc} AND (d.keperluan LIKE '%dampingan%' OR d.keperluan LIKE '%offline%')`,
         paramsDoc
       );
       assistedCount = assistRow?.total || 0;
     } catch (e) {
-      // Fallback
+      console.warn('[Analytics] Assisted submission metric unavailable:', e.message);
     }
 
     const [byTypeRows] = await pool.query(
-      `SELECT jenis_dokumen, COUNT(*) as count FROM dokumen_request ${whereDoc} GROUP BY jenis_dokumen ORDER BY count DESC`,
+      `SELECT COALESCE(NULLIF(d.jenis_dokumen, ''), d.jenis_surat) as jenis_dokumen,
+              COUNT(*) as count,
+              AVG(CASE WHEN d.status IN ('APPROVED', 'COMPLETED')
+                       THEN TIMESTAMPDIFF(MINUTE, d.created_at, d.updated_at)/60
+                       ELSE NULL END) as rata_jam
+       FROM dokumen_request d
+       LEFT JOIN warga w ON d.nik_pemohon = w.nik
+       ${whereDoc}
+       GROUP BY COALESCE(NULLIF(d.jenis_dokumen, ''), d.jenis_surat)
+       ORDER BY count DESC`,
+      paramsDoc
+    );
+    const [byRT] = await pool.query(
+      `SELECT d.rw, d.rt,
+              COUNT(*) AS total,
+              SUM(CASE WHEN d.status IN ('APPROVED', 'COMPLETED') THEN 1 ELSE 0 END) AS selesai,
+              SUM(CASE WHEN d.status = 'REJECTED' THEN 1 ELSE 0 END) AS ditolak,
+              SUM(CASE WHEN d.status NOT IN ('APPROVED', 'COMPLETED', 'REJECTED') THEN 1 ELSE 0 END) AS dalam_proses,
+              AVG(CASE WHEN d.status IN ('APPROVED', 'COMPLETED')
+                       THEN TIMESTAMPDIFF(MINUTE, d.created_at, d.updated_at)/60
+                       ELSE NULL END) AS rata_jam
+       FROM dokumen_request d
+       LEFT JOIN warga w ON d.nik_pemohon = w.nik
+       ${whereDoc}
+       GROUP BY d.rw, d.rt
+       ORDER BY d.rw, d.rt`,
       paramsDoc
     );
 
@@ -334,13 +458,27 @@ router.get('/dokumen', requireAuth, async (req, res) => {
         pipeline: {
           total_pengajuan: Number(docSummary?.total_pengajuan || 0),
           step_selesai: Number(docSummary?.step_selesai || 0),
+          ditolak: Number(docSummary?.ditolak || 0),
           total_assisted_submission: Number(assistedCount),
           pending_rt: Number(docSummary?.pending_rt || 0),
           pending_rw: Number(docSummary?.pending_rw || 0),
           pending_kelurahan: Number(docSummary?.pending_kelurahan || 0),
-          rata_sla_jam: Number((Number(docSummary?.avg_sla_jam || 0)).toFixed(1))
+          rata_sla_jam: docSummary?.avg_sla_jam == null ? null : Number(Number(docSummary.avg_sla_jam).toFixed(1))
         },
-        by_type: byTypeRows
+        by_type: byTypeRows.map(row => ({
+          jenis_dokumen: row.jenis_dokumen,
+          count: Number(row.count || 0),
+          rata_jam: row.rata_jam == null ? null : Number(Number(row.rata_jam).toFixed(1))
+        })),
+        by_rt: byRT.map(row => ({
+          rw: row.rw,
+          rt: row.rt,
+          total: Number(row.total || 0),
+          selesai: Number(row.selesai || 0),
+          ditolak: Number(row.ditolak || 0),
+          dalam_proses: Number(row.dalam_proses || 0),
+          rata_jam: row.rata_jam == null ? null : Number(Number(row.rata_jam).toFixed(1))
+        }))
       }
     });
   } catch (error) {

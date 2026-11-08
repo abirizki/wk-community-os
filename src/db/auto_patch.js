@@ -435,7 +435,9 @@ async function autoPatchDatabase() {
       "catatan_bansos_mandiri TEXT NULL",
       "pin_mandiri VARCHAR(255) NULL",
       "last_login_at TIMESTAMP NULL DEFAULT NULL",
-      "login_method VARCHAR(50) NULL"
+      "login_method VARCHAR(50) NULL",
+      "is_nik_sementara TINYINT(1) NOT NULL DEFAULT 0",
+      "nik_definitif_updated_at TIMESTAMP NULL DEFAULT NULL"
     ];
     for (const wCol of wargaSocialCols) {
       try {

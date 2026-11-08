@@ -14,8 +14,8 @@ class AIEngineService {
   /**
    * Menghasilkan Executive Summary lengkap (KPI, Matriks Wilayah, & Rekomendasi AI)
    */
-  async getExecutiveSummary(userSession = {}) {
-    const scope = this.resolveScope(userSession);
+  async getExecutiveSummary(userSession = {}, requestedScope = {}) {
+    const scope = { ...this.resolveScope(userSession), ...requestedScope };
 
     const [
       demography,
@@ -32,8 +32,11 @@ class AIEngineService {
       analyticsRepository.getLansiaHealthByRT(scope),
       analyticsRepository.getBansosEquityByRT(scope),
       analyticsRepository.getDocumentVelocityStats(scope),
-      analyticsRepository.getComplaintsStats(),
-      completenessRepository.getKelurahanDataMaturityIndex().catch(() => null),
+      analyticsRepository.getComplaintsStats(scope),
+      completenessRepository.getKelurahanDataMaturityIndex(scope).catch((error) => {
+        console.warn('[AI Summary] Data maturity unavailable:', error.message);
+        return null;
+      }),
       dayaDukungService.getComprehensiveCarryingCapacity(scope).catch(() => null)
     ]);
 
@@ -54,9 +57,9 @@ class AIEngineService {
     });
 
     // Hitung Data Fidelity Confidence Score
-    const dataFidelity = maturityStats 
+    const dataFidelity = maturityStats
       ? completenessService.calculateDataFidelityConfidence(maturityStats.overall_maturity_score)
-      : { confidence_score: 85, level: 'HIGH', badge_color: 'emerald', explanation: 'Tingkat kepercayaan data prima untuk kebijakan.' };
+      : { confidence_score: null, level: 'UNAVAILABLE', badge_color: 'neutral', explanation: 'Indeks kepercayaan data belum tersedia untuk cakupan ini.' };
 
     return {
       scope,
@@ -77,8 +80,8 @@ class AIEngineService {
   /**
    * Menghasilkan daftar rekomendasi cerdas AI terperinci
    */
-  async getAIInsights(userSession = {}) {
-    const summary = await this.getExecutiveSummary(userSession);
+  async getAIInsights(userSession = {}, requestedScope = {}) {
+    const summary = await this.getExecutiveSummary(userSession, requestedScope);
     return summary.ai_insights;
   }
 
@@ -87,9 +90,9 @@ class AIEngineService {
    * Setiap role mendapatkan KPI, prioritas, dan tindakan yang relevan dengan wilayahnya.
    * Menggunakan rule-based engine — BUKAN generative AI.
    */
-  async getRoleScopedBrief(userSession = {}) {
+  async getRoleScopedBrief(userSession = {}, requestedScope = {}) {
     const role = userSession?.role || 'warga';
-    const scope = this.resolveScope(userSession);
+    const scope = { ...this.resolveScope(userSession), ...requestedScope };
     const today = new Date().toISOString().split('T')[0];
 
     // Ambil data yang relevan sesuai role
@@ -342,8 +345,13 @@ class AIEngineService {
     if (['ketua_rw', 'admin_rw'].includes(user.role)) {
       return { rw: user.rw || '001', kode_kelurahan: user.kode_kelurahan || '32.72.03.1004' };
     }
-    if (['admin_kelurahan', 'lurah', 'admin'].includes(user.role)) {
-      return { kode_kelurahan: user.kode_kelurahan || '32.72.03.1004' };
+    if (['admin_kelurahan', 'lurah', 'admin', 'staf_kelurahan'].includes(user.role)) {
+      return {
+        kelurahan: user.kelurahan || null,
+        kode_kelurahan: user.kode_kelurahan || null,
+        rw: user.rw || undefined,
+        rt: user.rt || undefined
+      };
     }
     if (user.role === 'camat') {
       return { kode_kecamatan: user.kode_kecamatan || '32.72.03' };
@@ -366,15 +374,15 @@ class AIEngineService {
       const rate = (stuntingRisk / total) * 100;
 
       if (stuntingRisk >= 2 || rate >= 15) {
-        const affectedKids = balitaNutrition.at_risk_balita.filter(b => b.rt === rtItem.rt);
+        const affectedKids = balitaNutrition.at_risk_balita.filter(b => b.rt === rtItem.rt && b.rw === rtItem.rw);
         insights.push({
-          id: `INS-STUNTING-${rtItem.rt}`,
+          id: `INS-STUNTING-${rtItem.rw}-${rtItem.rt}`,
           category: 'KESEHATAN_BALITA',
           rule_code: 'RULE_STUNTING_CLUSTER',
           severity: 'CRITICAL',
           badge_label: 'Prioritas Intervensi Stunting',
           title: `Kluster Balita Berisiko Stunting Tinggi Terdeteksi di RT ${rtItem.rt}`,
-          summary: `Tercatat ${stuntingRisk} balita (${rate.toFixed(1)}% dari total pemeriksaan) terindikasi gizi kurang/buruk di RT ${rtItem.rt} / RW ${rtItem.rw}.`,
+          summary: `Tercatat ${stuntingRisk} hasil pemeriksaan (${rate.toFixed(1)}% dari pemeriksaan yang dihitung) berstatus gizi kurang/buruk di RT ${rtItem.rt} / RW ${rtItem.rw}. Ini sinyal tindak lanjut, bukan diagnosis stunting.`,
           evidence: {
             wilayah: `RT ${rtItem.rt} / RW ${rtItem.rw}`,
             total_balita_diperiksa: rtItem.total_balita_unik,
@@ -397,13 +405,13 @@ class AIEngineService {
         });
       } else if (stuntingRisk === 1) {
         insights.push({
-          id: `INS-STUNTING-WARN-${rtItem.rt}`,
+          id: `INS-STUNTING-WARN-${rtItem.rw}-${rtItem.rt}`,
           category: 'KESEHATAN_BALITA',
           rule_code: 'RULE_STUNTING_MONITORING',
           severity: 'WARNING',
           badge_label: 'Pemantauan Gizi Ketat',
           title: `Perhatian Gizi Balita Terindikasi di RT ${rtItem.rt}`,
-          summary: `Ditemukan 1 kasus balita dalam kategori gizi kurang di RT ${rtItem.rt}. Diperlukan mitigasi dini agar tidak berkembang menjadi stunting kronis.`,
+          summary: `Ditemukan 1 hasil pemeriksaan balita berstatus gizi kurang di RT ${rtItem.rt}. Validasi pemeriksaan terbaru dan tindak lanjuti sesuai protokol tenaga kesehatan.`,
           evidence: {
             wilayah: `RT ${rtItem.rt} / RW ${rtItem.rw}`,
             total_balita_diperiksa: rtItem.total_balita_unik,
@@ -464,7 +472,7 @@ class AIEngineService {
       // Jika ada SKTM disahkan tapi belum ada bansos terealisasi
       if (b.total_sktm > 0 && b.disahkan_bansos === 0) {
         insights.push({
-          id: `INS-EQUITY-${b.rt}`,
+          id: `INS-EQUITY-${b.rw}-${b.rt}`,
           category: 'BANTUAN_SOSIAL',
           rule_code: 'RULE_BANSOS_EQUITY',
           severity: 'WARNING',
@@ -500,7 +508,7 @@ class AIEngineService {
         severity: 'INFO',
         badge_label: 'Dinamika Kependudukan',
         title: `Rasio Ketergantungan Penduduk: ${dependencyRatio.toFixed(1)}%`,
-        summary: `Kelurahan Kebonjati memiliki ${demography.total_warga_aktif} warga aktif. Setiap 100 penduduk usia produktif menopang sekitar ${Math.round(dependencyRatio)} jiwa usia non-produktif (balita & lansia).`,
+        summary: `${demography.total_warga_aktif} warga aktif tercatat pada cakupan terpilih. Setiap 100 penduduk usia produktif berbanding dengan sekitar ${Math.round(dependencyRatio)} warga usia balita atau lansia.`,
         evidence: {
           total_warga: demography.total_warga_aktif,
           usia_produktif: demography.total_produktif,
@@ -527,82 +535,80 @@ class AIEngineService {
    */
   buildRTRiskMatrix({ balitaNutrition, lansiaHealth, bansosEquity }) {
     // Kumpulkan semua RT unik
-    const rtSet = new Set();
-    balitaNutrition.per_rt.forEach(r => rtSet.add(r.rt));
-    lansiaHealth.per_rt.forEach(r => rtSet.add(r.rt));
-    bansosEquity.forEach(r => rtSet.add(r.rt));
-
-    // Default ke RT 001, 002, 003 bila database baru mulai diisi
-    ['001', '002', '003'].forEach(r => rtSet.add(r));
-
-    const sortedRTs = Array.from(rtSet).sort();
-
-    return sortedRTs.map((rt) => {
-      const balita = balitaNutrition.per_rt.find(r => r.rt === rt) || {
-        total_balita_unik: 0,
-        gizi_kurang: 0,
-        gizi_buruk: 0,
-        gizi_baik: 0
-      };
-
-      const lansia = lansiaHealth.per_rt.find(r => r.rt === rt) || {
-        total_lansia: 0,
-        sebatang_kara: 0,
-        hipertensi: 0,
-        hipertensi_berat: 0,
-        diabetes: 0,
-        ketergantungan_tinggi: 0
-      };
-
-      const bansos = bansosEquity.find(r => r.rt === rt) || {
-        total_sktm: 0,
-        disahkan_bansos: 0,
-        total_usulan_bansos: 0,
-        total_nominal_disalurkan: 0
-      };
-
-      // Tentukan Level Risiko Stunting RT
-      const stuntingRiskCount = balita.gizi_kurang + balita.gizi_buruk;
-      let stuntingLevel = 'AMAN';
-      if (stuntingRiskCount >= 2) stuntingLevel = 'TINGGI';
-      else if (stuntingRiskCount === 1) stuntingLevel = 'WASPADA';
-
-      // Tentukan Level Risiko Lansia RT
-      let lansiaLevel = 'AMAN';
-      if (lansia.hipertensi_berat >= 2 || (lansia.sebatang_kara >= 2)) lansiaLevel = 'TINGGI';
-      else if (lansia.hipertensi >= 1 || lansia.sebatang_kara >= 1) lansiaLevel = 'WASPADA';
-
-      // Status Kesejahteraan
-      let bansosCoverage = 'TERPENUHI';
-      if (bansos.total_sktm > bansos.disahkan_bansos) {
-        bansosCoverage = 'PERLU_PERHATIAN';
-      }
-
-      return {
-        rt,
-        rw: '001',
-        stunting: {
-          level: stuntingLevel,
-          kasus_rawan: stuntingRiskCount,
-          total_balita: balita.total_balita_unik
-        },
-        geriatri: {
-          level: lansiaLevel,
-          hipertensi: lansia.hipertensi,
-          hipertensi_berat: lansia.hipertensi_berat,
-          sebatang_kara: lansia.sebatang_kara,
-          total_lansia: lansia.total_lansia
-        },
-        bansos: {
-          coverage: bansosCoverage,
-          total_sktm: bansos.total_sktm,
-          disahkan: bansos.disahkan_bansos,
-          nominal: bansos.total_nominal_disalurkan
-        }
-      };
+    const territoryKey = ({ rw, rt }) => `${rw ?? ''}:${rt ?? ''}`;
+    const territories = new Map();
+    [...balitaNutrition.per_rt, ...lansiaHealth.per_rt, ...bansosEquity].forEach((item) => {
+      if (item.rt == null || item.rw == null) return;
+      territories.set(territoryKey(item), { rw: item.rw, rt: item.rt });
     });
+
+    return [...territories.values()]
+      .sort((a, b) => String(a.rw).localeCompare(String(b.rw)) || String(a.rt).localeCompare(String(b.rt)))
+      .map(({ rw, rt }) => {
+        const balita = balitaNutrition.per_rt.find(r => r.rt === rt && r.rw === rw) || {
+          total_balita_unik: 0,
+          gizi_kurang: 0,
+          gizi_buruk: 0,
+          gizi_baik: 0
+        };
+
+        const lansia = lansiaHealth.per_rt.find(r => r.rt === rt && r.rw === rw) || {
+          total_lansia: 0,
+          sebatang_kara: 0,
+          hipertensi: 0,
+          hipertensi_berat: 0,
+          diabetes: 0,
+          ketergantungan_tinggi: 0
+        };
+
+        const bansos = bansosEquity.find(r => r.rt === rt && r.rw === rw) || {
+          total_sktm: 0,
+          disahkan_bansos: 0,
+          total_usulan_bansos: 0,
+          total_nominal_disalurkan: 0
+        };
+
+        // Tentukan Level Risiko Stunting RT
+        const stuntingRiskCount = balita.gizi_kurang + balita.gizi_buruk;
+        let stuntingLevel = 'AMAN';
+        if (stuntingRiskCount >= 2) stuntingLevel = 'TINGGI';
+        else if (stuntingRiskCount === 1) stuntingLevel = 'WASPADA';
+
+        // Tentukan Level Risiko Lansia RT
+        let lansiaLevel = 'AMAN';
+        if (lansia.hipertensi_berat >= 2 || (lansia.sebatang_kara >= 2)) lansiaLevel = 'TINGGI';
+        else if (lansia.hipertensi >= 1 || lansia.sebatang_kara >= 1) lansiaLevel = 'WASPADA';
+
+        // Status Kesejahteraan
+        let bansosCoverage = 'TERPENUHI';
+        if (bansos.total_sktm > bansos.disahkan_bansos) {
+          bansosCoverage = 'PERLU_PERHATIAN';
+        }
+
+        return {
+          rt,
+          rw,
+          stunting: {
+            level: stuntingLevel,
+            kasus_rawan: stuntingRiskCount,
+            total_balita: balita.total_balita_unik
+          },
+          geriatri: {
+            level: lansiaLevel,
+            hipertensi: lansia.hipertensi,
+            hipertensi_berat: lansia.hipertensi_berat,
+            sebatang_kara: lansia.sebatang_kara,
+            total_lansia: lansia.total_lansia
+          },
+          bansos: {
+            coverage: bansosCoverage,
+            total_sktm: bansos.total_sktm,
+            disahkan: bansos.disahkan_bansos,
+            nominal: bansos.total_nominal_disalurkan
+          }
+        };
+      });
   }
 }
 
 module.exports = new AIEngineService();
-

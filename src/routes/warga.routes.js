@@ -128,4 +128,72 @@ router.patch('/mandiri-asuransi-bansos', requireAuth, async (req, res) => {
   }
 });
 
+
+// PATCH /api/warga/update-nik-bayi - Orang tua memperbarui NIK sementara bayi menjadi NIK resmi definitif dari Akta Lahir
+router.patch('/update-nik-bayi', requireAuth, async (req, res) => {
+  try {
+    const { nik_sementara, nik_definitif, catatan } = req.body;
+    const user = req.session.user;
+
+    if (!nik_sementara || !nik_definitif) {
+      return res.status(400).json({ success: false, message: 'NIK sementara dan NIK definitif wajib diisi.' });
+    }
+
+    // Validasi format NIK definitif: tepat 16 digit angka, tidak boleh diawali 0000
+    if (!/^\d{16}$/.test(nik_definitif) || nik_definitif.startsWith('0000')) {
+      return res.status(400).json({ success: false, message: 'Format NIK definitif tidak valid (harus 16 digit angka resmi).' });
+    }
+
+    const pool = require('../db/pool');
+
+    // Cek apakah bayi ada di database dan benar berstatus NIK sementara
+    const [targetBaby] = await pool.execute('SELECT * FROM warga WHERE nik = ?', [nik_sementara]);
+    if (targetBaby.length === 0) {
+      return res.status(404).json({ success: false, message: 'Data bayi dengan NIK sementara tidak ditemukan.' });
+    }
+
+    const baby = targetBaby[0];
+
+    // Otorisasi: Warga yang mengupdate harus memiliki No KK yang sama (orang tua / kepala keluarga)
+    // Atau jika petugas (ketua_rt, ketua_rw, admin_kelurahan, superadmin)
+    const isStaff = ['superadmin', 'admin_kelurahan', 'admin', 'lurah', 'ketua_rw', 'ketua_rt'].includes(user.role);
+    if (!isStaff && user.no_kk && user.no_kk !== baby.no_kk) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak: Anda hanya dapat memperbarui data bayi dalam satu Kartu Keluarga.' });
+    }
+
+    // Cek apakah NIK definitif sudah dipakai oleh warga lain
+    const [existingNik] = await pool.execute('SELECT id FROM warga WHERE nik = ? AND id != ?', [nik_definitif, baby.id]);
+    if (existingNik.length > 0) {
+      return res.status(400).json({ success: false, message: 'NIK definitif ini sudah terdaftar atas nama warga lain.' });
+    }
+
+    // Lakukan pembaruan NIK secara terpadu (Cascade ke posyandu)
+    await pool.execute(
+      `UPDATE warga 
+       SET nik = ?, is_nik_sementara = 0, nik_definitif_updated_at = NOW() 
+       WHERE id = ?`,
+      [nik_definitif, baby.id]
+    );
+
+    // Update foreign reference di tabel posyandu balita
+    try {
+      await pool.execute('UPDATE posyandu SET nik_warga = ? WHERE nik_warga = ?', [nik_definitif, nik_sementara]);
+    } catch (e) {}
+
+    res.json({
+      success: true,
+      message: `NIK bayi ${baby.nama} berhasil diperbarui menjadi NIK resmi definitif (${nik_definitif}).`,
+      data: {
+        nama: baby.nama,
+        nik_lama: nik_sementara,
+        nik_baru: nik_definitif,
+        updated_at: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error update-nik-bayi:', error);
+    res.status(500).json({ success: false, message: 'Gagal memperbarui NIK definitif bayi: ' + error.message });
+  }
+});
+
 module.exports = router;

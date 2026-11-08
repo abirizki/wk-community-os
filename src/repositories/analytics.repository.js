@@ -22,6 +22,10 @@ class AnalyticsRepository {
       whereClause += " AND rw = ?";
       params.push(scope.rw);
     }
+    if (scope.kelurahan) {
+      whereClause += " AND kelurahan = ?";
+      params.push(scope.kelurahan);
+    }
 
     // Hitung total warga aktif, gender, dan distribusi umur
     const [wargaRows] = await pool.execute(
@@ -50,6 +54,10 @@ class AnalyticsRepository {
       historyWhere += " AND rw = ?";
       histParams.push(scope.rw);
     }
+    if (scope.kelurahan) {
+      historyWhere += " AND kelurahan = ?";
+      histParams.push(scope.kelurahan);
+    }
 
     const [eventRows] = await pool.execute(
       `SELECT 
@@ -69,6 +77,10 @@ class AnalyticsRepository {
     if (scope.rw) {
       kkWhere += " AND rw = ?";
       kkParams.push(scope.rw);
+    }
+    if (scope.kelurahan) {
+      kkWhere += " AND kelurahan = ?";
+      kkParams.push(scope.kelurahan);
     }
 
     const [kkRows] = await pool.execute(
@@ -96,7 +108,7 @@ class AnalyticsRepository {
    * 2. Agregasi Kesehatan Balita & Risiko Stunting per Wilayah RT
    */
   async getBalitaNutritionByRT(scope = {}) {
-    let whereClause = "WHERE 1=1";
+    let whereClause = "WHERE w.rt IS NOT NULL AND w.rw IS NOT NULL";
     const params = [];
 
     if (scope.rt) {
@@ -107,12 +119,16 @@ class AnalyticsRepository {
       whereClause += " AND w.rw = ?";
       params.push(scope.rw);
     }
+    if (scope.kelurahan) {
+      whereClause += " AND w.kelurahan = ?";
+      params.push(scope.kelurahan);
+    }
 
     // Ambil data agregat per RT
     const [rtRows] = await pool.execute(
       `SELECT 
-        COALESCE(w.rt, '001') AS rt,
-        COALESCE(w.rw, '001') AS rw,
+        w.rt AS rt,
+        w.rw AS rw,
         COUNT(p.id) AS total_pemeriksaan,
         COUNT(DISTINCT p.nama_anak) AS total_balita_unik,
         SUM(CASE WHEN p.status_gizi IN ('Gizi Baik', 'Normal') THEN 1 ELSE 0 END) AS gizi_baik,
@@ -138,8 +154,8 @@ class AnalyticsRepository {
         p.status_gizi,
         p.tanggal_pemeriksaan,
         COALESCE(w.nama, 'Warga') AS nama_ortu,
-        COALESCE(w.rt, '001') AS rt,
-        COALESCE(w.rw, '001') AS rw
+        w.rt AS rt,
+        w.rw AS rw
        FROM posyandu p
        LEFT JOIN warga w ON p.nik_warga = w.nik
        ${whereClause} AND p.status_gizi IN ('Gizi Kurang', 'Gizi Buruk')
@@ -192,6 +208,7 @@ class AnalyticsRepository {
           SUM(CASE WHEN latest.gula_darah_sewaktu >= 200 THEN 1 ELSE 0 END) AS diabetes,
           SUM(CASE WHEN latest.skor_kemandirian_adl IN ('Ketergantungan Berat', 'Ketergantungan Total') THEN 1 ELSE 0 END) AS ketergantungan_tinggi
          FROM posyandu_lansia l
+         INNER JOIN warga scope_w ON scope_w.nik = l.nik
          LEFT JOIN (
            SELECT p1.*
            FROM posyandu_lansia_pemeriksaan p1
@@ -201,10 +218,10 @@ class AnalyticsRepository {
              GROUP BY posyandu_lansia_id
            ) p2 ON p1.posyandu_lansia_id = p2.posyandu_lansia_id AND p1.id = p2.max_id
          ) latest ON l.id = latest.posyandu_lansia_id
-         ${whereClause}
+         ${whereClause}${scope.kelurahan ? ' AND scope_w.kelurahan = ?' : ''}
          GROUP BY l.rt, l.rw
          ORDER BY l.rt ASC`,
-        params
+        scope.kelurahan ? [...params, scope.kelurahan] : params
       );
 
       // Ambil lansia prioritas kritis untuk data bukti AI
@@ -227,6 +244,7 @@ class AnalyticsRepository {
           latest.skor_kemandirian_adl,
           latest.tanggal_pemeriksaan
          FROM posyandu_lansia l
+         INNER JOIN warga scope_w ON scope_w.nik = l.nik
          INNER JOIN (
            SELECT p1.*
            FROM posyandu_lansia_pemeriksaan p1
@@ -236,7 +254,7 @@ class AnalyticsRepository {
              GROUP BY posyandu_lansia_id
            ) p2 ON p1.id = p2.max_id
          ) latest ON l.id = latest.posyandu_lansia_id
-         ${whereClause}
+         ${whereClause}${scope.kelurahan ? ' AND scope_w.kelurahan = ?' : ''}
          AND (
            (latest.tensi_sistolik >= 160 OR latest.gula_darah_sewaktu >= 200)
            OR (l.status_tinggal = 'Sebatang Kara')
@@ -244,7 +262,7 @@ class AnalyticsRepository {
          )
          ORDER BY latest.tensi_sistolik DESC
          LIMIT 50`,
-        params
+        scope.kelurahan ? [...params, scope.kelurahan] : params
       );
 
       return {
@@ -272,21 +290,27 @@ class AnalyticsRepository {
   async getBansosEquityByRT(scope = {}) {
     try {
       let whereBansos = "WHERE 1=1";
-      let whereSKTM = "WHERE (COALESCE(d.jenis_surat, d.jenis_dokumen, '') LIKE '%Tidak Mampu%') AND d.status = 'APPROVED'";
+      let whereSKTM = "WHERE w.rt IS NOT NULL AND w.rw IS NOT NULL AND (COALESCE(d.jenis_surat, d.jenis_dokumen, '') LIKE '%Tidak Mampu%') AND d.status = 'APPROVED'";
       const paramsBansos = [];
       const paramsSKTM = [];
 
       if (scope.rt) {
-        whereBansos += " AND rt = ?";
+        whereBansos += " AND b.rt = ?";
         whereSKTM += " AND w.rt = ?";
         paramsBansos.push(scope.rt);
         paramsSKTM.push(scope.rt);
       }
       if (scope.rw) {
-        whereBansos += " AND rw = ?";
+        whereBansos += " AND b.rw = ?";
         whereSKTM += " AND w.rw = ?";
         paramsBansos.push(scope.rw);
         paramsSKTM.push(scope.rw);
+      }
+      if (scope.kelurahan) {
+        whereBansos += " AND kk.kelurahan = ?";
+        whereSKTM += " AND w.kelurahan = ?";
+        paramsBansos.push(scope.kelurahan);
+        paramsSKTM.push(scope.kelurahan);
       }
 
       // Bansos grouped by RT
@@ -294,16 +318,17 @@ class AnalyticsRepository {
       try {
         const [rows] = await pool.execute(
           `SELECT 
-            rt,
-            rw,
+            b.rt,
+            b.rw,
             COUNT(*) AS total_usulan_bansos,
-            SUM(CASE WHEN status = 'APPROVED_KELURAHAN' THEN 1 ELSE 0 END) AS disahkan_bansos,
-            SUM(CASE WHEN status != 'REJECTED' AND status != 'APPROVED_KELURAHAN' THEN 1 ELSE 0 END) AS pending_bansos,
-            SUM(CASE WHEN status = 'APPROVED_KELURAHAN' THEN nominal_bantuan ELSE 0 END) AS total_nominal_disalurkan
-           FROM bansos_pengajuan
+            SUM(CASE WHEN b.status IN ('APPROVED_KELURAHAN', 'APPROVED', 'DISBURSED') THEN 1 ELSE 0 END) AS disahkan_bansos,
+            SUM(CASE WHEN b.status NOT IN ('REJECTED', 'APPROVED_KELURAHAN', 'APPROVED', 'DISBURSED') THEN 1 ELSE 0 END) AS pending_bansos,
+            SUM(CASE WHEN b.status IN ('APPROVED_KELURAHAN', 'APPROVED', 'DISBURSED') THEN b.nominal_bantuan ELSE 0 END) AS total_nominal_disalurkan
+           FROM bansos_pengajuan b
+           INNER JOIN kartu_keluarga kk ON kk.no_kk = b.no_kk
            ${whereBansos}
-           GROUP BY rt, rw
-           ORDER BY rt ASC`,
+           GROUP BY b.rt, b.rw
+           ORDER BY b.rw, b.rt`,
           paramsBansos
         );
         bansosRows = rows;
@@ -316,8 +341,8 @@ class AnalyticsRepository {
       try {
         const [rows] = await pool.execute(
           `SELECT 
-            COALESCE(w.rt, '001') AS rt,
-            COALESCE(w.rw, '001') AS rw,
+            w.rt AS rt,
+            w.rw AS rw,
             COUNT(*) AS total_sktm_disahkan
            FROM dokumen_request d
            LEFT JOIN warga w ON d.nik_pemohon = w.nik
@@ -331,9 +356,11 @@ class AnalyticsRepository {
       }
 
       // Map by RT
-      const sktmMap = {};
+      const territoryKey = (rw, rt) => `${rw ?? ''}:${rt ?? ''}`;
+      const sktmMap = new Map();
       sktmRows.forEach(s => {
-        sktmMap[s.rt] = Number(s.total_sktm_disahkan || 0);
+        const key = territoryKey(s.rw, s.rt);
+        sktmMap.set(key, (sktmMap.get(key) || 0) + Number(s.total_sktm_disahkan || 0));
       });
 
       const result = bansosRows.map(b => ({
@@ -343,20 +370,21 @@ class AnalyticsRepository {
         disahkan_bansos: Number(b.disahkan_bansos || 0),
         pending_bansos: Number(b.pending_bansos || 0),
         total_nominal_disalurkan: Number(b.total_nominal_disalurkan || 0),
-        total_sktm: sktmMap[b.rt] || 0
+        total_sktm: sktmMap.get(territoryKey(b.rw, b.rt)) || 0
       }));
 
       // Tangani RT yang ada di SKTM tapi belum ada di bansos
-      Object.keys(sktmMap).forEach(rt => {
-        if (!result.find(r => r.rt === rt)) {
+      sktmRows.forEach(({ rt, rw }) => {
+        const key = territoryKey(rw, rt);
+        if (!result.find(r => territoryKey(r.rw, r.rt) === key)) {
           result.push({
             rt,
-            rw: scope.rw || '001',
+            rw,
             total_usulan_bansos: 0,
             disahkan_bansos: 0,
             pending_bansos: 0,
             total_nominal_disalurkan: 0,
-            total_sktm: sktmMap[rt]
+            total_sktm: sktmMap.get(key) || 0
           });
         }
       });
@@ -382,6 +410,10 @@ class AnalyticsRepository {
     if (scope.rw) {
       whereClause += " AND w.rw = ?";
       params.push(scope.rw);
+    }
+    if (scope.kelurahan) {
+      whereClause += " AND w.kelurahan = ?";
+      params.push(scope.kelurahan);
     }
 
     const [rows] = await pool.execute(
@@ -415,7 +447,21 @@ class AnalyticsRepository {
   /**
    * 6. Aspirasi & Pengaduan Warga
    */
-  async getComplaintsStats() {
+  async getComplaintsStats(scope = {}) {
+    let whereClause = 'WHERE 1=1';
+    const params = [];
+    if (scope.rw) {
+      whereClause += ' AND w.rw = ?';
+      params.push(scope.rw);
+    }
+    if (scope.rt) {
+      whereClause += ' AND w.rt = ?';
+      params.push(scope.rt);
+    }
+    if (scope.kelurahan) {
+      whereClause += ' AND w.kelurahan = ?';
+      params.push(scope.kelurahan);
+    }
     const [rows] = await pool.execute(
       `SELECT 
         COUNT(*) AS total,
@@ -423,7 +469,10 @@ class AnalyticsRepository {
         SUM(CASE WHEN status = 'PROCESSING' THEN 1 ELSE 0 END) AS processing,
         SUM(CASE WHEN status = 'RESOLVED' THEN 1 ELSE 0 END) AS resolved,
         SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected
-       FROM pengaduan`
+       FROM pengaduan p
+       INNER JOIN warga w ON p.nik_pelapor = w.nik
+       ${whereClause}`,
+      params
     );
 
     return {
@@ -437,4 +486,3 @@ class AnalyticsRepository {
 }
 
 module.exports = new AnalyticsRepository();
-

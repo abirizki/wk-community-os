@@ -58,12 +58,15 @@ router.get('/list', requireAuth, async (req, res) => {
 });
 
 // GET /api/desil/stats - Statistik Sebaran Desil Kewilayahan
-router.get('/stats', requireAuth, async (req, res) => {
+router.get('/stats', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'staf_kelurahan', 'lurah', 'superadmin', 'camat', 'walikota', 'admin'), async (req, res) => {
   try {
-    const data = await desilService.getDesilStats(req.session.user);
+    const data = await desilService.getDesilStats(req.session.user, {
+      rt: req.query.rt,
+      rw: req.query.rw
+    });
     res.json({ success: true, data });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(error.status || 500).json({ success: false, message: error.message });
   }
 });
 
@@ -99,4 +102,3 @@ router.patch('/:id/verify', requireAuth, requireRole('superadmin', 'admin_kelura
 });
 
 module.exports = router;
-

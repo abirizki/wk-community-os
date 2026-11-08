@@ -412,15 +412,17 @@ class DokumenService {
         const mmStr = String(mm || '01').padStart(2, '0');
         const yyStr = String(yyyy || '2026').slice(-2);
         const random4 = Math.floor(1000 + Math.random() * 9000);
-        const provisionalNik = `327204${ddStr}${mmStr}${yyStr}${random4}`;
+        // Format NIK sementara (Provisional NIK): Awalan '0000' + DDMMyy + 4 digit acak (16 digit)
+        // Format NIK sementara (Provisional NIK): 000000 + DDMMyy + 4 digit acak (Tepat 16 Digit)
+        const provisionalNik = `000000${ddStr}${mmStr}${yyStr}${random4}`;
 
         // 1. Tambahkan ke pangkalan data warga kependudukan
         const [existingWarga] = await pool.execute('SELECT id FROM warga WHERE nama = ? AND no_kk = ?', [namaAnak, noKk]);
         if (existingWarga.length === 0) {
           await pool.execute(
             `INSERT INTO warga 
-             (nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, agama, status_perkawinan, status_hubungan_keluarga, status_kependudukan, rt, rw, kelurahan, kecamatan, kota) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'Belum Kawin', 'Anak', 'Tetap', ?, ?, ?, ?, ?)`,
+             (nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, agama, status_perkawinan, status_hubungan_keluarga, status_kependudukan, rt, rw, kelurahan, kecamatan, kota, is_nik_sementara) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'Belum Kawin', 'Anak', 'Tetap', ?, ?, ?, ?, ?, 1)`,
             [provisionalNik, noKk, namaAnak, jenisKelamin, tempatLahir, tglLahir, agama, rt, rw, kelurahan, kecamatan, kota]
           );
           console.log(`[Trigger Sukses] Bayi ${namaAnak} otomatis terdaftar di warga (NIK Sementara: ${provisionalNik}, KK: ${noKk}).`);

@@ -212,7 +212,21 @@ class CompletenessRepository {
   /**
    * Indeks Kematangan Data Komposit Tingkat Kelurahan (Data Maturity Index)
    */
-  async getKelurahanDataMaturityIndex() {
+  async getKelurahanDataMaturityIndex(scope = {}) {
+    let whereClause = "WHERE w.status_kependudukan != 'Meninggal'";
+    const params = [];
+    if (scope.kelurahan) {
+      whereClause += ' AND w.kelurahan = ?';
+      params.push(scope.kelurahan);
+    }
+    if (scope.rw) {
+      whereClause += ' AND w.rw = ?';
+      params.push(scope.rw);
+    }
+    if (scope.rt) {
+      whereClause += ' AND w.rt = ?';
+      params.push(scope.rt);
+    }
     const [summary] = await pool.execute(
       `SELECT 
         COUNT(w.id) AS total_warga,
@@ -225,11 +239,27 @@ class CompletenessRepository {
         SUM(CASE WHEN w.foto_url IS NOT NULL AND w.foto_url != '' THEN 1 ELSE 0 END) AS total_with_photo,
         SUM(CASE WHEN w.user_id IS NOT NULL THEN 1 ELSE 0 END) AS total_accounts
        FROM warga w
-       WHERE w.status_kependudukan != 'Meninggal'`
+       ${whereClause}`,
+      params
     );
 
+    let territoryWhere = 'WHERE 1=1';
+    const territoryParams = [];
+    if (scope.kelurahan) {
+      territoryWhere += ' AND kelurahan = ?';
+      territoryParams.push(scope.kelurahan);
+    }
+    if (scope.rw) {
+      territoryWhere += ' AND rw = ?';
+      territoryParams.push(scope.rw);
+    }
+    if (scope.rt) {
+      territoryWhere += ' AND rt = ?';
+      territoryParams.push(scope.rt);
+    }
     const [totalRtRw] = await pool.execute(
-      `SELECT COUNT(DISTINCT rt) AS total_rt, COUNT(DISTINCT rw) AS total_rw FROM warga`
+      `SELECT COUNT(DISTINCT rt) AS total_rt, COUNT(DISTINCT rw) AS total_rw FROM warga ${territoryWhere}`,
+      territoryParams
     );
 
     const data = summary[0] || {};
@@ -302,4 +332,3 @@ class CompletenessRepository {
 }
 
 module.exports = new CompletenessRepository();
-

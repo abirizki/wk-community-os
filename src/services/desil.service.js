@@ -229,18 +229,32 @@ class DesilService {
     return desilRepository.listDesil(filters, scope);
   }
 
-  async getDesilStats(user) {
+  async getDesilStats(user, filters = {}) {
     const scope = this.resolveScope(user);
+    if (scope.rw && filters.rw && filters.rw !== scope.rw) {
+      const error = new Error(`Akses dibatasi pada RW ${scope.rw}.`);
+      error.status = 403;
+      throw error;
+    }
+    if (scope.rt && filters.rt && filters.rt !== scope.rt) {
+      const error = new Error(`Akses dibatasi pada RT ${scope.rt}.`);
+      error.status = 403;
+      throw error;
+    }
+    if (!scope.rw && filters.rw && filters.rw !== 'all') scope.rw = filters.rw;
+    if (!scope.rt && filters.rt && filters.rt !== 'all') scope.rt = filters.rt;
     return desilRepository.getDesilStats(scope);
   }
 
   resolveScope(user) {
     if (!user) return {};
-    if (user.role === 'ketua_rt') return { rt: user.rt, rw: user.rw };
-    if (user.role === 'ketua_rw' || user.role === 'admin_rw') return { rw: user.rw };
-    return {}; // Kelurahan / Superadmin melihat makro
+    if (user.role === 'ketua_rt') return { rt: user.rt, rw: user.rw, kelurahan: user.kelurahan };
+    if (user.role === 'ketua_rw' || user.role === 'admin_rw') return { rw: user.rw, kelurahan: user.kelurahan };
+    if (['admin_kelurahan', 'admin', 'staf_kelurahan', 'lurah'].includes(user.role)) {
+      return { kelurahan: user.kelurahan || null };
+    }
+    return {}; // Executive roles may view macro data
   }
 }
 
 module.exports = new DesilService();
-

@@ -15,7 +15,7 @@ class DayaDukungService {
       fasilitasRepository.getPendidikanSummary(scope),
       fasilitasRepository.getKesehatanSummary(scope),
       fasilitasRepository.getEntitasUsahaSummary(scope),
-      fasilitasRepository.getSanitasiSummaryByRT()
+      fasilitasRepository.getSanitasiSummaryByRT(scope)
     ]);
 
     const eduAnalysis = this.analyzeEducation(pendidikanSummary);
@@ -773,4 +773,3 @@ class DayaDukungService {
 }
 
 module.exports = new DayaDukungService();
-
