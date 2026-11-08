@@ -1187,6 +1187,150 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] Patch PBB note:', e.message);
     }
 
+    // 19. Fasilitas Pendidikan
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS fasilitas_pendidikan (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          nama_sekolah VARCHAR(150) NOT NULL,
+          npsn VARCHAR(50) NULL,
+          jenjang ENUM('PAUD', 'SD', 'SMP', 'SMA', 'SMK', 'SLB', 'PKBM') NOT NULL DEFAULT 'SD',
+          status_sekolah ENUM('Negeri', 'Swasta') NOT NULL DEFAULT 'Negeri',
+          alamat TEXT NULL,
+          rt VARCHAR(5) NULL,
+          rw VARCHAR(5) NULL,
+          kelurahan VARCHAR(100) DEFAULT 'Kebonjati',
+          kecamatan VARCHAR(100) DEFAULT 'Cikole',
+          kota VARCHAR(100) DEFAULT 'Kota Sukabumi',
+          koordinat_lat_lng VARCHAR(100) NULL,
+          daya_tampung_kursi_baru INT DEFAULT 0,
+          total_kapasitas_murid INT DEFAULT 0,
+          jumlah_rombel INT DEFAULT 0,
+          akreditasi VARCHAR(10) DEFAULT 'A',
+          no_telepon VARCHAR(50) NULL,
+          kepala_sekolah VARCHAR(100) NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_sekolah_wilayah (rw, rt),
+          INDEX idx_sekolah_jenjang (jenjang)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      const [eduRows] = await connection.query("SELECT COUNT(*) as count FROM fasilitas_pendidikan");
+      if (eduRows[0].count === 0) {
+        await connection.execute(`
+          INSERT INTO fasilitas_pendidikan 
+            (nama_sekolah, npsn, jenjang, status_sekolah, alamat, rt, rw, kelurahan, kecamatan, kota, daya_tampung_kursi_baru, total_kapasitas_murid, jumlah_rombel, akreditasi)
+          VALUES 
+            ('SD Negeri Kebonjati 1', '20221001', 'SD', 'Negeri', 'Jl. Kebonjati No. 15', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 60, 360, 12, 'A'),
+            ('SD Negeri Kebonjati 2', '20221002', 'SD', 'Negeri', 'Jl. Kebonjati No. 18', '002', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 80, 480, 16, 'A'),
+            ('SMP Negeri 1 Cikole', '20222001', 'SMP', 'Negeri', 'Jl. R. Syamsudin No. 4', '003', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 120, 720, 24, 'A')
+        `);
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE fasilitas_pendidikan note:', e.message);
+    }
+
+    // 20. Fasilitas Kesehatan
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS fasilitas_kesehatan (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          nama_faskes VARCHAR(150) NOT NULL,
+          jenis_faskes ENUM('Puskesmas', 'Pustu', 'Klinik Pratama', 'Posyandu', 'Apotek', 'Praktik Mandiri') NOT NULL DEFAULT 'Posyandu',
+          kategori_pengelola ENUM('Pemerintah', 'Swasta') NOT NULL DEFAULT 'Pemerintah',
+          alamat TEXT NULL,
+          rt VARCHAR(5) NULL,
+          rw VARCHAR(5) NULL,
+          kelurahan VARCHAR(100) DEFAULT 'Kebonjati',
+          kecamatan VARCHAR(100) DEFAULT 'Cikole',
+          kota VARCHAR(100) DEFAULT 'Kota Sukabumi',
+          koordinat_lat_lng VARCHAR(100) NULL,
+          jumlah_dokter INT DEFAULT 0,
+          jumlah_bidan INT DEFAULT 0,
+          jumlah_perawat INT DEFAULT 0,
+          jumlah_ahli_gizi INT DEFAULT 0,
+          kapasitas_tempat_tidur INT DEFAULT 0,
+          layanan_igd_24jam TINYINT(1) DEFAULT 0,
+          jam_operasional VARCHAR(100) DEFAULT '08:00 - 14:00',
+          no_kontak VARCHAR(50) NULL,
+          penanggung_jawab VARCHAR(100) NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_faskes_wilayah (rw, rt),
+          INDEX idx_faskes_jenis (jenis_faskes)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      const [faskesRows] = await connection.query("SELECT COUNT(*) as count FROM fasilitas_kesehatan");
+      if (faskesRows[0].count === 0) {
+        await connection.execute(`
+          INSERT INTO fasilitas_kesehatan 
+            (nama_faskes, jenis_faskes, kategori_pengelola, alamat, rt, rw, kelurahan, kecamatan, kota, jumlah_dokter, jumlah_bidan, jumlah_perawat, jumlah_ahli_gizi, kapasitas_tempat_tidur, penanggung_jawab)
+          VALUES 
+            ('Puskesmas Pembantu Kebonjati', 'Pustu', 'Pemerintah', 'Jl. Kebonjati No. 22', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 2, 3, 4, 1, 6, 'dr. Ratna Dewi'),
+            ('Posyandu Melati RW 001', 'Posyandu', 'Pemerintah', 'Balai RW 001 Kebonjati', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 0, 1, 0, 1, 0, 'Ny. Hj. Yayah Rokayah')
+        `);
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE fasilitas_kesehatan note:', e.message);
+    }
+
+    // 21. Entitas Usaha Warga
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS entitas_usaha (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          nama_usaha VARCHAR(150) NOT NULL,
+          nik_pemilik VARCHAR(16) NULL,
+          nama_pemilik VARCHAR(100) NULL,
+          kategori_usaha VARCHAR(100) DEFAULT 'Kuliner',
+          skala_usaha ENUM('Mikro', 'Kecil', 'Menengah') DEFAULT 'Mikro',
+          alamat TEXT NULL,
+          rt VARCHAR(5) NULL,
+          rw VARCHAR(5) NULL,
+          kelurahan VARCHAR(100) DEFAULT 'Kebonjati',
+          kecamatan VARCHAR(100) DEFAULT 'Cikole',
+          kota VARCHAR(100) DEFAULT 'Kota Sukabumi',
+          koordinat_lat_lng VARCHAR(100) NULL,
+          jumlah_tenaga_kerja_lokal INT DEFAULT 1,
+          omset_bulanan_kategori VARCHAR(100) DEFAULT '< 5 Juta',
+          apakah_toko_pangan_murah TINYINT(1) DEFAULT 0,
+          sku_nomor_registrasi VARCHAR(100) NULL,
+          status_verifikasi ENUM('DRAFT', 'TERVERIFIKASI', 'DITOLAK') DEFAULT 'TERVERIFIKASI',
+          no_telepon VARCHAR(50) NULL,
+          deskripsi_produk TEXT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_usaha_wilayah (rw, rt),
+          INDEX idx_usaha_pemilik (nik_pemilik)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+
+      const [bizRows] = await connection.query("SELECT COUNT(*) as count FROM entitas_usaha");
+      if (bizRows[0].count === 0) {
+        await connection.execute(`
+          INSERT INTO entitas_usaha 
+            (nama_usaha, nik_pemilik, nama_pemilik, kategori_usaha, skala_usaha, alamat, rt, rw, kelurahan, kecamatan, kota, jumlah_tenaga_kerja_lokal, apakah_toko_pangan_murah, sku_nomor_registrasi, status_verifikasi)
+          VALUES 
+            ('Warung Sembako Barokah', '3272030103810001', 'Budi Santoso', 'Sembako', 'Mikro', 'Jl. Kebonjati No. 12', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 2, 1, 'SKU-2026-KBJ-001', 'TERVERIFIKASI')
+        `);
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE entitas_usaha note:', e.message);
+    }
+
+    // 22. Indeks Performa Lintas Tabel
+    try {
+      await connection.query('ALTER TABLE warga ADD INDEX idx_warga_rw_rt (rw, rt)');
+    } catch (e) {}
+    try {
+      await connection.query('ALTER TABLE warga ADD INDEX idx_warga_no_kk (no_kk)');
+    } catch (e) {}
+    try {
+      await connection.query('ALTER TABLE posyandu ADD INDEX idx_posyandu_tgl (tanggal_pemeriksaan)');
+    } catch (e) {}
+
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');
   } catch (err) {
     console.warn('[AutoPatch] Catatan auto-patch database:', err.message);

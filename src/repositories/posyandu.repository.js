@@ -668,7 +668,7 @@ class PosyanduRepository {
       query += ' ORDER BY sudah_ditimbang_bulan_ini ASC, w.nama ASC LIMIT 100';
 
       const [rows] = await pool.execute(query, params);
-      if (rows.length > 0) return rows;
+      if (rows) return rows;
     } catch (e) {
       console.warn('[PosyanduRepo] listTargetBalita fallback:', e.message);
     }
@@ -871,7 +871,7 @@ class PosyanduRepository {
       query += ' ORDER BY sudah_diperiksa_bulan_ini ASC, w.nama ASC LIMIT 100';
 
       const [rows] = await pool.execute(query, params);
-      if (rows.length > 0) return rows;
+      if (rows) return rows;
     } catch (e) {
       console.warn('[PosyanduRepo] listTargetLansia fallback:', e.message);
     }

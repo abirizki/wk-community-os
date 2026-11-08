@@ -248,6 +248,7 @@ class DesilService {
 
   resolveScope(user) {
     if (!user) return {};
+    if (user.role === 'warga') return { no_kk: user.no_kk || user.username };
     if (user.role === 'ketua_rt') return { rt: user.rt, rw: user.rw, kelurahan: user.kelurahan };
     if (user.role === 'ketua_rw' || user.role === 'admin_rw') return { rw: user.rw, kelurahan: user.kelurahan };
     if (['admin_kelurahan', 'admin', 'staf_kelurahan', 'lurah'].includes(user.role)) {

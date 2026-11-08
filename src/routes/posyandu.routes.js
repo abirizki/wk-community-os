@@ -298,12 +298,8 @@ router.get('/stunting-cluster', requireAuth, async (req, res) => {
       console.warn('Fallback on posyandu/stunting-cluster query:', dbErr.message);
     }
 
-    if (!clusters || clusters.length === 0) {
-      clusters = [
-        { rw: '001', kasus: 2, total_pantau: 18 },
-        { rw: '002', kasus: 1, total_pantau: 14 },
-        { rw: '004', kasus: 3, total_pantau: 22 }
-      ];
+    if (!clusters) {
+      clusters = [];
     }
 
     res.json({
@@ -318,12 +314,9 @@ router.get('/stunting-cluster', requireAuth, async (req, res) => {
     res.json({
       success: true,
       data: {
-        clusters: [
-          { rw: '001', kasus: 2, total_pantau: 18 },
-          { rw: '004', kasus: 3, total_pantau: 22 }
-        ],
-        total_cluster: 2,
-        total_kasus_terpantau: 5
+        clusters: [],
+        total_cluster: 0,
+        total_kasus_terpantau: 0
       }
     });
   }

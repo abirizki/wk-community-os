@@ -325,7 +325,7 @@ class AnalyticsRepository {
             SUM(CASE WHEN b.status NOT IN ('REJECTED', 'APPROVED_KELURAHAN', 'APPROVED', 'DISBURSED') THEN 1 ELSE 0 END) AS pending_bansos,
             SUM(CASE WHEN b.status IN ('APPROVED_KELURAHAN', 'APPROVED', 'DISBURSED') THEN b.nominal_bantuan ELSE 0 END) AS total_nominal_disalurkan
            FROM bansos_pengajuan b
-           INNER JOIN kartu_keluarga kk ON kk.no_kk = b.no_kk
+           LEFT JOIN kartu_keluarga kk ON kk.no_kk = b.no_kk
            ${whereBansos}
            GROUP BY b.rt, b.rw
            ORDER BY b.rw, b.rt`,

@@ -41,7 +41,7 @@ router.post('/submit-update', requireAuth, async (req, res) => {
 });
 
 // GET /api/desil/list - Daftar Status Desil Keluarga (RT / RW / Kelurahan)
-router.get('/list', requireAuth, async (req, res) => {
+router.get('/list', requireAuth, requireRole('ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'staf_kelurahan', 'lurah', 'superadmin', 'camat', 'walikota', 'admin'), async (req, res) => {
   try {
     const filters = {
       rt: req.query.rt,

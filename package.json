@@ -11,6 +11,7 @@
     "preflight": "node scripts/production_preflight.js",
     "uat": "node scripts/run_e2e_uat.js",
     "test:warga": "node scripts/test_warga_suite.js",
+    "test": "node --test tests/unit/*.test.js",
     "test:integration": "node --test tests/unit/analytics_integration_synthetic.test.js",
     "db:seed:full": "node scripts/seed_full_production.js",
     "deploy:db": "node scripts/deploy_production_db.js",
