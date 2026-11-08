@@ -151,6 +151,7 @@ export default function AnalyticsDashboardPage() {
   const [actionsMap, setActionsMap] = useState({});
   const [actionFilter, setActionFilter] = useState('all');
   const [updatingActionId, setUpdatingActionId] = useState(null);
+  const [pyramidMode, setPyramidMode] = useState('bps'); // 'bps' | 'siklus'
   const [sources, setSources] = useState({
     summary: null,
     demographics: null,
@@ -285,6 +286,87 @@ export default function AnalyticsDashboardPage() {
     ));
   }, [demographics, documents, summary]);
 
+  const pyramidData = useMemo(() => {
+    if (pyramidMode === 'bps' && demographics?.piramida?.length) {
+      return demographics.piramida.map((item) => ({
+        kelompok: item.kelompok_usia,
+        pria: Number(item.pria || 0),
+        wanita: Number(item.wanita || 0),
+        priaNegative: -Math.abs(Number(item.pria || 0)),
+      }));
+    }
+    if (!population) return [];
+    const balita = Number(population.total_balita || 0);
+    const anak = Number(population.total_anak || 0);
+    const produktif = Number(population.total_produktif || 0);
+    const lansia = Number(population.total_lansia || 0);
+
+    const totalPria = demographics?.piramida?.reduce((sum, item) => sum + Number(item.pria || 0), 0) || Math.round(Number(population.total_warga_aktif || 0) * 0.51);
+    const totalWanita = demographics?.piramida?.reduce((sum, item) => sum + Number(item.wanita || 0), 0) || (Number(population.total_warga_aktif || 0) - totalPria);
+    const pRatio = totalPria / (totalPria + totalWanita || 1);
+
+    return [
+      { kelompok: 'Balita (0–4)', pria: Math.round(balita * pRatio), wanita: balita - Math.round(balita * pRatio), priaNegative: -Math.round(balita * pRatio) },
+      { kelompok: 'Anak (5–17)', pria: Math.round(anak * pRatio), wanita: anak - Math.round(anak * pRatio), priaNegative: -Math.round(anak * pRatio) },
+      { kelompok: 'Produktif (18–59)', pria: Math.round(produktif * pRatio), wanita: produktif - Math.round(produktif * pRatio), priaNegative: -Math.round(produktif * pRatio) },
+      { kelompok: 'Lansia (60+)', pria: Math.round(lansia * pRatio), wanita: lansia - Math.round(lansia * pRatio), priaNegative: -Math.round(lansia * pRatio) },
+    ];
+  }, [pyramidMode, demographics?.piramida, population]);
+
+  const dependencyRatio = useMemo(() => {
+    if (!population) return null;
+    const nonProductive = Number(population.total_balita || 0) + Number(population.total_anak || 0) + Number(population.total_lansia || 0);
+    const productive = Number(population.total_produktif || 0);
+    if (!productive) return null;
+    return Math.round((nonProductive / productive) * 100);
+  }, [population]);
+
+  const sexRatio = useMemo(() => {
+    const totalPria = demographics?.piramida?.reduce((sum, item) => sum + Number(item.pria || 0), 0);
+    const totalWanita = demographics?.piramida?.reduce((sum, item) => sum + Number(item.wanita || 0), 0);
+    if (!totalPria || !totalWanita) return null;
+    return Math.round((totalPria / totalWanita) * 100);
+  }, [demographics?.piramida]);
+
+  const rwAggregates = useMemo(() => {
+    const map = new Map();
+    comparisonRows.forEach(row => {
+      const rw = String(row.rw || '001');
+      if (!map.has(rw)) {
+        map.set(rw, {
+          rw,
+          total_penduduk: 0,
+          balita: 0,
+          lansia: 0,
+          desilRentan: 0,
+          kasusGizi: 0,
+          suratProses: 0,
+          rtCount: 0,
+          pbbSum: 0,
+          pbbCount: 0
+        });
+      }
+      const item = map.get(rw);
+      item.total_penduduk += Number(row.penduduk || 0);
+      item.balita += Number(row.balita || 0);
+      item.lansia += Number(row.lansia || 0);
+      item.desilRentan += Number(row.desilRentan || 0);
+      item.kasusGizi += Number(row.kasusGizi || 0);
+      item.suratProses += Number(row.suratProses || 0);
+      item.rtCount += 1;
+      if (row.pbb !== null && row.pbb !== undefined) {
+        item.pbbSum += Number(row.pbb);
+        item.pbbCount += 1;
+      }
+    });
+    return [...map.values()].map(item => ({
+      ...item,
+      pbbRata: item.pbbCount > 0 ? Math.round(item.pbbSum / item.pbbCount) : null,
+      balitaRasio: item.total_penduduk > 0 ? ((item.balita / item.total_penduduk) * 100).toFixed(1) : '0.0',
+      desilRasio: item.total_penduduk > 0 ? ((item.desilRentan / item.total_penduduk) * 100).toFixed(1) : '0.0',
+    })).sort((a, b) => String(a.rw).localeCompare(String(b.rw)));
+  }, [comparisonRows]);
+
   const ageRows = useMemo(() => {
     if (!population) return [];
     return [
@@ -398,21 +480,127 @@ export default function AnalyticsDashboardPage() {
 
       <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
         <Panel className="p-4 sm:p-5">
-          <SectionHeading
-            eyebrow="Profil kependudukan"
-            title="Struktur usia warga"
-            description="Jumlah warga aktif per kelompok usia. Gunakan untuk membaca kebutuhan layanan lintas siklus hidup."
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <SectionHeading
+              eyebrow="Struktur Kependudukan & Demografi"
+              title="Piramida Penduduk & Ketergantungan"
+              description="Komposisi gender dan kelompok usia. Membantu membaca rasio beban ketergantungan dan kohort layanan."
+            />
+            <div className="flex items-center gap-1 self-start rounded-lg border border-slate-200 bg-slate-50 p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setPyramidMode('bps')}
+                className={`rounded px-2.5 py-1 font-medium transition ${
+                  pyramidMode === 'bps'
+                    ? 'bg-white font-semibold text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                15 Kohort BPS
+              </button>
+              <button
+                type="button"
+                onClick={() => setPyramidMode('siklus')}
+                className={`rounded px-2.5 py-1 font-medium transition ${
+                  pyramidMode === 'siklus'
+                    ? 'bg-white font-semibold text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Siklus Hidup
+              </button>
+            </div>
+          </div>
+
+          {/* Demographic Storytelling Metrics */}
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5">
+              <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                <Users size={13} />
+                <span>Rasio Ketergantungan</span>
+              </div>
+              <p className="mt-1 text-base font-bold text-slate-900">
+                {dependencyRatio != null ? `${dependencyRatio}%` : '—'}
+              </p>
+              <p className="mt-0.5 text-[10px] text-slate-500">
+                {dependencyRatio != null && dependencyRatio < 50
+                  ? 'Beban ketergantungan rendah'
+                  : 'Beban non-produktif sedang'}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5">
+              <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                <TrendingUp size={13} />
+                <span>Rasio Jenis Kelamin</span>
+              </div>
+              <p className="mt-1 text-base font-bold text-slate-900">
+                {sexRatio != null ? `${sexRatio}` : '—'}
+              </p>
+              <p className="mt-0.5 text-[10px] text-slate-500">
+                Laki-laki per 100 Perempuan
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5">
+              <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                <Baby size={13} className="text-teal-600" />
+                <span>Balita & Lansia</span>
+              </div>
+              <p className="mt-1 text-base font-bold text-slate-900">
+                {formatNumber(population?.total_balita)} <span className="text-[11px] font-normal text-slate-500">Balita</span> · {formatNumber(population?.total_lansia)} <span className="text-[11px] font-normal text-slate-500">Lansia</span>
+              </p>
+              <p className="mt-0.5 text-[10px] text-slate-500">
+                Target intervensi rentan
+              </p>
+            </div>
+          </div>
+
           <SourceStatus source={sources.summary} loading={loading && !summary} label="Profil penduduk" />
-          {ageRows.length ? (
-            <div className="mt-5 h-64" role="img" aria-label="Grafik jumlah penduduk berdasarkan kelompok usia">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ageRows} margin={{ top: 8, right: 12, left: -18, bottom: 8 }}>
-                  <CartesianGrid stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="kelompok" tick={{ fontSize: 11, fill: '#475569' }} />
-                  <YAxis tick={{ fontSize: 11, fill: '#64748b' }} allowDecimals={false} />
-                  <Tooltip formatter={(value) => [formatNumber(value), 'Penduduk']} />
-                  <Bar dataKey="jumlah" name="Penduduk" fill="#2563eb" radius={[5, 5, 0, 0]} maxBarSize={54} />
+          {pyramidData.length ? (
+            <div className="mt-4 h-80" role="img" aria-label="Piramida penduduk laki-laki dan perempuan berdasarkan kelompok usia">
+              <div className="mb-2 flex items-center justify-between text-xs text-slate-500 px-1">
+                <span className="font-semibold text-sky-700">◀ Laki-laki</span>
+                <span className="font-semibold text-cyan-600">Perempuan ▶</span>
+              </div>
+              <ResponsiveContainer width="100%" height="90%">
+                <BarChart data={pyramidData} layout="vertical" stackOffset="sign" margin={{ top: 4, right: 16, left: 18, bottom: 4 }}>
+                  <CartesianGrid stroke="#f1f5f9" horizontal={false} />
+                  <XAxis
+                    type="number"
+                    tickFormatter={(val) => formatNumber(Math.abs(val))}
+                    tick={{ fontSize: 10, fill: '#64748b' }}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="kelompok"
+                    tick={{ fontSize: 10, fill: '#334155' }}
+                    width={90}
+                  />
+                  <ReferenceLine x={0} stroke="#94a3b8" strokeWidth={1.5} />
+                  <Tooltip
+                    formatter={(val, name) => [
+                      formatNumber(Math.abs(val)),
+                      name === 'priaNegative' ? 'Laki-laki' : 'Perempuan'
+                    ]}
+                    labelFormatter={(label) => `Kelompok: ${label}`}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: 11, paddingTop: 4 }}
+                    formatter={(value) => (value === 'priaNegative' ? 'Laki-laki' : 'Perempuan')}
+                  />
+                  <Bar
+                    dataKey="priaNegative"
+                    name="priaNegative"
+                    fill="#0284c7"
+                    radius={[4, 0, 0, 4]}
+                    maxBarSize={20}
+                  />
+                  <Bar
+                    dataKey="wanita"
+                    name="wanita"
+                    fill="#38bdf8"
+                    radius={[0, 4, 4, 0]}
+                    maxBarSize={20}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -507,6 +695,11 @@ export default function AnalyticsDashboardPage() {
       0
     );
 
+    // Rasio Beban Posyandu
+    const totalPosyandu = Number(coverage?.dukungan_layanan?.total_posyandu || 0);
+    const totalBalita = Number(population?.total_balita || 0);
+    const posyanduRatio = totalPosyandu > 0 ? Math.round(totalBalita / totalPosyandu) : 0;
+
     return (
       <div className="space-y-5">
         <Panel className="p-4 sm:p-5">
@@ -520,27 +713,153 @@ export default function AnalyticsDashboardPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <MetricCard label="Balita" value={formatNumber(population?.total_balita)} detail="Penduduk usia 0–4 tahun" icon={Baby} tone="teal" />
               <MetricCard label="Lansia" value={formatNumber(population?.total_lansia)} detail="Penduduk usia 60 tahun ke atas" icon={HeartPulse} tone="rose" />
-              <MetricCard label="Posyandu" value={formatNumber(coverage?.dukungan_layanan?.total_posyandu)} detail="Fasilitas terdata pada cakupan ini" icon={Activity} tone="blue" />
-              <MetricCard label="Fasilitas pendidikan" value={formatNumber(educationInstitutions)} detail={`Kapasitas kursi baru ${formatNumber(newEducationSeats)}`} icon={Layers3} tone="amber" />
+              <MetricCard label="Posyandu" value={formatNumber(totalPosyandu)} detail={`Beban rata-rata ${posyanduRatio} balita/posyandu`} icon={Activity} tone="blue" />
+              <MetricCard label="Fasilitas pendidikan" value={formatNumber(educationInstitutions)} detail={`Daya tampung ${formatNumber(newEducationSeats)} kursi`} icon={Layers3} tone="amber" />
             </div>
           ) : (
             <div className="mt-4"><EmptyState title="Data lintas sektor belum tersedia" message={sources.summary?.error || 'Coba segarkan data atau periksa koneksi layanan.'} /></div>
           )}
         </Panel>
 
-        <div className="grid gap-4 lg:grid-cols-3">
+        {/* SECTION BARU: Daya Tampung Layanan Pendidikan & Kesehatan (Bullet Bars) */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Bullet Bar: Pendidikan */}
           <Panel className="p-4 sm:p-5">
-            <h3 className="text-sm font-semibold text-slate-900">Kesehatan siklus hidup</h3>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Jumlah sasaran dibanding dukungan fasilitas.</p>
-            <div className="mt-4 space-y-3">
-              <DataLine label="Baduta 0–23 bulan" value={formatNumber(coverage?.demografi_kesehatan?.baduta_1000hpk)} />
-              <DataLine label="Ibu hamil risiko tinggi" value={formatNumber(coverage?.demografi_kesehatan?.ibu_hamil_risti)} />
-              <DataLine label="Lansia berisiko tinggi" value={formatNumber(coverage?.demografi_kesehatan?.lansia_risti)} />
-              <DataLine label="Tenaga kesehatan tercatat" value={formatNumber(coverage?.faskes_stats?.total_nakes?.jumlah)} />
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Daya Tampung Sekolah vs Sasaran Usia</h3>
+                <p className="mt-0.5 text-xs text-slate-500">Kapasitas rombel ruang kelas standar Permendikbud vs populasi jenjang</p>
+              </div>
+              <span className="rounded-lg bg-amber-50 p-2 text-amber-700">
+                <GraduationCap size={18} />
+              </span>
             </div>
-            <Link to="/dashboard/posyandu" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900">Buka layanan kesehatan <ChevronRight size={14} /></Link>
+
+            <div className="mt-5 space-y-4">
+              {(education?.cohorts || []).map((cohort) => {
+                const targetPop = Number(cohort.populasi_usia || 0);
+                const capacity = Number(cohort.kursi_baru || 0);
+                const selisih = Number(cohort.selisih || 0);
+                const isDeficit = selisih < 0;
+                const percentCovered = targetPop > 0 ? Math.min(100, Math.round((capacity / targetPop) * 100)) : 100;
+
+                return (
+                  <div key={cohort.tingkat} className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="text-xs font-semibold text-slate-800">{cohort.tingkat}</span>
+                      <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                        isDeficit
+                          ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                          : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      }`}>
+                        {isDeficit
+                          ? `Defisit ${formatNumber(Math.abs(selisih))} Kursi (~${Math.ceil(Math.abs(selisih)/28)} Rombel)`
+                          : `Kapasitas Memadai (+${formatNumber(selisih)} Kursi)`}
+                      </span>
+                    </div>
+
+                    <div className="mt-2.5 flex items-center justify-between text-xs text-slate-600">
+                      <span>Kapasitas: <strong>{formatNumber(capacity)}</strong> kursi</span>
+                      <span>Target: <strong>{formatNumber(targetPop)}</strong> anak</span>
+                    </div>
+
+                    {/* Bullet Progress Bar */}
+                    <div className="mt-1.5 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          isDeficit ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${percentCovered}%` }}
+                      />
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Cakupan daya tampung lokal</span>
+                      <span className="font-semibold">{percentCovered}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-[11px] italic text-slate-400">
+              *Catatan: Selisih daya tampung memperhitungkan estimasi rombel sekolah negeri dan swasta di wilayah setempat.
+            </p>
           </Panel>
 
+          {/* Bullet Bar: Kesehatan & Posyandu */}
+          <Panel className="p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Jangkauan & Beban Layanan Posyandu</h3>
+                <p className="mt-0.5 text-xs text-slate-500">Kapasitas posyandu menangani siklus hidup 1000 HPK & Lansia</p>
+              </div>
+              <span className="rounded-lg bg-teal-50 p-2 text-teal-700">
+                <HeartPulse size={18} />
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800">Rasio Beban Posyandu Balita</span>
+                  <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                    posyanduRatio > 100
+                      ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                      : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                  }`}>
+                    {posyanduRatio > 100 ? 'Beban Sasaran Tinggi' : 'Beban Sasaran Ideal'}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-sm font-bold text-slate-900">
+                  {posyanduRatio} <span className="text-xs font-normal text-slate-600">balita per posyandu (Standar ideal: 80–100 balita)</span>
+                </p>
+                <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className={`h-full rounded-full ${
+                      posyanduRatio > 100 ? 'bg-amber-500' : 'bg-teal-500'
+                    }`}
+                    style={{ width: `${Math.min(100, (posyanduRatio / 120) * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200/80 bg-white p-3">
+                  <span className="text-[11px] font-medium text-slate-500">Baduta 0–23 Bulan (1000 HPK)</span>
+                  <p className="mt-1 text-base font-bold text-slate-900">
+                    {formatNumber(coverage?.demografi_kesehatan?.baduta_1000hpk)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-teal-700 font-medium">Prioritas intervensi stunting</p>
+                </div>
+                <div className="rounded-xl border border-slate-200/80 bg-white p-3">
+                  <span className="text-[11px] font-medium text-slate-500">Ibu Hamil Risiko Tinggi</span>
+                  <p className="mt-1 text-base font-bold text-slate-900">
+                    {formatNumber(coverage?.demografi_kesehatan?.ibu_hamil_risti)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-amber-700 font-medium">Perlu pemantauan nakes</p>
+                </div>
+                <div className="rounded-xl border border-slate-200/80 bg-white p-3">
+                  <span className="text-[11px] font-medium text-slate-500">Lansia Risiko Tinggi (Komorbid)</span>
+                  <p className="mt-1 text-base font-bold text-slate-900">
+                    {formatNumber(coverage?.demografi_kesehatan?.lansia_risti)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-rose-700 font-medium">Sasaran posbindu lansia</p>
+                </div>
+                <div className="rounded-xl border border-slate-200/80 bg-white p-3">
+                  <span className="text-[11px] font-medium text-slate-500">Tenaga Kesehatan Tercatat</span>
+                  <p className="mt-1 text-base font-bold text-slate-900">
+                    {formatNumber(coverage?.faskes_stats?.total_nakes?.jumlah)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-slate-600 font-medium">Bidan desa & perawat pembina</p>
+                </div>
+              </div>
+            </div>
+            <Link to="/dashboard/posyandu" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900">
+              Buka register lengkap posyandu <ChevronRight size={14} />
+            </Link>
+          </Panel>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
           <Panel className="p-4 sm:p-5">
             <h3 className="text-sm font-semibold text-slate-900">Perlindungan sosial & ekonomi</h3>
             <p className="mt-1 text-xs leading-5 text-slate-500">Kebutuhan keluarga rentan dibanding ekosistem dukungan lokal.</p>
@@ -572,7 +891,7 @@ export default function AnalyticsDashboardPage() {
               <SourceStatus source={sources.demographics} loading={loading} label="Demografi" />
               <SourceStatus source={sources.documents} loading={loading} label="Layanan surat" />
               <SourceStatus source={sources.desil} loading={loading} label="Kesejahteraan" />
-              <SourceStatus source={sources.summary} loading={loading} label="Kesehatan, ekonomi, aduan, dan kematangan data" />
+              <SourceStatus source={sources.summary} loading={loading && !summary} label="Kesehatan, ekonomi, aduan, dan kematangan data" />
             </div>
           </Panel>
         )}
@@ -582,13 +901,116 @@ export default function AnalyticsDashboardPage() {
 
   const renderArea = () => (
     <div className="space-y-5">
+      {/* MATRIKS KERAWANAN & KEBUTUHAN ANTAR-RW (MICRO MATRIX HEATMAP) */}
+      <Panel className="p-4 sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <SectionHeading
+            eyebrow="Komparasi Spasial Wilayah"
+            title="Matriks Kerawanan & Beban Layanan Antar-RW"
+            description="Bandingkan rasio kerentanan dan kebutuhan layanan antar-RW. Klik tombol Fokus untuk drill-down langsung ke RW terpilih."
+          />
+          {effectiveRW !== 'all' && (
+            <button
+              type="button"
+              onClick={() => { setSelectedRW('all'); setSelectedRT('all'); }}
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Lihat Seluruh RW
+            </button>
+          )}
+        </div>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full text-left text-xs">
+            <thead className="border-y border-slate-200 bg-slate-50 text-slate-700">
+              <tr>
+                <th className="px-3 py-2.5 font-semibold">Wilayah</th>
+                <th className="px-3 py-2.5 text-center font-semibold">Cakupan RT</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Total Penduduk</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Balita (% Pop)</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Lansia</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Desil 1–2 (% Pop)</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Surat Proses</th>
+                <th className="px-3 py-2.5 text-right font-semibold">PBB Rata-rata</th>
+                <th className="px-3 py-2.5 text-center font-semibold">Aksi Drill-Down</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rwAggregates.map((item) => {
+                const isSelected = effectiveRW === item.rw;
+                const isHighBalita = Number(item.balitaRasio) > 10.0;
+                const isHighDesil = Number(item.desilRentan) > 10;
+
+                return (
+                  <tr
+                    key={item.rw}
+                    className={`transition-colors ${
+                      isSelected
+                        ? 'bg-sky-50/80 font-medium text-sky-950'
+                        : 'hover:bg-slate-50/80 text-slate-700'
+                    }`}
+                  >
+                    <td className="px-3 py-3 font-semibold text-slate-900">
+                      RW {item.rw}
+                    </td>
+                    <td className="px-3 py-3 text-center text-slate-500">
+                      {item.rtCount} RT
+                    </td>
+                    <td className="px-3 py-3 text-right font-medium">
+                      {formatNumber(item.total_penduduk)}
+                    </td>
+                    <td className={`px-3 py-3 text-right ${
+                      isHighBalita ? 'font-semibold text-teal-800 bg-teal-50/60 rounded' : ''
+                    }`}>
+                      {formatNumber(item.balita)} <span className="text-[10px] text-slate-400">({item.balitaRasio}%)</span>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      {formatNumber(item.lansia)}
+                    </td>
+                    <td className={`px-3 py-3 text-right ${
+                      isHighDesil ? 'font-semibold text-amber-800 bg-amber-50/60 rounded' : ''
+                    }`}>
+                      {formatNumber(item.desilRentan)} <span className="text-[10px] text-slate-400">({item.desilRasio}%)</span>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      {formatNumber(item.suratProses)}
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      {item.pbbRata == null ? '—' : `${item.pbbRata}%`}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      {isSelected ? (
+                        <span className="inline-flex items-center gap-1 rounded bg-sky-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs">
+                          Aktif
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedRW(item.rw);
+                            setSelectedRT('all');
+                          }}
+                          className="inline-flex items-center gap-1 rounded border border-sky-300 bg-sky-50 px-2 py-1 text-[11px] font-medium text-sky-700 hover:bg-sky-100"
+                        >
+                          Fokus RW {item.rw} <ChevronRight size={12} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+
       <Panel className="p-4 sm:p-5">
         <SectionHeading
-          eyebrow="Pemerataan layanan per RT"
-          title="Penduduk, kerentanan, dan beban layanan"
-          description="Bandingkan jumlah penduduk dan sinyal layanan pada cakupan filter yang sama. Nilai adalah jumlah, bukan skor risiko; gunakan persentase/denominator saat mengambil keputusan."
+          eyebrow="Rincian tingkat RT"
+          title={`Distribusi Layanan RT pada ${effectiveRW !== 'all' ? `RW ${effectiveRW}` : 'Seluruh Wilayah'}`}
+          description="Bandingkan jumlah penduduk dan sinyal layanan per RT. Gunakan persentase dan tingkat kerentanan untuk memprioritaskan kunjungan kader."
         />
-        <SourceStatus source={sources.demographics} loading={loading && !demographics} label="Matriks demografi" />
+                <SourceStatus source={sources.demographics} loading={loading && !demographics} label="Matriks demografi" />
         {comparisonRows.length ? (
           <>
             <div className="mt-5 h-80" role="img" aria-label="Perbandingan jumlah warga, balita, lansia, keluarga rentan dan surat dalam proses per RT">
