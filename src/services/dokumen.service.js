@@ -380,6 +380,79 @@ class DokumenService {
       }
     }
 
+    // 5. Trigger Surat Keterangan Kelahiran -> Otomatisasi Registrasi Bayi Warga & Enrolment Posyandu (1000 HPK)
+    if (jenis.includes('kelahiran') || jenis.includes('lahir') || jenis.includes('akta')) {
+      try {
+        const ortuWarga = await wargaRepository.findByNik(nik);
+        let dataTambahan = {};
+        if (typeof doc.data_tambahan === 'string') {
+          try { dataTambahan = JSON.parse(doc.data_tambahan); } catch (e) {}
+        } else if (typeof doc.data_tambahan === 'object' && doc.data_tambahan !== null) {
+          dataTambahan = doc.data_tambahan;
+        }
+
+        const namaAnak = dataTambahan.nama_anak || doc.nama_subjek || 'Bayi Baru Lahir';
+        const rawJk = (dataTambahan.jenis_kelamin_anak || dataTambahan.jenis_kelamin || 'Laki-Laki').toLowerCase();
+        const jenisKelamin = rawJk.includes('p') || rawJk.includes('perempuan') ? 'P' : 'L';
+        const tglLahir = dataTambahan.tanggal_lahir_anak || dataTambahan.tanggal_lahir || new Date().toISOString().slice(0, 10);
+        const tempatLahir = dataTambahan.tempat_lahir_anak || dataTambahan.tempat_lahir || (ortuWarga?.kota || 'Kota Sukabumi');
+        const noKk = ortuWarga?.no_kk || doc.no_kk || '3272040000000000';
+        const rt = ortuWarga?.rt || doc.rt || '001';
+        const rw = ortuWarga?.rw || doc.rw || '001';
+        const kelurahan = ortuWarga?.kelurahan || 'Kebonjati';
+        const kecamatan = ortuWarga?.kecamatan || 'Cikole';
+        const kota = ortuWarga?.kota || 'Kota Sukabumi';
+        const agama = ortuWarga?.agama || 'Islam';
+
+        // Format NIK sementara (Provisional NIK): 327204 + DDMMyy + random 4 digit
+        const [yyyy, mm, dd] = tglLahir.split('-');
+        let dayNum = parseInt(dd, 10) || 1;
+        if (jenisKelamin === 'P') dayNum += 40; // Standar Dukcapil: wanita tanggal lahir + 40
+        const ddStr = String(dayNum).padStart(2, '0');
+        const mmStr = String(mm || '01').padStart(2, '0');
+        const yyStr = String(yyyy || '2026').slice(-2);
+        const random4 = Math.floor(1000 + Math.random() * 9000);
+        const provisionalNik = `327204${ddStr}${mmStr}${yyStr}${random4}`;
+
+        // 1. Tambahkan ke pangkalan data warga kependudukan
+        const [existingWarga] = await pool.execute('SELECT id FROM warga WHERE nama = ? AND no_kk = ?', [namaAnak, noKk]);
+        if (existingWarga.length === 0) {
+          await pool.execute(
+            `INSERT INTO warga 
+             (nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, agama, status_perkawinan, status_hubungan_keluarga, status_kependudukan, rt, rw, kelurahan, kecamatan, kota) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'Belum Kawin', 'Anak', 'Tetap', ?, ?, ?, ?, ?)`,
+            [provisionalNik, noKk, namaAnak, jenisKelamin, tempatLahir, tglLahir, agama, rt, rw, kelurahan, kecamatan, kota]
+          );
+          console.log(`[Trigger Sukses] Bayi ${namaAnak} otomatis terdaftar di warga (NIK Sementara: ${provisionalNik}, KK: ${noKk}).`);
+        }
+
+        // 2. Cek apakah ibu terdaftar di posyandu_ibu_hamil, lalu perbarui status
+        try {
+          await pool.execute(
+            `UPDATE posyandu_ibu_hamil SET usia_kehamilan_minggu = 40 WHERE no_kk = ? OR nik = ?`,
+            [noKk, nik]
+          );
+        } catch (e) {}
+
+        // 3. Enrolment Otomatis ke Posyandu Balita (1000 HPK)
+        const [existingPos] = await pool.execute('SELECT id FROM posyandu WHERE nama_anak = ? AND nik_warga = ?', [namaAnak, provisionalNik]);
+        if (existingPos.length === 0) {
+          await pool.execute(
+            `INSERT INTO posyandu 
+             (nama_anak, nik_warga, tanggal_pemeriksaan, berat_badan, tinggi_badan, status_gizi, catatan, created_by) 
+             VALUES (?, ?, ?, ?, ?, 'Normal', 'Pendaftaran otomatis balita 1000 HPK dari pengesahan Akta Kelahiran resmi Kelurahan', 'SISTEM')`,
+            [namaAnak, provisionalNik, tglLahir, 3.2, 49.0]
+          );
+          console.log(`[Trigger Sukses] Bayi ${namaAnak} otomatis di-enroll ke pemantauan Posyandu balita.`);
+        }
+
+        return true;
+      } catch (birthErr) {
+        console.error('[Trigger Kelahiran Error]:', birthErr.message);
+        return false;
+      }
+    }
+
     return false;
   }
 
