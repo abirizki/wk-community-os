@@ -526,8 +526,15 @@ class AIEngineService {
       });
     }
 
-    // Urutkan insight berdasarkan impact_score (prioritas tertinggi di paling atas)
-    return insights.sort((a, b) => b.impact_score - a.impact_score);
+    // Urutkan insight berdasarkan impact_score dan lengkapi metadata transparansi AI & Human-in-the-Loop
+    return insights
+      .map(insight => ({
+        ...insight,
+        methodology: 'RULE_BASED_INFERENCE',
+        requires_human_review: true,
+        human_in_the_loop_notice: 'Rekomendasi ini berbasis aturan indikator kewilayahan (Rule-Based DSS). Segala penetapan bansos, rujukan klinis, atau intervensi anggaran wajib divalidasi dan disahkan oleh pejabat berwenang (Human-in-the-Loop).'
+      }))
+      .sort((a, b) => b.impact_score - a.impact_score);
   }
 
   /**

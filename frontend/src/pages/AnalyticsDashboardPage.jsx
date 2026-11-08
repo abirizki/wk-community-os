@@ -722,7 +722,8 @@ export default function AnalyticsDashboardPage() {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <SeverityTag severity={insight.severity} />
-                          {insight.badge_label && <span className="text-[11px] text-slate-500">{insight.badge_label}</span>}
+                          {insight.badge_label && <span className="text-[11px] font-medium text-slate-500">{insight.badge_label}</span>}
+                          <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-medium text-sky-700 border border-sky-200/60">Rule-based DSS · Perlu Verifikasi</span>
                         </div>
                         <h3 className="mt-2 text-base font-semibold leading-6 text-slate-950">{insight.title}</h3>
                         <p className="mt-1.5 text-sm leading-6 text-slate-600">{insight.summary}</p>
@@ -735,6 +736,11 @@ export default function AnalyticsDashboardPage() {
                               </div>
                             ))}
                           </dl>
+                        )}
+                        {insight.human_in_the_loop_notice && (
+                          <p className="mt-2 text-[11px] italic text-slate-500 bg-slate-50/70 p-2 rounded border border-slate-100">
+                            ℹ {insight.human_in_the_loop_notice}
+                          </p>
                         )}
                         {insight.action_directives?.length > 0 && (
                           <div className="mt-4 rounded-lg border-l-2 border-blue-500 bg-blue-50/60 px-3 py-2.5">

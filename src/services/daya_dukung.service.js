@@ -52,6 +52,7 @@ class DayaDukungService {
     return {
       scope,
       timestamp: new Date().toISOString(),
+
       index_daya_dukung: {
         score: overallScore,
         status: statusLabel,
@@ -78,6 +79,8 @@ class DayaDukungService {
     return {
       scope,
       timestamp: new Date().toISOString(),
+      is_simulated_fallback: true,
+      simulation_notice: 'Data daya dukung live belum terisi pada cakupan wilayah ini. Angka berikut merupakan estimasi proyeksi baseline standar.',
       index_daya_dukung: {
         score: 84,
         status: 'MEMADAI',
@@ -252,7 +255,7 @@ class DayaDukungService {
           neraca_value: sdCohort.selisih_kursi < 0 ? `Defisit ${Math.abs(sdCohort.selisih_kursi)} Kursi` : `Surplus +${sdCohort.selisih_kursi} Kursi`
         },
         temuan_kritis: isEduDeficit
-          ? `Sebanyak ${sdCohort.proyeksi_masuk_t1} anak usia 6 tahun akan memasuki jenjang SD tahun ajaran depan, sedangkan daya tampung kursi baru hanya ${sdCohort.kursi_baru} kursi (Defisit ${Math.abs(sdCohort.selisih_kursi)} kursi / butuh ~${sdCohort.rombel_defisit || 1} rombel baru).`
+          ? `Sebanyak ${sdCohort.proyeksi_masuk_t1} anak usia 6 tahun akan memasuki jenjang SD tahun ajaran depan, sedangkan daya tampung kursi baru hanya ${sdCohort.kursi_baru} kursi (Defisit ${Math.abs(sdCohort.selisih_kursi)} kursi / butuh ~${sdCohort.rombel_defisit || Math.ceil(Math.abs(sdCohort.selisih_kursi) / 28) || 1} rombel baru).`
           : `Proyeksi ${sdCohort.proyeksi_masuk_t1} calon siswa baru kelas 1 SD dapat tertampung optimal pada ${sdCohort.kursi_baru} kuota kursi PPDB zonasi yang tersedia.`,
         rekomendasi_kebijakan: isEduDeficit
           ? `Disposisikan pembukaan 1 rombongan belajar tambahan di SD Negeri zonasi terdekat atau aktifkan kuota beasiswa afirmasi ke sekolah swasta/madrasah sebelum pengumuman PPDB.`
@@ -305,7 +308,7 @@ class DayaDukungService {
         urgensi: 'medium',
         ringkasan_angka: {
           tahun_ini_label: 'Keluarga Rentan Desil 1-2',
-          tahun_ini_value: `${ekonomi.food_accessibility_per_rw?.reduce((acc, curr) => acc + (curr.keluarga_desil_1_2 || 0), 0) || 14} KK`,
+          tahun_ini_value: `${ekonomi.food_accessibility_per_rw?.reduce((acc, curr) => acc + (Number(curr.keluarga_desil_1_2) || 0), 0) || 0} KK`,
           tahun_depan_label: 'Target Graduasi Mandiri',
           tahun_depan_value: '3 - 5 KK / Thn',
           daya_dukung_label: 'Mitra Sembako Murah',
@@ -353,7 +356,12 @@ class DayaDukungService {
       scope,
       timestamp: new Date().toISOString(),
       index_daya_dukung,
-      executive_insights: executiveInsights,
+      executive_insights: executiveInsights.map(card => ({
+        ...card,
+        decision_type: 'RULE_BASED_PRESCRIPTIVE',
+        human_approval_required: true,
+        human_in_the_loop_notice: 'Rekomendasi kebijakan ini merupakan panduan pendukung keputusan (Decision Support System) berbasis aturan wilayah dan wajib diverifikasi faktual oleh Lurah / Tim Verifikasi Kelurahan (Human-in-the-Loop).'
+      })),
       pillars: {
         pendidikan,
         kesehatan,
