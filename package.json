@@ -6,10 +6,12 @@
     "start": "node server.js",
     "db:init": "node src/db/init.js",
     "db:seed": "node src/db/seed.js",
+    "db:test:setup": "node scripts/setup_test_db.js",
     "build:frontend": "cd frontend && npm run build",
     "preflight": "node scripts/production_preflight.js",
     "uat": "node scripts/run_e2e_uat.js",
     "test:warga": "node scripts/test_warga_suite.js",
+    "test:integration": "node --test tests/unit/analytics_integration_synthetic.test.js",
     "db:seed:full": "node scripts/seed_full_production.js",
     "deploy:db": "node scripts/deploy_production_db.js",
     "deploy:accounts": "node database/migrate_standard_accounts.js"
