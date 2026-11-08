@@ -1331,6 +1331,34 @@ async function autoPatchDatabase() {
       await connection.query('ALTER TABLE posyandu ADD INDEX idx_posyandu_tgl (tanggal_pemeriksaan)');
     } catch (e) {}
 
+        // 23. Pelacakan Tindak Lanjut Analitik & DSS Workflows (Sprint 5)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS analytics_action_tracking (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          insight_id VARCHAR(100) NOT NULL UNIQUE,
+          category VARCHAR(50) NOT NULL,
+          title VARCHAR(255) NOT NULL,
+          wilayah_rw VARCHAR(10) NOT NULL,
+          wilayah_rt VARCHAR(10) NULL,
+          status ENUM('BELUM_DITINDAKLANJUTI', 'DALAM_PROSES', 'SELESAI') NOT NULL DEFAULT 'BELUM_DITINDAKLANJUTI',
+          catatan_tindak_lanjut TEXT NULL,
+          assigned_role VARCHAR(50) NULL,
+          updated_by_user_id INT NULL,
+          updated_by_nama VARCHAR(150) NULL,
+          target_deadline DATE NULL,
+          completed_at DATETIME NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_act_insight (insight_id),
+          INDEX idx_act_wilayah (wilayah_rw, wilayah_rt),
+          INDEX idx_act_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE analytics_action_tracking note:', e.message);
+    }
+
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');
   } catch (err) {
     console.warn('[AutoPatch] Catatan auto-patch database:', err.message);

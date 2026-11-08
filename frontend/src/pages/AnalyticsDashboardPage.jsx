@@ -148,6 +148,9 @@ export default function AnalyticsDashboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [actionsMap, setActionsMap] = useState({});
+  const [actionFilter, setActionFilter] = useState('all');
+  const [updatingActionId, setUpdatingActionId] = useState(null);
   const [sources, setSources] = useState({
     summary: null,
     demographics: null,
@@ -180,9 +183,17 @@ export default function AnalyticsDashboardPage() {
       api.get(`/analytics/demografi?${params}`),
       api.get(`/analytics/dokumen?${params}`),
       api.get(`/desil/stats?${params}`),
+      api.get(`/analytics/actions?${params}`),
     ]).then((results) => {
       if (!active) return;
       const keys = ['summary', 'demographics', 'documents', 'desil'];
+      if (results[4] && results[4].status === 'fulfilled' && results[4].value?.data) {
+        const map = {};
+        (results[4].value.data || []).forEach(item => {
+          if (item.insight_id) map[item.insight_id] = item;
+        });
+        setActionsMap(map);
+      }
       const nextSources = {};
 
       results.forEach((result, index) => {
@@ -676,9 +687,67 @@ export default function AnalyticsDashboardPage() {
     </div>
   );
 
+  const buildDeepLink = (insight) => {
+    const insightRw = insight.evidence?.wilayah?.match(/RW\s*(\d+)/i)?.[1] || (effectiveRW !== 'all' ? effectiveRW : '001');
+    const insightRt = insight.evidence?.wilayah?.match(/RT\s*(\d+)/i)?.[1] || (effectiveRT !== 'all' ? effectiveRT : '001');
+    
+    if (insight.category === 'KESEHATAN_BALITA') {
+      return `/dashboard/posyandu?category=balita&rw=${insightRw}&rt=${insightRt}&filter=gizi_kurang`;
+    }
+    if (insight.category === 'GERIATRI_LANSIA') {
+      return `/dashboard/posyandu?category=lansia&rw=${insightRw}&rt=${insightRt}&filter=komorbid`;
+    }
+    if (insight.category === 'BANTUAN_SOSIAL') {
+      return `/dashboard/bansos?rw=${insightRw}&rt=${insightRt}&tab=sktm`;
+    }
+    if (insight.category === 'LAYANAN_DOKUMEN') {
+      return `/dashboard/dokumen?rw=${insightRw}&rt=${insightRt}&status=PROSES`;
+    }
+    return `/dashboard/warga?rw=${insightRw}&rt=${insightRt}`;
+  };
+
+  const handleUpdateActionStatus = async (insight, nextStatus) => {
+    setUpdatingActionId(insight.id);
+    const defaultNote = nextStatus === 'SELESAI' 
+      ? 'Telah diverifikasi dan ditindaklanjuti di lapangan.' 
+      : 'Sedang dalam penanganan dan koordinasi petugas.';
+    const note = window.prompt(`Perbarui status menjadi [${nextStatus}]:\nMasukkan catatan verifikasi lapangan:`, defaultNote);
+    if (note === null) {
+      setUpdatingActionId(null);
+      return;
+    }
+
+    const insightRw = insight.evidence?.wilayah?.match(/RW\s*(\d+)/i)?.[1] || (effectiveRW !== 'all' ? effectiveRW : '001');
+    const insightRt = insight.evidence?.wilayah?.match(/RT\s*(\d+)/i)?.[1] || (effectiveRT !== 'all' ? effectiveRT : '001');
+
+    try {
+      const res = await api.patch(`/analytics/actions/${encodeURIComponent(insight.id)}`, {
+        status: nextStatus,
+        catatan_tindak_lanjut: note,
+        category: insight.category,
+        title: insight.title,
+        wilayah_rw: insightRw,
+        wilayah_rt: insightRt,
+      });
+      if (res?.success && res.data) {
+        setActionsMap(prev => ({ ...prev, [insight.id]: res.data }));
+      }
+    } catch (e) {
+      alert('Gagal memperbarui status: ' + (e.message || 'Error server'));
+    } finally {
+      setUpdatingActionId(null);
+    }
+  };
+
   const renderStrategies = () => {
     const insights = summary?.ai_insights || [];
     const fidelity = summary?.data_fidelity;
+
+    const filteredInsights = insights.filter((insight) => {
+      const status = actionsMap[insight.id]?.status || 'PENDING';
+      if (actionFilter === 'all') return true;
+      return status === actionFilter;
+    });
 
     return (
       <div className="space-y-5">
@@ -686,9 +755,9 @@ export default function AnalyticsDashboardPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="max-w-3xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-300">Decision support · {areaLabel}</p>
-              <h2 className="mt-2 text-xl font-semibold tracking-tight">Strategi berbasis bukti, bukan prediksi otomatis</h2>
+              <h2 className="mt-2 text-xl font-semibold tracking-tight">Strategi berbasis bukti & alur tindak lanjut</h2>
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                Insight dibentuk dari aturan yang dapat diperiksa. Gunakan temuan sebagai prioritas verifikasi dan koordinasi; penetapan program tetap memerlukan validasi petugas.
+                Setiap rekomendasi dilengkapi bukti wilayah dan dapat ditandai status penanganannya untuk transparansi audit dan koordinasi lintas petugas.
               </p>
             </div>
             <div className="min-w-40 rounded-xl border border-white/15 p-3">
@@ -699,18 +768,44 @@ export default function AnalyticsDashboardPage() {
           </div>
         </Panel>
 
+        {/* Filter Bar Tindak Lanjut */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white p-3 shadow-xs">
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
+            <span>Filter Status Tindak Lanjut:</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { id: 'all', label: `Semua (${insights.length})` },
+              { id: 'PENDING', label: `Perlu Tindakan (${insights.filter(i => (actionsMap[i.id]?.status || 'PENDING') === 'PENDING').length})` },
+              { id: 'IN_PROGRESS', label: `Dalam Proses (${insights.filter(i => actionsMap[i.id]?.status === 'IN_PROGRESS').length})` },
+              { id: 'SELESAI', label: `Selesai (${insights.filter(i => actionsMap[i.id]?.status === 'SELESAI').length})` },
+            ].map(filter => (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => setActionFilter(filter.id)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  actionFilter === filter.id
+                    ? 'bg-sky-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <SourceStatus source={sources.summary} loading={loading && !summary} label="Analisis strategi" />
-        {insights.length ? (
-          <div className="space-y-3">
-            {insights.map((insight, index) => {
+        {filteredInsights.length ? (
+          <div className="space-y-4">
+            {filteredInsights.map((insight, index) => {
               const evidence = Object.entries(insight.evidence || {})
                 .filter(([, value]) => ['string', 'number'].includes(typeof value) && value !== null)
                 .slice(0, 4);
-              const targetLink = insight.category === 'KESEHATAN_BALITA' || insight.category === 'GERIATRI_LANSIA'
-                ? '/dashboard/posyandu'
-                : insight.category === 'LAYANAN_DOKUMEN'
-                  ? '/dashboard/dokumen'
-                  : '/dashboard/bansos';
+              const targetLink = buildDeepLink(insight);
+              const actionRecord = actionsMap[insight.id];
+              const currentStatus = actionRecord?.status || 'PENDING';
 
               return (
                 <Panel key={insight.id || index} className="p-4 sm:p-5">
@@ -719,11 +814,24 @@ export default function AnalyticsDashboardPage() {
                       <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
                         {insight.severity === 'CRITICAL' ? <AlertCircle size={17} /> : <Activity size={17} />}
                       </span>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <SeverityTag severity={insight.severity} />
                           {insight.badge_label && <span className="text-[11px] font-medium text-slate-500">{insight.badge_label}</span>}
                           <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-medium text-sky-700 border border-sky-200/60">Rule-based DSS · Perlu Verifikasi</span>
+                          {currentStatus === 'SELESAI' ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 size={12} /> Selesai Ditindaklanjuti
+                            </span>
+                          ) : currentStatus === 'IN_PROGRESS' ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 border border-amber-200">
+                              Dalam Penanganan
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                              Perlu Verifikasi Lapangan
+                            </span>
+                          )}
                         </div>
                         <h3 className="mt-2 text-base font-semibold leading-6 text-slate-950">{insight.title}</h3>
                         <p className="mt-1.5 text-sm leading-6 text-slate-600">{insight.summary}</p>
@@ -743,20 +851,65 @@ export default function AnalyticsDashboardPage() {
                           </p>
                         )}
                         {insight.action_directives?.length > 0 && (
-                          <div className="mt-4 rounded-lg border-l-2 border-blue-500 bg-blue-50/60 px-3 py-2.5">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-800">Langkah tindak lanjut</p>
+                          <div className="mt-3 rounded-lg border-l-2 border-blue-500 bg-blue-50/60 px-3 py-2.5">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-800">Langkah tindak lanjut terarah</p>
                             <ul className="mt-1 list-inside list-disc space-y-1 text-xs leading-5 text-slate-700">
                               {insight.action_directives.slice(0, 2).map((action) => <li key={action}>{action}</li>)}
                             </ul>
                           </div>
                         )}
+                        {actionRecord && (
+                          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 text-xs text-slate-700">
+                            <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-500">
+                              <span>Log Audit: Status diperbarui oleh <strong>{actionRecord.updated_by_nama || 'Petugas'}</strong> ({actionRecord.updated_by_role || 'Admin'})</span>
+                              <span>{actionRecord.updated_at ? new Date(actionRecord.updated_at).toLocaleString('id-ID') : ''}</span>
+                            </div>
+                            {actionRecord.catatan_tindak_lanjut && (
+                              <p className="mt-1.5 italic text-slate-600">
+                                "{actionRecord.catatan_tindak_lanjut}"
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2 lg:flex-col lg:items-end">
+                    <div className="flex shrink-0 flex-col items-end gap-2">
                       {insight.impact_score != null && <span className="text-[11px] text-slate-500">Prioritas relatif {formatNumber(insight.impact_score)}</span>}
-                      <Link to={targetLink} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                        Tindak lanjuti <ChevronRight size={14} />
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        {currentStatus !== 'SELESAI' ? (
+                          <button
+                            type="button"
+                            disabled={updatingActionId === insight.id}
+                            onClick={() => handleUpdateActionStatus(insight, currentStatus === 'PENDING' ? 'IN_PROGRESS' : 'SELESAI')}
+                            className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                              currentStatus === 'PENDING'
+                                ? 'bg-amber-500 text-white hover:bg-amber-600'
+                                : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                            }`}
+                          >
+                            {updatingActionId === insight.id
+                              ? 'Menyimpan...'
+                              : currentStatus === 'PENDING'
+                                ? 'Mulai Tindak Lanjut'
+                                : 'Tandai Selesai'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={updatingActionId === insight.id}
+                            onClick={() => handleUpdateActionStatus(insight, 'IN_PROGRESS')}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                          >
+                            Tinjau Ulang
+                          </button>
+                        )}
+                        <Link
+                          to={targetLink}
+                          className="inline-flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-100"
+                        >
+                          Tindak Lanjuti <ChevronRight size={14} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </Panel>
@@ -764,7 +917,10 @@ export default function AnalyticsDashboardPage() {
             })}
           </div>
         ) : !loading && !sources.summary?.error ? (
-          <EmptyState title="Belum ada insight yang memenuhi aturan" message="Data atau ambang keputusan belum cukup untuk memunculkan prioritas pada wilayah ini." />
+          <EmptyState
+            title="Tidak ada data insight pada filter ini"
+            message={actionFilter !== 'all' ? `Belum ada rekomendasi dengan status ${actionFilter}.` : "Data atau ambang keputusan belum cukup untuk memunculkan prioritas pada wilayah ini."}
+          />
         ) : null}
 
         <Panel className="p-4 sm:p-5">
@@ -779,7 +935,7 @@ export default function AnalyticsDashboardPage() {
     );
   };
 
-  const tabContent = activeTab === 'ringkasan'
+    const tabContent = activeTab === 'ringkasan'
     ? renderSummary()
     : activeTab === 'penduduk'
       ? renderPopulation()

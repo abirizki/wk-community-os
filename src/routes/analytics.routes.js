@@ -487,4 +487,119 @@ router.get('/dokumen', requireAuth, async (req, res) => {
   }
 });
 
+
+// =========================================================================
+// ACTION TRACKING & WORKFLOW DISPATCH (SPRINT 5)
+// =========================================================================
+
+// GET /api/analytics/actions - Daftar Status Tindak Lanjut Rekomendasi
+router.get('/actions', requireAuth, async (req, res) => {
+  try {
+    const scope = resolveAnalyticsScope(req, res);
+    if (!scope) return;
+
+    let query = "SELECT * FROM analytics_action_tracking WHERE 1=1";
+    const params = [];
+
+    if (scope.rw) {
+      query += " AND wilayah_rw = ?";
+      params.push(scope.rw);
+    }
+    if (scope.rt) {
+      query += " AND wilayah_rt = ?";
+      params.push(scope.rt);
+    }
+    if (req.query.status && req.query.status !== 'all') {
+      query += " AND status = ?";
+      params.push(req.query.status);
+    }
+
+    query += " ORDER BY status ASC, updated_at DESC";
+
+    const [rows] = await pool.execute(query, params);
+    res.json({ success: true, data: rows || [] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || 'Gagal memuat status tindak lanjut' });
+  }
+});
+
+// PATCH /api/analytics/actions/:insightId - Pembaruan Status & Jejak Audit Petugas
+router.patch('/actions/:insightId', requireAuth, requireRole('superadmin', 'walikota', 'camat', 'lurah', 'admin_kelurahan', 'admin', 'ketua_rw', 'admin_rw', 'ketua_rt', 'kader_posyandu'), async (req, res) => {
+  try {
+    const scope = resolveAnalyticsScope(req, res);
+    if (!scope) return;
+
+    const { insightId } = req.params;
+    const { status, catatan_tindak_lanjut, category, title, wilayah_rw, wilayah_rt } = req.body;
+    const user = req.session.user;
+
+    const validStatuses = ['BELUM_DITINDAKLANJUTI', 'DALAM_PROSES', 'SELESAI'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Status tidak valid.' });
+    }
+
+    const [existing] = await pool.execute("SELECT * FROM analytics_action_tracking WHERE insight_id = ?", [insightId]);
+
+    const isCompleted = status === 'SELESAI';
+    const completedAt = isCompleted ? new Date() : null;
+
+    if (existing.length > 0) {
+      if (scope.rw && existing[0].wilayah_rw !== scope.rw) {
+        return res.status(403).json({ success: false, message: 'Akses ditolak: Anda tidak berwenang atas wilayah tindakan ini.' });
+      }
+      if (scope.rt && existing[0].wilayah_rt && existing[0].wilayah_rt !== scope.rt) {
+        return res.status(403).json({ success: false, message: 'Akses ditolak: Anda tidak berwenang atas RT tindakan ini.' });
+      }
+
+      await pool.execute(
+        `UPDATE analytics_action_tracking
+         SET status = COALESCE(?, status),
+             catatan_tindak_lanjut = COALESCE(?, catatan_tindak_lanjut),
+             updated_by_user_id = ?,
+             updated_by_nama = ?,
+             completed_at = CASE WHEN ? = 'SELESAI' THEN NOW() ELSE completed_at END
+         WHERE insight_id = ?`,
+        [
+          status || null,
+          catatan_tindak_lanjut || null,
+          user.id || null,
+          user.nama || user.username,
+          status || null,
+          insightId
+        ]
+      );
+    } else {
+      await pool.execute(
+        `INSERT INTO analytics_action_tracking
+          (insight_id, category, title, wilayah_rw, wilayah_rt, status, catatan_tindak_lanjut, assigned_role, updated_by_user_id, updated_by_nama, completed_at)
+         VALUES
+          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          insightId,
+          category || 'UMUM',
+          title || 'Tindak Lanjut Rekomendasi Wilayah',
+          wilayah_rw || scope.rw || '001',
+          wilayah_rt || scope.rt || '001',
+          status || 'DALAM_PROSES',
+          catatan_tindak_lanjut || 'Tindak lanjut dicatat oleh petugas',
+          user.role,
+          user.id || null,
+          user.nama || user.username,
+          completedAt
+        ]
+      );
+    }
+
+    const [updated] = await pool.execute("SELECT * FROM analytics_action_tracking WHERE insight_id = ?", [insightId]);
+
+    res.json({
+      success: true,
+      message: `Status tindak lanjut berhasil diperbarui menjadi ${status || 'tersimpan'}.`,
+      data: updated[0] || null
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || 'Gagal memperbarui status tindak lanjut' });
+  }
+});
+
 module.exports = router;
