@@ -263,6 +263,7 @@ export default function DokumenPage() {
     lokasi_tinggal: ''
   });
   const [directRtApproval, setDirectRtApproval] = useState(true);
+  const [emergencyBypass, setEmergencyBypass] = useState(true);
   const [formData, setFormData] = useState({
     jenis_dokumen: 'Surat Keterangan Domisili',
     keperluan: ''
@@ -430,22 +431,38 @@ export default function DokumenPage() {
     }
   }, [searchParams]);
 
-  // Load Warga RT untuk Loket Dampingan Petugas
+  // Live Server-Side Search Warga untuk Loket Dampingan RT / RW (Debounced & Ringan)
   useEffect(() => {
-    if (showModal && isOfficer && user?.rt) {
-      setLoadingRtWarga(true);
-      api.get(`/warga?rt=${user.rt}&rw=${user.rw || '001'}&limit=150`)
-        .then(res => {
-          if (res?.data && Array.isArray(res.data)) {
-            setRtWargaList(res.data);
-          } else if (Array.isArray(res?.warga)) {
-            setRtWargaList(res.warga);
-          }
-        })
-        .catch(err => console.warn('Failed loading warga RT for assisted desk:', err.message))
-        .finally(() => setLoadingRtWarga(false));
+    if (!showModal || !isOfficer) return;
+    const query = searchWargaText.trim();
+    if (query.length < 2) {
+      setRtWargaList([]);
+      setLoadingRtWarga(false);
+      return;
     }
-  }, [showModal, isOfficer, user?.rt, user?.rw]);
+
+    const timer = setTimeout(() => {
+      setLoadingRtWarga(true);
+      const params = new URLSearchParams();
+      params.set('search', query);
+      params.set('limit', '8');
+      if (isRT && user?.rt) {
+        params.set('rt', user.rt);
+        params.set('rw', user.rw || '001');
+      } else if (isRW && user?.rw) {
+        params.set('rw', user.rw);
+      }
+      api.get(`/warga?${params.toString()}`)
+        .then(res => {
+          const items = res?.items || (Array.isArray(res?.data) ? res.data : []);
+          setRtWargaList(items);
+        })
+        .catch(err => console.warn('Search warga error:', err.message))
+        .finally(() => setLoadingRtWarga(false));
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchWargaText, showModal, isOfficer, isRT, isRW, user?.rt, user?.rw]);
 
   // Selected subject information
   const selectedSubjectInfo = useMemo(() => {
@@ -552,6 +569,8 @@ export default function DokumenPage() {
         nama_subjek: targetNama,
         is_assisted: isAssisted,
         direct_rt_approval: isRT && directRtApproval,
+        is_emergency_bypass: isRW && emergencyBypass,
+        direct_rw_approval: isRW,
         data_tambahan: {
           ...dataTambahan,
           alamat_ktp_asal: pendatangCustom.alamat_asal || dataTambahan.alamat_ktp_asal,
@@ -1069,7 +1088,7 @@ export default function DokumenPage() {
                     >
                       <Users size={16} />
                       <div>
-                        <span className="block leading-tight">Dampingan Warga RT</span>
+                        <span className="block leading-tight">{isRW ? 'Dampingan Warga RW' : 'Dampingan Warga RT'}</span>
                         <span className={`text-[10px] font-normal block mt-0.5 ${pelayananMode === 'WARGA_RT' ? 'text-sky-100' : 'text-slate-400'}`}>Lansia / Gaptek / Offline</span>
                       </div>
                     </button>
@@ -1108,25 +1127,25 @@ export default function DokumenPage() {
                     >
                       <User size={16} />
                       <div>
-                        <span className="block leading-tight">Mandiri Pribadi RT</span>
-                        <span className={`text-[10px] font-normal block mt-0.5 ${pelayananMode === 'MANDIRI' ? 'text-indigo-100' : 'text-slate-400'}`}>Keluarga RT Sendiri</span>
+                        <span className="block leading-tight">{isRW ? 'Mandiri Pribadi RW' : 'Mandiri Pribadi RT'}</span>
+                        <span className={`text-[10px] font-normal block mt-0.5 ${pelayananMode === 'MANDIRI' ? 'text-indigo-100' : 'text-slate-400'}`}>{isRW ? 'Keluarga RW Sendiri' : 'Keluarga RT Sendiri'}</span>
                       </div>
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* PANEL 1: JIKA MODE DAMPINGAN WARGA RT (LANSIA / GAPTEK) */}
+              {/* PANEL 1: JIKA MODE DAMPINGAN WARGA RT / RW (LANSIA / GAPTEK) */}
               {isOfficer && pelayananMode === 'WARGA_RT' && (
                 <div className="p-4 rounded-xl bg-sky-50/70 border border-sky-200 space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-sky-950 flex items-center gap-1.5">
                       <Users size={15} className="text-sky-700" />
-                      <span>Cari & Pilih Warga RT {user?.rt} yang Sedang Didampingi: *</span>
+                      <span>Cari & Pilih Warga {isRT ? `RT ${user?.rt}` : `RW ${user?.rw}`} yang Sedang Didampingi: *</span>
                     </label>
                     {loadingRtWarga && (
                       <span className="text-[10px] text-sky-700 flex items-center gap-1">
-                        <Loader2 size={12} className="animate-spin" /> Memuat data warga RT...
+                        <Loader2 size={12} className="animate-spin" /> Mencari data warga...
                       </span>
                     )}
                   </div>
@@ -1135,23 +1154,18 @@ export default function DokumenPage() {
                     <Search size={14} className="absolute left-3 top-3 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Ketik nama warga atau NIK di RT Anda..."
+                      placeholder={`Ketik nama atau NIK warga ${isRT ? `RT ${user?.rt}` : `RW ${user?.rw}`} (min. 2 karakter)...`}
                       value={searchWargaText}
                       onChange={(e) => setSearchWargaText(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-sky-300 text-xs outline-none focus:ring-1 focus:ring-sky-500"
                     />
                   </div>
 
-                  {/* Autocomplete List Warga RT */}
-                  {searchWargaText.trim().length > 0 && (
-                    <div className="max-h-40 overflow-y-auto bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
-                      {rtWargaList
-                        .filter(w => 
-                          (w.nama || '').toLowerCase().includes(searchWargaText.toLowerCase()) || 
-                          (w.nik || '').includes(searchWargaText)
-                        )
-                        .slice(0, 8)
-                        .map(w => (
+                  {/* Autocomplete List Warga RT / RW */}
+                  {searchWargaText.trim().length >= 2 && (
+                    <div className="max-h-48 overflow-y-auto bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
+                      {rtWargaList.length > 0 ? (
+                        rtWargaList.map(w => (
                           <button
                             key={w.nik}
                             type="button"
@@ -1163,24 +1177,48 @@ export default function DokumenPage() {
                           >
                             <div>
                               <span className="font-bold text-slate-800 block">{w.nama}</span>
-                              <span className="text-[10px] font-mono text-slate-500">NIK: {w.nik} &bull; No. KK: {w.no_kk || '-'}</span>
+                              <span className="text-[10px] font-mono text-slate-500">
+                                NIK: {w.nik} &bull; RT {w.rt || '001'} / RW {w.rw || '001'} &bull; No. KK: {w.no_kk || '-'}
+                              </span>
                             </div>
                             <span className="text-[10px] font-semibold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
                               Pilih Warga
                             </span>
                           </button>
-                        ))}
+                        ))
+                      ) : !loadingRtWarga ? (
+                        <div className="p-3 bg-amber-50 text-center space-y-1.5 text-xs">
+                          <p className="font-semibold text-amber-900">Warga tidak ditemukan di database lingkungan.</p>
+                          <p className="text-[11px] text-amber-700">Warga baru pindah atau belum ber-KTP Kebonjati?</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPelayananMode('WARGA_PENDATANG');
+                              setPendatangCustom(prev => ({ ...prev, nama: searchWargaText }));
+                              setFormData(prev => ({
+                                ...prev,
+                                jenis_dokumen: 'Surat Pengantar Warga Pendatang (Domisili Non-Permanen)',
+                                keperluan: 'Permohonan Surat Keterangan Domisili Sementara / Lapor Warga Pendatang ke Kelurahan'
+                              }));
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition"
+                          >
+                            <Home size={13} />
+                            <span>Beralih ke Input Warga Pendatang Baru</span>
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   )}
 
-                  {/* Preview Warga RT Terpilih */}
+                  {/* Preview Warga RT / RW Terpilih */}
                   {selectedWargaRt ? (
                     <div className="p-3 bg-white rounded-xl border border-emerald-300 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] font-bold text-emerald-800 uppercase block">Warga yang Didampingi (Pemohon Sah):</span>
                         <h4 className="font-extrabold text-sm text-slate-900">{selectedWargaRt.nama}</h4>
                         <p className="text-[11px] font-mono text-slate-500">
-                          NIK: {selectedWargaRt.nik} &bull; RT {selectedWargaRt.rt || user?.rt}/RW {selectedWargaRt.rw || user?.rw}
+                          NIK: {selectedWargaRt.nik} &bull; RT {selectedWargaRt.rt || '001'} / RW {selectedWargaRt.rw || '001'}
                         </p>
                       </div>
                       <button
@@ -1193,7 +1231,7 @@ export default function DokumenPage() {
                     </div>
                   ) : (
                     <p className="text-[11px] text-sky-800 italic">
-                      * Pilih warga lansia/gaptek dari daftar pencarian di atas agar surat terbit atas nama warga tersebut.
+                      * Ketik nama atau NIK warga di atas (min. 2 karakter) untuk memilih warga yang sedang didampingi.
                     </p>
                   )}
 
@@ -1211,6 +1249,24 @@ export default function DokumenPage() {
                       </label>
                       <p className="text-[10px] text-slate-500 ml-6">
                         Surat tidak akan mengantre di meja Anda lagi dan langsung diteruskan ke Ketua RW / Kelurahan.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Otorisasi Bypass Darurat RW */}
+                  {isRW && (
+                    <div className="pt-2 border-t border-sky-200/80">
+                      <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-amber-900">
+                        <input
+                          type="checkbox"
+                          checked={emergencyBypass}
+                          onChange={(e) => setEmergencyBypass(e.target.checked)}
+                          className="rounded text-amber-600 focus:ring-amber-500 w-4 h-4"
+                        />
+                        <span>Bypass Diskresi Darurat RW (RT Berhalangan / Kebutuhan Sangat Mendesak)</span>
+                      </label>
+                      <p className="text-[10px] text-slate-500 ml-6">
+                        Surat langsung disahkan atas nama RT & RW dan langsung diteruskan ke tingkat Kelurahan Kebonjati.
                       </p>
                     </div>
                   )}
@@ -1284,6 +1340,20 @@ export default function DokumenPage() {
                           className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4"
                         />
                         <span>Langsung Sahkan & TTE Surat Pengantar Domisili RT</span>
+                      </label>
+                    </div>
+                  )}
+
+                  {isRW && (
+                    <div className="pt-2 border-t border-emerald-200">
+                      <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-emerald-950">
+                        <input
+                          type="checkbox"
+                          checked={emergencyBypass}
+                          onChange={(e) => setEmergencyBypass(e.target.checked)}
+                          className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4"
+                        />
+                        <span>Bypass Diskresi Darurat RW (Sahkan RT & RW Langsung ke Kelurahan)</span>
                       </label>
                     </div>
                   )}

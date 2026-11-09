@@ -63,11 +63,33 @@ class PengaduanService {
   }
 
   /**
-   * Ambil semua pengaduan
+   * Ambil semua pengaduan dengan filter wilayah berdasar peran pengguna
+   * @param {Object} currentUser
    * @returns {Promise<Array>}
    */
-  async getAll() {
-    return await pengaduanRepository.list();
+  async getAll(currentUser = {}) {
+    const filters = {};
+    if (currentUser.role === 'ketua_rt') {
+      filters.rt = currentUser.rt;
+      filters.rw = currentUser.rw || '001';
+    } else if (currentUser.role === 'ketua_rw' || currentUser.role === 'admin_rw') {
+      filters.rw = currentUser.rw || '001';
+    }
+    return await pengaduanRepository.list(filters);
+  }
+
+  /**
+   * Tindak lanjut / mediasi pengaduan warga oleh aparatur RT/RW/Kelurahan
+   */
+  async updateStatus(id, { status, catatan_admin }, currentUser = {}) {
+    const allowed = ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'lurah', 'superadmin', 'admin'];
+    if (!allowed.includes(currentUser.role)) {
+      const err = new Error('Hanya aparatur lingkungan yang berwenang menindaklanjuti pengaduan.');
+      err.status = 403;
+      throw err;
+    }
+    await pengaduanRepository.updateStatus(id, { status, catatan_admin });
+    return { success: true, message: `Status aduan berhasil diperbarui menjadi ${status}.` };
   }
 }
 

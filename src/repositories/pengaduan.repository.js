@@ -37,14 +37,46 @@ class PengaduanRepository {
   }
 
   /**
-   * Ambil semua pengaduan
+   * Ambil semua pengaduan dengan scoping RT/RW dan informasi pelapor
+   * @param {Object} filter
    * @returns {Promise<Array>}
    */
-  async list() {
-    const [rows] = await pool.execute(
-      'SELECT * FROM pengaduan ORDER BY created_at DESC'
-    );
+  async list({ rt, rw } = {}) {
+    let query = `
+      SELECT p.*, w.nama AS nama_pelapor, w.rt, w.rw, w.no_telepon AS telepon_pelapor
+      FROM pengaduan p
+      LEFT JOIN warga w ON p.nik_pelapor = w.nik
+      WHERE 1=1
+    `;
+    const params = [];
+    if (rw) {
+      query += ' AND w.rw = ?';
+      params.push(rw);
+    }
+    if (rt) {
+      query += ' AND w.rt = ?';
+      params.push(rt);
+    }
+    query += ' ORDER BY p.created_at DESC';
+
+    const [rows] = await pool.execute(query, params);
     return rows;
+  }
+
+  /**
+   * Update status dan catatan tanggapan pengaduan
+   */
+  async updateStatus(id, { status, catatan_admin }) {
+    let query = 'UPDATE pengaduan SET status = ?, catatan_admin = ?';
+    const params = [status, catatan_admin || null];
+    if (status === 'RESOLVED') {
+      query += ', resolved_at = NOW()';
+    }
+    query += ' WHERE id = ?';
+    params.push(id);
+
+    const [result] = await pool.execute(query, params);
+    return result;
   }
 }
 

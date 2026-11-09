@@ -60,6 +60,7 @@ export default function KeuanganPage() {
   const { user } = useAuth();
   const isOfficer = user && ['ketua_rt', 'ketua_rw', 'admin_rw', 'admin_kelurahan', 'superadmin', 'admin'].includes(user.role);
   const isRT = user?.role === 'ketua_rt';
+  const isRW = user && ['ketua_rw', 'admin_rw'].includes(user.role);
 
   const [activeTab, setActiveTab] = useState('kas'); // 'kas' | 'iuran' | 'transparansi'
   const [summary, setSummary] = useState({
@@ -293,12 +294,12 @@ export default function KeuanganPage() {
 
         {isOfficer && (
           <div className="flex flex-wrap items-center gap-2">
-            {isRT && (
+            {(isRT || isRW) && (
               <button
                 onClick={() => setShowGenIuranModal(true)}
                 className="flex items-center gap-2 px-3.5 py-2.5 bg-sky-50 text-sky-800 border border-sky-200 rounded-xl font-semibold shadow-sm hover:bg-sky-100 transition-colors text-xs"
               >
-                <Calendar size={15} /> Buat Tagihan Iuran Bulanan
+                <Calendar size={15} /> Buat Tagihan Iuran Bulanan {isRW ? 'RW' : 'RT'}
               </button>
             )}
             <button

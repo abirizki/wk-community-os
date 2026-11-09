@@ -228,9 +228,24 @@ class DokumenService {
     const rt = targetWarga ? targetWarga.rt : (userWarga ? userWarga.rt : (currentUser.rt || '001'));
     const rw = targetWarga ? targetWarga.rw : (userWarga ? userWarga.rw : (currentUser.rw || '001'));
 
-    const isDirectRtApproval = Boolean(payload.direct_rt_approval || (currentUser.role === 'ketua_rt' && payload.is_assisted));
-    const initialStatus = isDirectRtApproval ? 'VERIFYING' : 'SUBMITTED';
-    const initialStep = isDirectRtApproval ? 'RW' : 'RT';
+    const isRwEmergencyBypass = Boolean(
+      (currentUser.role === 'ketua_rw' || currentUser.role === 'admin_rw') && 
+      (payload.is_emergency_bypass || payload.emergency_bypass || payload.direct_rw_approval || payload.is_assisted)
+    );
+    const isDirectRtApproval = Boolean(
+      payload.direct_rt_approval || (currentUser.role === 'ketua_rt' && payload.is_assisted)
+    );
+
+    let initialStatus = 'SUBMITTED';
+    let initialStep = 'RT';
+
+    if (isRwEmergencyBypass) {
+      initialStatus = 'VERIFYING';
+      initialStep = 'KELURAHAN';
+    } else if (isDirectRtApproval) {
+      initialStatus = 'VERIFYING';
+      initialStep = 'RW';
+    }
 
     const result = await dokumenRepository.create({
       nik_pemohon: targetNik,
@@ -249,7 +264,21 @@ class DokumenService {
       acted_by_user_id: currentUser.id
     });
 
-    if (isDirectRtApproval && (result.id || result.insertId)) {
+    if (isRwEmergencyBypass && (result.id || result.insertId)) {
+      try {
+        await dokumenRepository.updateApproval(result.id || result.insertId, {
+          status: 'VERIFYING',
+          approval_step: 'KELURAHAN',
+          approved_by_rt: currentUser.id,
+          approved_by_rw: currentUser.id,
+          catatan_petugas: payload.bypass_reason 
+            ? `Bypass Diskresi Darurat RW: ${payload.bypass_reason}`
+            : 'Disahkan via Diskresi Darurat Ketua RW (Ketua RT berhalangan/kebutuhan mendesak warga) dan langsung diteruskan ke Kelurahan.'
+        });
+      } catch (apprErr) {
+        console.warn('Auto-approval step update note:', apprErr.message);
+      }
+    } else if (isDirectRtApproval && (result.id || result.insertId)) {
       try {
         await dokumenRepository.updateApproval(result.id || result.insertId, {
           status: 'VERIFYING',
