@@ -18,6 +18,8 @@ class DokumenRepository {
       nomor_registrasi,
       rt = null,
       rw = null,
+      status = 'SUBMITTED',
+      approval_step = 'RT',
       is_auto_filled_by_ai = 0,
       acted_by_user_id = null,
       diajukan_oleh_nik = null,
@@ -36,7 +38,7 @@ class DokumenRepository {
       const [result] = await pool.execute(
         `INSERT INTO dokumen_request 
          (nomor_registrasi, nik_pemohon, diajukan_oleh_nik, nama_subjek, hubungan_keluarga, data_tambahan, syarat_berkas, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw, trigger_executed, is_auto_filled_by_ai, rt_received_at, sla_deadline) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NOW(), DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
         [
           noReg, 
           nik_pemohon, 
@@ -48,6 +50,8 @@ class DokumenRepository {
           jenis_dokumen, 
           jenis_dokumen, 
           keperluan, 
+          status,
+          approval_step,
           rt, 
           rw, 
           is_auto_filled_by_ai ? 1 : 0
@@ -60,8 +64,8 @@ class DokumenRepository {
       const [fallbackResult] = await pool.execute(
         `INSERT INTO dokumen_request 
          (nomor_registrasi, nik_pemohon, jenis_surat, jenis_dokumen, keperluan, status, approval_step, rt, rw) 
-         VALUES (?, ?, ?, ?, ?, 'SUBMITTED', 'RT', ?, ?)`,
-        [noReg, nik_pemohon, jenis_dokumen, jenis_dokumen, keperluan, rt, rw]
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [noReg, nik_pemohon, jenis_dokumen, jenis_dokumen, keperluan, status, approval_step, rt, rw]
       );
       docId = fallbackResult.insertId;
     }

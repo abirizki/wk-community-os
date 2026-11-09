@@ -156,6 +156,22 @@ export const JENIS_SURAT_CONFIG = {
       { name: 'rencana_tanggal_nikah', label: 'Rencana Tanggal Akad Nikah', type: 'date', required: true }
     ]
   },
+  'Surat Pengantar Warga Pendatang (Domisili Non-Permanen)': {
+    label: 'Surat Pengantar Warga Pendatang (Domisili Non-Permanen)',
+    deskripsi: 'Surat pengantar RT/RW bagi warga luar daerah / non-permanen (penghuni kos, kontrakan, atau tinggal sementara) untuk penerbitan Surat Keterangan Tinggal Sementara dari Kelurahan.',
+    syarat: [
+      'e-KTP Asal Pemohon (Luar Daerah / Luar Kelurahan)',
+      'Surat Pernyataan / Keterangan dari Pemilik Kos / Kontrakan',
+      'Tanda Bukti Lapor Diri Pengurus RT 1x24 Jam'
+    ],
+    fields: [
+      { name: 'alamat_ktp_asal', label: 'Alamat KTP Asal (Kabupaten / Kota)', type: 'text', placeholder: 'Contoh: Kec. Cililin, Kab. Bandung Barat', required: true },
+      { name: 'lokasi_tinggal_rt', label: 'Alamat Tempat Tinggal di RT', type: 'text', placeholder: 'Contoh: Kos Melati No. 04 / Kontrakan Bpk. Mulyadi Pintu 2', required: true },
+      { name: 'nama_pemilik_hunian', label: 'Nama Pemilik Kos / Kontrakan / Penjamin', type: 'text', placeholder: 'Nama pemilik kos/kontrakan tempat tinggal', required: true },
+      { name: 'status_pekerjaan_tinggal', label: 'Tujuan & Status Tinggal di Wilayah Ini', type: 'select', options: ['Pekerja Kontrak / Karyawan Swasta', 'Mahasiswa / Pelajar', 'Wiraswasta / Usaha Kuliner', 'Tinggal Sementara Mengikuti Keluarga'], required: true },
+      { name: 'rencana_lama_tinggal', label: 'Rencana Lama Tinggal', type: 'select', options: ['< 3 Bulan', '3 - 6 Bulan', '6 - 12 Bulan (1 Tahun)', '> 1 Tahun'], required: true }
+    ]
+  },
   'Surat Keterangan Pindah Domisili': {
     label: 'Surat Keterangan Pindah Domisili',
     deskripsi: 'Pengantar penerbitan SKPWNI untuk kepindahan domisili warga antar-RT, RW, Kelurahan, atau Luar Kota.',
@@ -227,6 +243,24 @@ export default function DokumenPage() {
 
   // Subjek Pemohon: 'self' atau NIK anggota keluarga dalam 1 KK
   const [subjekPemohon, setSubjekPemohon] = useState('self');
+
+  // Mode Pengajuan Layanan RT/RW: 'WARGA_RT' (dampingan lansia/gaptek) | 'WARGA_PENDATANG' (warga pendatang) | 'MANDIRI' (pribadi)
+  const isDampinganUrl = searchParams.get('mode') === 'dampingan';
+  const [pelayananMode, setPelayananMode] = useState(
+    isDampinganUrl ? (searchParams.get('nik') ? 'WARGA_PENDATANG' : 'WARGA_RT') : (isOfficer ? 'WARGA_RT' : 'MANDIRI')
+  );
+  const [rtWargaList, setRtWargaList] = useState([]);
+  const [loadingRtWarga, setLoadingRtWarga] = useState(false);
+  const [selectedWargaRt, setSelectedWargaRt] = useState(null);
+  const [searchWargaText, setSearchWargaText] = useState('');
+  const [pendatangCustom, setPendatangCustom] = useState({
+    nama: searchParams.get('nama') || '',
+    nik: searchParams.get('nik') || '',
+    no_hp: '',
+    alamat_asal: '',
+    lokasi_tinggal: ''
+  });
+  const [directRtApproval, setDirectRtApproval] = useState(true);
   const [formData, setFormData] = useState({
     jenis_dokumen: 'Surat Keterangan Domisili',
     keperluan: ''
@@ -361,17 +395,55 @@ export default function DokumenPage() {
     }
   }, [showModal]);
 
-  // Handle URL query parameters (?for_nik=...&action=new)
+  // Handle URL query parameters (?mode=dampingan / ?for_nik=... / ?action=new)
   useEffect(() => {
     const action = searchParams.get('action');
     const forNik = searchParams.get('for_nik');
-    if (action === 'new') {
+    const mode = searchParams.get('mode');
+    const namaParam = searchParams.get('nama');
+    const nikParam = searchParams.get('nik');
+
+    if (action === 'new' || mode === 'dampingan') {
       setShowModal(true);
+      if (mode === 'dampingan') {
+        if (nikParam || namaParam) {
+          setPelayananMode('WARGA_PENDATANG');
+          setPendatangCustom(prev => ({
+            ...prev,
+            nama: namaParam || prev.nama,
+            nik: nikParam || prev.nik
+          }));
+          setFormData(prev => ({
+            ...prev,
+            jenis_dokumen: 'Surat Pengantar Warga Pendatang (Domisili Non-Permanen)',
+            keperluan: 'Permohonan Surat Keterangan Domisili Sementara / Lapor Warga Pendatang ke Kelurahan'
+          }));
+        } else {
+          setPelayananMode('WARGA_RT');
+        }
+      }
       if (forNik) {
         setSubjekPemohon(forNik);
       }
     }
   }, [searchParams]);
+
+  // Load Warga RT untuk Loket Dampingan Petugas
+  useEffect(() => {
+    if (showModal && isOfficer && user?.rt) {
+      setLoadingRtWarga(true);
+      api.get(`/warga?rt=${user.rt}&rw=${user.rw || '001'}&limit=150`)
+        .then(res => {
+          if (res?.data && Array.isArray(res.data)) {
+            setRtWargaList(res.data);
+          } else if (Array.isArray(res?.warga)) {
+            setRtWargaList(res.warga);
+          }
+        })
+        .catch(err => console.warn('Failed loading warga RT for assisted desk:', err.message))
+        .finally(() => setLoadingRtWarga(false));
+    }
+  }, [showModal, isOfficer, user?.rt, user?.rw]);
 
   // Selected subject information
   const selectedSubjectInfo = useMemo(() => {
@@ -443,14 +515,47 @@ export default function DokumenPage() {
       setIsSubmitting(true);
       setError(null);
 
-      const targetNik = subjekPemohon === 'self' 
-        ? (prefillInfo?.profile?.nik || user?.active_nik || user?.username)
-        : subjekPemohon;
+      let targetNik = activeNik;
+      let targetNama = user?.nama;
+      let isAssisted = false;
+
+      if (isOfficer && pelayananMode === 'WARGA_RT') {
+        if (!selectedWargaRt?.nik) {
+          setError('Silakan cari dan pilih warga RT yang sedang didampingi.');
+          setIsSubmitting(false);
+          return;
+        }
+        targetNik = selectedWargaRt.nik;
+        targetNama = selectedWargaRt.nama;
+        isAssisted = true;
+      } else if (isOfficer && pelayananMode === 'WARGA_PENDATANG') {
+        if (!pendatangCustom.nama || !pendatangCustom.nik) {
+          setError('Nama dan NIK KTP asal warga pendatang wajib diisi.');
+          setIsSubmitting(false);
+          return;
+        }
+        targetNik = pendatangCustom.nik;
+        targetNama = pendatangCustom.nama;
+        isAssisted = true;
+      } else {
+        targetNik = subjekPemohon === 'self' 
+          ? (prefillInfo?.profile?.nik || user?.active_nik || user?.username)
+          : subjekPemohon;
+      }
 
       await api.post('/dokumen', {
         ...formData,
         nik_pemohon: targetNik,
-        data_tambahan: dataTambahan,
+        nama_pemohon: targetNama,
+        nama_subjek: targetNama,
+        is_assisted: isAssisted,
+        direct_rt_approval: isRT && directRtApproval,
+        data_tambahan: {
+          ...dataTambahan,
+          alamat_ktp_asal: pendatangCustom.alamat_asal || dataTambahan.alamat_ktp_asal,
+          lokasi_tinggal_rt: pendatangCustom.lokasi_tinggal || dataTambahan.lokasi_tinggal_rt,
+          no_hp_pemohon: pendatangCustom.no_hp || ''
+        },
         syarat_berkas: syaratChecked,
         lampiran_ktp: lampiranKtp || prefillInfo?.profile?.foto_ktp_url || null,
         lampiran_kk: lampiranKk || prefillInfo?.profile?.foto_kk_url || null,
@@ -944,8 +1049,248 @@ export default function DokumenPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-              {/* 1. SELEKSI SUBJEK PEMOHON (DIRI SENDIRI VS ANGGOTA KELUARGA 1 KK) */}
-              <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/70 space-y-2.5">
+              {/* SELEKSI MODE PELAYANAN UNTUK PENGURUS RT / RW */}
+              {isOfficer && (
+                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Mode Pengajuan Surat (Akses Pengurus RT/RW):
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPelayananMode('WARGA_RT')}
+                      className={`p-2.5 rounded-xl text-xs font-bold text-left transition flex items-center gap-2 cursor-pointer ${
+                        pelayananMode === 'WARGA_RT'
+                          ? 'bg-sky-600 text-white shadow-xs'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Users size={16} />
+                      <div>
+                        <span className="block leading-tight">Dampingan Warga RT</span>
+                        <span className={`text-[10px] font-normal block mt-0.5 ${pelayananMode === 'WARGA_RT' ? 'text-sky-100' : 'text-slate-400'}`}>Lansia / Gaptek / Offline</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPelayananMode('WARGA_PENDATANG');
+                        setFormData(prev => ({
+                          ...prev,
+                          jenis_dokumen: 'Surat Pengantar Warga Pendatang (Domisili Non-Permanen)',
+                          keperluan: 'Permohonan Surat Keterangan Domisili Sementara / Lapor Warga Pendatang ke Kelurahan'
+                        }));
+                      }}
+                      className={`p-2.5 rounded-xl text-xs font-bold text-left transition flex items-center gap-2 cursor-pointer ${
+                        pelayananMode === 'WARGA_PENDATANG'
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Home size={16} />
+                      <div>
+                        <span className="block leading-tight">Warga Pendatang</span>
+                        <span className={`text-[10px] font-normal block mt-0.5 ${pelayananMode === 'WARGA_PENDATANG' ? 'text-emerald-100' : 'text-slate-400'}`}>Kos / Kontrakan / KTP Luar</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPelayananMode('MANDIRI')}
+                      className={`p-2.5 rounded-xl text-xs font-bold text-left transition flex items-center gap-2 cursor-pointer ${
+                        pelayananMode === 'MANDIRI'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <User size={16} />
+                      <div>
+                        <span className="block leading-tight">Mandiri Pribadi RT</span>
+                        <span className={`text-[10px] font-normal block mt-0.5 ${pelayananMode === 'MANDIRI' ? 'text-indigo-100' : 'text-slate-400'}`}>Keluarga RT Sendiri</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* PANEL 1: JIKA MODE DAMPINGAN WARGA RT (LANSIA / GAPTEK) */}
+              {isOfficer && pelayananMode === 'WARGA_RT' && (
+                <div className="p-4 rounded-xl bg-sky-50/70 border border-sky-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-sky-950 flex items-center gap-1.5">
+                      <Users size={15} className="text-sky-700" />
+                      <span>Cari & Pilih Warga RT {user?.rt} yang Sedang Didampingi: *</span>
+                    </label>
+                    {loadingRtWarga && (
+                      <span className="text-[10px] text-sky-700 flex items-center gap-1">
+                        <Loader2 size={12} className="animate-spin" /> Memuat data warga RT...
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-3 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Ketik nama warga atau NIK di RT Anda..."
+                      value={searchWargaText}
+                      onChange={(e) => setSearchWargaText(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-sky-300 text-xs outline-none focus:ring-1 focus:ring-sky-500"
+                    />
+                  </div>
+
+                  {/* Autocomplete List Warga RT */}
+                  {searchWargaText.trim().length > 0 && (
+                    <div className="max-h-40 overflow-y-auto bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
+                      {rtWargaList
+                        .filter(w => 
+                          (w.nama || '').toLowerCase().includes(searchWargaText.toLowerCase()) || 
+                          (w.nik || '').includes(searchWargaText)
+                        )
+                        .slice(0, 8)
+                        .map(w => (
+                          <button
+                            key={w.nik}
+                            type="button"
+                            onClick={() => {
+                              setSelectedWargaRt(w);
+                              setSearchWargaText('');
+                            }}
+                            className="w-full p-2.5 text-left text-xs hover:bg-sky-50 flex items-center justify-between cursor-pointer"
+                          >
+                            <div>
+                              <span className="font-bold text-slate-800 block">{w.nama}</span>
+                              <span className="text-[10px] font-mono text-slate-500">NIK: {w.nik} &bull; No. KK: {w.no_kk || '-'}</span>
+                            </div>
+                            <span className="text-[10px] font-semibold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full">
+                              Pilih Warga
+                            </span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+
+                  {/* Preview Warga RT Terpilih */}
+                  {selectedWargaRt ? (
+                    <div className="p-3 bg-white rounded-xl border border-emerald-300 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-emerald-800 uppercase block">Warga yang Didampingi (Pemohon Sah):</span>
+                        <h4 className="font-extrabold text-sm text-slate-900">{selectedWargaRt.nama}</h4>
+                        <p className="text-[11px] font-mono text-slate-500">
+                          NIK: {selectedWargaRt.nik} &bull; RT {selectedWargaRt.rt || user?.rt}/RW {selectedWargaRt.rw || user?.rw}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedWargaRt(null)}
+                        className="text-xs text-rose-600 font-bold hover:underline cursor-pointer"
+                      >
+                        Ganti Warga
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-sky-800 italic">
+                      * Pilih warga lansia/gaptek dari daftar pencarian di atas agar surat terbit atas nama warga tersebut.
+                    </p>
+                  )}
+
+                  {/* Otorisasi Langsung RT */}
+                  {isRT && (
+                    <div className="pt-2 border-t border-sky-200/80">
+                      <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-800">
+                        <input
+                          type="checkbox"
+                          checked={directRtApproval}
+                          onChange={(e) => setDirectRtApproval(e.target.checked)}
+                          className="rounded text-sky-600 focus:ring-sky-500 w-4 h-4"
+                        />
+                        <span>Langsung Sahkan & TTE Surat Pengantar RT (Verifikasi Tatap Muka Selesai)</span>
+                      </label>
+                      <p className="text-[10px] text-slate-500 ml-6">
+                        Surat tidak akan mengantre di meja Anda lagi dan langsung diteruskan ke Ketua RW / Kelurahan.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* PANEL 2: JIKA MODE WARGA PENDATANG */}
+              {isOfficer && pelayananMode === 'WARGA_PENDATANG' && (
+                <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                      <Home size={15} className="text-emerald-700" />
+                      <span>Data Identitas Warga Pendatang (Non-Permanen): *</span>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Nama Lengkap Pendatang *</label>
+                      <input
+                        type="text"
+                        placeholder="Nama sesuai e-KTP asal"
+                        value={pendatangCustom.nama}
+                        onChange={(e) => setPendatangCustom(prev => ({ ...prev, nama: e.target.value }))}
+                        className="w-full p-2 bg-white rounded-xl border border-emerald-300 outline-none focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">NIK Asal (16 Digit) *</label>
+                      <input
+                        type="text"
+                        maxLength={16}
+                        placeholder="Contoh: 3204123456780001"
+                        value={pendatangCustom.nik}
+                        onChange={(e) => setPendatangCustom(prev => ({ ...prev, nik: e.target.value }))}
+                        className="w-full p-2 bg-white rounded-xl border border-emerald-300 outline-none focus:ring-1 focus:ring-emerald-500 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Kota / Kabupaten Asal KTP *</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: Kab. Bandung Barat"
+                        value={pendatangCustom.alamat_asal}
+                        onChange={(e) => setPendatangCustom(prev => ({ ...prev, alamat_asal: e.target.value }))}
+                        className="w-full p-2 bg-white rounded-xl border border-emerald-300 outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Tempat Tinggal di RT {user?.rt} (Kos / Kontrakan) *</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: Kontrakan Bpk. Mulyadi Pintu 2"
+                        value={pendatangCustom.lokasi_tinggal}
+                        onChange={(e) => setPendatangCustom(prev => ({ ...prev, lokasi_tinggal: e.target.value }))}
+                        className="w-full p-2 bg-white rounded-xl border border-emerald-300 outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {isRT && (
+                    <div className="pt-2 border-t border-emerald-200">
+                      <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-800">
+                        <input
+                          type="checkbox"
+                          checked={directRtApproval}
+                          onChange={(e) => setDirectRtApproval(e.target.checked)}
+                          className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4"
+                        />
+                        <span>Langsung Sahkan & TTE Surat Pengantar Domisili RT</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* PANEL 3: JIKA MODE MANDIRI ATAU USER WARGA BIASA */}
+              {(!isOfficer || pelayananMode === 'MANDIRI') && (
+                <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/70 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-on-surface flex items-center gap-1.5">
                     <Users size={15} className="text-primary" />
@@ -1062,6 +1407,7 @@ export default function DokumenPage() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* 2. JENIS SURAT & DESKRIPSI */}
               <div>

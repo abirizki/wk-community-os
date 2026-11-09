@@ -185,13 +185,35 @@ class DokumenService {
           }
         }
       } else {
-        // Petugas / Admin dapat mengajukan atas nama warga
-        const targetW = await wargaRepository.findByNik(cleanRequestedNik);
+        // Petugas / Admin dapat mengajukan atas nama warga (Loket Dampingan / Offline)
+        let targetW = await wargaRepository.findByNik(cleanRequestedNik);
         if (targetW) {
           targetNik = targetW.nik;
           targetNama = targetW.nama;
           targetHubungan = targetW.status_hubungan_keluarga || 'Warga';
           isDiajukanUntukKeluarga = true;
+        } else if (cleanRequestedNik && (payload.nama_pemohon || payload.nama_subjek || payload.data_tambahan?.nama_warga)) {
+          // Warga Pendatang / Non-Permanen belum ada di tabel warga, daftarkan otomatis agar integritas foreign key terjaga
+          const pendatangNama = payload.nama_pemohon || payload.nama_subjek || payload.data_tambahan?.nama_warga || 'Warga Pendatang';
+          try {
+            await wargaRepository.create({
+              nik: cleanRequestedNik,
+              nama: pendatangNama,
+              status_hubungan_keluarga: 'Warga Pendatang',
+              rt: currentUser.rt || '001',
+              rw: currentUser.rw || '001',
+              status_kependudukan: 'Tidak Tetap'
+            });
+            targetW = await wargaRepository.findByNik(cleanRequestedNik);
+            if (targetW) {
+              targetNik = targetW.nik;
+              targetNama = targetW.nama;
+              targetHubungan = 'Warga Pendatang';
+              isDiajukanUntukKeluarga = true;
+            }
+          } catch (createErr) {
+            console.warn('[DokumenService] Auto-create pendatang warning:', createErr.message);
+          }
         }
       }
     }
@@ -206,20 +228,39 @@ class DokumenService {
     const rt = targetWarga ? targetWarga.rt : (userWarga ? userWarga.rt : (currentUser.rt || '001'));
     const rw = targetWarga ? targetWarga.rw : (userWarga ? userWarga.rw : (currentUser.rw || '001'));
 
+    const isDirectRtApproval = Boolean(payload.direct_rt_approval || (currentUser.role === 'ketua_rt' && payload.is_assisted));
+    const initialStatus = isDirectRtApproval ? 'VERIFYING' : 'SUBMITTED';
+    const initialStep = isDirectRtApproval ? 'RW' : 'RT';
+
     const result = await dokumenRepository.create({
       nik_pemohon: targetNik,
-      diajukan_oleh_nik: isDiajukanUntukKeluarga ? activeNik : null,
+      diajukan_oleh_nik: (isDiajukanUntukKeluarga || currentUser.role !== 'warga') ? activeNik : null,
       nama_subjek: targetNama,
       hubungan_keluarga: targetHubungan,
       data_tambahan,
       syarat_berkas,
       jenis_dokumen: jenis_dokumen.trim(),
       keperluan: keperluan.trim(),
+      status: initialStatus,
+      approval_step: initialStep,
       rt,
       rw,
       is_auto_filled_by_ai: Boolean(is_auto_filled_by_ai),
       acted_by_user_id: currentUser.id
     });
+
+    if (isDirectRtApproval && (result.id || result.insertId)) {
+      try {
+        await dokumenRepository.updateApproval(result.id || result.insertId, {
+          status: 'VERIFYING',
+          approval_step: 'RW',
+          approved_by_rt: currentUser.id,
+          catatan_petugas: 'Diajukan melalui Loket Dampingan RT dan langsung diverifikasi faktual oleh Ketua RT.'
+        });
+      } catch (apprErr) {
+        console.warn('Auto-approval step update note:', apprErr.message);
+      }
+    }
 
     // Kirim notifikasi konfirmasi ke pemohon
     try {
