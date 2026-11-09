@@ -246,16 +246,22 @@ router.get('/demografi', requireAuth, async (req, res) => {
       territoryWhere += " AND kelurahan = ?";
       territoryParams.push(scope.kelurahan);
     }
+    let rwOptionsWhere = territoryWhere;
+    const rwOptionsParams = [...territoryParams];
+    if (scope.rw) {
+      rwOptionsWhere += " AND rw = ?";
+      rwOptionsParams.push(scope.rw);
+    }
     const [rwRows] = await pool.query(
-      `SELECT DISTINCT rw FROM warga ${territoryWhere} ORDER BY rw ASC`,
-      territoryParams
+      `SELECT DISTINCT rw FROM warga ${rwOptionsWhere} ORDER BY rw ASC`,
+      rwOptionsParams
     );
 
-    let rtOptionsWhere = territoryWhere;
-    const rtOptionsParams = [...territoryParams];
-    if (scope.rw) {
-      rtOptionsWhere += " AND rw = ?";
-      rtOptionsParams.push(scope.rw);
+    let rtOptionsWhere = rwOptionsWhere;
+    const rtOptionsParams = [...rwOptionsParams];
+    if (scope.rt) {
+      rtOptionsWhere += " AND rt = ?";
+      rtOptionsParams.push(scope.rt);
     }
     const [rtOptionRows] = await pool.query(
       `SELECT DISTINCT rt FROM warga ${rtOptionsWhere} ORDER BY rt ASC`,

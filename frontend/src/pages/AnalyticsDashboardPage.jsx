@@ -33,12 +33,6 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 
 const numberFormat = new Intl.NumberFormat('id-ID');
-const tabs = [
-  { id: 'ringkasan', label: 'Ringkasan', icon: BarChart3 },
-  { id: 'penduduk', label: 'Penduduk & layanan', icon: Users },
-  { id: 'wilayah', label: 'Perbandingan wilayah', icon: MapPin },
-  { id: 'strategi', label: 'Strategi & prioritas', icon: Activity },
-];
 const periods = [
   { id: '7d', label: '7 hari' },
   { id: '30d', label: '30 hari' },
@@ -167,6 +161,32 @@ export default function AnalyticsDashboardPage() {
   const lockedRW = isRT || isRW;
   const effectiveRW = lockedRW ? (user?.rw || 'all') : selectedRW;
   const effectiveRT = isRT ? (user?.rt || 'all') : selectedRT;
+
+  const tabs = useMemo(() => {
+    const list = [
+      { id: 'ringkasan', label: isRT ? 'Ringkasan RT' : isRW ? 'Ringkasan RW' : 'Ringkasan', icon: BarChart3 },
+      { id: 'penduduk', label: isRT ? 'Penduduk & Layanan RT' : isRW ? 'Penduduk & Layanan RW' : 'Penduduk & layanan', icon: Users },
+    ];
+    if (!isRT) {
+      list.push({
+        id: 'wilayah',
+        label: isRW ? 'Komparasi Antar-RT' : 'Perbandingan wilayah',
+        icon: MapPin,
+      });
+    }
+    list.push({
+      id: 'strategi',
+      label: isRT ? 'Strategi & Prioritas RT' : isRW ? 'Strategi & Prioritas RW' : 'Strategi & prioritas',
+      icon: Activity,
+    });
+    return list;
+  }, [isRT, isRW]);
+
+  useEffect(() => {
+    if (isRT && activeTab === 'wilayah') {
+      setActiveTab('ringkasan');
+    }
+  }, [isRT, activeTab]);
 
   useEffect(() => {
     if (user?.rw && selectedRW === 'all' && lockedRW) setSelectedRW(user.rw);
@@ -387,31 +407,64 @@ export default function AnalyticsDashboardPage() {
   const renderTopFilters = () => (
     <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
       <div className="flex flex-wrap items-center gap-2">
-        <label className="text-xs font-medium text-slate-500" htmlFor="analytics-rw">Cakupan</label>
-        <select
-          id="analytics-rw"
-          value={effectiveRW}
-          disabled={lockedRW}
-          onChange={(event) => {
-            setSelectedRW(event.target.value);
-            setSelectedRT('all');
-          }}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-50"
-        >
-          <option value="all">Semua RW</option>
-          {(demographics?.rw_options || []).map((rw) => <option key={rw} value={rw}>RW {rw}</option>)}
-        </select>
-        <label className="sr-only" htmlFor="analytics-rt">Filter RT</label>
-        <select
-          id="analytics-rt"
-          value={effectiveRT}
-          disabled={isRT}
-          onChange={(event) => setSelectedRT(event.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-50"
-        >
-          <option value="all">Semua RT</option>
-          {(demographics?.rt_options || []).map((rt) => <option key={rt} value={rt}>RT {rt}</option>)}
-        </select>
+        <label className="text-xs font-medium text-slate-500">Cakupan</label>
+        {isRT ? (
+          <div className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">
+            <MapPin size={13} className="text-blue-600 shrink-0" />
+            <span>RW {user?.rw || '—'} / RT {user?.rt || '—'}</span>
+            <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">Terkunci (1 RT)</span>
+          </div>
+        ) : isRW ? (
+          <>
+            <div className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">
+              <MapPin size={13} className="text-blue-600 shrink-0" />
+              <span>RW {user?.rw || '—'}</span>
+              <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">Terkunci</span>
+            </div>
+            <label className="sr-only" htmlFor="analytics-rt">Filter RT</label>
+            <select
+              id="analytics-rt"
+              value={effectiveRT}
+              onChange={(event) => setSelectedRT(event.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500"
+            >
+              <option value="all">Semua RT (RW {user?.rw})</option>
+              {(demographics?.rt_options || []).map((rt) => (
+                <option key={rt} value={rt}>RT {rt}</option>
+              ))}
+            </select>
+          </>
+        ) : (
+          <>
+            <label className="sr-only" htmlFor="analytics-rw">Filter RW</label>
+            <select
+              id="analytics-rw"
+              value={effectiveRW}
+              onChange={(event) => {
+                setSelectedRW(event.target.value);
+                setSelectedRT('all');
+              }}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500"
+            >
+              <option value="all">Semua RW</option>
+              {(demographics?.rw_options || []).map((rw) => (
+                <option key={rw} value={rw}>RW {rw}</option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="analytics-rt">Filter RT</label>
+            <select
+              id="analytics-rt"
+              value={effectiveRT}
+              onChange={(event) => setSelectedRT(event.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500"
+            >
+              <option value="all">Semua RT</option>
+              {(demographics?.rt_options || []).map((rt) => (
+                <option key={rt} value={rt}>RT {rt}</option>
+              ))}
+            </select>
+          </>
+        )}
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="mr-1 text-xs text-slate-500">Periode layanan</span>
@@ -904,114 +957,116 @@ export default function AnalyticsDashboardPage() {
 
   const renderArea = () => (
     <div className="space-y-5">
-      {/* MATRIKS KERAWANAN & KEBUTUHAN ANTAR-RW (MICRO MATRIX HEATMAP) */}
-      <Panel className="p-4 sm:p-5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <SectionHeading
-            eyebrow="Komparasi Spasial Wilayah"
-            title="Matriks Kerawanan & Beban Layanan Antar-RW"
-            description="Bandingkan rasio kerentanan dan kebutuhan layanan antar-RW. Klik tombol Fokus untuk drill-down langsung ke RW terpilih."
-          />
-          {effectiveRW !== 'all' && (
-            <button
-              type="button"
-              onClick={() => { setSelectedRW('all'); setSelectedRT('all'); }}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Lihat Seluruh RW
-            </button>
-          )}
-        </div>
+      {/* MATRIKS KERAWANAN & KEBUTUHAN ANTAR-RW (Hanya untuk Tingkat Kelurahan / Eksekutif) */}
+      {!isRW && !isRT && (
+        <Panel className="p-4 sm:p-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <SectionHeading
+              eyebrow="Komparasi Spasial Wilayah"
+              title="Matriks Kerawanan & Beban Layanan Antar-RW"
+              description="Bandingkan rasio kerentanan dan kebutuhan layanan antar-RW. Klik tombol Fokus untuk drill-down langsung ke RW terpilih."
+            />
+            {effectiveRW !== 'all' && (
+              <button
+                type="button"
+                onClick={() => { setSelectedRW('all'); setSelectedRT('all'); }}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Lihat Seluruh RW
+              </button>
+            )}
+          </div>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full text-left text-xs">
-            <thead className="border-y border-slate-200 bg-slate-50 text-slate-700">
-              <tr>
-                <th className="px-3 py-2.5 font-semibold">Wilayah</th>
-                <th className="px-3 py-2.5 text-center font-semibold">Cakupan RT</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Total Penduduk</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Balita (% Pop)</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Lansia</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Desil 1–2 (% Pop)</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Surat Proses</th>
-                <th className="px-3 py-2.5 text-right font-semibold">PBB Rata-rata</th>
-                <th className="px-3 py-2.5 text-center font-semibold">Aksi Drill-Down</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rwAggregates.map((item) => {
-                const isSelected = effectiveRW === item.rw;
-                const isHighBalita = Number(item.balitaRasio) > 10.0;
-                const isHighDesil = Number(item.desilRentan) > 10;
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full text-left text-xs">
+              <thead className="border-y border-slate-200 bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-3 py-2.5 font-semibold">Wilayah</th>
+                  <th className="px-3 py-2.5 text-center font-semibold">Cakupan RT</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Total Penduduk</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Balita (% Pop)</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Lansia</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Desil 1–2 (% Pop)</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Surat Proses</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">PBB Rata-rata</th>
+                  <th className="px-3 py-2.5 text-center font-semibold">Aksi Drill-Down</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rwAggregates.map((item) => {
+                  const isSelected = effectiveRW === item.rw;
+                  const isHighBalita = Number(item.balitaRasio) > 10.0;
+                  const isHighDesil = Number(item.desilRentan) > 10;
 
-                return (
-                  <tr
-                    key={item.rw}
-                    className={`transition-colors ${
-                      isSelected
-                        ? 'bg-sky-50/80 font-medium text-sky-950'
-                        : 'hover:bg-slate-50/80 text-slate-700'
-                    }`}
-                  >
-                    <td className="px-3 py-3 font-semibold text-slate-900">
-                      RW {item.rw}
-                    </td>
-                    <td className="px-3 py-3 text-center text-slate-500">
-                      {item.rtCount} RT
-                    </td>
-                    <td className="px-3 py-3 text-right font-medium">
-                      {formatNumber(item.total_penduduk)}
-                    </td>
-                    <td className={`px-3 py-3 text-right ${
-                      isHighBalita ? 'font-semibold text-teal-800 bg-teal-50/60 rounded' : ''
-                    }`}>
-                      {formatNumber(item.balita)} <span className="text-[10px] text-slate-400">({item.balitaRasio}%)</span>
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      {formatNumber(item.lansia)}
-                    </td>
-                    <td className={`px-3 py-3 text-right ${
-                      isHighDesil ? 'font-semibold text-amber-800 bg-amber-50/60 rounded' : ''
-                    }`}>
-                      {formatNumber(item.desilRentan)} <span className="text-[10px] text-slate-400">({item.desilRasio}%)</span>
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      {formatNumber(item.suratProses)}
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      {item.pbbRata == null ? '—' : `${item.pbbRata}%`}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      {isSelected ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-sky-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs">
-                          Aktif
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedRW(item.rw);
-                            setSelectedRT('all');
-                          }}
-                          className="inline-flex items-center gap-1 rounded border border-sky-300 bg-sky-50 px-2 py-1 text-[11px] font-medium text-sky-700 hover:bg-sky-100"
-                        >
-                          Fokus RW {item.rw} <ChevronRight size={12} />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
+                  return (
+                    <tr
+                      key={item.rw}
+                      className={`transition-colors ${
+                        isSelected
+                          ? 'bg-sky-50/80 font-medium text-sky-950'
+                          : 'hover:bg-slate-50/80 text-slate-700'
+                      }`}
+                    >
+                      <td className="px-3 py-3 font-semibold text-slate-900">
+                        RW {item.rw}
+                      </td>
+                      <td className="px-3 py-3 text-center text-slate-500">
+                        {item.rtCount} RT
+                      </td>
+                      <td className="px-3 py-3 text-right font-medium">
+                        {formatNumber(item.total_penduduk)}
+                      </td>
+                      <td className={`px-3 py-3 text-right ${
+                        isHighBalita ? 'font-semibold text-teal-800 bg-teal-50/60 rounded' : ''
+                      }`}>
+                        {formatNumber(item.balita)} <span className="text-[10px] text-slate-400">({item.balitaRasio}%)</span>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        {formatNumber(item.lansia)}
+                      </td>
+                      <td className={`px-3 py-3 text-right ${
+                        isHighDesil ? 'font-semibold text-amber-800 bg-amber-50/60 rounded' : ''
+                      }`}>
+                        {formatNumber(item.desilRentan)} <span className="text-[10px] text-slate-400">({item.desilRasio}%)</span>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        {formatNumber(item.suratProses)}
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        {item.pbbRata == null ? '—' : `${item.pbbRata}%`}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {isSelected ? (
+                          <span className="inline-flex items-center gap-1 rounded bg-sky-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-xs">
+                            Aktif
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedRW(item.rw);
+                              setSelectedRT('all');
+                            }}
+                            className="inline-flex items-center gap-1 rounded border border-sky-300 bg-sky-50 px-2 py-1 text-[11px] font-medium text-sky-700 hover:bg-sky-100"
+                          >
+                            Fokus RW {item.rw} <ChevronRight size={12} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      )}
 
       <Panel className="p-4 sm:p-5">
         <SectionHeading
-          eyebrow="Rincian tingkat RT"
-          title={`Distribusi Layanan RT pada ${effectiveRW !== 'all' ? `RW ${effectiveRW}` : 'Seluruh Wilayah'}`}
-          description="Bandingkan jumlah penduduk dan sinyal layanan per RT. Gunakan persentase dan tingkat kerentanan untuk memprioritaskan kunjungan kader."
+          eyebrow={isRW ? "Komparasi Internal Wilayah" : "Rincian tingkat RT"}
+          title={isRW ? `Distribusi Layanan Antar-RT di RW ${effectiveRW}` : `Distribusi Layanan RT pada ${effectiveRW !== 'all' ? `RW ${effectiveRW}` : 'Seluruh Wilayah'}`}
+          description={isRW ? "Bandingkan beban penduduk, kelompok balita, lansia, desil 1–2, dan antrean surat antar-RT di bawah koordinasi RW Anda." : "Bandingkan jumlah penduduk dan sinyal layanan per RT. Gunakan persentase dan tingkat kerentanan untuk memprioritaskan kunjungan kader."}
         />
                 <SourceStatus source={sources.demographics} loading={loading && !demographics} label="Matriks demografi" />
         {comparisonRows.length ? (
@@ -1113,8 +1168,12 @@ export default function AnalyticsDashboardPage() {
   );
 
   const buildDeepLink = (insight) => {
-    const insightRw = insight.evidence?.wilayah?.match(/RW\s*(\d+)/i)?.[1] || (effectiveRW !== 'all' ? effectiveRW : '001');
-    const insightRt = insight.evidence?.wilayah?.match(/RT\s*(\d+)/i)?.[1] || (effectiveRT !== 'all' ? effectiveRT : '001');
+    const defaultRw = isRT || isRW ? user?.rw : (effectiveRW !== 'all' ? effectiveRW : '001');
+    const defaultRt = isRT ? user?.rt : (effectiveRT !== 'all' ? effectiveRT : '001');
+    const parsedRw = insight.evidence?.wilayah?.match(/RW\s*(\d+)/i)?.[1];
+    const parsedRt = insight.evidence?.wilayah?.match(/RT\s*(\d+)/i)?.[1];
+    const insightRw = isRT || isRW ? (user?.rw || '001') : (parsedRw || defaultRw);
+    const insightRt = isRT ? (user?.rt || '001') : (parsedRt || defaultRt);
     
     if (insight.category === 'KESEHATAN_BALITA') {
       return `/dashboard/posyandu?category=balita&rw=${insightRw}&rt=${insightRt}&filter=gizi_kurang`;
