@@ -283,7 +283,7 @@ export default function DashboardLayout() {
             { name: 'Kas & Iuran Warga', path: '/dashboard/keuangan', icon: <Wallet size={19} /> },
             { name: 'Rumah Sewa & Kontrakan', path: '/dashboard/kontrakan', icon: <KeyRound size={19} /> },
             { name: 'Aduan Lingkungan RT', path: '/dashboard/pengaduan', icon: <MessageSquareWarning size={19} /> },
-            { name: 'Skor Kelengkapan RT', path: '/dashboard/data-maturity', icon: <Award size={19} /> }
+            { name: 'Pemeriksa Data Warga', path: '/dashboard/data-maturity', icon: <Award size={19} /> }
           ]
         },
         {

@@ -68,7 +68,6 @@ import { BookOpen, Activity, FileSpreadsheet, Download } from 'lucide-react';
 import AuthorizationPinModal from '../../components/AuthorizationPinModal';
 import ActivationCouponModal from '../../components/ActivationCouponModal';
 import ScanAndRegisterWargaModal from '../../components/ScanAndRegisterWargaModal';
-import AIStrategyInsightEngine from '../../components/design-system/AIStrategyInsightEngine';
 
 export default function DashboardKetuaRT() {
   const { user } = useAuth();
@@ -80,7 +79,7 @@ export default function DashboardKetuaRT() {
   const handleTabChange = (newTab) => {
     setSearchParams({ tab: newTab });
     setTimeout(() => {
-      const el = document.getElementById(newTab === 'surat' ? 'antrean-verifikasi-rt' : newTab === 'rentan' ? 'radar-rentan-rt' : 'fasilitas-rt');
+      const el = document.getElementById(newTab === 'surat' ? 'antrean-verifikasi-rt' : newTab === 'pendatang' ? 'warga-pendatang-rt' : newTab === 'rentan' ? 'radar-rentan-rt' : newTab === 'keuangan' ? 'keuangan-rt' : 'fasilitas-rt');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   };
@@ -164,6 +163,66 @@ export default function DashboardKetuaRT() {
   const [scanResult, setScanResult] = useState(null);
   const [showAddRentanModal, setShowAddRentanModal] = useState(false);
   const [rentanSubmitting, setRentanSubmitting] = useState(false);
+
+  // State: Pemeriksaan Pendataan Warga Pendatang & Kelayakan Layanan Kelurahan
+  const [wargaPendatangList, setWargaPendatangList] = useState([
+    {
+      id: 'p-1',
+      nik: '3204123456780001',
+      nama: 'Asep Saepuloh',
+      jenis_kelamin: 'L',
+      no_hp: '081234567890',
+      asal_domisili: 'Kec. Cililin, Kab. Bandung Barat',
+      lokasi_tinggal: 'Kontrakan Barokah Pintu 2 (Bpk. Mulyadi)',
+      status_tinggal: 'Pekerja Kontrak Pabrik',
+      tanggal_lapor: '2026-09-15',
+      durasi_bulan: 3,
+      status_layanan: 'SIAP_LAYANAN',
+      catatan: 'KTP asal terverifikasi, bekerja di industri sekitar. Berhak mengajukan Surat Keterangan Domisili Kelurahan.'
+    },
+    {
+      id: 'p-2',
+      nik: '3302198765430002',
+      nama: 'Siti Rahmawati',
+      jenis_kelamin: 'P',
+      no_hp: '085712345678',
+      asal_domisili: 'Kec. Purwokerto Timur, Kab. Banyumas',
+      lokasi_tinggal: 'Kos Putri Melati Kamar 05 (Ibu Hj. Aminah)',
+      status_tinggal: 'Mahasiswi Magang',
+      tanggal_lapor: '2026-10-02',
+      durasi_bulan: 2,
+      status_layanan: 'SIAP_LAYANAN',
+      catatan: 'Dokumen KTP & Surat Pengantar Kampus lengkap. Berhak memohon surat keterangan tinggal sementara.'
+    },
+    {
+      id: 'p-3',
+      nik: '3515123498760003',
+      nama: 'Bambang Sugeng',
+      jenis_kelamin: 'L',
+      no_hp: '081398765432',
+      asal_domisili: 'Kec. Waru, Kab. Sidoarjo',
+      lokasi_tinggal: 'Kontrakan Bpk. Dedi No. 14B',
+      status_tinggal: 'Wiraswasta Kuliner',
+      tanggal_lapor: '2026-11-01',
+      durasi_bulan: 1,
+      status_layanan: 'PERLU_VERIFIKASI',
+      catatan: 'Baru pindah masuk, dokumen KTP asal belum difotokopi untuk arsip RT. Belum bisa diterbitkan pengantar kelurahan.'
+    }
+  ]);
+  const [pendatangSearch, setPendatangSearch] = useState('');
+  const [pendatangFilter, setPendatangFilter] = useState('ALL');
+  const [showAddPendatangModal, setShowAddPendatangModal] = useState(false);
+  const [pendatangForm, setPendatangForm] = useState({
+    nama: '',
+    nik: '',
+    jenis_kelamin: 'L',
+    no_hp: '',
+    asal_domisili: '',
+    lokasi_tinggal: '',
+    status_tinggal: 'Pekerja Kontrak',
+    status_layanan: 'SIAP_LAYANAN',
+    catatan: ''
+  });
   const [rentanForm, setRentanForm] = useState({
     kategori: 'ANAK_YATIM_PIATU',
     nik: '',
@@ -697,21 +756,15 @@ export default function DashboardKetuaRT() {
       </div>
 
       
-      {/* AI STRATEGY & STRATEGIC DECISION SUPPORT ENGINE (TEPAT DI BAWAH HERO & QUICK SHORTCUTS) */}
-      <AIStrategyInsightEngine
-        scope={{ rt: rtNomor, rw: rwNomor }}
-        title={`AI Strategy & Daya Dukung Wilayah RT ${rtNomor} / RW ${rwNomor}`}
-        subtitle="Analisis kohort demografi anak usia sekolah (T+1), kesiapan posyandu 1000 HPK balita, dan graduasi desil DTKS lingkungan RT"
-        className="mb-6"
-      />
+      
 
-      {/* 1. BENTO WORKSPACE PILLAR SWITCHER (ACTION-FIRST INFORMATION ARCHITECTURE) */}
+      {/* 1. BENTO WORKSPACE PILLAR SWITCHER (ACTION-FIRST MEJA KERJA RT) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {/* Tab 1: Meja Antrean Surat (Action Desk) */}
         <button
           type="button"
           onClick={() => handleTabChange('surat')}
-          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'surat'
               ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-500 shadow-md shadow-emerald-600/20 scale-[1.02]'
               : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
@@ -732,16 +785,44 @@ export default function DashboardKetuaRT() {
           <div className="mt-2.5">
             <span className="text-xs font-bold block">Verifikasi Surat & TTE</span>
             <span className={`text-[10px] block ${activeTab === 'surat' ? 'text-emerald-100' : 'text-slate-500'}`}>
-              SOP 3-Aksi & SLA
+              SLA & 3-Aksi Cepat
             </span>
           </div>
         </button>
 
-        {/* Tab 2: Radar Kelompok Rentan */}
+        {/* Tab 2: Pemeriksaan Warga Pendatang (Layanan Kelurahan) */}
+        <button
+          type="button"
+          onClick={() => handleTabChange('pendatang')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
+            activeTab === 'pendatang'
+              ? 'bg-gradient-to-br from-sky-600 to-blue-700 text-white border-sky-500 shadow-md shadow-sky-600/20 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className={`p-2 rounded-xl ${activeTab === 'pendatang' ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-700'}`}>
+              <Users size={18} />
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+              activeTab === 'pendatang' ? 'bg-white text-sky-900' : 'bg-sky-100 text-sky-800'
+            }`}>
+              {wargaPendatangList.filter(p => p.status_layanan === 'SIAP_LAYANAN').length} Siap Layanan
+            </span>
+          </div>
+          <div className="mt-2.5">
+            <span className="text-xs font-bold block">Warga Pendatang & Domisili</span>
+            <span className={`text-[10px] block ${activeTab === 'pendatang' ? 'text-sky-100' : 'text-slate-500'}`}>
+              Kelayakan Layanan Kelurahan
+            </span>
+          </div>
+        </button>
+
+        {/* Tab 3: Pengingat Sambang Warga Prioritas */}
         <button
           type="button"
           onClick={() => handleTabChange('rentan')}
-          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'rentan'
               ? 'bg-gradient-to-br from-rose-600 to-pink-700 text-white border-rose-500 shadow-md shadow-rose-600/20 scale-[1.02]'
               : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
@@ -758,71 +839,43 @@ export default function DashboardKetuaRT() {
             </span>
           </div>
           <div className="mt-2.5">
-            <span className="text-xs font-bold block">Radar Warga Rentan</span>
+            <span className="text-xs font-bold block">Pengingat Sambang Warga</span>
             <span className={`text-[10px] block ${activeTab === 'rentan' ? 'text-rose-100' : 'text-slate-500'}`}>
-              Yatim & Lansia Sebatang
+              Lansia & Warga Rentan
             </span>
           </div>
         </button>
 
-        {/* Tab 3: Potensi & Fasilitas Wilayah */}
+        {/* Tab 4: Kas & Iuran Warga RT */}
         <button
           type="button"
-          onClick={() => handleTabChange('fasilitas')}
-          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
-            activeTab === 'fasilitas'
-              ? 'bg-gradient-to-br from-sky-600 to-blue-700 text-white border-sky-500 shadow-md shadow-sky-600/20 scale-[1.02]'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'fasilitas' ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-700'}`}>
-              <Building2 size={18} />
-            </div>
-            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-              activeTab === 'fasilitas' ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-800'
-            }`}>
-              Daya Dukung
-            </span>
-          </div>
-          <div className="mt-2.5">
-            <span className="text-xs font-bold block">Fasilitas & Hunian Sewa</span>
-            <span className={`text-[10px] block ${activeTab === 'fasilitas' ? 'text-sky-100' : 'text-slate-500'}`}>
-              Faskes, Kos, Tempat Ibadah
-            </span>
-          </div>
-        </button>
-
-        {/* Tab 4: Analitik & Ringkasan Cerdas */}
-        <button
-          type="button"
-          onClick={() => handleTabChange('analitik')}
-          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
-            activeTab === 'analitik'
+          onClick={() => handleTabChange('keuangan')}
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
+            activeTab === 'keuangan'
               ? 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-indigo-500 shadow-md shadow-indigo-600/20 scale-[1.02]'
               : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'analitik' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
-              <Sparkles size={18} />
+            <div className={`p-2 rounded-xl ${activeTab === 'keuangan' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
+              <Wallet size={18} />
             </div>
-            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-              activeTab === 'analitik' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800'
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+              activeTab === 'keuangan' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
             }`}>
-              AI Insights
+              {iuranSummary.persentase || '0%'} Lunas
             </span>
           </div>
           <div className="mt-2.5">
-            <span className="text-xs font-bold block">Analitik & Ringkasan AI</span>
-            <span className={`text-[10px] block ${activeTab === 'analitik' ? 'text-indigo-100' : 'text-slate-500'}`}>
-              Looker BI & Grafik Iuran
+            <span className="text-xs font-bold block">Kas & Iuran Lingkungan</span>
+            <span className={`text-[10px] block ${activeTab === 'keuangan' ? 'text-indigo-100' : 'text-slate-500'}`}>
+              {iuranSummary.sudah_bayar || 0}/{iuranSummary.total_kk || 0} KK Terkumpul
             </span>
           </div>
         </button>
       </div>
 
-            {/* 2. Super Apps Bento Quick Launcher */}
+      {/* 2. Super Apps Bento Quick Launcher */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -953,7 +1006,7 @@ export default function DashboardKetuaRT() {
             </div>
           </Link>
 
-          {/* 6. Radar Kelompok Rentan */}
+          {/* 6. Pengingat Sambang Warga */}
           <button
             type="button"
             onClick={() => handleTabChange('rentan')}
@@ -968,29 +1021,30 @@ export default function DashboardKetuaRT() {
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-rose-700">Radar Rentan & Bansos</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Yatim & Lansia Sebatang</p>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-rose-700">Pengingat Sambang Warga</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Lansia, Balita & Rentan</p>
             </div>
           </button>
 
-          {/* 7. Dashboard Analitik Looker / Power BI */}
-          <Link
-            to="/dashboard/analitik"
-            className="p-3.5 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+          {/* 7. Pemeriksaan Warga Pendatang & Domisili */}
+          <button
+            type="button"
+            onClick={() => handleTabChange('pendatang')}
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200/80 hover:border-sky-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Layers className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Users className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-100 text-purple-800">
-                Looker BI
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-sky-100 text-sky-800">
+                {wargaPendatangList.length} Jiwa
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-purple-700">Dashboard Analitik</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Visualisasi data Power BI</p>
+              <h4 className="text-xs font-bold text-slate-800 group-hover:text-sky-700">Warga Pendatang</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">Kelayakan Layanan Kelurahan</p>
             </div>
-          </Link>
+          </button>
 
           {/* 8. Tanya KANAYA Copilot */}
           <Link
@@ -1202,330 +1256,496 @@ export default function DashboardKetuaRT() {
         </div>
       )}
 
-      {/* TAB ANALITIK & RINGKASAN CERDAS */}
-      {activeTab === 'analitik' && (
-        <div id="analitik-rt" className="space-y-6 mb-6">
-      {/* Unified Kanaya AI Intelligence Bento Card */}
-      <div className="mb-6 p-5 sm:p-6 rounded-[2rem] bg-gradient-to-br from-sky-50 via-blue-50/80 to-indigo-50/60 border border-sky-200/70 shadow-sm relative overflow-hidden group">
-        <div className="absolute right-0 top-0 w-48 h-48 bg-sky-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-        <div className="absolute left-0 bottom-0 w-36 h-36 bg-blue-300/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3.5 flex-1">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
-              <Sparkles className="w-6 h-6 animate-pulse" />
-            </div>
+      {/* TAB PEMERIKSAAN WARGA PENDATANG (LAYANAN KELURAHAN) */}
+      {activeTab === 'pendatang' && (
+        <div id="warga-pendatang-rt" className="space-y-6 mb-6">
+          {/* Header Panel */}
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 text-[10px] font-extrabold uppercase tracking-wider border border-sky-200">
-                  Kanaya AI Strategic Policy
-                </span>
-                <span className="text-[11px] font-semibold text-slate-500 font-mono">Evidence-Based</span>
-              </div>
-              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
-                Rekomendasi Kebijakan & Ringkasan Cerdas Wilayah
-              </h3>
-            </div>
-          </div>
-
-          <Link
-            to="/dashboard/analitik"
-            className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 group-hover:scale-[1.02] shrink-0"
-          >
-            <span>Buka Analitik & Looker BI</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-        </div>
-
-        <div className="relative z-10 mt-4 pt-3.5 border-t border-sky-100">
-          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-            {loadingBrief ? (
-              <span className="flex items-center gap-2 text-sky-700">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Menganalisis evidance data kependudukan, iuran, dan bansos...
-              </span>
-            ) : (
-              aiBrief?.summary || `Halo, ${user?.nama || user?.name || "Bapak/Ibu"}. Terdapat ${pendingDocs.length} permohonan surat yang memerlukan verifikasi. Partisipasi iuran kas tercatat ${iuranSummary.persentase} dari ${iuranSummary.total_kk} KK. Terdeteksi ${kelompokRentanList.length} warga rentan (yatim & lansia sebatang kara) yang direkomendasikan masuk prioritas program jaring pengaman sosial.`
-            )}
-          </p>
-        </div>
-
-        <div className="relative z-10 grid grid-cols-3 gap-2.5 mt-4 pt-3 border-t border-sky-100/60">
-          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
-            <span className="text-[10px] font-semibold text-slate-500">Antrean Surat</span>
-            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
-              {pendingDocs.length} berkas
-            </span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
-            <span className="text-[10px] font-semibold text-slate-500">Kolektivitas Kas</span>
-            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-mono mt-0.5">
-              {iuranSummary.persentase || '0%'} <span className="text-[10px] text-slate-500 font-normal font-sans">({iuranSummary.sudah_bayar || 0}/{iuranSummary.total_kk || 0} KK)</span>
-            </span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-white/90 border border-sky-100 flex flex-col justify-center">
-            <span className="text-[10px] font-semibold text-slate-500">Warga Rentan</span>
-            <span className="text-xs sm:text-sm font-extrabold text-rose-600 font-mono mt-0.5">
-              {kelompokRentanList.length} jiwa
-            </span>
-          </div>
-        </div>
-      </div>
-
-
-      {/* SECTION VISUALISASI KANAYA DATA ANALYTICS */}
-      <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm mb-6">
-        <div className="flex items-center justify-between mb-6">
-           <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-            <Sparkles className="text-blue-600" size={18} />
-            Analitik Warga & Kerentanan (Kanaya Insights)
-          </h3>
-          <span className="text-[10px] text-slate-500 font-mono">Data ter-update: Hari Ini</span>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-on-surface">Kolektivitas Iuran RT</span>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                {iuranSummary.persentase || '0%'} <span className="text-[10px] text-slate-500 font-normal font-sans">({iuranSummary.sudah_bayar || 0}/{iuranSummary.total_kk || 0} KK)</span>
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-on-surface">{iuranSummary.sudah_bayar}</span>
-              <span className="text-xs text-on-surface-variant">dari {iuranSummary.total_kk} KK Lunas</span>
-            </div>
-            <p className="text-[11px] text-on-surface-variant font-medium">
-              {iuranSummary.belum_bayar > 0 ? `${iuranSummary.belum_bayar} KK menunggak iuran kas lingkungan.` : 'Seluruh warga telah melunasi iuran.'}
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-on-surface">Balita Risiko Stunting</span>
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${balitaRisikoCount > 0 ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
-                {balitaRisikoCount > 0 ? 'Perlu Intervensi' : 'Aman'}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-on-surface">{balitaRisikoCount}</span>
-              <span className="text-xs text-on-surface-variant">anak berisiko di RT {rtNomor}</span>
-            </div>
-            <p className="text-[11px] text-on-surface-variant font-medium">
-              Data terintegrasi dari buku KIA Posyandu binaan RW {rwNomor}.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-on-surface">Warga Rentan Terdata</span>
-              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
-                Prioritas Jamsos
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-on-surface">{kelompokRentanList.length}</span>
-              <span className="text-xs text-on-surface-variant">jiwa yatim & lansia sebatang kara</span>
-            </div>
-            <p className="text-[11px] text-on-surface-variant font-medium">
-              Berdasarkan hasil pencocokan lapangan dan kartu keluarga aktif.
-            </p>
-          </div>
-        </div>
-      </div>
-  
-      {/* SECTION VISUALISASI DATA INTERAKTIF                                      */}
-      {/* ========================================================================= */}
-      <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-6">
-        <div className="flex-1">
-          <h3 className="text-sm font-extrabold text-slate-900 mb-4 flex items-center gap-2">
-            <Layers className="text-blue-600" size={18} />
-            Berapa Banyak KK yang Telah Melunasi Iuran Kas Bulan Ini?
-          </h3>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={[
-                  {
-                    name: 'Iuran RT',
-                    Lunas: iuranSummary.sudah_bayar,
-                    Menunggak: iuranSummary.belum_bayar
-                  }
-                ]}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                layout="vertical"
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                <XAxis type="number" domain={[0, Math.max(iuranSummary.total_kk, 10)]} allowDecimals={false} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fontWeight: 'bold', fill: '#64748b' }} axisLine={false} tickLine={false} width={80} />
-                <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Bar dataKey="Lunas" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40} />
-                <Bar dataKey="Menunggak" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        <div className="flex-1 border-t md:border-t-0 md:border-l border-slate-100 pt-5 md:pt-0 md:pl-6">
-           <h3 className="text-sm font-extrabold text-slate-900 mb-4 flex items-center gap-2">
-            <FileCheck className="text-indigo-600" size={18} />
-            Bagaimana Rasio Penyelesaian Permohonan Surat Warga Bulan Ini?
-          </h3>
-          <div className="h-48">
-             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: 'Selesai/Disetujui', value: docStats.total_approved ?? 0 },
-                    { name: 'Ditolak/Revisi', value: docStats.total_rejected ?? 0 },
-                    { name: 'Menunggu', value: docStats.pending_rt || pendingDocs.length }
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  <Cell fill="#10b981" />
-                  <Cell fill="#ef4444" />
-                  <Cell fill="#f59e0b" />
-                </Pie>
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 2: ANALITIK PENDIDIKAN & KESEHATAN RT (DECISION SUPPORT) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* LAYANAN PENDIDIKAN */}
-        <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                <GraduationCap className="text-sky-600" size={18} />
-                Layanan Pendidikan & Usia Sekolah RT {rtNomor}
-              </h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700">Wajib Belajar 12 Thn</span>
-            </div>
-            
-            <p className="text-xs text-slate-600 mb-4">
-              Distribusi jenjang pendidikan dan anak usia sekolah di wilayah RT {rtNomor} untuk monitoring beasiswa dan mitigasi anak putus sekolah.
-            </p>
-
-            {/* Jenjang Pendidikan Chart */}
-            <div className="h-44 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={demografiData?.pendidikan?.length > 0 ? demografiData.pendidikan : [
-                    { label: 'SD/MI', count: 24 },
-                    { label: 'SMP/MTs', count: 18 },
-                    { label: 'SMA/SMK', count: 22 },
-                    { label: 'Diploma/S1', count: 15 },
-                    { label: 'Belum Sekolah', count: 8 }
-                  ]}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} interval={0} angle={-15} textAnchor="end" />
-                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Bar dataKey="count" name="Jumlah Jiwa" fill="#0284c7" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Daya Tampung Sekolah Binaan: <strong>Memadai</strong></span>
-            <Link to="/dashboard/fasilitas" className="text-primary font-bold hover:underline flex items-center gap-1">
-              Data Sekolah <ArrowRight size={12} />
-            </Link>
-          </div>
-        </div>
-
-        {/* LAYANAN KESEHATAN & POSYANDU */}
-        <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                <HeartPulse className="text-rose-600" size={18} />
-                Kesehatan Balita & Lansia Resti RT {rtNomor}
-              </h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700">Integrasi Posyandu</span>
-            </div>
-
-            <p className="text-xs text-slate-600 mb-4">
-              Monitoring berkala status gizi balita penimbangan KIA dan lansia risti dengan riwayat komorbid di lingkungan RT.
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-500 font-bold block">Status Gizi Balita</span>
-                <span className="text-lg font-black text-slate-800 font-mono">
-                  {balitaRisikoCount === 0 ? '100% Gizi Baik' : balitaRisikoCount + ' Balita Risiko'}
-                </span>
-                <span className="text-[10px] text-emerald-600 font-medium block mt-0.5">Penimbangan Rutin Posyandu</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-500 font-bold block">Lansia Binaan RT</span>
-                <span className="text-lg font-black text-slate-800 font-mono">
-                  {(Array.isArray(kelompokRentanList) ? kelompokRentanList : []).filter(k => k && k.kategori === 'LANSIA_SEBATANG_KARA').length} Jiwa
-                </span>
-                <span className="text-[10px] text-amber-600 font-medium block mt-0.5">Prioritas Posbindu Lansia</span>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity size={16} className="text-sky-600" />
-                <span className="text-xs font-semibold text-sky-900">Jadwal Posyandu RW Binaan: Pekan ke-2</span>
+                <span className="p-2 rounded-xl bg-sky-100 text-sky-700">
+                  <Users size={20} />
+                </span>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">
+                    Pemeriksaan & Pendataan Warga Pendatang
+                  </h3>
+                  <span className="text-[11px] font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
+                    Verifikasi Hak Layanan Kelurahan
+                  </span>
+                </div>
               </div>
-              <Link to="/dashboard/posyandu" className="text-xs font-bold text-sky-700 hover:underline">
-                Buka Posyandu
-              </Link>
+              <p className="text-xs text-slate-600 mt-2 max-w-2xl">
+                Pendataan warga non-permanen (penghuni kos, kontrakan, pekerja/pelajar rantau) di lingkungan RT {rtNomor}. 
+                Ketua RT memverifikasi apakah warga pendatang telah melengkapi identitas asal sehingga berhak mengajukan Surat Keterangan Domisili & layanan kelurahan.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowAddPendatangModal(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95"
+              >
+                <Plus size={15} />
+                <span>+ Lapor Pendatang Baru</span>
+              </button>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 mt-3">
-            <span>Faskes Rujukan Terdekat: <strong>Puskesmas Cikole</strong></span>
-            <span className="text-emerald-600 font-bold">Siaga Ambulans Desa</span>
-          </div>
-        </div>
-      </div>
+          {/* Statcard Ringkasan Cepat */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+              <span className="text-[11px] font-semibold text-slate-500 block">Total Pendatang Terdata</span>
+              <span className="text-xl sm:text-2xl font-black text-slate-900 font-mono mt-0.5 block tabular-nums">
+                {wargaPendatangList.length} Jiwa
+              </span>
+              <span className="text-[10px] text-slate-400 mt-0.5 block">Di lingkungan RT {rtNomor}</span>
+            </div>
 
-      {/* DOWNLOAD EXECUTIVE PROFILE BUTTON */}
-      <div className="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-            <BookOpen size={20} />
-          </div>
-          <div>
-            <h4 className="text-xs font-extrabold text-slate-900">Buku Profil & Rekapitulasi Wilayah RT {rtNomor}</h4>
-            <p className="text-[11px] text-slate-500">Laporan terintegrasi data kependudukan, iuran kas, kelompok rentan, dan fasilitas warga.</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={async () => {
-              try {
-                setIsExportingProfile(true);
-                await downloadReport('/keuangan/export/kas', { rt: rtNomor, rw: rwNomor, format: 'xlsx' }, 'Profil_Keuangan_RT' + rtNomor + '_RW' + rwNomor + '.xlsx');
-              } catch (e) {
-                alert('Gagal mengunduh profil RT: ' + e.message);
-              } finally {
-                setIsExportingProfile(false);
-              }
-            }}
-            disabled={isExportingProfile}
-            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
-          >
-            <FileSpreadsheet size={15} />
-            <span>{isExportingProfile ? 'Mengunduh...' : 'Unduh Rekap Excel'}</span>
-          </button>
-        </div>
-      </div>
+            <div className="p-3.5 rounded-2xl bg-white border border-emerald-200 shadow-2xs bg-gradient-to-br from-emerald-50/40 to-transparent">
+              <span className="text-[11px] font-semibold text-emerald-700 block">Siap Layanan Kelurahan</span>
+              <span className="text-xl sm:text-2xl font-black text-emerald-800 font-mono mt-0.5 block tabular-nums">
+                {wargaPendatangList.filter(p => p.status_layanan === 'SIAP_LAYANAN').length} Jiwa
+              </span>
+              <span className="text-[10px] text-emerald-600 mt-0.5 block">Berhak Surat Domisili</span>
+            </div>
 
+            <div className="p-3.5 rounded-2xl bg-white border border-amber-200 shadow-2xs bg-gradient-to-br from-amber-50/40 to-transparent">
+              <span className="text-[11px] font-semibold text-amber-700 block">Perlu Verifikasi Dokumen</span>
+              <span className="text-xl sm:text-2xl font-black text-amber-800 font-mono mt-0.5 block tabular-nums">
+                {wargaPendatangList.filter(p => p.status_layanan === 'PERLU_VERIFIKASI').length} Jiwa
+              </span>
+              <span className="text-[10px] text-amber-600 mt-0.5 block">KTP asal belum dicek</span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+              <span className="text-[11px] font-semibold text-slate-500 block">Kos & Kontrakan Terdaftar</span>
+              <span className="text-xl sm:text-2xl font-black text-slate-900 font-mono mt-0.5 block tabular-nums">
+                {hunianSewaList.length || 2} Lokasi
+              </span>
+              <span className="text-[10px] text-slate-400 mt-0.5 block">Kapasitas hunian sewa</span>
+            </div>
+          </div>
+
+          {/* Filter & Search Bar */}
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="relative flex-1 max-w-md">
+              <Search size={14} className="absolute left-3 top-3 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari nama, NIK, alamat kontrakan/kos, kota asal..."
+                value={pendatangSearch}
+                onChange={(e) => setPendatangSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs outline-none focus:ring-1 focus:ring-sky-500"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              <button
+                type="button"
+                onClick={() => setPendatangFilter('ALL')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  pendatangFilter === 'ALL'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                Semua ({wargaPendatangList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendatangFilter('SIAP_LAYANAN')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                  pendatangFilter === 'SIAP_LAYANAN'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                }`}
+              >
+                <CheckCircle2 size={13} />
+                <span>Siap Layanan ({wargaPendatangList.filter(p => p.status_layanan === 'SIAP_LAYANAN').length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendatangFilter('PERLU_VERIFIKASI')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                  pendatangFilter === 'PERLU_VERIFIKASI'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                }`}
+              >
+                <AlertCircle size={13} />
+                <span>Perlu Verifikasi ({wargaPendatangList.filter(p => p.status_layanan === 'PERLU_VERIFIKASI').length})</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Daftar Kartu Warga Pendatang */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {wargaPendatangList
+              .filter(p => {
+                const matchesFilter = pendatangFilter === 'ALL' || p.status_layanan === pendatangFilter;
+                const matchesSearch = !pendatangSearch || 
+                  p.nama.toLowerCase().includes(pendatangSearch.toLowerCase()) ||
+                  p.nik.includes(pendatangSearch) ||
+                  p.lokasi_tinggal.toLowerCase().includes(pendatangSearch.toLowerCase()) ||
+                  p.asal_domisili.toLowerCase().includes(pendatangSearch.toLowerCase());
+                return matchesFilter && matchesSearch;
+              })
+              .map((p) => {
+                const isSiap = p.status_layanan === 'SIAP_LAYANAN';
+                return (
+                  <div
+                    key={p.id}
+                    className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-extrabold text-sm text-slate-900">{p.nama}</h4>
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
+                              {p.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
+                            </span>
+                          </div>
+                          <p className="font-mono text-xs text-slate-500 mt-0.5">
+                            NIK: {p.nik ? `${p.nik.slice(0, 6)}******${p.nik.slice(-4)}` : '—'}
+                          </p>
+                        </div>
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                          isSiap
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-amber-100 text-amber-800 border border-amber-300'
+                        }`}>
+                          {isSiap ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                          <span>{isSiap ? 'Siap Layanan' : 'Perlu Cek RT'}</span>
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div>
+                          <span className="text-slate-400 text-[10px] uppercase font-bold block">Lokasi Tinggal di RT {rtNomor}</span>
+                          <span className="font-semibold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                            <Home size={13} className="text-sky-600 shrink-0" />
+                            {p.lokasi_tinggal}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 text-[10px] uppercase font-bold block">Asal Domisili KTP</span>
+                          <span className="text-slate-700 flex items-center gap-1.5 mt-0.5">
+                            <MapPin size={13} className="text-slate-400 shrink-0" />
+                            {p.asal_domisili}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[11px]">
+                          <span className="text-slate-500">Status: <strong>{p.status_tinggal}</strong></span>
+                          <span className="text-slate-500 font-mono">Lapor: {p.tanggal_lapor}</span>
+                        </div>
+                      </div>
+
+                      {/* Catatan Status Kelayakan */}
+                      <div className={`p-2.5 rounded-xl text-xs leading-relaxed ${
+                        isSiap
+                          ? 'bg-emerald-50/70 border border-emerald-200 text-emerald-900'
+                          : 'bg-amber-50/70 border border-amber-200 text-amber-900'
+                      }`}>
+                        <p className="font-semibold text-[11px] flex items-center gap-1.5 mb-0.5">
+                          {isSiap ? <ShieldCheck size={13} className="text-emerald-600" /> : <AlertCircle size={13} className="text-amber-600" />}
+                          {isSiap ? 'Hak Layanan Kelurahan Aktif' : 'Status Verifikasi Belum Lengkap'}
+                        </p>
+                        <p className="text-[11px] opacity-90">{p.catatan}</p>
+                      </div>
+                    </div>
+
+                    {/* Tombol Aksi Cepat RT */}
+                    <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setWargaPendatangList(prev => prev.map(item => {
+                            if (item.id === p.id) {
+                              const nextStatus = item.status_layanan === 'SIAP_LAYANAN' ? 'PERLU_VERIFIKASI' : 'SIAP_LAYANAN';
+                              const nextCatatan = nextStatus === 'SIAP_LAYANAN'
+                                ? 'KTP asal terverifikasi dan dinyatakan berhak mengajukan Surat Keterangan Domisili Kelurahan.'
+                                : 'Dokumen KTP asal sedang diperiksa ulang oleh Ketua RT.';
+                              return { ...item, status_layanan: nextStatus, catatan: nextCatatan };
+                            }
+                            return item;
+                          }));
+                          setActionSuccessToast(`Status layanan untuk ${p.nama} berhasil diperbarui.`);
+                          setTimeout(() => setActionSuccessToast(''), 3000);
+                        }}
+                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          isSiap
+                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                        }`}
+                      >
+                        {isSiap ? 'Ubah Status' : '✓ Sahkan Hak Layanan'}
+                      </button>
+
+                      <Link
+                        to={`/dashboard/dokumen?mode=dampingan&nama=${encodeURIComponent(p.nama)}&nik=${p.nik}`}
+                        className="py-2 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold transition flex items-center gap-1 shrink-0 border border-sky-200 cursor-pointer"
+                        title="Buatkan Surat Keterangan Domisili / Pengantar Kelurahan"
+                      >
+                        <FileText size={13} />
+                        <span>Buat Pengantar</span>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+
+          {/* Modal Form Tambah Warga Pendatang Baru */}
+          {showAddPendatangModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+              <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900">
+                      Form Pendataan Warga Pendatang Baru
+                    </h3>
+                    <p className="text-xs text-slate-500">Lingkungan RT {rtNomor} / RW {rwNomor} · Kelurahan Kebonjati</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPendatangModal(false)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1">Nama Lengkap Pemohon</label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Asep Saepuloh"
+                      value={pendatangForm.nama}
+                      onChange={(e) => setPendatangForm(prev => ({ ...prev, nama: e.target.value }))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">NIK Asal (16 Digit)</label>
+                      <input
+                        type="text"
+                        maxLength={16}
+                        placeholder="Contoh: 3204123456780001"
+                        value={pendatangForm.nik}
+                        onChange={(e) => setPendatangForm(prev => ({ ...prev, nik: e.target.value }))}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Jenis Kelamin</label>
+                      <select
+                        value={pendatangForm.jenis_kelamin}
+                        onChange={(e) => setPendatangForm(prev => ({ ...prev, jenis_kelamin: e.target.value }))}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500"
+                      >
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1">Nomor WhatsApp / HP Aktif</label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: 081234567890"
+                      value={pendatangForm.no_hp}
+                      onChange={(e) => setPendatangForm(prev => ({ ...prev, no_hp: e.target.value }))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1">Asal Domisili KTP (Kota / Kabupaten)</label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Kec. Cililin, Kab. Bandung Barat"
+                      value={pendatangForm.asal_domisili}
+                      onChange={(e) => setPendatangForm(prev => ({ ...prev, asal_domisili: e.target.value }))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1">Tempat Tinggal di RT {rtNomor}</label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Kontrakan Bpk. Mulyadi Pintu No. 2"
+                      value={pendatangForm.lokasi_tinggal}
+                      onChange={(e) => setPendatangForm(prev => ({ ...prev, lokasi_tinggal: e.target.value }))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Tujuan / Status Tinggal</label>
+                      <select
+                        value={pendatangForm.status_tinggal}
+                        onChange={(e) => setPendatangForm(prev => ({ ...prev, status_tinggal: e.target.value }))}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500"
+                      >
+                        <option value="Pekerja Kontrak">Pekerja Kontrak</option>
+                        <option value="Mahasiswa / Pelajar">Mahasiswa / Pelajar</option>
+                        <option value="Wiraswasta / Usaha">Wiraswasta / Usaha</option>
+                        <option value="Domisili Sementara Keluarga">Domisili Sementara Keluarga</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">Status Hak Layanan</label>
+                      <select
+                        value={pendatangForm.status_layanan}
+                        onChange={(e) => setPendatangForm(prev => ({ ...prev, status_layanan: e.target.value }))}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500"
+                      >
+                        <option value="SIAP_LAYANAN">Siap Layanan Kelurahan</option>
+                        <option value="PERLU_VERIFIKASI">Perlu Verifikasi Lanjutan</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1">Catatan Verifikasi RT</label>
+                    <textarea
+                      rows={2}
+                      placeholder="Contoh: Telah melampirkan salinan KTP asal dan surat pengantar dari kontrakan."
+                      value={pendatangForm.catatan}
+                      onChange={(e) => setPendatangForm(prev => ({ ...prev, catatan: e.target.value }))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPendatangModal(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!pendatangForm.nama || !pendatangForm.nik) {
+                        alert('Nama dan NIK wajib diisi!');
+                        return;
+                      }
+                      const newEntry = {
+                        id: 'p-' + Date.now(),
+                        ...pendatangForm,
+                        tanggal_lapor: new Date().toISOString().split('T')[0],
+                        durasi_bulan: 1
+                      };
+                      setWargaPendatangList(prev => [newEntry, ...prev]);
+                      setShowAddPendatangModal(false);
+                      setPendatangForm({
+                        nama: '',
+                        nik: '',
+                        jenis_kelamin: 'L',
+                        no_hp: '',
+                        asal_domisili: '',
+                        lokasi_tinggal: '',
+                        status_tinggal: 'Pekerja Kontrak',
+                        status_layanan: 'SIAP_LAYANAN',
+                        catatan: ''
+                      });
+                      setActionSuccessToast('Data warga pendatang berhasil dicatat!');
+                      setTimeout(() => setActionSuccessToast(''), 3000);
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-sm"
+                  >
+                    Simpan Pendataan
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB KEUANGAN & IURAN WARGA RT */}
+      {activeTab === 'keuangan' && (
+        <div id="keuangan-rt" className="space-y-6 mb-6">
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4 sm:p-5 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-indigo-100 text-indigo-700">
+                  <Wallet size={20} />
+                </span>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">
+                    Kas & Iuran Warga Lingkungan RT {rtNomor}
+                  </h3>
+                  <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                    Kolektivitas Kas Lingkungan
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 mt-2 max-w-2xl">
+                Pantau partisipasi iuran kebersihan, keamanan, dan kas sosial warga RT {rtNomor}. Transparansi pencatatan kas lingkungan untuk pelayanan warga yang akuntabel.
+              </p>
+            </div>
+
+            <button
+              onClick={async () => {
+                try {
+                  setIsExportingProfile(true);
+                  await downloadReport('/keuangan/export/kas', { rt: rtNomor, rw: rwNomor, format: 'xlsx' }, 'Rekap_Kas_RT' + rtNomor + '_RW' + rwNomor + '.xlsx');
+                } catch (e) {
+                  alert('Gagal mengunduh rekap kas: ' + e.message);
+                } finally {
+                  setIsExportingProfile(false);
+                }
+              }}
+              disabled={isExportingProfile}
+              className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50 shrink-0"
+            >
+              <FileSpreadsheet size={15} />
+              <span>{isExportingProfile ? 'Mengunduh...' : 'Unduh Rekap Kas (Excel)'}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-2xs">
+              <span className="text-xs font-bold text-slate-700">Tingkat Kolektivitas</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-indigo-700 font-mono">{iuranSummary.persentase || '0%'}</span>
+                <span className="text-xs text-slate-500 font-sans">dari {iuranSummary.total_kk || 0} KK</span>
+              </div>
+              <p className="text-[11px] text-slate-500">Iuran bulan berjalan lingkungan RT {rtNomor}.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white border border-emerald-200 space-y-2 shadow-2xs bg-emerald-50/20">
+              <span className="text-xs font-bold text-emerald-800">KK Sudah Lunas</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-emerald-700 font-mono">{iuranSummary.sudah_bayar || 0}</span>
+                <span className="text-xs text-slate-500">Kepala Keluarga</span>
+              </div>
+              <p className="text-[11px] text-emerald-600">Terima kasih atas partisipasi aktif warga.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white border border-rose-200 space-y-2 shadow-2xs bg-rose-50/20">
+              <span className="text-xs font-bold text-rose-800">KK Belum Membayar</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-rose-700 font-mono">{iuranSummary.belum_bayar || 0}</span>
+                <span className="text-xs text-slate-500">Kepala Keluarga</span>
+              </div>
+              <p className="text-[11px] text-rose-600">Perlu diingatkan saat ronda atau pertemuan warga.</p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1794,7 +2014,7 @@ export default function DashboardKetuaRT() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-extrabold text-on-surface">
-                  Perlindungan Sosial Anak Yatim Piatu & Lansia Sebatang Kara
+                  Jadwal Sambang Warga Prioritas & Perlindungan Rentan
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
                   <Sparkles size={12} />

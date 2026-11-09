@@ -121,7 +121,7 @@ export default function DataMaturityPage() {
               Indeks Kematangan Data Profil Warga
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Pemantauan kualitas data kependudukan berjenjang ($0 - 100\%$) Kelurahan Kebonjati. Menghadirkan AI Auto-Fill Surat bagi warga dan AI Door-to-Door Nudge bagi Ketua RT.
+              Pemantauan kualitas data kependudukan berjenjang ($0 - 100\%$) Kelurahan Kebonjati. Menghadirkan Auto-Fill Surat bagi warga dan Pengingat Sambang Warga bagi Ketua RT.
             </p>
           </div>
 
@@ -228,7 +228,7 @@ export default function DataMaturityPage() {
                 }`}
               >
                 <Footprints size={16} />
-                <span>AI Door-to-Door Nudge</span>
+                <span>Pengingat Sambang Warga</span>
                 {nudgeList.length > 0 && (
                   <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-mono">
                     {nudgeList.length}
@@ -245,7 +245,7 @@ export default function DataMaturityPage() {
                 }`}
               >
                 <AlertCircle size={16} />
-                <span>AI Data Guardian (Anomali)</span>
+                <span>Pemeriksa Kelengkapan Data</span>
                 {anomalies.length > 0 && (
                   <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500 text-white font-mono">
                     {anomalies.length}
@@ -645,10 +645,10 @@ export default function DataMaturityPage() {
             <div>
               <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
                 <Footprints className="text-primary" size={18} />
-                Daftar Prioritas Kunjungan Lapangan (AI Door-to-Door Nudge)
+                Jadwal Sambang Warga Prioritas
               </h3>
               <p className="text-on-surface-variant mt-0.5">
-                AI mengidentifikasi {nudgeList.length} warga/keluarga yang memiliki kelengkapan data &lt; 50% atau kerentanan khusus untuk didampingi via RT Assisted Mode.
+                Sistem menandai {nudgeList.length} warga/keluarga yang memiliki kelengkapan data &lt; 50% atau membutuhkan sambang/kunjungan pendampingan oleh RT.
               </p>
             </div>
 
@@ -743,10 +743,10 @@ export default function DataMaturityPage() {
             <div>
               <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
                 <AlertCircle className="text-amber-500" size={18} />
-                AI Data Guardian (Deteksi Anomali & Inkonsistensi)
+                Pemeriksa Kelengkapan & Anomali Data Warga
               </h3>
               <p className="text-on-surface-variant mt-0.5">
-                Inference Engine AI memindai anomali biologis, duplikasi NIK, dan ketidaksinkronan data kependudukan secara real-time.
+                Pemeriksaan otomatis untuk menemukan NIK tidak valid, duplikasi, dan ketidaksinkronan data kependudukan secara berkala.
               </p>
             </div>
             <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-mono font-bold text-xs">
