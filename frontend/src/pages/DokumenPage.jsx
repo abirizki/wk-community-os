@@ -33,7 +33,9 @@ import {
   ExternalLink,
   RotateCcw,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Home,
+  Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { downloadReport } from '../utils/exportHelper';
