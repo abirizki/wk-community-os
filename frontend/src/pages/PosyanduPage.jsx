@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { enqueueOfflineAction, cacheData, getCachedData } from '../utils/offlineStorage';
 import { offlineQueue } from '../utils/offlineQueue';
 import DashboardKaderPosyandu from './dashboard/DashboardKaderPosyandu';
+import KanayaStrategicHealthPolicyCard from '../components/KanayaStrategicHealthPolicyCard';
 
 export default function PosyanduPage() {
   const { user } = useAuth();
@@ -63,6 +64,17 @@ export default function PosyanduPage() {
     imunisasi: '',
     catatan_kesehatan: ''
   });
+
+  // Live Citizen Search for Balita Parent & Lansia Register
+  const [parentSearch, setParentSearch] = useState('');
+  const [parentCandidates, setParentCandidates] = useState([]);
+  const [searchingParent, setSearchingParent] = useState(false);
+  const [selectedParent, setSelectedParent] = useState(null);
+  const [manualParentMode, setManualParentMode] = useState(false);
+
+  const [lansiaSearch, setLansiaSearch] = useState('');
+  const [lansiaCandidates, setLansiaCandidates] = useState([]);
+  const [searchingLansiaCandidate, setSearchingLansiaCandidate] = useState(false);
 
   // ---------------------------------------------------------------------------
   // LANSIA STATE
@@ -108,6 +120,44 @@ export default function PosyanduPage() {
     keluhan: '',
     tindakan_petugas: ''
   });
+
+  useEffect(() => {
+    if (!parentSearch.trim() || parentSearch.length < 2) {
+      setParentCandidates([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        setSearchingParent(true);
+        const res = await api.get(`/warga?search=${encodeURIComponent(parentSearch.trim())}&limit=6`);
+        setParentCandidates(res.data?.warga || res.data || []);
+      } catch (err) {
+        console.warn('Gagal mencari orang tua:', err.message);
+      } finally {
+        setSearchingParent(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [parentSearch]);
+
+  useEffect(() => {
+    if (!lansiaSearch.trim() || lansiaSearch.length < 2) {
+      setLansiaCandidates([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        setSearchingLansiaCandidate(true);
+        const res = await api.get(`/warga?search=${encodeURIComponent(lansiaSearch.trim())}&limit=6`);
+        setLansiaCandidates(res.data?.warga || res.data || []);
+      } catch (err) {
+        console.warn('Gagal mencari warga lansia:', err.message);
+      } finally {
+        setSearchingLansiaCandidate(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [lansiaSearch]);
 
   // Fetch Balita Data
   const fetchBalita = async () => {
@@ -519,6 +569,12 @@ export default function PosyanduPage() {
         )}
       </AnimatePresence>
 
+      {/* KANAYA STRATEGIC HEALTH POLICY RADAR */}
+      <KanayaStrategicHealthPolicyCard
+        role={user?.role || 'aparatur'}
+        scope={{ rt: user?.rt, rw: user?.rw, kelurahan: user?.kelurahan }}
+      />
+
       {/* TABS SELECTOR */}
       <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-hidden p-1.5 gap-1.5">
         <button
@@ -900,17 +956,92 @@ export default function PosyanduPage() {
 
             <form onSubmit={handleSubmitBalita} className="space-y-3.5 text-sm">
               {isOfficer && (
-                <div>
-                  <label className="block font-semibold mb-1">NIK Orang Tua / Pelapor</label>
-                  <input
-                    type="text"
-                    maxLength={16}
-                    value={balitaForm.nik_warga}
-                    onChange={(e) => setBalitaForm({ ...balitaForm, nik_warga: e.target.value })}
-                    required
-                    placeholder="16 Digit NIK Orang Tua"
-                    className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                  />
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-semibold">Orang Tua / Kepala Keluarga *</label>
+                    <button
+                      type="button"
+                      onClick={() => setManualParentMode(!manualParentMode)}
+                      className="text-xs text-primary font-medium hover:underline"
+                    >
+                      {manualParentMode ? 'Beralih ke Cari Master Warga' : 'Ketik Manual (Warga Pendatang)'}
+                    </button>
+                  </div>
+
+                  {!manualParentMode ? (
+                    <div>
+                      {!selectedParent ? (
+                        <div className="relative">
+                          <Search size={15} className="absolute left-3 top-2.5 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="Ketik nama orang tua (misal: Budi Santoso / Siti)..."
+                            value={parentSearch}
+                            onChange={(e) => setParentSearch(e.target.value)}
+                            className="w-full pl-9 pr-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none text-xs"
+                          />
+                          {searchingParent && (
+                            <Loader2 size={14} className="absolute right-3 top-2.5 animate-spin text-slate-400" />
+                          )}
+                          {parentCandidates.length > 0 && (
+                            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto divide-y divide-slate-100">
+                              {parentCandidates.map((w) => (
+                                <button
+                                  key={w.nik}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedParent(w);
+                                    setBalitaForm({ ...balitaForm, nik_warga: w.nik });
+                                    setParentCandidates([]);
+                                    setParentSearch('');
+                                  }}
+                                  className="w-full text-left p-2.5 hover:bg-teal-50/60 transition-colors flex items-center justify-between"
+                                >
+                                  <div>
+                                    <p className="text-xs font-bold text-slate-800">{w.nama}</p>
+                                    <p className="text-[11px] text-slate-500 font-mono">
+                                      NIK: {w.nik} · RT {w.rt || '—'}/RW {w.rw || '—'}
+                                    </p>
+                                  </div>
+                                  <span className="text-[11px] text-teal-700 font-semibold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                                    Pilih
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-2.5 bg-teal-50 border border-teal-200 rounded-xl flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] font-bold text-teal-800 uppercase block">Orang Tua Terverifikasi</span>
+                            <p className="text-xs font-bold text-teal-950">{selectedParent.nama}</p>
+                            <p className="text-[11px] text-teal-800 font-mono">NIK: {selectedParent.nik} · RT {selectedParent.rt}/RW {selectedParent.rw}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedParent(null);
+                              setBalitaForm({ ...balitaForm, nik_warga: '' });
+                            }}
+                            className="text-xs text-rose-600 font-semibold hover:underline"
+                          >
+                            Ganti
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      maxLength={16}
+                      value={balitaForm.nik_warga}
+                      onChange={(e) => setBalitaForm({ ...balitaForm, nik_warga: e.target.value })}
+                      required
+                      placeholder="16 Digit NIK Orang Tua"
+                      className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none font-mono text-xs"
+                    />
+                  )}
                 </div>
               )}
 
@@ -1072,6 +1203,58 @@ export default function PosyanduPage() {
             </div>
 
             <form onSubmit={handleSubmitRegLansia} className="space-y-3.5 text-sm">
+              <div className="space-y-1.5 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <label className="block text-xs font-bold text-slate-700">Pencarian Cepat di Master Warga (Otomatis)</label>
+                <div className="relative">
+                  <Search size={15} className="absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Ketik nama warga lansia (misal: Warsito / Ijem)..."
+                    value={lansiaSearch}
+                    onChange={(e) => setLansiaSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none text-xs bg-white"
+                  />
+                  {searchingLansiaCandidate && (
+                    <Loader2 size={14} className="absolute right-3 top-2.5 animate-spin text-slate-400" />
+                  )}
+                  {lansiaCandidates.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto divide-y divide-slate-100">
+                      {lansiaCandidates.map((w) => (
+                        <button
+                          key={w.nik}
+                          type="button"
+                          onClick={() => {
+                            setRegLansiaForm({
+                              ...regLansiaForm,
+                              nik: w.nik,
+                              nama: w.nama,
+                              tanggal_lahir: w.tanggal_lahir ? w.tanggal_lahir.split('T')[0] : '',
+                              jenis_kelamin: w.jenis_kelamin || 'L',
+                              rt: w.rt || user?.rt || '001',
+                              rw: w.rw || user?.rw || '001',
+                              alamat: w.alamat || 'Jl. Kebonjati'
+                            });
+                            setLansiaCandidates([]);
+                            setLansiaSearch('');
+                          }}
+                          className="w-full text-left p-2.5 hover:bg-rose-50/60 transition-colors flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">{w.nama}</p>
+                            <p className="text-[11px] text-slate-500 font-mono">
+                              NIK: {w.nik} · RT {w.rt || '—'}/RW {w.rw || '—'}
+                            </p>
+                          </div>
+                          <span className="text-[11px] text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                            Pilih
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="block font-semibold mb-1">Nomor Induk Kependudukan (NIK) *</label>
                 <input

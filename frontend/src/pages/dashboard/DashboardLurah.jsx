@@ -10,6 +10,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
+import KanayaStrategicHealthPolicyCard from '../../components/KanayaStrategicHealthPolicyCard';
 import {
   DashboardShell,
   RoleHeader,
@@ -448,6 +449,14 @@ export default function DashboardLurah() {
           scope={{ kelurahan: user?.kelurahan || 'Kebonjati' }}
           title="AI Strategy: Rekomendasi Kebijakan & Daya Dukung Kelurahan"
           subtitle="Pemetaan kohort usia sekolah (T+1), kesiapan 1000 HPK, stunting posyandu, dan graduasi desil DTKS 13 RW"
+        />
+      </div>
+
+      {/* Kanaya Strategic Health Policy Radar Kelurahan */}
+      <div className="mb-6">
+        <KanayaStrategicHealthPolicyCard
+          role="lurah"
+          scope={{ kelurahan: user?.kelurahan || 'Kebonjati' }}
         />
       </div>
 

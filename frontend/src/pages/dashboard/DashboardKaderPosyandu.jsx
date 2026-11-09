@@ -141,6 +141,13 @@ export default function DashboardKaderPosyandu() {
     riwayat_penyakit: ''
   });
 
+  // Smart Family/KK Search State for Sasaran Baru (Eliminates Mismatches & Typos)
+  const [familySearchQuery, setFamilySearchQuery] = useState('');
+  const [familyCandidates, setFamilyCandidates] = useState([]);
+  const [searchingFamily, setSearchingFamily] = useState(false);
+  const [selectedFamily, setSelectedFamily] = useState(null);
+  const [isPendatangBaru, setIsPendatangBaru] = useState(false);
+
   // Form State: Antropometri Balita
   const [balitaForm, setBalitaForm] = useState({
     berat_badan_kg: '',
@@ -500,6 +507,27 @@ export default function DashboardKaderPosyandu() {
       (l.alamat && l.alamat.toLowerCase().includes(q))
     );
   }, [targetLansia, lansiaSearchQuery]);
+
+  // Debounced search for family / head of family in master warga
+  useEffect(() => {
+    if (!familySearchQuery.trim() || familySearchQuery.length < 2) {
+      setFamilyCandidates([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        setSearchingFamily(true);
+        const res = await api.get(`/warga?search=${encodeURIComponent(familySearchQuery.trim())}&limit=6`);
+        const list = res.data?.warga || res.data || [];
+        setFamilyCandidates(list);
+      } catch (err) {
+        console.warn('Gagal mencari KK/keluarga:', err.message);
+      } finally {
+        setSearchingFamily(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [familySearchQuery]);
 
   // ===========================================================================
   // SUBMISSION HANDLERS: OFFLINE-FIRST WITH SANITY BOUNDS
@@ -2664,27 +2692,147 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                 </div>
 
                 {daftarSasaranForm.tipe === 'balita' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Nama Ibu</label>
-                      <input
-                        type="text"
-                        placeholder="Nama ibu..."
-                        value={daftarSasaranForm.nama_ibu}
-                        onChange={(e) => setDaftarSasaranForm({ ...daftarSasaranForm, nama_ibu: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs"
-                      />
+                  <div className="space-y-2 p-3 bg-teal-50/70 border border-teal-200/80 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-teal-950">
+                        Keluarga Orang Tua (Master Warga) *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsPendatangBaru(!isPendatangBaru)}
+                        className="text-[11px] font-semibold text-teal-700 hover:underline cursor-pointer"
+                      >
+                        {isPendatangBaru ? 'Hubungkan ke Master Warga' : 'Warga Pendatang Baru (Ketik Bebas)'}
+                      </button>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Nama Ayah</label>
-                      <input
-                        type="text"
-                        placeholder="Nama ayah..."
-                        value={daftarSasaranForm.nama_ayah}
-                        onChange={(e) => setDaftarSasaranForm({ ...daftarSasaranForm, nama_ayah: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs"
-                      />
-                    </div>
+
+                    {!isPendatangBaru ? (
+                      <div>
+                        {!selectedFamily ? (
+                          <div className="relative">
+                            <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                            <input
+                              type="text"
+                              placeholder="Ketik nama ayah/ibu (contoh: Budi Santoso)..."
+                              value={familySearchQuery}
+                              onChange={(e) => setFamilySearchQuery(e.target.value)}
+                              className="w-full pl-8 pr-3 py-2 rounded-xl border border-teal-300 bg-white text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none"
+                            />
+                            {searchingFamily && (
+                              <RefreshCw size={13} className="absolute right-3 top-2.5 animate-spin text-slate-400" />
+                            )}
+                            {familyCandidates.length > 0 && (
+                              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto divide-y divide-slate-100">
+                                {familyCandidates.map((w) => (
+                                  <button
+                                    key={w.nik}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedFamily(w);
+                                      setDaftarSasaranForm({
+                                        ...daftarSasaranForm,
+                                        no_kk: w.no_kk || '',
+                                        nama_ayah: w.jenis_kelamin === 'L' ? w.nama : daftarSasaranForm.nama_ayah,
+                                        nama_ibu: w.jenis_kelamin === 'P' ? w.nama : daftarSasaranForm.nama_ibu,
+                                        rt: w.rt || daftarSasaranForm.rt,
+                                        rw: w.rw || daftarSasaranForm.rw,
+                                        alamat: w.alamat || daftarSasaranForm.alamat
+                                      });
+                                      setFamilyCandidates([]);
+                                      setFamilySearchQuery('');
+                                    }}
+                                    className="w-full text-left p-2.5 hover:bg-teal-50 transition-colors flex items-center justify-between"
+                                  >
+                                    <div>
+                                      <p className="text-xs font-bold text-slate-900">{w.nama}</p>
+                                      <p className="text-[10px] text-slate-500 font-mono">
+                                        KK: {w.no_kk || '—'} · RT {w.rt || '—'}/RW {w.rw || '—'} · {w.alamat || 'Kebonjati'}
+                                      </p>
+                                    </div>
+                                    <span className="text-[10px] text-teal-800 font-bold bg-teal-100 px-2 py-0.5 rounded">
+                                      Pilih
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="p-2.5 bg-white border border-teal-300 rounded-xl flex items-center justify-between shadow-2xs">
+                            <div>
+                              <span className="text-[9px] font-bold text-teal-800 uppercase block">Keluarga Terverifikasi</span>
+                              <p className="text-xs font-extrabold text-slate-900">{selectedFamily.nama}</p>
+                              <p className="text-[10px] text-slate-500 font-mono">
+                                No. KK: {selectedFamily.no_kk} · RT {selectedFamily.rt}/RW {selectedFamily.rw}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedFamily(null);
+                                setDaftarSasaranForm({
+                                  ...daftarSasaranForm,
+                                  no_kk: '',
+                                  nama_ayah: '',
+                                  nama_ibu: ''
+                                });
+                              }}
+                              className="text-[11px] text-rose-600 font-bold hover:underline"
+                            >
+                              Ganti
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Nama Ibu</label>
+                            <input
+                              type="text"
+                              placeholder="Nama ibu..."
+                              value={daftarSasaranForm.nama_ibu}
+                              onChange={(e) => setDaftarSasaranForm({ ...daftarSasaranForm, nama_ibu: e.target.value })}
+                              className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Nama Ayah</label>
+                            <input
+                              type="text"
+                              placeholder="Nama ayah..."
+                              value={daftarSasaranForm.nama_ayah}
+                              onChange={(e) => setDaftarSasaranForm({ ...daftarSasaranForm, nama_ayah: e.target.value })}
+                              className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs bg-white"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Nama Ibu (Pendatang)</label>
+                            <input
+                              type="text"
+                              placeholder="Nama ibu..."
+                              value={daftarSasaranForm.nama_ibu}
+                              onChange={(e) => setDaftarSasaranForm({ ...daftarSasaranForm, nama_ibu: e.target.value })}
+                              className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Nama Ayah (Pendatang)</label>
+                            <input
+                              type="text"
+                              placeholder="Nama ayah..."
+                              value={daftarSasaranForm.nama_ayah}
+                              onChange={(e) => setDaftarSasaranForm({ ...daftarSasaranForm, nama_ayah: e.target.value })}
+                              className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs bg-white"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

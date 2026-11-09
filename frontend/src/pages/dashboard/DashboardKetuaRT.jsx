@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 import { StatusBadge, SLABadge } from "../../components/design-system";
 import MaskedField from "../../components/MaskedField";
+import KanayaStrategicHealthPolicyCard from "../../components/KanayaStrategicHealthPolicyCard";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import {
   FileCheck,
@@ -757,6 +758,14 @@ export default function DashboardKetuaRT() {
 
       
       
+
+      {/* Kanaya Strategic Health Policy Radar RT */}
+      <div className="mb-6">
+        <KanayaStrategicHealthPolicyCard
+          role="ketua_rt"
+          scope={{ rt: rtNomor, rw: rwNomor }}
+        />
+      </div>
 
       {/* 1. BENTO WORKSPACE PILLAR SWITCHER (ACTION-FIRST MEJA KERJA RT) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">

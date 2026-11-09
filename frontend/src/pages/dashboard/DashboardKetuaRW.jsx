@@ -16,6 +16,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
+import KanayaStrategicHealthPolicyCard from '../../components/KanayaStrategicHealthPolicyCard';
 import {
   FileCheck,
   Clock,
@@ -802,6 +803,14 @@ export default function DashboardKetuaRW() {
 
         </div>
       )}
+
+      {/* Kanaya Strategic Health Policy Radar RW */}
+      <div className="mb-6">
+        <KanayaStrategicHealthPolicyCard
+          role="ketua_rw"
+          scope={{ rw: rwNomor }}
+        />
+      </div>
 
       {/* 2. Super Apps Bento Quick Launcher RW (8 Flutter-Style Grid Shortcuts) */}
       <div>
