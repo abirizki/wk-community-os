@@ -308,11 +308,11 @@ export default function DashboardLayout() {
           ]
         },
         {
-          category: 'Administrasi',
+          category: 'Administrasi & Direktori',
           items: [
             { name: 'Kartu Keluarga Digital', path: '/dashboard/kk', icon: <Users size={19} /> },
             { name: 'Pengajuan Surat Mandiri', path: '/dashboard/dokumen', icon: <FileCheck size={19} /> },
-            { name: 'Profil & Tim Kader', path: '/dashboard/profil', icon: <User size={19} /> }
+            { name: 'Direktori Kader & Faskes', path: '/dashboard/aparatur', icon: <UserCheck size={19} /> }
           ]
         }
       ];

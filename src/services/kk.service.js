@@ -39,6 +39,16 @@ class KkService {
   async getMyFamilyCard(currentUser) {
     let noKk = currentUser.no_kk;
 
+    // Deteksi akun khusus Kader Posyandu Ny. Hj. Yayah Rokayah
+    const isYayahAccount = (currentUser?.active_nik === '3272030101800003') ||
+                          (currentUser?.username === 'posyandu.melati_kbj') ||
+                          (currentUser?.username === '3272030101800003') ||
+                          (currentUser?.nama && currentUser.nama.toLowerCase().includes('yayah'));
+
+    if (isYayahAccount && !noKk) {
+      noKk = '3272030101900103';
+    }
+
     if (!noKk) {
       // Coba cari no_kk dari NIK, user_id, atau nama di tabel warga
       try {
@@ -54,20 +64,24 @@ class KkService {
       }
     }
 
-    // Jika pengguna adalah warga (misal Budi Santoso) dan belum punya no_kk, gunakan default KK Budi Santoso
-    if (!noKk && (currentUser.role === 'warga' || !currentUser.role || (currentUser.nama && currentUser.nama.includes('Budi')))) {
-      noKk = '3273010101900001';
-    }
+    // Hanya default ke KK Budi Santoso jika akun yang login memang Budi Santoso
+    const isBudiAccount = (currentUser?.active_nik === '3272030103810001') ||
+                          (currentUser?.active_nik === '3273010203850003') ||
+                          (currentUser?.username === '3272030103810001') ||
+                          (currentUser?.username === '3272030101900101') ||
+                          (currentUser?.nama && currentUser.nama.toLowerCase().includes('budi'));
 
-    if (!noKk) {
+    if (!noKk && isBudiAccount) {
       noKk = '3273010101900001';
     }
 
     let card = null;
-    try {
-      card = await kkRepository.findWithMembersByNoKk(noKk);
-    } catch (e) {
-      console.warn('[KkService] findWithMembersByNoKk note:', e.message);
+    if (noKk) {
+      try {
+        card = await kkRepository.findWithMembersByNoKk(noKk);
+      } catch (e) {
+        console.warn('[KkService] findWithMembersByNoKk note:', e.message);
+      }
     }
     
     // Jika data KK belum ada di database atau anggota kosong, sediakan struktur dinamis sesuai pengguna aktif
@@ -80,6 +94,12 @@ class KkService {
                      (currentUser?.active_nik === '3273010203850003') || 
                      (currentUser?.nama && currentUser.nama.toLowerCase().includes('budi')) ||
                      (noKk === '3273010101900001');
+
+      const isYayah = (currentUser?.active_nik === '3272030101800003') ||
+                      (currentUser?.username === 'posyandu.melati_kbj') ||
+                      (currentUser?.username === '3272030101800003') ||
+                      (currentUser?.nama && currentUser.nama.toLowerCase().includes('yayah')) ||
+                      (noKk === '3272030101900103');
 
       if (isAsep) {
         card = {
@@ -286,6 +306,88 @@ class KkService {
               bpjs_ketenagakerjaan_status: 'Pensiun',
               kip: null,
               kis: 'KIS-PBI-3276'
+            }
+          ]
+        };
+      } else if (isYayah) {
+        card = {
+          id: 3,
+          no_kk: noKk || '3272030101900103',
+          kepala_keluarga: 'H. Rahmat Hidayat',
+          alamat: 'Jl. Kebonjati No. 18 RT 001/RW 001',
+          rt: currentUser?.rt || '001',
+          rw: currentUser?.rw || '001',
+          kelurahan: 'Kebonjati',
+          kecamatan: 'Cikole',
+          kota: 'Kota Sukabumi',
+          provinsi: 'Jawa Barat',
+          kode_pos: '43111',
+          anggota: [
+            {
+              id: 1,
+              nik: '3272030101780003',
+              nama: 'H. Rahmat Hidayat',
+              jenis_kelamin: 'L',
+              tempat_lahir: 'Sukabumi',
+              tanggal_lahir: '1978-05-12',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Kepala Keluarga',
+              status_perkawinan: 'Kawin',
+              pekerjaan: 'Wiraswasta',
+              pendidikan_terakhir: 'S1',
+              golongan_darah: 'O',
+              nama_ayah: 'H. AHMAD HIDAYAT',
+              nama_ibu: 'HJ. NENENG HASANAH',
+              bpjs_kesehatan: '0001000000031 (Mandiri Aktif)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: '18092837401 (BPU Mandiri)',
+              bpjs_ketenagakerjaan_status: 'Aktif',
+              kip: null,
+              kis: null
+            },
+            {
+              id: 2,
+              nik: '3272030101800003',
+              nama: 'Ny. Hj. Yayah Rokayah',
+              jenis_kelamin: 'P',
+              tempat_lahir: 'Sukabumi',
+              tanggal_lahir: '1980-08-14',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Istri',
+              status_perkawinan: 'Kawin',
+              pekerjaan: 'Tenaga Kesehatan / Kader Posyandu',
+              pendidikan_terakhir: 'D3/Akademi',
+              golongan_darah: 'A',
+              nama_ayah: 'H. ENDANG SUKANDA',
+              nama_ibu: 'HJ. ENI ROHAENI',
+              bpjs_kesehatan: '0001000000032 (Peserta Aktif)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: null,
+              kis: null
+            },
+            {
+              id: 3,
+              nik: '3272034508050003',
+              nama: 'Nabila Rahmawati',
+              jenis_kelamin: 'P',
+              tempat_lahir: 'Sukabumi',
+              tanggal_lahir: '2005-08-20',
+              agama: 'Islam',
+              status_hubungan_keluarga: 'Anak',
+              status_perkawinan: 'Belum Kawin',
+              pekerjaan: 'Pelajar / Mahasiswa',
+              pendidikan_terakhir: 'SMA/SMK',
+              golongan_darah: 'B',
+              nama_ayah: 'H. Rahmat Hidayat',
+              nama_ibu: 'Ny. Hj. Yayah Rokayah',
+              bpjs_kesehatan: '0001000000033 (Tanggungan)',
+              bpjs_kesehatan_status: 'Aktif',
+              bpjs_ketenagakerjaan: null,
+              bpjs_ketenagakerjaan_status: 'Non-PPU',
+              kip: null,
+              kis: null
             }
           ]
         };

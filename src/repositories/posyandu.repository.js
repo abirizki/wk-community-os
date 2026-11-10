@@ -494,13 +494,14 @@ class PosyanduRepository {
     // Default Fallback
     const rwDefault = fallbackUser.rw || '001';
     const rtDefault = fallbackUser.rt || '001';
+    const kaderNik = fallbackUser.active_nik || (fallbackUser.username && /^\d{16}$/.test(fallbackUser.username) ? fallbackUser.username : '3272030101800003');
     return {
       user_id: userId,
-      nik: fallbackUser.username || '3273016008920005',
-      nama_lengkap: fallbackUser.nama || 'Kader Posyandu Melati',
+      nik: kaderNik,
+      nama_lengkap: fallbackUser.nama || 'Ny. Hj. Yayah Rokayah',
       no_hp: '081234567890',
       nama_posyandu: 'Posyandu Melati RW 001',
-      posyandu_list: ['Posyandu Melati RW 001', 'Posyandu Mawar RT 002'],
+      posyandu_list: ['Posyandu Melati RW 001'],
       wilayah_tugas: [
         { rw: rwDefault, rt: rtDefault },
         { rw: rwDefault, rt: '002' }

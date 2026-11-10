@@ -219,6 +219,23 @@ router.post('/login', async (req, res) => {
       }
     }
 
+    // 2.B.2 Jika user ditemukan tapi identifiedWarga belum terisi, cari data warga terkait
+    if (user && !identifiedWarga) {
+      try {
+        const cleanName = (user.nama || '').replace(/\([^)]*\)/g, '').trim();
+        const [wLookup] = await pool.execute(
+          'SELECT * FROM warga WHERE user_id = ? OR nik = ? OR (nama LIKE ? AND LENGTH(?) >= 4) LIMIT 1',
+          [user.id, user.username, `%${cleanName}%`, cleanName]
+        );
+        if (wLookup.length > 0) {
+          identifiedWarga = wLookup[0];
+          if (!no_kk) no_kk = identifiedWarga.no_kk;
+        } else if (user.no_kk) {
+          no_kk = user.no_kk;
+        }
+      } catch (e) {}
+    }
+
     // 2.C. Jika belum ditemukan tapi memiliki identifiedWarga (cari berdasarkan NIK)
     if (!user && identifiedWarga) {
       try {
@@ -426,12 +443,18 @@ router.post('/login', async (req, res) => {
     // Deteksi apakah NIK yang login memiliki jabatan resmi di aparatur_kelurahan
     let officialRoleInfo = null;
     try {
+      const searchName = (activeNama || '').replace(/\([^)]*\)/g, '').trim();
       const [apaRows] = await pool.execute(
-        'SELECT * FROM aparatur_kelurahan WHERE nik_pejabat = ? AND is_active = 1 LIMIT 1',
-        [activeNik]
+        `SELECT * FROM aparatur_kelurahan 
+         WHERE (nik_pejabat = ? OR (nama_pejabat LIKE ? AND LENGTH(?) >= 4)) 
+           AND is_active = 1 LIMIT 1`,
+        [activeNik, `%${searchName}%`, searchName]
       );
       if (apaRows.length > 0) {
         const apa = apaRows[0];
+        if (!identifiedWarga && apa.nik_pejabat) {
+          activeNik = apa.nik_pejabat;
+        }
         let mappedRole = 'warga';
         if (apa.kategori === 'RW') mappedRole = 'ketua_rw';
         else if (apa.kategori === 'RT') mappedRole = 'ketua_rt';
@@ -455,6 +478,17 @@ router.post('/login', async (req, res) => {
       }
     } catch (errApa) {
       console.warn('[Auth] Error checking aparatur for NIK:', errApa.message);
+    }
+
+    // Pastikan gelar / jabatan aparatur ditampilkan dengan bermartabat (bukan teks 'Pengguna')
+    if (officialRoleInfo && (!activeHubungan || activeHubungan === 'Pengguna')) {
+      activeHubungan = officialRoleInfo.jabatan;
+    } else if (user?.role === 'kader_posyandu' && activeHubungan === 'Pengguna') {
+      activeHubungan = 'Kader Posyandu';
+    } else if (user?.role === 'ketua_rt' && activeHubungan === 'Pengguna') {
+      activeHubungan = 'Ketua RT';
+    } else if (user?.role === 'ketua_rw' && activeHubungan === 'Pengguna') {
+      activeHubungan = 'Ketua RW';
     }
 
     // Tentukan initial role: jika memiliki jabatan resmi dan user role default warga, aktifkan mode jabatan

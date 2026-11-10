@@ -67,6 +67,12 @@ export default function KartuKeluargaPage() {
                    (activeUser?.active_nik === '3272030103810001') ||
                    (activeUser?.nama && activeUser.nama.toLowerCase().includes('budi'));
 
+    const isYayah = (activeUser?.active_nik === '3272030101800003') ||
+                    (activeUser?.username === 'posyandu.melati_kbj') ||
+                    (activeUser?.username === '3272030101800003') ||
+                    (activeUser?.nama && activeUser.nama.toLowerCase().includes('yayah')) ||
+                    (activeUser?.no_kk === '3272030101900103');
+
     if (isAsep) {
       return {
         id: 2,
@@ -231,6 +237,81 @@ export default function KartuKeluargaPage() {
             bpjs_kesehatan: '0001234567893 (Anak)',
             bpjs_ketenagakerjaan: null,
             kip: 'KIP-2026-SKB-0081'
+          }
+        ]
+      };
+    }
+
+    if (isYayah) {
+      return {
+        id: 3,
+        no_kk: activeUser?.no_kk || '3272030101900103',
+        kepala_keluarga: 'H. Rahmat Hidayat',
+        alamat: 'Jl. Kebonjati No. 18 RT 001/RW 001',
+        rt: activeUser?.rt || '001',
+        rw: activeUser?.rw || '001',
+        kelurahan: 'Kebonjati',
+        kecamatan: 'Cikole',
+        kota: 'Kota Sukabumi',
+        provinsi: 'Jawa Barat',
+        kode_pos: '43111',
+        anggota: [
+          {
+            id: 1,
+            nik: '3272030101780003',
+            nama: 'H. Rahmat Hidayat',
+            jenis_kelamin: 'L',
+            tempat_lahir: 'Sukabumi',
+            tanggal_lahir: '1978-05-12',
+            agama: 'Islam',
+            status_hubungan_keluarga: 'Kepala Keluarga',
+            status_perkawinan: 'Kawin',
+            pekerjaan: 'Wiraswasta',
+            pendidikan_terakhir: 'S1',
+            golongan_darah: 'O',
+            nama_ayah: 'H. AHMAD HIDAYAT',
+            nama_ibu: 'HJ. NENENG HASANAH',
+            bpjs_kesehatan: '0001000000031 (Mandiri Aktif)',
+            bpjs_ketenagakerjaan: '18092837401 (BPU Mandiri)',
+            kip: null
+          },
+          {
+            id: 2,
+            nik: '3272030101800003',
+            nama: 'Ny. Hj. Yayah Rokayah',
+            jenis_kelamin: 'P',
+            tempat_lahir: 'Sukabumi',
+            tanggal_lahir: '1980-08-14',
+            agama: 'Islam',
+            status_hubungan_keluarga: 'Istri',
+            status_perkawinan: 'Kawin',
+            pekerjaan: 'Tenaga Kesehatan / Kader Posyandu',
+            pendidikan_terakhir: 'D3/Akademi',
+            golongan_darah: 'A',
+            nama_ayah: 'H. ENDANG SUKANDA',
+            nama_ibu: 'HJ. ENI ROHAENI',
+            bpjs_kesehatan: '0001000000032 (Peserta Aktif)',
+            bpjs_ketenagakerjaan: null,
+            kip: null
+          },
+          {
+            id: 3,
+            nik: '3272034508050003',
+            nama: 'Nabila Rahmawati',
+            jenis_kelamin: 'P',
+            tempat_lahir: 'Sukabumi',
+            tanggal_lahir: '2005-08-20',
+            agama: 'Islam',
+            status_hubungan_keluarga: 'Anak',
+            status_perkawinan: 'Belum Kawin',
+            pekerjaan: 'Pelajar / Mahasiswa',
+            pendidikan_terakhir: 'SMA/SMK',
+            golongan_darah: 'B',
+            nama_ayah: 'H. Rahmat Hidayat',
+            nama_ibu: 'Ny. Hj. Yayah Rokayah',
+            bpjs_kesehatan: '0001000000033 (Tanggungan)',
+            bpjs_ketenagakerjaan: null,
+            kip: null
           }
         ]
       };

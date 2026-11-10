@@ -24,7 +24,7 @@ const STANDARD_ACCOUNTS = [
   { username: 'rt03_rw01_kbj', nama: 'Agus Setiawan (RT 03 Kebonjati)', role: 'ketua_rt', rt: '003', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
   { username: 'rt04_rw01_kbj', nama: 'Dedi Mulyadi (RT 04 Kebonjati)', role: 'ketua_rt', rt: '004', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
   { username: 'rt05_rw01_kbj', nama: 'Eko Prasetyo (RT 05 Kebonjati)', role: 'ketua_rt', rt: '005', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
-  { username: 'posyandu.melati_kbj', nama: 'Ny. Hj. Yayah Rokayah (Posyandu Melati)', role: 'kader_posyandu', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: 'posyandu.melati_kbj', nama: 'Ny. Hj. Yayah Rokayah (Posyandu Melati)', role: 'kader_posyandu', rt: '001', rw: '001', no_kk: '3272030101900103', password_hash: STANDARD_PASSWORD_HASH },
 
   // 3. Kelurahan Cikole
   { username: 'lurah.cikole', nama: 'Ir. H. Dian Ardiansyah (Lurah Cikole)', role: 'lurah', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
@@ -42,7 +42,7 @@ const STANDARD_ACCOUNTS = [
   { username: 'lurah.kebonjati', nama: 'Drs. H. Maman Suryaman, M.Si (Lurah Kebonjati)', role: 'lurah', rt: null, rw: null, password_hash: STANDARD_PASSWORD_HASH },
   { username: '3272030101700001', nama: 'H. Ahmad Sanusi (Ketua RW 001 Kebonjati)', role: 'ketua_rw', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
   { username: '3272030101750002', nama: 'Dadang Ruhiyat (Ketua RT 001 Kebonjati)', role: 'ketua_rt', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
-  { username: '3272030101800003', nama: 'Ny. Hj. Yayah Rokayah (Kader Posyandu Kebonjati)', role: 'kader_posyandu', rt: null, rw: '001', password_hash: STANDARD_PASSWORD_HASH },
+  { username: '3272030101800003', nama: 'Ny. Hj. Yayah Rokayah (Kader Posyandu Kebonjati)', role: 'kader_posyandu', rt: '001', rw: '001', no_kk: '3272030101900103', password_hash: STANDARD_PASSWORD_HASH },
   { username: '3272030103810001', nama: 'Budi Santoso', role: 'warga', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH },
   { username: '3272030101900101', nama: 'Keluarga Budi Santoso (KK)', role: 'warga', rt: '001', rw: '001', password_hash: STANDARD_PASSWORD_HASH }
 ];
@@ -549,16 +549,17 @@ async function autoPatchDatabase() {
     for (const acc of STANDARD_ACCOUNTS) {
       try {
         await connection.execute(`
-          INSERT INTO users (username, password_hash, nama, role, rt, rw, status, must_change_password)
-          VALUES (?, ?, ?, ?, ?, ?, 'active', 0)
+          INSERT INTO users (username, password_hash, nama, role, rt, rw, no_kk, status, must_change_password)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 0)
           ON DUPLICATE KEY UPDATE
             password_hash = VALUES(password_hash),
             nama = VALUES(nama),
             role = VALUES(role),
             rt = VALUES(rt),
             rw = VALUES(rw),
+            no_kk = COALESCE(VALUES(no_kk), no_kk),
             status = 'active'
-        `, [acc.username, acc.password_hash, acc.nama, acc.role, acc.rt, acc.rw]);
+        `, [acc.username, acc.password_hash, acc.nama, acc.role, acc.rt, acc.rw, acc.no_kk || null]);
       } catch (errAcc) {}
     }
 
@@ -591,24 +592,28 @@ async function autoPatchDatabase() {
 
     // Seeding Profil Kader Posyandu Default (posyandu.melati_rw01)
     try {
-      const [uRows] = await connection.execute("SELECT id, nama FROM users WHERE username = 'posyandu.melati_rw01' LIMIT 1");
+      const [uRows] = await connection.execute("SELECT id, nama FROM users WHERE username IN ('posyandu.melati_kbj', '3272030101800003', 'posyandu.melati_rw01') LIMIT 1");
       if (uRows.length > 0) {
         const kaderUserId = uRows[0].id;
         const defaultWilayah = JSON.stringify([
           { rw: '001', rt: '001' },
-          { rw: '001', rt: '002' }
+          { rw: '001', rt: '002' },
+          { rw: '001', rt: '003' },
+          { rw: '001', rt: '004' },
+          { rw: '001', rt: '005' }
         ]);
-        const defaultPosyanduList = JSON.stringify(['Posyandu Melati RW 001', 'Posyandu Mawar RT 002']);
+        const defaultPosyanduList = JSON.stringify(['Posyandu Melati RW 001']);
 
         await connection.execute(`
           INSERT INTO kader_posyandu_profile 
             (user_id, nik, nama_lengkap, no_hp, nama_posyandu, posyandu_list, wilayah_tugas, status_aktif)
-          VALUES (?, '3273016008920005', ?, '081234567890', 'Posyandu Melati RW 001', ?, ?, 1)
+          VALUES (?, '3272030101800003', 'Ny. Hj. Yayah Rokayah', '081234567890', 'Posyandu Melati RW 001', ?, ?, 1)
           ON DUPLICATE KEY UPDATE
-            nama_lengkap = VALUES(nama_lengkap),
-            wilayah_tugas = VALUES(wilayah_tugas),
-            nama_posyandu = VALUES(nama_posyandu)
-        `, [kaderUserId, uRows[0].nama || 'Kader Posyandu Melati', defaultPosyanduList, defaultWilayah]);
+            nik = '3272030101800003',
+            nama_lengkap = 'Ny. Hj. Yayah Rokayah',
+            nama_posyandu = 'Posyandu Melati RW 001',
+            wilayah_tugas = VALUES(wilayah_tugas)
+        `, [kaderUserId, defaultPosyanduList, defaultWilayah]);
       }
     } catch (errKader) {
       console.warn('[AutoPatch] Seed kader_posyandu_profile note:', errKader.message);
@@ -785,7 +790,8 @@ async function autoPatchDatabase() {
           (\`no_kk\`, \`kepala_keluarga\`, \`alamat\`, \`rt\`, \`rw\`, \`kelurahan\`, \`kecamatan\`, \`kota\`, \`provinsi\`, \`kode_pos\`)
         VALUES 
           ('3272030101900102', 'Asep Saepulloh', 'Jl. Kebonjati Gg. Mesjid No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'Jawa Barat', '43111'),
-          ('3273010101900001', 'Budi Santoso', 'Jl. Kebonjati No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'Jawa Barat', '43111')
+          ('3273010101900001', 'Budi Santoso', 'Jl. Kebonjati No. 12 RT 001/RW 001', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'Jawa Barat', '43111'),
+          ('3272030101900103', 'H. Rahmat Hidayat', 'Jl. Kebonjati No. 18 RT 001/RW 001', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'Jawa Barat', '43111')
         ON DUPLICATE KEY UPDATE 
           \`kepala_keluarga\` = VALUES(\`kepala_keluarga\`),
           \`alamat\` = VALUES(\`alamat\`),
@@ -839,6 +845,36 @@ async function autoPatchDatabase() {
             no_kk = VALUES(no_kk);
         `);
       } catch (wAsepErr) {}
+
+      // Pastikan tabel warga berisi anggota KK resmi Kader Posyandu Ny. Hj. Yayah Rokayah (3272030101900103)
+      try {
+        await connection.execute(`
+          INSERT INTO \`warga\` 
+            (nik, no_kk, nama, jenis_kelamin, tempat_lahir, tanggal_lahir, agama, pendidikan_terakhir, pekerjaan, status_perkawinan, status_hubungan_keluarga, golongan_darah, alamat, rt, rw, kelurahan, kecamatan, kota, kategori_asuransi, nomor_asuransi)
+          VALUES 
+            ('3272030101780003', '3272030101900103', 'H. Rahmat Hidayat', 'L', 'Sukabumi', '1978-05-12', 'Islam', 'S1', 'Wiraswasta', 'Kawin', 'Kepala Keluarga', 'O', 'Jl. Kebonjati No. 18 RT 001/RW 001', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'BPJS Kesehatan Mandiri', '0001000000031 (Mandiri)'),
+            ('3272030101800003', '3272030101900103', 'Ny. Hj. Yayah Rokayah', 'P', 'Sukabumi', '1980-08-14', 'Islam', 'D3/Akademi', 'Tenaga Kesehatan / Kader Posyandu', 'Kawin', 'Istri', 'A', 'Jl. Kebonjati No. 18 RT 001/RW 001', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'BPJS Kesehatan Mandiri', '0001000000032 (Peserta Aktif)'),
+            ('3272034508050003', '3272030101900103', 'Nabila Rahmawati', 'P', 'Sukabumi', '2005-08-20', 'Islam', 'SMA/SMK', 'Pelajar / Mahasiswa', 'Belum Kawin', 'Anak', 'B', 'Jl. Kebonjati No. 18 RT 001/RW 001', '001', '001', 'Kebonjati', 'Cikole', 'Kota Sukabumi', 'BPJS Kesehatan Mandiri', '0001000000033 (Anak)')
+          ON DUPLICATE KEY UPDATE
+            nama = VALUES(nama),
+            status_hubungan_keluarga = VALUES(status_hubungan_keluarga),
+            no_kk = VALUES(no_kk);
+        `);
+
+        // Hubungkan user_id akun posyandu.melati_kbj dan 3272030101800003 dengan baris warga resmi
+        await connection.execute(`
+          UPDATE warga 
+          SET user_id = (SELECT id FROM users WHERE username = 'posyandu.melati_kbj' OR username = '3272030101800003' LIMIT 1)
+          WHERE nik = '3272030101800003'
+        `);
+        await connection.execute(`
+          UPDATE users 
+          SET no_kk = '3272030101900103', rt = '001', rw = '001'
+          WHERE username IN ('posyandu.melati_kbj', '3272030101800003')
+        `);
+      } catch (wYayahErr) {
+        console.warn('[AutoPatch] Seed warga Ny. Hj. Yayah Rokayah note:', wYayahErr.message);
+      }
       
       // Master Seeder: Periksa apakah 200 warga telah terisi di database
       try {
