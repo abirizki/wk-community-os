@@ -189,9 +189,26 @@ export default function AuthorizationPinModal({
                 <span>{error}</span>
               </div>
             ) : (
-              <p className="text-xs text-slate-400 mb-4 font-mono">
-                {isVerifying ? 'Memverifikasi kredensial TTE...' : 'Masukkan 6 digit PIN Otorisasi Jabatan Anda'}
-              </p>
+              <div className="mb-4">
+                <p className="text-xs text-slate-500 font-mono">
+                  {isVerifying ? 'Memverifikasi kredensial TTE...' : 'Masukkan 6 digit PIN Otorisasi Jabatan Anda'}
+                </p>
+                <div className="mt-1.5 flex items-center justify-center gap-2">
+                  <span className="text-[11px] text-slate-500">
+                    PIN Standar: <code className="font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">123456</code>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPin('123456');
+                      verifyPin('123456');
+                    }}
+                    className="text-[11px] text-emerald-600 hover:text-emerald-800 font-semibold underline cursor-pointer"
+                  >
+                    Gunakan PIN Standar
+                  </button>
+                </div>
+              </div>
             )}
 
             {/* Numeric Keypad (Flutter Style 3x4) */}

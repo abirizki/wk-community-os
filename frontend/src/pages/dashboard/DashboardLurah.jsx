@@ -208,7 +208,7 @@ export default function DashboardLurah() {
   // Execute TTE after PIN confirmation
   const handleConfirmSign = async () => {
     if (!signerPin || signerPin.trim().length < 4) {
-      setPinError('Masukkan minimal 4 digit PIN / Passphrase TTE Pejabat');
+      setPinError('Masukkan minimal 4 digit PIN / Passphrase TTE Pejabat (Standar Kedinasan: 123456)');
       return;
     }
 
@@ -219,7 +219,8 @@ export default function DashboardLurah() {
       if (signTarget.mode === 'single') {
         const docId = signTarget.ids[0];
         const res = await api.patch(`/dokumen/${docId}/approve`, {
-          catatan: signerNotes || 'Disahkan dengan Tanda Tangan Elektronik oleh Lurah Kebonjati'
+          catatan: signerNotes || 'Disahkan dengan Tanda Tangan Elektronik oleh Lurah Kebonjati',
+          pin: signerPin
         });
         if (res.success) {
           showToast('Dokumen berhasil disahkan dan ditandatangani secara elektronik (TTE).');
@@ -998,20 +999,44 @@ export default function DashboardLurah() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-on-surface mb-1">
-                    PIN / Passphrase TTE Pejabat:
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-on-surface">
+                      PIN / Passphrase TTE Pejabat:
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSignerPin('123456');
+                        setPinError('');
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition-colors cursor-pointer"
+                    >
+                      <Sparkles size={12} />
+                      Gunakan PIN Standar (123456)
+                    </button>
+                  </div>
                   <div className="relative">
                     <input
                       type="password"
                       autoFocus
                       value={signerPin}
-                      onChange={(e) => setSignerPin(e.target.value)}
-                      placeholder="Masukkan PIN TTE Elektronik"
+                      onChange={(e) => {
+                        setSignerPin(e.target.value);
+                        if (pinError) setPinError('');
+                      }}
+                      placeholder="Masukkan PIN TTE Elektronik (Standar: 123456)"
                       className="w-full px-3 py-2 text-sm rounded-lg border border-outline focus:ring-2 focus:ring-primary focus:border-transparent outline-none pl-9 font-mono tracking-widest"
                       onKeyDown={(e) => e.key === 'Enter' && handleConfirmSign()}
                     />
                     <Lock size={15} className="absolute left-3 top-2.5 text-outline" />
+                  </div>
+                  <div className="flex items-center justify-between mt-1 text-[11px]">
+                    <span className="text-slate-500">
+                      PIN Standar Kedinasan: <code className="font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">123456</code>
+                    </span>
+                    {signerPin && (
+                      <span className="text-slate-400 font-mono">{signerPin.length} digit terisi</span>
+                    )}
                   </div>
                   {pinError && (
                     <p className="text-[11px] text-red-600 mt-1 font-medium">{pinError}</p>
