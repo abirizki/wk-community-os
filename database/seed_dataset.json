@@ -11678,5 +11678,60 @@
       "rw": "001",
       "catatan_verifikasi": "Disahkan berdasarkan pemeriksaan Posyandu Lansia."
     }
+  ],
+  "keuanganKas": [
+    {
+      "id": 1,
+      "nomor_transaksi": "KAS-RT001-20261001-1001",
+      "tipe": "MASUK",
+      "kategori": "Iuran Warga",
+      "nominal": 1250000,
+      "rt": "001",
+      "rw": "001",
+      "tanggal": "2026-10-01"
+    },
+    {
+      "id": 2,
+      "nomor_transaksi": "KAS-RT001-20261005-1002",
+      "tipe": "KELUAR",
+      "kategori": "Kebersihan",
+      "nominal": 350000,
+      "rt": "001",
+      "rw": "001",
+      "tanggal": "2026-10-05"
+    },
+    {
+      "id": 3,
+      "nomor_transaksi": "KAS-RT001-20261020-1004",
+      "tipe": "MASUK",
+      "kategori": "Donasi",
+      "nominal": 1500000,
+      "rt": "001",
+      "rw": "001",
+      "tanggal": "2026-10-20"
+    }
+  ],
+  "fasilitasPendidikan": [
+    {
+      "id": 1,
+      "nama": "SDN Kebonjati 1",
+      "jenjang": "SD",
+      "kapasitas": 360,
+      "akreditasi": "A"
+    },
+    {
+      "id": 2,
+      "nama": "SDN Kebonjati 2",
+      "jenjang": "SD",
+      "kapasitas": 480,
+      "akreditasi": "A"
+    },
+    {
+      "id": 3,
+      "nama": "SMPN 1 Cikole",
+      "jenjang": "SMP",
+      "kapasitas": 720,
+      "akreditasi": "A"
+    }
   ]
 }
