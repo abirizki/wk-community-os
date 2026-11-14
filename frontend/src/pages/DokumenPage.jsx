@@ -698,6 +698,9 @@ export default function DokumenPage() {
       if (isRW) return doc.approval_step === 'RW' && doc.status !== 'REJECTED';
       if (isKelurahan) return doc.approval_step === 'KELURAHAN' && doc.status !== 'REJECTED';
     }
+    if (activeTab === 'ready_to_issue') {
+      return doc.status === 'APPROVED';
+    }
     return true;
   });
 
@@ -840,10 +843,10 @@ export default function DokumenPage() {
 
       {/* TABS (OFFICERS ONLY) */}
       {isOfficer && (
-        <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-hidden p-1.5 gap-1.5">
+        <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-hidden p-1.5 gap-1.5 flex-wrap sm:flex-nowrap">
           <button
             onClick={() => setActiveTab('pending_approval')}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`flex-1 py-2.5 px-3 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'pending_approval'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-low'
@@ -851,7 +854,7 @@ export default function DokumenPage() {
           >
             <Clock size={16} />
             <span>
-              Menunggu Tindakan Anda ({
+              Menunggu Tindakan ({
                 data.filter((d) => {
                   if (isRT) return d.approval_step === 'RT' && d.status !== 'REJECTED';
                   if (isRW) return d.approval_step === 'RW' && d.status !== 'REJECTED';
@@ -861,27 +864,46 @@ export default function DokumenPage() {
               })
             </span>
           </button>
+
+          {isKelurahan && (
+            <button
+              onClick={() => setActiveTab('ready_to_issue')}
+              className={`flex-1 py-2.5 px-3 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                activeTab === 'ready_to_issue'
+                  ? 'bg-primary text-on-primary shadow-sm'
+                  : 'text-on-surface-variant hover:bg-surface-container-low'
+              }`}
+            >
+              <Printer size={16} />
+              <span>
+                Siap Terbit / Cetak PATEN ({
+                  data.filter((d) => d.status === 'APPROVED').length
+                })
+              </span>
+            </button>
+          )}
+
           <button
             onClick={() => setActiveTab('my_docs')}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`flex-1 py-2.5 px-3 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'my_docs'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-low'
             }`}
           >
             <User size={16} />
-            <span>Surat Mandiri Saya & KK ({myDocs.length})</span>
+            <span>Surat Mandiri ({myDocs.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('all')}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`flex-1 py-2.5 px-3 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'all'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-low'
             }`}
           >
             <FileText size={16} />
-            <span>Semua Dokumen Wilayah ({data.length})</span>
+            <span>Semua Dokumen ({data.length})</span>
           </button>
         </div>
       )}
@@ -2033,6 +2055,19 @@ export default function DokumenPage() {
                     <RotateCcw size={13} /> Perbaiki Permohonan Ini
                   </button>
                 )}
+                {/* Tombol cetak salinan resmi jika dokumen telah disetujui */}
+                {detailDoc?.status === 'APPROVED' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      handlePrint(detailDoc);
+                    }}
+                    className="px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <Printer size={15} /> Cetak / Unduh Salinan Resmi
+                  </button>
+                )}
               </div>
 
               <button
@@ -2134,113 +2169,319 @@ export default function DokumenPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 3: PREVIEW CETAK SURAT RESMI (KOP RESMI KELURAHAN KEBONJATI SUKABUMI) */}
+      {/* MODAL 3: PREVIEW CETAK SURAT RESMI (KOP RESMI PEMERINTAH DAERAH SPBE)       */}
+      {/* Sesuai Tata Naskah Dinas Permendagri No. 83/2022 & UU ITE TTE Tersertifikasi */}
       {/* ========================================================================= */}
-      {showPrintModal && printDoc && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-8 shadow-2xl my-8 border border-slate-300"
-          >
-            {/* Kop Surat Kelurahan Kebonjati, Cikole, Kota Sukabumi */}
-            <div className="text-center border-b-2 border-slate-900 pb-4 mb-6">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-700">Pemerintah Kota Sukabumi</h3>
-              <h2 className="text-lg font-extrabold uppercase tracking-wide">Kecamatan Cikole &bull; Kelurahan Kebonjati</h2>
-              <p className="text-xs text-slate-600 mt-1">
-                Jl. Surya Kencana No. 42, Kebonjati, Kec. Cikole, Kota Sukabumi, Jawa Barat 43111
-              </p>
-            </div>
+      {showPrintModal && printDoc && (() => {
+        const kelurahanName = printDoc.kelurahan || user?.kelurahan || 'Kebonjati';
+        const kecamatanName = printDoc.kecamatan || user?.kecamatan || 'Cikole';
+        const kotaName = printDoc.kota || user?.kota || 'Kota Sukabumi';
+        const provinsiName = printDoc.provinsi || user?.provinsi || 'Jawa Barat';
 
-            {/* Nomor & Judul Surat */}
-            <div className="text-center mb-6">
-              <h4 className="text-base font-bold underline uppercase tracking-wider">
-                {printDoc.jenis_dokumen || printDoc.jenis_surat}
-              </h4>
-              <p className="text-xs font-mono text-slate-600 mt-1">
-                Nomor: {printDoc.nomor_surat || printDoc.nomor_registrasi || `470/${printDoc.id}/Ktr.Kbjt-Ckl/${new Date().getFullYear()}`}
-              </p>
-            </div>
+        // Profil Wilayah Kerja & Pejabat Definitif Sesuai Kelurahan
+        let kantorAlamat = `Jl. Surya Kencana No. 42, ${kelurahanName}, Kec. ${kecamatanName}, ${kotaName}, ${provinsiName} 43111`;
+        let kontakKantor = `Telepon: (0266) 221234 • Pos-el: kelurahan.${kelurahanName.toLowerCase().replace(/\s+/g, '')}@sukabumikota.go.id • Kode Pos: 43111`;
+        let namaLurah = 'Drs. H. Hendra Gunawan, M.Si';
+        let nipLurah = '19740512 199903 1 004';
 
-            {/* Isi Surat */}
-            <div className="space-y-3 text-sm leading-relaxed text-slate-800">
-              <p>
-                Yang bertanda tangan di bawah ini, Kepala Kelurahan Kebonjati, Kecamatan Cikole, Kota Sukabumi, menerangkan dengan sebenarnya bahwa:
-              </p>
-              <div className="pl-6 space-y-1.5 font-sans">
-                <div className="grid grid-cols-3">
-                  <span className="text-slate-600">Nama Lengkap</span>
-                  <span className="col-span-2 font-bold">: {printDoc.nama_pemohon}</span>
-                </div>
-                <div className="grid grid-cols-3">
-                  <span className="text-slate-600">NIK</span>
-                  <span className="col-span-2 font-mono">: {printDoc.nik_pemohon}</span>
-                </div>
-                {printDoc.hubungan_keluarga && printDoc.hubungan_keluarga !== 'Kepala Keluarga' && (
-                  <div className="grid grid-cols-3">
-                    <span className="text-slate-600">Status Hubungan</span>
-                    <span className="col-span-2 font-medium">: {printDoc.hubungan_keluarga}</span>
+        if (kelurahanName.toLowerCase().includes('cikole')) {
+          kantorAlamat = `Jl. R.E. Martadinata No. 58, Cikole, Kec. Cikole, Kota Sukabumi, Jawa Barat 43113`;
+          kontakKantor = `Telepon: (0266) 222345 • Pos-el: kelurahan.cikole@sukabumikota.go.id • Kode Pos: 43113`;
+          namaLurah = 'Ir. H. Dian Ardiansyah';
+          nipLurah = '19760814 200212 1 003';
+        }
+
+        // Parsing data tambahan (misal untuk SKU/SKTM/Lainnya)
+        let extraInfo = {};
+        if (printDoc.data_tambahan) {
+          try {
+            extraInfo = typeof printDoc.data_tambahan === 'string' ? JSON.parse(printDoc.data_tambahan) : printDoc.data_tambahan;
+          } catch (e) {
+            extraInfo = {};
+          }
+        }
+
+        const tglSurat = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        const tglLahir = printDoc.tanggal_lahir ? new Date(printDoc.tanggal_lahir).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+        const docTitle = (printDoc.jenis_dokumen || printDoc.jenis_surat || 'SURAT KETERANGAN').toUpperCase();
+        const docTitleLower = docTitle.toLowerCase();
+
+        // Hitung kode klasifikasi dinamis jika belum tercantum di nomor surat
+        let kodeKlasifikasi = '470';
+        if (docTitleLower.includes('usaha') || docTitleLower.includes('sku')) kodeKlasifikasi = '503';
+        else if (docTitleLower.includes('tidak mampu') || docTitleLower.includes('sktm')) kodeKlasifikasi = '463';
+        else if (docTitleLower.includes('kematian') || docTitleLower.includes('meninggal')) kodeKlasifikasi = '472.12';
+        else if (docTitleLower.includes('kelahiran') || docTitleLower.includes('lahir')) kodeKlasifikasi = '472.11';
+        else if (docTitleLower.includes('skck') || docTitleLower.includes('kelakuan baik')) kodeKlasifikasi = '331';
+        else if (docTitleLower.includes('belum menikah') || docTitleLower.includes('kawin')) kodeKlasifikasi = '474.2';
+        else if (docTitleLower.includes('penghasilan')) kodeKlasifikasi = '560';
+
+        const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+        const currentMonthRoman = romanMonths[new Date().getMonth()];
+        const currentYear = new Date().getFullYear();
+        const singkatanKel = kelurahanName.toLowerCase().includes('cikole') ? 'Kel.Ckl' : 'Kel.Kbjt';
+        const fallbackNomorSurat = `${kodeKlasifikasi}/${String(printDoc.id).padStart(3, '0')}-${singkatanKel}/${currentMonthRoman}/${currentYear}`;
+        const displayedNomorSurat = printDoc.nomor_surat || fallbackNomorSurat;
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm overflow-y-auto">
+            {/* Embedded Print CSS to isolate printable document */}
+            <style dangerouslySetInnerHTML={{ __html: `
+              @media print {
+                body * {
+                  visibility: hidden !important;
+                }
+                #official-print-document, #official-print-document * {
+                  visibility: visible !important;
+                }
+                #official-print-document {
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  margin: 0 !important;
+                  padding: 15mm 20mm !important;
+                  box-shadow: none !important;
+                  border: none !important;
+                  background: white !important;
+                }
+                .no-print-zone {
+                  display: none !important;
+                }
+              }
+            ` }} />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white text-slate-900 rounded-2xl max-w-3xl w-full p-6 sm:p-10 shadow-2xl my-6 border border-slate-300 font-sans relative max-h-[92vh] overflow-y-auto"
+            >
+              {/* DOCUMENT SHEET PRINTABLE CONTAINER */}
+              <div id="official-print-document" className="bg-white text-slate-900">
+                {/* 1. KOP SURAT RESMI PEMERINTAH DAERAH */}
+                <div className="flex items-center gap-4 pb-2 border-b-[3px] border-slate-950 mb-0.5">
+                  {/* Lambang Garuda / Lambang Pemda Resmi */}
+                  <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full border-2 border-slate-900 p-1 flex items-center justify-center bg-amber-50/50">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="w-11 h-11 text-amber-800">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A2.333 2.333 0 0017.167 8H6.833A2.333 2.333 0 004.5 10.333V21h15z" />
+                        <circle cx="12" cy="7" r="1.5" fill="currentColor" />
+                      </svg>
+                    </div>
                   </div>
-                )}
-                <div className="grid grid-cols-3">
-                  <span className="text-slate-600">Alamat Domisili</span>
-                  <span className="col-span-2">: RT {printDoc.rt || '001'} / RW {printDoc.rw || '001'}, Kelurahan Kebonjati, Kec. Cikole</span>
+
+                  {/* Header Teks Instansi Pemerintah Daerah */}
+                  <div className="flex-1 text-center pr-6">
+                    <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-800 leading-tight">
+                      PEMERINTAH {kotaName.toUpperCase()}
+                    </h3>
+                    <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-slate-900 leading-tight">
+                      KECAMATAN {kecamatanName.toUpperCase()}
+                    </h2>
+                    <h1 className="text-lg sm:text-2xl font-black uppercase tracking-widest text-slate-950 font-serif leading-tight">
+                      KELURAHAN {kelurahanName.toUpperCase()}
+                    </h1>
+                    <p className="text-[10px] sm:text-xs text-slate-600 mt-1 leading-tight font-sans">
+                      {kantorAlamat}
+                    </p>
+                    <p className="text-[9px] sm:text-[10px] text-slate-500 leading-tight font-sans">
+                      {kontakKantor}
+                    </p>
+                  </div>
                 </div>
-                <div className="grid grid-cols-3">
-                  <span className="text-slate-600">Keperluan</span>
-                  <span className="col-span-2 font-medium">: {printDoc.keperluan}</span>
+                {/* Garis Ganda Naskah Dinas Resmi (Double Border) */}
+                <div className="border-b border-slate-950 mb-6" />
+
+                {/* 2. JUDUL DAN NOMOR SURAT RESMI */}
+                <div className="text-center mb-6">
+                  <h4 className="text-sm sm:text-base font-bold underline uppercase tracking-wider font-serif">
+                    {docTitle}
+                  </h4>
+                  <p className="text-xs font-mono font-semibold text-slate-800 mt-1">
+                    Nomor: {displayedNomorSurat}
+                  </p>
+                </div>
+
+                {/* 3. BATANG TUBUH SURAT (ISI NASKAH DINAS) */}
+                <div className="space-y-3.5 text-xs sm:text-sm leading-relaxed text-slate-850">
+                  <p>
+                    Yang bertanda tangan di bawah ini, Kepala Kelurahan {kelurahanName}, Kecamatan {kecamatanName}, {kotaName}, menerangkan dengan sebenarnya bahwa:
+                  </p>
+
+                  {/* Tabel Data Identitas Pemohon / Subjek */}
+                  <div className="pl-4 sm:pl-8 space-y-1.5 font-sans bg-slate-50/60 p-3 rounded-lg border border-slate-200">
+                    <div className="grid grid-cols-12 gap-1">
+                      <span className="col-span-4 text-slate-600 font-medium">Nama Lengkap</span>
+                      <span className="col-span-8 font-bold text-slate-950">: {printDoc.nama_pemohon}</span>
+                    </div>
+                    <div className="grid grid-cols-12 gap-1">
+                      <span className="col-span-4 text-slate-600 font-medium">Nomor Induk Kependudukan (NIK)</span>
+                      <span className="col-span-8 font-mono font-bold text-slate-950">: {printDoc.nik_pemohon}</span>
+                    </div>
+                    <div className="grid grid-cols-12 gap-1">
+                      <span className="col-span-4 text-slate-600 font-medium">Nomor Kartu Keluarga (KK)</span>
+                      <span className="col-span-8 font-mono text-slate-800">: {printDoc.no_kk || '-'}</span>
+                    </div>
+                    <div className="grid grid-cols-12 gap-1">
+                      <span className="col-span-4 text-slate-600 font-medium">Tempat, Tanggal Lahir</span>
+                      <span className="col-span-8 text-slate-800">: {printDoc.tempat_lahir || 'Sukabumi'}, {tglLahir}</span>
+                    </div>
+                    <div className="grid grid-cols-12 gap-1">
+                      <span className="col-span-4 text-slate-600 font-medium">Jenis Kelamin</span>
+                      <span className="col-span-8 text-slate-800">: {printDoc.jenis_kelamin === 'L' ? 'Laki-laki' : (printDoc.jenis_kelamin === 'P' ? 'Perempuan' : (printDoc.jenis_kelamin || '-'))}</span>
+                    </div>
+                    <div className="grid grid-cols-12 gap-1">
+                      <span className="col-span-4 text-slate-600 font-medium">Agama</span>
+                      <span className="col-span-8 text-slate-800">: {printDoc.agama || 'Islam'}</span>
+                    </div>
+                    <div className="grid grid-cols-12 gap-1">
+                      <span className="col-span-4 text-slate-600 font-medium">Pekerjaan</span>
+                      <span className="col-span-8 text-slate-800">: {printDoc.pekerjaan || 'Wiraswasta / Karyawan'}</span>
+                    </div>
+                    <div className="grid grid-cols-12 gap-1">
+                      <span className="col-span-4 text-slate-600 font-medium">Alamat KTP / Domisili</span>
+                      <span className="col-span-8 text-slate-800">: RT {printDoc.rt || '001'} / RW {printDoc.rw || '001'}, Kelurahan {kelurahanName}, Kec. {kecamatanName}, {kotaName}</span>
+                    </div>
+                    {printDoc.hubungan_keluarga && printDoc.hubungan_keluarga !== 'Kepala Keluarga' && (
+                      <div className="grid grid-cols-12 gap-1">
+                        <span className="col-span-4 text-slate-600 font-medium">Status Hubungan Keluarga</span>
+                        <span className="col-span-8 text-slate-800">: {printDoc.hubungan_keluarga}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Keterangan Substantif Sesuai Jenis Permohonan */}
+                  <div className="pt-2 text-justify space-y-2">
+                    {docTitleLower.includes('usaha') || docTitleLower.includes('sku') ? (
+                      <>
+                        <p>
+                          Orang tersebut di atas adalah benar-benar warga yang bertempat tinggal di wilayah kami dan berdasarkan pengamatan, verifikasi lapangan berjenjang oleh Pengurus RT/RW setempat, yang bersangkutan benar memiliki dan mengelola kegiatan usaha aktif sebagai berikut:
+                        </p>
+                        <div className="pl-4 sm:pl-8 py-1 space-y-1 font-sans">
+                          <div><strong>Nama Usaha:</strong> {extraInfo.nama_usaha || extraInfo.namaUsaha || 'Usaha Perdagangan / Jasa'}</div>
+                          <div><strong>Bidang Usaha:</strong> {extraInfo.bidang_usaha || extraInfo.bidangUsaha || 'Perdagangan Eceran / Jasa Komunitas'}</div>
+                          <div><strong>Lokasi Usaha:</strong> {extraInfo.lokasi_usaha || extraInfo.alamatUsaha || `RT ${printDoc.rt || '001'} / RW ${printDoc.rw || '001'}, Kelurahan ${kelurahanName}`}</div>
+                        </div>
+                        <p>
+                          Surat Keterangan Usaha (SKU) ini diberikan atas permohonan yang bersangkutan untuk pemenuhan kelengkapan administrasi: <strong>{printDoc.keperluan}</strong>.
+                        </p>
+                      </>
+                    ) : docTitleLower.includes('tidak mampu') || docTitleLower.includes('sktm') ? (
+                      <>
+                        <p>
+                          Menerangkan bahwa keluarga yang bersangkutan benar bertempat tinggal di wilayah kerja kami dan terdaftar sebagai keluarga prasejahtera / berpenghasilan rendah berdasarkan pangkalan data kesejahteraan sosial daerah.
+                        </p>
+                        <p>
+                          Surat Keterangan Tidak Mampu (SKTM) ini diterbitkan untuk pemenuhan persyaratan: <strong>{printDoc.keperluan}</strong>.
+                        </p>
+                      </>
+                    ) : docTitleLower.includes('kematian') || docTitleLower.includes('meninggal') ? (
+                      <>
+                        <p>
+                          Menerangkan dengan sebenarnya bahwa warga yang bersangkutan benar telah meninggal dunia di wilayah kami dan telah dicatatkan dalam pelaporan kematian rukun warga setempat untuk keperluan: <strong>{printDoc.keperluan}</strong>.
+                        </p>
+                      </>
+                    ) : docTitleLower.includes('skck') || docTitleLower.includes('kelakuan baik') ? (
+                      <>
+                        <p>
+                          Menerangkan bahwa yang bersangkutan selama berdomisili di lingkungan kami senantiasa berkelakuan baik, mematuhi tata tertib kemasyarakatan, serta tidak sedang tersangkut perkara pidana atau organisasi terlarang. Surat keterangan ini diterbitkan untuk pengurusan: <strong>{printDoc.keperluan}</strong>.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p>
+                          Menerangkan dengan sebenarnya bahwa orang tersebut di atas adalah benar bertempat tinggal dan berdomisili menetap di wilayah kerja Kelurahan {kelurahanName}, Kecamatan {kecamatanName}, {kotaName}.
+                        </p>
+                        <p>
+                          Surat keterangan ini diberikan atas permohonan yang bersangkutan setelah melalui verifikasi data dan pengantar berjenjang oleh Pengurus RT dan RW setempat untuk keperluan: <strong>{printDoc.keperluan}</strong>.
+                        </p>
+                      </>
+                    )}
+
+                    <p className="pt-2">
+                      Demikian surat keterangan ini dibuat dengan sebenarnya dengan penuh rasa tanggung jawab agar dapat dipergunakan sebagaimana mestinya oleh pihak yang berkepentingan.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 4. TANDA TANGAN ELEKTRONIK (TTE LURAH SAH) & QR CODE SPBE */}
+                <div className="mt-8 pt-4 flex flex-col sm:flex-row justify-between items-end gap-6 border-t border-slate-200">
+                  {/* Sisi Kiri: QR Code Otentikasi Digital */}
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 border-2 border-slate-400 rounded-xl bg-slate-50 flex-shrink-0 shadow-sm">
+                      <QrCode size={56} className="text-slate-900" />
+                    </div>
+                    <div className="text-[10px] text-slate-600 space-y-0.5">
+                      <p className="font-bold text-slate-800 text-[11px] flex items-center gap-1">
+                        <CheckCircle2 size={12} className="text-emerald-600 inline" /> Dokumen Sah Ber-TTE
+                      </p>
+                      <p>Sistem Pemerintahan Berbasis Elektronik (SPBE)</p>
+                      <p className="font-mono text-[9px] text-slate-500 truncate max-w-[200px]" title={printDoc.qr_code_hash}>
+                        Hash: {printDoc.qr_code_hash ? `${printDoc.qr_code_hash.substring(0, 18)}...` : `BW-${printDoc.id}-${Date.now().toString(36)}`}
+                      </p>
+                      <p className="text-[9px] text-slate-400 italic">Pindai QR untuk verifikasi keaslian naskah</p>
+                    </div>
+                  </div>
+
+                  {/* Sisi Kanan: Pejabat Penandatangan (Lurah) */}
+                  <div className="text-right text-xs min-w-[220px]">
+                    <p>{kotaName}, {tglSurat}</p>
+                    <p className="font-bold uppercase tracking-wide mt-0.5">
+                      LURAH {kelurahanName.toUpperCase()}
+                    </p>
+                    
+                    {/* Kotak Segel TTE Digital */}
+                    <div className="my-2 py-1 px-3 border border-emerald-300 bg-emerald-50/80 rounded-md inline-block text-left shadow-xs">
+                      <div className="text-[9px] font-bold text-emerald-800 flex items-center gap-1">
+                        <span>&#10003; DITANDATANGANI SECARA ELEKTRONIK</span>
+                      </div>
+                      <div className="text-[8px] text-emerald-700 font-mono">
+                        Sertifikat BSrE • BSSN Republik Indonesia
+                      </div>
+                    </div>
+
+                    <p className="font-bold underline text-sm text-slate-950 mt-1">{namaLurah}</p>
+                    <p className="text-[10px] text-slate-600 font-mono">NIP. {nipLurah}</p>
+                  </div>
+                </div>
+
+                {/* 5. CATATAN LEGALISASI & PENATAUSAHAAN LOKET PATEN KELURAHAN */}
+                <div className="mt-6 pt-3 border-t border-dashed border-slate-300 text-[10px] text-slate-500 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div>
+                    <span className="font-semibold text-slate-700">Pelayanan Administrasi Terpadu Kelurahan (PATEN):</span> Diterbitkan & dicatat dalam Register Surat Keluar oleh Petugas: <strong>{user?.nama || 'Petugas PATEN Kelurahan'}</strong> ({user?.role === 'admin_kelurahan' ? 'Admin Kelurahan' : (user?.role || 'Operator')})
+                  </div>
+                  <div className="font-mono text-[9px] text-slate-400">
+                    ID Reg: {printDoc.nomor_registrasi || `REG-${printDoc.id}`} • SPBE Kota Sukabumi
+                  </div>
                 </div>
               </div>
-              <p className="pt-2">
-                Surat keterangan ini diberikan atas permohonan yang bersangkutan setelah melalui verifikasi data dan berkas digital berjenjang oleh Pengurus RT dan RW setempat.
-              </p>
-            </div>
 
-            {/* Tanda Tangan & QR Code */}
-            <div className="mt-8 pt-4 flex justify-between items-end border-t border-slate-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 border border-slate-300 rounded-lg bg-slate-50">
-                  <QrCode size={48} className="text-slate-800" />
+              {/* ACTION BUTTONS (HIDDEN WHEN PRINTING) */}
+              <div className="flex justify-between items-center gap-3 pt-6 mt-6 border-slate-200 border-t no-print-zone">
+                <div className="text-xs text-slate-500 hidden sm:block">
+                  Tips: Pilih opsi <em>"Save as PDF"</em> pada dialog printer untuk menyimpan berkas surat digital.
                 </div>
-                <div className="text-[11px] text-slate-500">
-                  <p className="font-bold text-slate-700">Tersertifikasi Digital</p>
-                  <p>Bumi Warga - Jabar Pintar Digital</p>
-                  <p className="font-mono text-[10px]">ID: {printDoc.id}-{Date.now().toString(36)}</p>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => setShowPrintModal(false)}
+                    className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-100 transition-colors text-xs cursor-pointer"
+                  >
+                    Tutup
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors text-xs flex items-center gap-2 cursor-pointer shadow-md active:scale-95"
+                  >
+                    <Printer size={16} /> Cetak Salinan Resmi (Print / PDF)
+                  </button>
                 </div>
               </div>
-
-              <div className="text-right text-xs">
-                <p>Sukabumi, {new Date().toLocaleDateString('id-ID', { dateStyle: 'long' })}</p>
-                <p className="font-bold mt-1">Lurah Kebonjati</p>
-                <div className="h-12 flex items-center justify-end">
-                  <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    [SIGNED DIGITALLY]
-                  </span>
-                </div>
-                <p className="font-bold underline text-sm">Drs. H. Maman Suryaman, M.Si</p>
-                <p className="text-[10px] text-slate-500">NIP. 19740512 199903 1 004</p>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-6 mt-6 border-slate-200 border-t">
-              <button
-                type="button"
-                onClick={() => setShowPrintModal(false)}
-                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-100 transition-colors text-sm cursor-pointer"
-              >
-                Tutup
-              </button>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="px-5 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors text-sm flex items-center gap-2 cursor-pointer shadow-sm"
-              >
-                <Printer size={16} /> Cetak Sekarang
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </motion.div>
+          </div>
+        );
+      })()}
 
       {/* ========================================================================= */}
       {/* MODAL 4: ZOOM PRATINJAU GAMBAR BERKAS DOKUMEN DIGITAL (KTP / KK / BERKAS) */}

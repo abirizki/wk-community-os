@@ -529,6 +529,57 @@ class DokumenService {
   }
 
   /**
+   * Pemetaan Kode Klasifikasi Naskah Dinas Kelurahan sesuai Permendagri No. 83/2022
+   * jo. Permendagri No. 138/2017 tentang Pola Klasifikasi Arsip Pemerintah Daerah
+   */
+  getKodeKlasifikasi(jenisDokumen = '') {
+    const j = String(jenisDokumen || '').toLowerCase();
+    if (j.includes('usaha') || j.includes('sku') || j.includes('umkm')) return '503';
+    if (j.includes('tidak mampu') || j.includes('sktm') || j.includes('miskin') || j.includes('beasiswa')) return '463';
+    if (j.includes('kematian') || j.includes('meninggal')) return '472.12';
+    if (j.includes('kelahiran') || j.includes('lahir')) return '472.11';
+    if (j.includes('skck') || j.includes('kelakuan baik') || j.includes('tertib')) return '331';
+    if (j.includes('belum menikah') || j.includes('kawin') || j.includes('janda') || j.includes('duda')) return '474.2';
+    if (j.includes('penghasilan') || j.includes('gaji')) return '560';
+    if (j.includes('pindah') || j.includes('mutasi')) return '475';
+    if (j.includes('domisili') || j.includes('tinggal') || j.includes('pengantar') || j.includes('keterangan')) return '470';
+    return '470';
+  }
+
+  /**
+   * Singkatan Resmi Kelurahan untuk Tata Naskah Dinas
+   */
+  getSingkatanKelurahan(kelurahan = 'Kebonjati') {
+    const k = String(kelurahan || 'Kebonjati').toLowerCase();
+    if (k.includes('kebonjati') || k.includes('kebon jati')) return 'Kel.Kbjt';
+    if (k.includes('cikole')) return 'Kel.Ckl';
+    if (k.includes('gunungpuyuh') || k.includes('gunung puyuh')) return 'Kel.Gnp';
+    if (k.includes('baros')) return 'Kel.Brs';
+    if (k.includes('cibeureum') || k.includes('cibereum')) return 'Kel.Cbr';
+    if (k.includes('lembur')) return 'Kel.Lbr';
+    if (k.includes('warudoyong')) return 'Kel.Wrd';
+    
+    const words = String(kelurahan).trim().split(/\s+/);
+    if (words.length === 1) return `Kel.${kelurahan.substring(0, 4)}`;
+    return `Kel.${words.map(w => w[0]).join('')}`;
+  }
+
+  /**
+   * Formula Penomoran Resmi Naskah Dinas Kelurahan:
+   * [Kode Klasifikasi] / [Nomor Urut Padded] - [Singkatan Kelurahan] / [Bulan Romawi] / [Tahun]
+   */
+  generateNomorSuratResmi(docId, jenisDokumen, kelurahan = 'Kebonjati') {
+    const kode = this.getKodeKlasifikasi(jenisDokumen);
+    const singkatan = this.getSingkatanKelurahan(kelurahan);
+    const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    const now = new Date();
+    const romanMonth = romanMonths[now.getMonth()];
+    const year = now.getFullYear();
+    const paddedId = String(docId).padStart(3, '0');
+    return `${kode}/${paddedId}-${singkatan}/${romanMonth}/${year}`;
+  }
+
+  /**
    * Verifikasi & Persetujuan Berjenjang (RT -> RW -> Kelurahan)
    */
   async approveDokumen(id, currentUser, catatan = '') {
@@ -608,13 +659,11 @@ class DokumenService {
       const triggerRan = await this.executeDemographyTrigger(doc);
 
       const crypto = require('crypto');
-      const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
       const now = new Date();
-      const romanMonth = romanMonths[now.getMonth()];
-      const year = now.getFullYear();
-      const nomorSurat = `470/${id}/Ktr.Kbjt/${romanMonth}/${year}`;
+      const kelurahanName = doc.kelurahan || currentUser.kelurahan || 'Kebonjati';
+      const nomorSurat = this.generateNomorSuratResmi(id, doc.jenis_dokumen || doc.jenis_surat, kelurahanName);
 
-      const signatureData = `${nomorSurat}|${doc.nik_pemohon}|${doc.jenis_dokumen || doc.jenis_surat}|${now.toISOString()}|Kelurahan Kebonjati`;
+      const signatureData = `${nomorSurat}|${doc.nik_pemohon}|${doc.jenis_dokumen || doc.jenis_surat}|${now.toISOString()}|Kelurahan ${kelurahanName}`;
       const qrCodeHash = crypto.createHash('sha256').update(signatureData).digest('hex');
 
       await dokumenRepository.updateApproval(id, {
@@ -623,14 +672,14 @@ class DokumenService {
         approved_by_kelurahan: currentUser.id,
         nomor_surat: nomorSurat,
         qr_code_hash: qrCodeHash,
-        catatan_petugas: catatan || 'Dokumen resmi disahkan oleh Kelurahan Kebonjati'
+        catatan_petugas: catatan || `Dokumen resmi disahkan oleh Kelurahan ${kelurahanName} (TTE Sah)`
       });
 
       // Notifikasi akhir ke warga
       await notifikasiRepository.create({
         nik_target: doc.nik_pemohon,
         judul: 'Surat Resmi Telah Disahkan',
-        pesan: `Selamat! Permohonan ${doc.jenis_dokumen} Anda telah RESMI DISETUJUI dan disahkan oleh Kelurahan Kebonjati dengan Nomor Surat: ${nomorSurat}.`,
+        pesan: `Selamat! Permohonan ${doc.jenis_dokumen} Anda telah RESMI DISETUJUI dan disahkan oleh Kelurahan ${kelurahanName} dengan Nomor Surat: ${nomorSurat}.`,
         tipe: 'success',
         link: '/dashboard/dokumen'
       });
