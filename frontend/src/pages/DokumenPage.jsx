@@ -35,7 +35,9 @@ import {
   Download,
   FileSpreadsheet,
   Home,
-  Search
+  Search,
+  PenLine,
+  Palette
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { downloadReport } from '../utils/exportHelper';
@@ -300,9 +302,57 @@ export default function DokumenPage() {
     );
   }, [detailDoc, isOfficer, isRT, isRW, isKelurahan]);
 
-  // Print Preview Modal State
+  // Print Preview Modal State & Customization (Logo, Nomor Surat, Identitas)
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printDoc, setPrintDoc] = useState(null);
+  const [customLogo, setCustomLogo] = useState(() => {
+    try {
+      return localStorage.getItem('bw_kop_logo') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const [showEditLetterPanel, setShowEditLetterPanel] = useState(false);
+  const [showLogoPicker, setShowLogoPicker] = useState(false);
+  const [editedLetterData, setEditedLetterData] = useState({
+    nomor_surat: '',
+    kota: '',
+    kecamatan: '',
+    kelurahan: '',
+    alamat_kantor: '',
+    kontak_kantor: '',
+    judul_surat: '',
+    nama_pejabat: '',
+    nip_pejabat: '',
+    titimangsa: ''
+  });
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran berkas logo maksimal 2MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result;
+      setCustomLogo(base64);
+      try {
+        localStorage.setItem('bw_kop_logo', base64);
+      } catch (err) {
+        console.warn('Gagal menyimpan logo ke localStorage:', err);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleResetLogo = () => {
+    setCustomLogo('');
+    try {
+      localStorage.removeItem('bw_kop_logo');
+    } catch (err) {}
+  };
 
   // File Upload Reader Helper
   const handleFileChange = (e, setter, nameSetter = null) => {
@@ -685,8 +735,57 @@ export default function DokumenPage() {
     setShowModal(true);
   };
 
-  // Open Print Modal
+  // Open Print Modal with Initialized Official Defaults
   const handlePrint = (doc) => {
+    const kelurahanName = doc.kelurahan || user?.kelurahan || 'Kebonjati';
+    const kecamatanName = doc.kecamatan || user?.kecamatan || 'Cikole';
+    const kotaName = doc.kota || user?.kota || 'Kota Sukabumi';
+    const provinsiName = doc.provinsi || user?.provinsi || 'Jawa Barat';
+
+    let defaultAlamat = `Jl. Surya Kencana No. 42, ${kelurahanName}, Kec. ${kecamatanName}, ${kotaName}, ${provinsiName} 43111`;
+    let defaultKontak = `Telepon: (0266) 221234 • Pos-el: kelurahan.${kelurahanName.toLowerCase().replace(/\s+/g, '')}@sukabumikota.go.id • Kode Pos: 43111`;
+    let defaultLurah = 'Drs. H. Hendra Gunawan, M.Si';
+    let defaultNip = '19740512 199903 1 004';
+
+    if (kelurahanName.toLowerCase().includes('cikole')) {
+      defaultAlamat = `Jl. R.E. Martadinata No. 58, Cikole, Kec. Cikole, Kota Sukabumi, Jawa Barat 43113`;
+      defaultKontak = `Telepon: (0266) 222345 • Pos-el: kelurahan.cikole@sukabumikota.go.id • Kode Pos: 43113`;
+      defaultLurah = 'Ir. H. Dian Ardiansyah';
+      defaultNip = '19760814 200212 1 003';
+    }
+
+    const docTitle = (doc.jenis_dokumen || doc.jenis_surat || 'SURAT KETERANGAN').toUpperCase();
+    const docTitleLower = docTitle.toLowerCase();
+    let kodeKlasifikasi = '470';
+    if (docTitleLower.includes('usaha') || docTitleLower.includes('sku')) kodeKlasifikasi = '503';
+    else if (docTitleLower.includes('tidak mampu') || docTitleLower.includes('sktm')) kodeKlasifikasi = '463';
+    else if (docTitleLower.includes('kematian') || docTitleLower.includes('meninggal')) kodeKlasifikasi = '472.12';
+    else if (docTitleLower.includes('kelahiran') || docTitleLower.includes('lahir')) kodeKlasifikasi = '472.11';
+    else if (docTitleLower.includes('skck') || docTitleLower.includes('kelakuan baik')) kodeKlasifikasi = '331';
+    else if (docTitleLower.includes('belum menikah') || docTitleLower.includes('kawin')) kodeKlasifikasi = '474.2';
+    else if (docTitleLower.includes('penghasilan')) kodeKlasifikasi = '560';
+
+    const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    const currentMonthRoman = romanMonths[new Date().getMonth()];
+    const currentYear = new Date().getFullYear();
+    const singkatanKel = kelurahanName.toLowerCase().includes('cikole') ? 'Kel.Ckl' : 'Kel.Kbjt';
+    const fallbackNomorSurat = `${kodeKlasifikasi}/${String(doc.id).padStart(3, '0')}-${singkatanKel}/${currentMonthRoman}/${currentYear}`;
+
+    setEditedLetterData({
+      nomor_surat: doc.nomor_surat || fallbackNomorSurat,
+      kota: kotaName,
+      kecamatan: kecamatanName,
+      kelurahan: kelurahanName,
+      alamat_kantor: defaultAlamat,
+      kontak_kantor: defaultKontak,
+      judul_surat: docTitle,
+      nama_pejabat: defaultLurah,
+      nip_pejabat: defaultNip,
+      titimangsa: `${kotaName}, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`
+    });
+
+    setShowEditLetterPanel(false);
+    setShowLogoPicker(false);
     setPrintDoc(doc);
     setShowPrintModal(true);
   };
@@ -2171,6 +2270,7 @@ export default function DokumenPage() {
       {/* ========================================================================= */}
       {/* MODAL 3: PREVIEW CETAK SURAT RESMI (KOP RESMI PEMERINTAH DAERAH SPBE)       */}
       {/* Sesuai Tata Naskah Dinas Permendagri No. 83/2022 & UU ITE TTE Tersertifikasi */}
+      {/* Dilengkapi Penyesuaian Logo Kota & Edit Identitas/Nomor Surat Opsional      */}
       {/* ========================================================================= */}
       {showPrintModal && printDoc && (() => {
         const kelurahanName = printDoc.kelurahan || user?.kelurahan || 'Kebonjati';
@@ -2221,7 +2321,18 @@ export default function DokumenPage() {
         const currentYear = new Date().getFullYear();
         const singkatanKel = kelurahanName.toLowerCase().includes('cikole') ? 'Kel.Ckl' : 'Kel.Kbjt';
         const fallbackNomorSurat = `${kodeKlasifikasi}/${String(printDoc.id).padStart(3, '0')}-${singkatanKel}/${currentMonthRoman}/${currentYear}`;
-        const displayedNomorSurat = printDoc.nomor_surat || fallbackNomorSurat;
+
+        // Field nilai yang ditampilkan (mengutamakan hasil editan admin jika ada, dengan fallback otomatis)
+        const displayedNomorSurat = editedLetterData.nomor_surat || printDoc.nomor_surat || fallbackNomorSurat;
+        const displayedKota = editedLetterData.kota || kotaName;
+        const displayedKecamatan = editedLetterData.kecamatan || kecamatanName;
+        const displayedKelurahan = editedLetterData.kelurahan || kelurahanName;
+        const displayedAlamatKantor = editedLetterData.alamat_kantor || kantorAlamat;
+        const displayedKontakKantor = editedLetterData.kontak_kantor || kontakKantor;
+        const displayedJudulSurat = editedLetterData.judul_surat || docTitle;
+        const displayedNamaLurah = editedLetterData.nama_pejabat || namaLurah;
+        const displayedNipLurah = editedLetterData.nip_pejabat || nipLurah;
+        const displayedTitimangsa = editedLetterData.titimangsa || `${displayedKota}, ${tglSurat}`;
 
         return (
           <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm overflow-y-auto">
@@ -2254,38 +2365,420 @@ export default function DokumenPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white text-slate-900 rounded-2xl max-w-3xl w-full p-6 sm:p-10 shadow-2xl my-6 border border-slate-300 font-sans relative max-h-[92vh] overflow-y-auto"
+              className="bg-white text-slate-900 rounded-2xl max-w-3xl w-full p-4 sm:p-8 shadow-2xl my-6 border border-slate-300 font-sans relative max-h-[94vh] overflow-y-auto"
             >
+              {/* TOP TOOLBAR (KONTROL ADMIN: LOGO & EDIT IDENTITAS) */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-200 no-print-zone">
+                <div className="flex items-center gap-2">
+                  <FileText className="text-primary" size={20} />
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900">Pratinjau Naskah Dinas Resmi SPBE</h3>
+                    <p className="text-[11px] text-slate-500">Permendagri No. 83/2022 • Tersedia opsi penyesuaian Logo & Nomor Surat</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Tombol Pilih / Upload Logo Daerah */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLogoPicker(!showLogoPicker);
+                      setShowEditLetterPanel(false);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                      showLogoPicker 
+                        ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-xs' 
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300'
+                    }`}
+                    title="Atur Logo Pemda di Kop Surat"
+                  >
+                    <Image size={14} className="text-amber-700" />
+                    <span>Logo Pemda {customLogo ? '✓' : ''}</span>
+                  </button>
+
+                  {/* Tombol Edit Nomor Surat & Identitas (Opsional) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditLetterPanel(!showEditLetterPanel);
+                      setShowLogoPicker(false);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                      showEditLetterPanel 
+                        ? 'bg-primary/15 text-primary border-primary/30 shadow-xs' 
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300'
+                    }`}
+                    title="Sesuaikan Nomor Surat & Identitas Kop Surat (Opsional)"
+                  >
+                    <PenLine size={14} />
+                    <span>Edit No. Surat & Kop (Opsional)</span>
+                  </button>
+
+                  {/* Tombol Tutup */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPrintModal(false)}
+                    className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                    title="Tutup Modal"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* PANEL 1: PENGATURAN LOGO PEMDA (EXPANDABLE) */}
+              {showLogoPicker && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="p-4 bg-amber-50/80 border border-amber-200 rounded-xl mb-4 space-y-3 text-xs no-print-zone shadow-sm"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-amber-950 flex items-center gap-1.5">
+                      <Image size={15} className="text-amber-700" /> Atur Lambang / Logo Daerah di Kop Surat
+                    </span>
+                    {customLogo && (
+                      <button
+                        type="button"
+                        onClick={handleResetLogo}
+                        className="text-rose-700 hover:text-rose-900 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+                      >
+                        <RotateCcw size={12} /> Reset ke Logo Default
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1">
+                    {/* Preset 1: Default Lambang Emas SPBE */}
+                    <button
+                      type="button"
+                      onClick={() => { setCustomLogo('default'); try { localStorage.setItem('bw_kop_logo', 'default'); } catch(e){} }}
+                      className={`p-2.5 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                        !customLogo || customLogo === 'default'
+                          ? 'bg-amber-100 border-amber-400 font-bold text-amber-900 ring-2 ring-amber-400/30'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-full border border-slate-700 flex items-center justify-center bg-amber-50 flex-shrink-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5 text-amber-800">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A2.333 2.333 0 0017.167 8H6.833A2.333 2.333 0 004.5 10.333V21h15z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-[11px]">Logo Nasional</div>
+                        <div className="text-[9px] text-slate-500 font-normal">Garuda / SPBE Emas</div>
+                      </div>
+                    </button>
+
+                    {/* Preset 2: Kota Sukabumi */}
+                    <button
+                      type="button"
+                      onClick={() => { setCustomLogo('sukabumi'); try { localStorage.setItem('bw_kop_logo', 'sukabumi'); } catch(e){} }}
+                      className={`p-2.5 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                        customLogo === 'sukabumi'
+                          ? 'bg-emerald-100 border-emerald-500 font-bold text-emerald-950 ring-2 ring-emerald-500/30'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-full border border-emerald-800 flex items-center justify-center bg-white flex-shrink-0">
+                        <svg viewBox="0 0 36 36" className="w-6 h-6">
+                          <path fill="#2E7D32" d="M18 2 L32 8 L32 24 C32 30 18 35 18 35 C18 35 4 30 4 24 L4 8 Z" />
+                          <path fill="#FFD54F" d="M18 6 L28 11 L28 22 C28 26 18 31 18 31 C18 31 8 26 8 22 L8 11 Z" />
+                          <path fill="#1565C0" d="M18 10 L25 20 L11 20 Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-[11px]">Kota Sukabumi</div>
+                        <div className="text-[9px] text-slate-500 font-normal">Perisai Hijau Resmi</div>
+                      </div>
+                    </button>
+
+                    {/* Preset 3: Provinsi Jawa Barat */}
+                    <button
+                      type="button"
+                      onClick={() => { setCustomLogo('jabar'); try { localStorage.setItem('bw_kop_logo', 'jabar'); } catch(e){} }}
+                      className={`p-2.5 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                        customLogo === 'jabar'
+                          ? 'bg-emerald-100 border-emerald-500 font-bold text-emerald-950 ring-2 ring-emerald-500/30'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-full border border-emerald-700 flex items-center justify-center bg-white flex-shrink-0">
+                        <svg viewBox="0 0 36 36" className="w-6 h-6">
+                          <path fill="#1B5E20" d="M18 2 L33 9 L30 25 C30 30 18 35 18 35 C18 35 6 30 6 25 L3 9 Z" />
+                          <path fill="#FFF" d="M18 7 L26 18 L10 18 Z" />
+                          <circle cx="18" cy="22" r="3" fill="#FBC02D" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-[11px]">Jawa Barat</div>
+                        <div className="text-[9px] text-slate-500 font-normal">Kujang & Padi Kapas</div>
+                      </div>
+                    </button>
+
+                    {/* Preset 4: Upload Custom Image File */}
+                    <label className={`p-2.5 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                      customLogo && !['default', 'sukabumi', 'jabar'].includes(customLogo)
+                        ? 'bg-blue-100 border-blue-500 font-bold text-blue-950 ring-2 ring-blue-500/30'
+                        : 'bg-white border-dashed border-slate-300 text-slate-700 hover:bg-slate-50'
+                    }`}>
+                      <input 
+                        type="file" 
+                        accept="image/png,image/jpeg,image/svg+xml" 
+                        onChange={handleLogoUpload}
+                        className="hidden" 
+                      />
+                      <div className="w-8 h-8 rounded-full border border-blue-400 flex items-center justify-center bg-blue-50 flex-shrink-0">
+                        <Upload size={16} className="text-blue-700" />
+                      </div>
+                      <div>
+                        <div className="text-[11px] truncate max-w-[110px]">
+                          {customLogo && !['default', 'sukabumi', 'jabar'].includes(customLogo) ? 'Logo Kustom Aktif' : 'Unggah File'}
+                        </div>
+                        <div className="text-[9px] text-slate-500 font-normal">PNG / SVG (Maks 2MB)</div>
+                      </div>
+                    </label>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* PANEL 2: EDIT IDENTITAS & NOMOR SURAT (EXPANDABLE) */}
+              {showEditLetterPanel && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="p-4 bg-slate-50 border border-slate-300 rounded-xl mb-4 space-y-3 text-xs no-print-zone shadow-sm"
+                >
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                    <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <PenLine size={15} className="text-primary" /> Penyesuaian Nomor Surat & Identitas Naskah Dinas (Opsional)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const defAlamat = `Jl. Surya Kencana No. 42, ${kelurahanName}, Kec. ${kecamatanName}, ${kotaName}, ${provinsiName} 43111`;
+                        const defKontak = `Telepon: (0266) 221234 • Pos-el: kelurahan.${kelurahanName.toLowerCase().replace(/\s+/g, '')}@sukabumikota.go.id • Kode Pos: 43111`;
+                        setEditedLetterData({
+                          nomor_surat: printDoc.nomor_surat || fallbackNomorSurat,
+                          kota: kotaName,
+                          kecamatan: kecamatanName,
+                          kelurahan: kelurahanName,
+                          alamat_kantor: defAlamat,
+                          kontak_kantor: defKontak,
+                          judul_surat: docTitle,
+                          nama_pejabat: namaLurah,
+                          nip_pejabat: nipLurah,
+                          titimangsa: `${kotaName}, ${tglSurat}`
+                        });
+                      }}
+                      className="text-slate-600 hover:text-slate-900 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+                    >
+                      <RotateCcw size={12} /> Reset ke Nilai Baku
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* 1. Nomor Surat Resmi */}
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        Nomor Surat Resmi *
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedNomorSurat}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, nomor_surat: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono font-bold bg-white text-slate-900 focus:ring-1 focus:ring-primary"
+                        placeholder="Contoh: 503/018-Kel.Kbjt/XI/2026"
+                      />
+                      <span className="text-[10px] text-slate-500">Format klasifikasi Permendagri No. 83/2022</span>
+                    </div>
+
+                    {/* 2. Judul Dokumen */}
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        Judul / Perihal Surat
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedJudulSurat}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, judul_surat: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs font-semibold bg-white text-slate-900 focus:ring-1 focus:ring-primary"
+                        placeholder="Contoh: SURAT KETERANGAN USAHA (SKU)"
+                      />
+                    </div>
+
+                    {/* 3. Titimangsa / Tanggal Surat */}
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        Titimangsa (Tempat & Tanggal)
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedTitimangsa}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, titimangsa: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-900 focus:ring-1 focus:ring-primary"
+                        placeholder="Contoh: Sukabumi, 14 November 2026"
+                      />
+                    </div>
+
+                    {/* 4. Pemerintah Daerah */}
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        Pemerintah Kota / Kabupaten
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedKota}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, kota: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-900 focus:ring-1 focus:ring-primary"
+                        placeholder="Contoh: Kota Sukabumi"
+                      />
+                    </div>
+
+                    {/* 5. Kecamatan */}
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        Kecamatan
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedKecamatan}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, kecamatan: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-900 focus:ring-1 focus:ring-primary"
+                        placeholder="Contoh: Cikole"
+                      />
+                    </div>
+
+                    {/* 6. Kelurahan */}
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        Kelurahan
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedKelurahan}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, kelurahan: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-900 focus:ring-1 focus:ring-primary font-bold"
+                        placeholder="Contoh: Kebonjati"
+                      />
+                    </div>
+
+                    {/* 7. Alamat Kantor */}
+                    <div className="sm:col-span-2">
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        Alamat Kantor Kelurahan
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedAlamatKantor}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, alamat_kantor: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-900 focus:ring-1 focus:ring-primary"
+                        placeholder="Alamat kantor lengkap..."
+                      />
+                    </div>
+
+                    {/* 8. Kontak / Pos-el */}
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        Telepon & Pos-el Kantor
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedKontakKantor}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, kontak_kantor: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-900 focus:ring-1 focus:ring-primary"
+                        placeholder="Telepon & email..."
+                      />
+                    </div>
+
+                    {/* 9. Nama Pejabat Penandatangan */}
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        Nama Pejabat (Lurah)
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedNamaLurah}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, nama_pejabat: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-900 focus:ring-1 focus:ring-primary font-semibold"
+                        placeholder="Nama Lurah & gelar..."
+                      />
+                    </div>
+
+                    {/* 10. NIP Pejabat */}
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1 text-[11px]">
+                        NIP Pejabat
+                      </label>
+                      <input
+                        type="text"
+                        value={displayedNipLurah}
+                        onChange={(e) => setEditedLetterData(prev => ({ ...prev, nip_pejabat: e.target.value }))}
+                        className="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono bg-white text-slate-900 focus:ring-1 focus:ring-primary"
+                        placeholder="NIP: 1974..."
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {/* DOCUMENT SHEET PRINTABLE CONTAINER */}
               <div id="official-print-document" className="bg-white text-slate-900">
                 {/* 1. KOP SURAT RESMI PEMERINTAH DAERAH */}
                 <div className="flex items-center gap-4 pb-2 border-b-[3px] border-slate-950 mb-0.5">
-                  {/* Lambang Garuda / Lambang Pemda Resmi */}
+                  {/* Lambang Daerah / Logo Pemda Resmi */}
                   <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full border-2 border-slate-900 p-1 flex items-center justify-center bg-amber-50/50">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="w-11 h-11 text-amber-800">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A2.333 2.333 0 0017.167 8H6.833A2.333 2.333 0 004.5 10.333V21h15z" />
-                        <circle cx="12" cy="7" r="1.5" fill="currentColor" />
-                      </svg>
-                    </div>
+                    {customLogo && customLogo.startsWith('data:image') ? (
+                      <img 
+                        src={customLogo} 
+                        alt="Logo Daerah" 
+                        className="max-h-20 max-w-20 object-contain drop-shadow-xs" 
+                      />
+                    ) : customLogo === 'sukabumi' || (!customLogo && displayedKota.toLowerCase().includes('sukabumi')) ? (
+                      <div className="w-18 h-18 rounded-full border-2 border-emerald-800 p-0.5 flex items-center justify-center bg-white shadow-xs">
+                        <svg viewBox="0 0 36 36" className="w-16 h-16 drop-shadow-sm">
+                          <path fill="#2E7D32" d="M18 2 L32 8 L32 24 C32 30 18 35 18 35 C18 35 4 30 4 24 L4 8 Z" />
+                          <path fill="#FFD54F" d="M18 6 L28 11 L28 22 C28 26 18 31 18 31 C18 31 8 26 8 22 L8 11 Z" />
+                          <path fill="#1565C0" d="M18 10 L25 20 L11 20 Z" />
+                          <circle cx="18" cy="18" r="2.5" fill="#FFD54F" />
+                        </svg>
+                      </div>
+                    ) : customLogo === 'jabar' ? (
+                      <div className="w-18 h-18 rounded-full border-2 border-emerald-700 p-0.5 flex items-center justify-center bg-white shadow-xs">
+                        <svg viewBox="0 0 36 36" className="w-16 h-16 drop-shadow-sm">
+                          <path fill="#1B5E20" d="M18 2 L33 9 L30 25 C30 30 18 35 18 35 C18 35 6 30 6 25 L3 9 Z" />
+                          <path fill="#FFF" d="M18 7 L26 18 L10 18 Z" />
+                          <circle cx="18" cy="22" r="3" fill="#FBC02D" />
+                        </svg>
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-full border-2 border-slate-900 p-1 flex items-center justify-center bg-amber-50/50">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="w-11 h-11 text-amber-800">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A2.333 2.333 0 0017.167 8H6.833A2.333 2.333 0 004.5 10.333V21h15z" />
+                          <circle cx="12" cy="7" r="1.5" fill="currentColor" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
 
                   {/* Header Teks Instansi Pemerintah Daerah */}
                   <div className="flex-1 text-center pr-6">
                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-800 leading-tight">
-                      PEMERINTAH {kotaName.toUpperCase()}
+                      PEMERINTAH {displayedKota.toUpperCase()}
                     </h3>
                     <h2 className="text-sm sm:text-base font-bold uppercase tracking-wider text-slate-900 leading-tight">
-                      KECAMATAN {kecamatanName.toUpperCase()}
+                      KECAMATAN {displayedKecamatan.toUpperCase()}
                     </h2>
                     <h1 className="text-lg sm:text-2xl font-black uppercase tracking-widest text-slate-950 font-serif leading-tight">
-                      KELURAHAN {kelurahanName.toUpperCase()}
+                      KELURAHAN {displayedKelurahan.toUpperCase()}
                     </h1>
                     <p className="text-[10px] sm:text-xs text-slate-600 mt-1 leading-tight font-sans">
-                      {kantorAlamat}
+                      {displayedAlamatKantor}
                     </p>
                     <p className="text-[9px] sm:text-[10px] text-slate-500 leading-tight font-sans">
-                      {kontakKantor}
+                      {displayedKontakKantor}
                     </p>
                   </div>
                 </div>
@@ -2295,7 +2788,7 @@ export default function DokumenPage() {
                 {/* 2. JUDUL DAN NOMOR SURAT RESMI */}
                 <div className="text-center mb-6">
                   <h4 className="text-sm sm:text-base font-bold underline uppercase tracking-wider font-serif">
-                    {docTitle}
+                    {displayedJudulSurat}
                   </h4>
                   <p className="text-xs font-mono font-semibold text-slate-800 mt-1">
                     Nomor: {displayedNomorSurat}
@@ -2305,7 +2798,7 @@ export default function DokumenPage() {
                 {/* 3. BATANG TUBUH SURAT (ISI NASKAH DINAS) */}
                 <div className="space-y-3.5 text-xs sm:text-sm leading-relaxed text-slate-850">
                   <p>
-                    Yang bertanda tangan di bawah ini, Kepala Kelurahan {kelurahanName}, Kecamatan {kecamatanName}, {kotaName}, menerangkan dengan sebenarnya bahwa:
+                    Yang bertanda tangan di bawah ini, Kepala Kelurahan {displayedKelurahan}, Kecamatan {displayedKecamatan}, {displayedKota}, menerangkan dengan sebenarnya bahwa:
                   </p>
 
                   {/* Tabel Data Identitas Pemohon / Subjek */}
@@ -2340,7 +2833,7 @@ export default function DokumenPage() {
                     </div>
                     <div className="grid grid-cols-12 gap-1">
                       <span className="col-span-4 text-slate-600 font-medium">Alamat KTP / Domisili</span>
-                      <span className="col-span-8 text-slate-800">: RT {printDoc.rt || '001'} / RW {printDoc.rw || '001'}, Kelurahan {kelurahanName}, Kec. {kecamatanName}, {kotaName}</span>
+                      <span className="col-span-8 text-slate-800">: RT {printDoc.rt || '001'} / RW {printDoc.rw || '001'}, Kelurahan {displayedKelurahan}, Kec. {displayedKecamatan}, {displayedKota}</span>
                     </div>
                     {printDoc.hubungan_keluarga && printDoc.hubungan_keluarga !== 'Kepala Keluarga' && (
                       <div className="grid grid-cols-12 gap-1">
@@ -2352,7 +2845,7 @@ export default function DokumenPage() {
 
                   {/* Keterangan Substantif Sesuai Jenis Permohonan */}
                   <div className="pt-2 text-justify space-y-2">
-                    {docTitleLower.includes('usaha') || docTitleLower.includes('sku') ? (
+                    {displayedJudulSurat.toLowerCase().includes('usaha') || displayedJudulSurat.toLowerCase().includes('sku') ? (
                       <>
                         <p>
                           Orang tersebut di atas adalah benar-benar warga yang bertempat tinggal di wilayah kami dan berdasarkan pengamatan, verifikasi lapangan berjenjang oleh Pengurus RT/RW setempat, yang bersangkutan benar memiliki dan mengelola kegiatan usaha aktif sebagai berikut:
@@ -2360,13 +2853,13 @@ export default function DokumenPage() {
                         <div className="pl-4 sm:pl-8 py-1 space-y-1 font-sans">
                           <div><strong>Nama Usaha:</strong> {extraInfo.nama_usaha || extraInfo.namaUsaha || 'Usaha Perdagangan / Jasa'}</div>
                           <div><strong>Bidang Usaha:</strong> {extraInfo.bidang_usaha || extraInfo.bidangUsaha || 'Perdagangan Eceran / Jasa Komunitas'}</div>
-                          <div><strong>Lokasi Usaha:</strong> {extraInfo.lokasi_usaha || extraInfo.alamatUsaha || `RT ${printDoc.rt || '001'} / RW ${printDoc.rw || '001'}, Kelurahan ${kelurahanName}`}</div>
+                          <div><strong>Lokasi Usaha:</strong> {extraInfo.lokasi_usaha || extraInfo.alamatUsaha || `RT ${printDoc.rt || '001'} / RW ${printDoc.rw || '001'}, Kelurahan ${displayedKelurahan}`}</div>
                         </div>
                         <p>
                           Surat Keterangan Usaha (SKU) ini diberikan atas permohonan yang bersangkutan untuk pemenuhan kelengkapan administrasi: <strong>{printDoc.keperluan}</strong>.
                         </p>
                       </>
-                    ) : docTitleLower.includes('tidak mampu') || docTitleLower.includes('sktm') ? (
+                    ) : displayedJudulSurat.toLowerCase().includes('tidak mampu') || displayedJudulSurat.toLowerCase().includes('sktm') ? (
                       <>
                         <p>
                           Menerangkan bahwa keluarga yang bersangkutan benar bertempat tinggal di wilayah kerja kami dan terdaftar sebagai keluarga prasejahtera / berpenghasilan rendah berdasarkan pangkalan data kesejahteraan sosial daerah.
@@ -2375,13 +2868,13 @@ export default function DokumenPage() {
                           Surat Keterangan Tidak Mampu (SKTM) ini diterbitkan untuk pemenuhan persyaratan: <strong>{printDoc.keperluan}</strong>.
                         </p>
                       </>
-                    ) : docTitleLower.includes('kematian') || docTitleLower.includes('meninggal') ? (
+                    ) : displayedJudulSurat.toLowerCase().includes('kematian') || displayedJudulSurat.toLowerCase().includes('meninggal') ? (
                       <>
                         <p>
                           Menerangkan dengan sebenarnya bahwa warga yang bersangkutan benar telah meninggal dunia di wilayah kami dan telah dicatatkan dalam pelaporan kematian rukun warga setempat untuk keperluan: <strong>{printDoc.keperluan}</strong>.
                         </p>
                       </>
-                    ) : docTitleLower.includes('skck') || docTitleLower.includes('kelakuan baik') ? (
+                    ) : displayedJudulSurat.toLowerCase().includes('skck') || displayedJudulSurat.toLowerCase().includes('kelakuan baik') ? (
                       <>
                         <p>
                           Menerangkan bahwa yang bersangkutan selama berdomisili di lingkungan kami senantiasa berkelakuan baik, mematuhi tata tertib kemasyarakatan, serta tidak sedang tersangkut perkara pidana atau organisasi terlarang. Surat keterangan ini diterbitkan untuk pengurusan: <strong>{printDoc.keperluan}</strong>.
@@ -2390,7 +2883,7 @@ export default function DokumenPage() {
                     ) : (
                       <>
                         <p>
-                          Menerangkan dengan sebenarnya bahwa orang tersebut di atas adalah benar bertempat tinggal dan berdomisili menetap di wilayah kerja Kelurahan {kelurahanName}, Kecamatan {kecamatanName}, {kotaName}.
+                          Menerangkan dengan sebenarnya bahwa orang tersebut di atas adalah benar bertempat tinggal dan berdomisili menetap di wilayah kerja Kelurahan {displayedKelurahan}, Kecamatan {displayedKecamatan}, {displayedKota}.
                         </p>
                         <p>
                           Surat keterangan ini diberikan atas permohonan yang bersangkutan setelah melalui verifikasi data dan pengantar berjenjang oleh Pengurus RT dan RW setempat untuk keperluan: <strong>{printDoc.keperluan}</strong>.
@@ -2425,9 +2918,9 @@ export default function DokumenPage() {
 
                   {/* Sisi Kanan: Pejabat Penandatangan (Lurah) */}
                   <div className="text-right text-xs min-w-[220px]">
-                    <p>{kotaName}, {tglSurat}</p>
+                    <p>{displayedTitimangsa}</p>
                     <p className="font-bold uppercase tracking-wide mt-0.5">
-                      LURAH {kelurahanName.toUpperCase()}
+                      LURAH {displayedKelurahan.toUpperCase()}
                     </p>
                     
                     {/* Kotak Segel TTE Digital */}
@@ -2440,8 +2933,8 @@ export default function DokumenPage() {
                       </div>
                     </div>
 
-                    <p className="font-bold underline text-sm text-slate-950 mt-1">{namaLurah}</p>
-                    <p className="text-[10px] text-slate-600 font-mono">NIP. {nipLurah}</p>
+                    <p className="font-bold underline text-sm text-slate-950 mt-1">{displayedNamaLurah}</p>
+                    <p className="text-[10px] text-slate-600 font-mono">NIP. {displayedNipLurah}</p>
                   </div>
                 </div>
 
@@ -2451,7 +2944,7 @@ export default function DokumenPage() {
                     <span className="font-semibold text-slate-700">Pelayanan Administrasi Terpadu Kelurahan (PATEN):</span> Diterbitkan & dicatat dalam Register Surat Keluar oleh Petugas: <strong>{user?.nama || 'Petugas PATEN Kelurahan'}</strong> ({user?.role === 'admin_kelurahan' ? 'Admin Kelurahan' : (user?.role || 'Operator')})
                   </div>
                   <div className="font-mono text-[9px] text-slate-400">
-                    ID Reg: {printDoc.nomor_registrasi || `REG-${printDoc.id}`} • SPBE Kota Sukabumi
+                    ID Reg: {printDoc.nomor_registrasi || `REG-${printDoc.id}`} • SPBE {displayedKota}
                   </div>
                 </div>
               </div>
@@ -2459,7 +2952,7 @@ export default function DokumenPage() {
               {/* ACTION BUTTONS (HIDDEN WHEN PRINTING) */}
               <div className="flex justify-between items-center gap-3 pt-6 mt-6 border-slate-200 border-t no-print-zone">
                 <div className="text-xs text-slate-500 hidden sm:block">
-                  Tips: Pilih opsi <em>"Save as PDF"</em> pada dialog printer untuk menyimpan berkas surat digital.
+                  Tips: Pilih opsi <em>"Save as PDF"</em> pada dialog printer untuk menyimpan berkas surat digital resmi.
                 </div>
                 <div className="flex items-center gap-2 ml-auto">
                   <button
