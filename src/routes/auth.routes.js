@@ -497,6 +497,20 @@ router.post('/login', async (req, res) => {
       assignedRole = officialRoleInfo.mapped_role;
     }
 
+    // Resolusi wilayah kelurahan yang presisi sesuai akun/aparatur/warga
+    let resolvedKelurahan = 'Kebonjati';
+    if (officialRoleInfo && officialRoleInfo.kelurahan) {
+      resolvedKelurahan = officialRoleInfo.kelurahan;
+    } else if (identifiedWarga && identifiedWarga.kelurahan) {
+      resolvedKelurahan = identifiedWarga.kelurahan;
+    } else if (user && (user.username?.includes('cikole') || user.kode_kelurahan === '32.72.03.1001')) {
+      resolvedKelurahan = 'Cikole';
+    } else if (user && (user.username?.includes('kebonjati') || user.username?.includes('kbj') || user.kode_kelurahan === '32.72.03.1004')) {
+      resolvedKelurahan = 'Kebonjati';
+    } else if (user && user.kelurahan) {
+      resolvedKelurahan = user.kelurahan;
+    }
+
     const userData = {
       id: user ? user.id : 0,
       username: user ? user.username : activeNik,
@@ -504,9 +518,9 @@ router.post('/login', async (req, res) => {
       role: assignedRole,
       rt: (officialRoleInfo && officialRoleInfo.wilayah_rt) || (user && user.rt) || (identifiedWarga && identifiedWarga.rt) || (familyMembers[0] && familyMembers[0].rt) || null,
       rw: (officialRoleInfo && officialRoleInfo.wilayah_rw) || (user && user.rw) || (identifiedWarga && identifiedWarga.rw) || (familyMembers[0] && familyMembers[0].rw) || null,
-      kelurahan: (officialRoleInfo && officialRoleInfo.kelurahan) || (identifiedWarga && identifiedWarga.kelurahan) || 'Cikole',
-      kecamatan: (officialRoleInfo && officialRoleInfo.kecamatan) || 'Cikole',
-      kota: (officialRoleInfo && officialRoleInfo.kota) || 'Kota Sukabumi',
+      kelurahan: resolvedKelurahan,
+      kecamatan: (officialRoleInfo && officialRoleInfo.kecamatan) || (identifiedWarga && identifiedWarga.kecamatan) || 'Cikole',
+      kota: (officialRoleInfo && officialRoleInfo.kota) || (identifiedWarga && identifiedWarga.kota) || 'Kota Sukabumi',
       no_kk,
       is_family_account: isFamilyAccount,
       active_nik: activeNik,

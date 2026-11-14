@@ -48,7 +48,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { downloadReport } from '../../utils/exportHelper';
-import { FileSpreadsheet, Download, BookOpen, GraduationCap, Activity, BarChart3, Layers } from 'lucide-react';
+import { Printer, FileSpreadsheet, Download, BookOpen, GraduationCap, Activity, BarChart3, Layers } from 'lucide-react';
 
 export default function DashboardLurah() {
   const { user } = useAuth();
@@ -62,6 +62,8 @@ export default function DashboardLurah() {
 
   // Lurah Data
   const [readyTTEDocs, setReadyTTEDocs] = useState([]);
+  const [approvedDocs, setApprovedDocs] = useState([]);
+  const [tteSubTab, setTteSubTab] = useState('pending'); // 'pending' | 'approved'
   const [slaCompliance, setSlaCompliance] = useState(null);
   const [atRiskBalitaCount, setAtRiskBalitaCount] = useState(0);
   const [stuntingClusterCount, setStuntingClusterCount] = useState(0);
@@ -105,7 +107,7 @@ export default function DashboardLurah() {
       // 2. Fetch parallel endpoints
       api.get('/analytics/demografi').then(r => { if (r?.success) setDemografiData(r.data); }).catch(() => {});
       const [docRes, statsRes, pengaduanRes, execSummaryRes, clusterRes] = await Promise.allSettled([
-        api.get('/dokumen?approval_step=KELURAHAN'),
+        api.get('/dokumen'),
         api.get('/dokumen/stats'),
         api.get('/pengaduan'),
         api.get('/analytics/executive-summary'),
@@ -116,12 +118,17 @@ export default function DashboardLurah() {
       if (docRes.status === 'fulfilled' && docRes.value?.success) {
         const rawDocs = docRes.value.data || [];
         // Filter specifically documents waiting for Kelurahan approval / TTE
+        // 1. Antrean Dokumen Menunggu TTE Lurah (Status READY_TTE atau Step KELURAHAN belum sah)
         const readyDocs = rawDocs.filter((d) => 
           (d.approval_step === 'KELURAHAN' || d.status === 'READY_TTE') && d.status !== 'APPROVED' && d.status !== 'REJECTED'
         );
-        // Sort by aging descending (oldest on top)
         readyDocs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         setReadyTTEDocs(readyDocs);
+
+        // 2. Arsip Surat Telah Disahkan (Status APPROVED / TTE Sah, termasuk verifikasi staf & Lurah)
+        const approved = rawDocs.filter((d) => d.status === 'APPROVED');
+        approved.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+        setApprovedDocs(approved);
       }
 
       // Process SLA compliance
@@ -840,25 +847,22 @@ export default function DashboardLurah() {
         </div>
       )}
 
-      {/* Main Content: Ready TTE Documents Queue */}
+      {/* Main Content: Ready TTE Documents Queue & Approved Archives */}
       <div id="daftar-tte-section" className={'space-y-6 ' + (activeView === 'tte' ? 'block' : 'hidden')}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-outline-variant">
           <div>
             <div className="flex items-center gap-2">
               <ShieldCheck size={22} className="text-primary" />
               <h3 className="text-lg font-bold text-on-surface">
-                Antrean Dokumen Siap Tanda Tangan Elektronik (TTE)
+                Meja Pengesahan & Tanda Tangan Elektronik (TTE) Lurah
               </h3>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
-                {readyTTEDocs.length} Berkas
-              </span>
             </div>
             <p className="text-xs text-on-surface-variant mt-0.5">
-              Berkas telah memenuhi syarat verifikasi berjenjang RT dan RW, siap disahkan menjadi dokumen dinas resmi.
+              Kelola dokumen yang menunggu TTE Pejabat serta arsip surat dinas resmi yang telah disahkan.
             </p>
           </div>
 
-          {readyTTEDocs.length > 0 && (
+          {tteSubTab === 'pending' && readyTTEDocs.length > 0 && (
             <button
               type="button"
               onClick={() => handleInitiateBatchSign(readyTTEDocs.map((d) => d.id))}
@@ -870,8 +874,38 @@ export default function DashboardLurah() {
           )}
         </div>
 
-        {/* List of Documents */}
-        {readyTTEDocs.length === 0 ? (
+        {/* SUB-TAB TOGGLES (MENUNGGU TTE VS ARSIP SURAT TELAH DISAHKAN) */}
+        <div className="flex items-center gap-2 bg-surface-container-low p-1.5 rounded-xl border border-outline-variant w-fit">
+          <button
+            type="button"
+            onClick={() => setTteSubTab('pending')}
+            className={'px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ' + (
+              tteSubTab === 'pending'
+                ? 'bg-primary text-on-primary shadow-sm'
+                : 'text-on-surface-variant hover:bg-surface-container'
+            )}
+          >
+            <Clock size={15} />
+            <span>Menunggu TTE Lurah ({readyTTEDocs.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTteSubTab('approved')}
+            className={'px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ' + (
+              tteSubTab === 'approved'
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'text-on-surface-variant hover:bg-surface-container'
+            )}
+          >
+            <CheckCircle2 size={15} />
+            <span>Arsip Surat Telah Disahkan ({approvedDocs.length})</span>
+          </button>
+        </div>
+
+        {/* VIEW A: DOKUMEN MENUNGGU TTE LURAH */}
+        {tteSubTab === 'pending' && (
+          <>
+            {readyTTEDocs.length === 0 ? (
           <div className="py-12 px-4 text-center rounded-2xl border border-dashed border-outline-variant bg-surface-container-lowest">
             <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 border border-emerald-200">
               <CheckCircle2 size={28} />
@@ -939,6 +973,83 @@ export default function DashboardLurah() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+          </>
+        )}
+
+        {/* VIEW B: ARSIP DOKUMEN TELAH DISAHKAN (TERMASUK YANG DIVERIFIKASI ADMIN KELURAHAN / LURAH) */}
+        {tteSubTab === 'approved' && (
+          <div className="space-y-4">
+            {approvedDocs.length === 0 ? (
+              <div className="py-12 px-4 text-center rounded-2xl border border-dashed border-outline-variant bg-surface-container-lowest">
+                <FileText size={32} className="mx-auto text-slate-400 mb-2" />
+                <h4 className="text-sm font-bold text-on-surface">Belum Ada Arsip Dokumen Disahkan</h4>
+                <p className="text-xs text-on-surface-variant mt-1">Dokumen yang disahkan oleh staf atau Lurah akan tercatat di sini.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {approvedDocs.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 shadow-sm flex flex-col justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[11px] font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                            {doc.nomor_surat || doc.nomor_registrasi || `REG-${doc.id}`}
+                          </span>
+                          <h4 className="text-sm font-bold text-on-surface mt-1.5 line-clamp-1">
+                            {doc.jenis_dokumen || doc.jenis_surat}
+                          </h4>
+                        </div>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          <CheckCircle2 size={13} /> TTE Sah
+                        </span>
+                      </div>
+
+                      <div className="mt-3 space-y-1 text-xs text-on-surface-variant">
+                        <div className="flex items-center justify-between">
+                          <span>Pemohon:</span>
+                          <span className="font-semibold text-on-surface">{doc.nama_pemohon || doc.nik_pemohon}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Wilayah:</span>
+                          <span className="font-medium text-on-surface">RT {doc.rt || '001'} / RW {doc.rw || '001'}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Titimangsa Sah:</span>
+                          <span className="font-medium text-slate-600">
+                            {doc.updated_at ? new Date(doc.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Hari ini'}
+                          </span>
+                        </div>
+                        {doc.catatan_petugas && (
+                          <div className="pt-1 text-[11px] text-slate-500 italic line-clamp-1">
+                            Catatan: {doc.catatan_petugas}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-emerald-100 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-mono text-emerald-700 truncate max-w-[180px]">
+                        SHA: {doc.qr_code_hash ? doc.qr_code_hash.slice(0, 16) + '...' : 'Tersertifikasi'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/dashboard/dokumen')}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm transition cursor-pointer"
+                        title="Buka register surat untuk pratinjau / cetak format resmi"
+                      >
+                        <Printer size={13} />
+                        <span>Lihat & Cetak PATEN</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

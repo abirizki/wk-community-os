@@ -5,6 +5,8 @@
  * Runs on server startup to guarantee zero-downtime database integrity.
  */
 
+const fs = require('fs');
+const path = require('path');
 const pool = require('./pool');
 
 const STANDARD_PASSWORD_HASH = '$2b$10$hN5MqJELAnUdVw3eoFGBgObO9O5oF/eCGw3rLk6SJv/B4ZMJ7ev3q'; // BumiWarga@2026
@@ -1393,6 +1395,80 @@ async function autoPatchDatabase() {
       `);
     } catch (e) {
       console.warn('[AutoPatch] CREATE analytics_action_tracking note:', e.message);
+    }
+
+    // 24. Tabel Notifikasi Resilient (Bebaskan dari Foreign Key Constraint Keras)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`notifikasi\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`nik_target\` VARCHAR(16) NOT NULL,
+          \`judul\` VARCHAR(255) NOT NULL,
+          \`pesan\` TEXT NOT NULL,
+          \`tipe\` VARCHAR(50) DEFAULT 'info',
+          \`link\` VARCHAR(255) NULL,
+          \`is_read\` TINYINT(1) DEFAULT 0,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX \`idx_notifikasi_nik\` (\`nik_target\`),
+          INDEX \`idx_notifikasi_read\` (\`is_read\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      // Lepaskan foreign key fk_notifikasi_warga jika masih aktif agar notifikasi tidak pernah memblokir flow surat
+      try {
+        await connection.query('ALTER TABLE notifikasi DROP FOREIGN KEY fk_notifikasi_warga');
+      } catch (fkErr) {}
+    } catch (e) {
+      console.warn('[AutoPatch] notifikasi schema resilience note:', e.message);
+    }
+
+    // 25. Rekonsiliasi Kelurahan Akun Standar & Warga (Mencegah Ketidaksesuaian Cikole vs Kebonjati)
+    try {
+      await connection.query(`
+        UPDATE users 
+        SET kode_kelurahan = '32.72.03.1004', kode_kecamatan = '32.72.03' 
+        WHERE username LIKE '%kebonjati%' OR username LIKE '%kbj%' OR username = 'admin.kebonjati' OR username = 'lurah.kebonjati';
+      `);
+      await connection.query(`
+        UPDATE warga 
+        SET kelurahan = 'Kebonjati', kecamatan = 'Cikole', kota = 'Kota Sukabumi' 
+        WHERE kelurahan IS NULL OR kelurahan = '' OR kelurahan = 'Sukabumi';
+      `);
+    } catch (e) {
+      console.warn('[AutoPatch] Rekonsiliasi akun & wilayah note:', e.message);
+    }
+
+    // 26. Injeksi Otomatis Data Seeding SADA JABAR (Buku Kas, Iuran Bulanan, Faskes, Faspend)
+    try {
+      let shouldSeedCoherence = false;
+      try {
+        const [kasRows] = await connection.query("SELECT COUNT(*) as count FROM keuangan_kas");
+        if (kasRows[0].count === 0) shouldSeedCoherence = true;
+      } catch (checkErr) {
+        shouldSeedCoherence = true;
+      }
+
+      if (shouldSeedCoherence) {
+        console.log('[AutoPatch] Tabel keuangan/analitik terdeteksi belum memiliki data koheren, menginjeksi seed_sada_jabar_coherence.sql...');
+        const coherencePath = path.resolve(__dirname, '../../database/seed_sada_jabar_coherence.sql');
+        if (fs.existsSync(coherencePath)) {
+          const sqlContent = fs.readFileSync(coherencePath, 'utf8');
+          const statements = sqlContent
+            .split(/;\s*[\r\n]+/)
+            .map(s => s.trim())
+            .filter(s => s.length > 0 && !s.startsWith('--') && !s.startsWith('/*') && !s.startsWith('SET '));
+
+          for (const stmt of statements) {
+            try {
+              await connection.query(stmt);
+            } catch (stmtErr) {
+              // Ignore duplicate keys
+            }
+          }
+          console.log('[AutoPatch] ✓ Seed SADA JABAR coherence berhasil diinjeksikan secara otomatis.');
+        }
+      }
+    } catch (seedCoherenceErr) {
+      console.warn('[AutoPatch] Auto-seed SADA JABAR note:', seedCoherenceErr.message);
     }
 
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');

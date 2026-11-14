@@ -114,6 +114,7 @@ class WhatsAppService {
       try {
         const response = await fetch('https://api.fonnte.com/send', {
           method: 'POST',
+          signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(3500) : undefined,
           headers: {
             'Authorization': fonnteToken,
             'Content-Type': 'application/json'
@@ -137,6 +138,7 @@ class WhatsAppService {
       try {
         const response = await fetch(`${wahaUrl.replace(/\/+$/, '')}/api/sendText`, {
           method: 'POST',
+          signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(3500) : undefined,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             chatId: `${normalizedPhone}@c.us`,

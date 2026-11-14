@@ -655,12 +655,47 @@ class DokumenService {
     }
 
     // STEP 3: Otorisasi & Pengesahan Kelurahan (Lurah / Admin Kelurahan)
-    if (['admin_kelurahan', 'superadmin', 'admin', 'lurah'].includes(role)) {
+    if (['admin_kelurahan', 'superadmin', 'admin', 'lurah', 'walikota', 'camat'].includes(role)) {
+      const kelurahanName = doc.kelurahan || currentUser.kelurahan || 'Kebonjati';
+
+      // 3.A. Jika aksi dilakukan oleh Staf / Admin Kelurahan (Verifikasi Berkas Administratif)
+      // Dokumen diberi status READY_TTE dan approval_step tetap KELURAHAN agar masuk ke Meja TTE Lurah
+      const isDirectLurahTTE = ['lurah', 'superadmin', 'walikota', 'camat'].includes(role) || Boolean(catatan && catatan.pin) || Boolean(currentUser.pin);
+
+      if (role === 'admin_kelurahan' && !isDirectLurahTTE) {
+        await dokumenRepository.updateApproval(id, {
+          status: 'READY_TTE',
+          approval_step: 'KELURAHAN',
+          approved_by_kelurahan: currentUser.id,
+          catatan_petugas: catatan || `Berkas telah diverifikasi lengkap oleh Staf Kelurahan ${kelurahanName}, menunggu penandatanganan TTE Lurah.`
+        });
+
+        // Notifikasi in-app ke warga (Resilient try-catch)
+        try {
+          await notifikasiRepository.create({
+            nik_target: doc.nik_pemohon,
+            judul: 'Berkas Surat Terverifikasi',
+            pesan: `Permohonan surat ${doc.jenis_dokumen} Anda telah diverifikasi oleh Staf Kelurahan ${kelurahanName} dan diteruskan ke Meja TTE Lurah.`,
+            tipe: 'info',
+            link: '/dashboard/dokumen'
+          });
+        } catch (notifErr) {
+          console.warn('[DokumenService] Catatan notifikasi verifikasi staf:', notifErr.message);
+        }
+
+        return {
+          success: true,
+          step: 'KELURAHAN',
+          status: 'READY_TTE',
+          message: `Berkas permohonan surat berhasil diverifikasi Staf Kelurahan. Dokumen siap ditandatangani oleh Lurah ${kelurahanName} (TTE).`
+        };
+      }
+
+      // 3.B. Pengesahan TTE Digital Resmi oleh Lurah / Pejabat Berwenang
       const triggerRan = await this.executeDemographyTrigger(doc);
 
       const crypto = require('crypto');
       const now = new Date();
-      const kelurahanName = doc.kelurahan || currentUser.kelurahan || 'Kebonjati';
       const nomorSurat = this.generateNomorSuratResmi(id, doc.jenis_dokumen || doc.jenis_surat, kelurahanName);
 
       const signatureData = `${nomorSurat}|${doc.nik_pemohon}|${doc.jenis_dokumen || doc.jenis_surat}|${now.toISOString()}|Kelurahan ${kelurahanName}`;
@@ -672,34 +707,40 @@ class DokumenService {
         approved_by_kelurahan: currentUser.id,
         nomor_surat: nomorSurat,
         qr_code_hash: qrCodeHash,
-        catatan_petugas: catatan || `Dokumen resmi disahkan oleh Kelurahan ${kelurahanName} (TTE Sah)`
+        catatan_petugas: catatan || `Dokumen resmi disahkan oleh Lurah ${kelurahanName} (TTE Sah)`
       });
 
-      // Notifikasi akhir ke warga
-      await notifikasiRepository.create({
-        nik_target: doc.nik_pemohon,
-        judul: 'Surat Resmi Telah Disahkan',
-        pesan: `Selamat! Permohonan ${doc.jenis_dokumen} Anda telah RESMI DISETUJUI dan disahkan oleh Kelurahan ${kelurahanName} dengan Nomor Surat: ${nomorSurat}.`,
-        tipe: 'success',
-        link: '/dashboard/dokumen'
-      });
-
-      // Notifikasi WhatsApp otomatis ke warga
+      // Notifikasi akhir ke warga (Resilient try-catch)
       try {
-        const warga = await wargaRepository.findByNik(doc.nik_pemohon);
-        if (warga && warga.no_telepon) {
-          const whatsappService = require('./whatsapp.service');
-          await whatsappService.sendSuratNotification({
-            phone: warga.no_telepon,
-            nama: warga.nama,
-            jenis_surat: doc.jenis_dokumen,
-            nomor_surat: nomorSurat,
-            qr_code_hash: qrCodeHash
-          });
-        }
-      } catch (waErr) {
-        console.warn('Gagal mengirim notifikasi WhatsApp surat:', waErr.message);
+        await notifikasiRepository.create({
+          nik_target: doc.nik_pemohon,
+          judul: 'Surat Resmi Telah Disahkan',
+          pesan: `Selamat! Permohonan ${doc.jenis_dokumen} Anda telah RESMI DISETUJUI dan disahkan oleh Kelurahan ${kelurahanName} dengan Nomor Surat: ${nomorSurat}.`,
+          tipe: 'success',
+          link: '/dashboard/dokumen'
+        });
+      } catch (notifErr) {
+        console.warn('[DokumenService] Catatan notifikasi kelulusan surat:', notifErr.message);
       }
+
+      // Notifikasi WhatsApp otomatis ke warga (Non-blocking asinkron agar respons HTTP instan)
+      setImmediate(async () => {
+        try {
+          const warga = await wargaRepository.findByNik(doc.nik_pemohon);
+          if (warga && warga.no_telepon) {
+            const whatsappService = require('./whatsapp.service');
+            await whatsappService.sendSuratNotification({
+              phone: warga.no_telepon,
+              nama: warga.nama,
+              jenis_surat: doc.jenis_dokumen || doc.jenis_surat,
+              nomor_surat: nomorSurat,
+              qr_code_hash: qrCodeHash
+            });
+          }
+        } catch (waErr) {
+          console.warn('[DokumenService] Gagal mengirim notifikasi WhatsApp surat (non-blocking):', waErr.message);
+        }
+      });
 
       return { 
         success: true, 
@@ -708,7 +749,7 @@ class DokumenService {
         nomor_surat: nomorSurat,
         qr_code_hash: qrCodeHash,
         trigger_executed: triggerRan,
-        message: 'Surat telah resmi disahkan oleh Kelurahan Kebonjati dan trigger data demografi berhasil dieksekusi.' 
+        message: `Surat telah resmi disahkan oleh Lurah ${kelurahanName} dengan TTE Sah dan trigger data kependudukan berhasil dieksekusi.` 
       };
     }
 

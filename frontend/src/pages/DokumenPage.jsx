@@ -795,7 +795,7 @@ export default function DokumenPage() {
     if (activeTab === 'pending_approval') {
       if (isRT) return doc.approval_step === 'RT' && doc.status !== 'REJECTED';
       if (isRW) return doc.approval_step === 'RW' && doc.status !== 'REJECTED';
-      if (isKelurahan) return doc.approval_step === 'KELURAHAN' && doc.status !== 'REJECTED';
+      if (isKelurahan) return (doc.approval_step === 'KELURAHAN' || doc.status === 'READY_TTE') && doc.status !== 'REJECTED' && doc.status !== 'APPROVED';
     }
     if (activeTab === 'ready_to_issue') {
       return doc.status === 'APPROVED';
@@ -837,12 +837,15 @@ export default function DokumenPage() {
 
     let currentStepText = 'Verifikasi RT';
     let stepColor = 'bg-amber-50 text-amber-700 border-amber-200';
-    if (doc.approval_step === 'RW') {
+    if (doc.status === 'READY_TTE') {
+      currentStepText = 'Menunggu TTE Lurah (Siap Sah)';
+      stepColor = 'bg-purple-50 text-purple-700 border-purple-200';
+    } else if (doc.approval_step === 'RW') {
       currentStepText = 'Verifikasi RW';
       stepColor = 'bg-blue-50 text-blue-700 border-blue-200';
     } else if (doc.approval_step === 'KELURAHAN') {
-      currentStepText = 'Pengesahan Kelurahan';
-      stepColor = 'bg-purple-50 text-purple-700 border-purple-200';
+      currentStepText = 'Verifikasi Staf Kelurahan';
+      stepColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
     }
 
     return (
@@ -957,7 +960,7 @@ export default function DokumenPage() {
                 data.filter((d) => {
                   if (isRT) return d.approval_step === 'RT' && d.status !== 'REJECTED';
                   if (isRW) return d.approval_step === 'RW' && d.status !== 'REJECTED';
-                  if (isKelurahan) return d.approval_step === 'KELURAHAN' && d.status !== 'REJECTED';
+                  if (isKelurahan) return (d.approval_step === 'KELURAHAN' || d.status === 'READY_TTE') && d.status !== 'REJECTED' && d.status !== 'APPROVED';
                   return false;
                 }).length
               })
@@ -1040,8 +1043,8 @@ export default function DokumenPage() {
                   const canAct = (
                     (isRT && doc.approval_step === 'RT') ||
                     (isRW && doc.approval_step === 'RW') ||
-                    (isKelurahan && doc.approval_step === 'KELURAHAN')
-                  ) && doc.status !== 'REJECTED';
+                    (isKelurahan && (doc.approval_step === 'KELURAHAN' || doc.status === 'READY_TTE'))
+                  ) && doc.status !== 'REJECTED' && doc.status !== 'APPROVED';
 
                   const isForFamily = doc.diajukan_oleh_nik && doc.diajukan_oleh_nik !== doc.nik_pemohon;
 
@@ -1112,7 +1115,7 @@ export default function DokumenPage() {
                                 onClick={() => openActionModal(doc, 'APPROVE')}
                                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer"
                               >
-                                <Check size={14} /> {isKelurahan ? 'Sahkan' : 'Setujui'}
+                                <Check size={14} /> {isLurah ? 'Tandatangani TTE' : (isAdminKelurahan ? 'Verifikasi Berkas' : (isKelurahan ? 'Sahkan' : 'Setujui'))}
                               </button>
                               <button
                                 onClick={() => openActionModal(doc, 'REVISION')}

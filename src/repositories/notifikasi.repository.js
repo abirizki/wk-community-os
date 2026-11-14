@@ -13,12 +13,20 @@ class NotifikasiRepository {
    */
   async create(payload) {
     const { nik_target, judul, pesan, tipe = 'info', link = null } = payload;
-    const [result] = await pool.execute(
-      `INSERT INTO notifikasi (nik_target, judul, pesan, tipe, link) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [nik_target, judul, pesan, tipe, link]
-    );
-    return result;
+    try {
+      if (!nik_target) {
+        return { id: null, skipped: true, reason: 'NIK target kosong' };
+      }
+      const [result] = await pool.execute(
+        `INSERT INTO notifikasi (nik_target, judul, pesan, tipe, link) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [nik_target, judul, pesan, tipe, link]
+      );
+      return result;
+    } catch (err) {
+      console.warn(`[NOTIFIKASI_WARN] Gagal membuat notifikasi untuk NIK ${nik_target}:`, err.message);
+      return { id: null, skipped: true, error: err.message };
+    }
   }
 
   /**
