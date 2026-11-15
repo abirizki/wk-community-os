@@ -200,6 +200,8 @@ export default function DokumenPage() {
 
   const isRT = user && user.role === 'ketua_rt';
   const isRW = user && ['ketua_rw', 'admin_rw'].includes(user.role);
+  const isLurah = user && user.role === 'lurah';
+  const isAdminKelurahan = user && ['admin_kelurahan', 'admin'].includes(user.role);
   const isKelurahan = user && ['admin_kelurahan', 'superadmin', 'admin', 'lurah'].includes(user.role);
   const isOfficer = isRT || isRW || isKelurahan;
   const isCitizen = !isOfficer || user?.role === 'warga';
