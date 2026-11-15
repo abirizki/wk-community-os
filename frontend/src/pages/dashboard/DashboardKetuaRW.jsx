@@ -16,7 +16,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
-import KanayaStrategicHealthPolicyCard from '../../components/KanayaStrategicHealthPolicyCard';
+import AIStrategyRoleCard from '../../components/AIStrategyRoleCard';
 import {
   FileCheck,
   Clock,
@@ -806,7 +806,7 @@ export default function DashboardKetuaRW() {
 
       {/* Kanaya Strategic Health Policy Radar RW */}
       <div className="mb-6">
-        <KanayaStrategicHealthPolicyCard
+        <AIStrategyRoleCard
           role="ketua_rw"
           scope={{ rw: rwNomor }}
         />

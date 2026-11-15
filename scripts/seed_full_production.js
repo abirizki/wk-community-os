@@ -68,10 +68,19 @@ async function seedFullProduction() {
     // Step 4: Run SADA JABAR Coherence Seeder
     const coherencePath = path.resolve(__dirname, '../database/seed_sada_jabar_coherence.sql');
     if (fs.existsSync(coherencePath)) {
-      console.log('\n[4/4] Menginjeksi Skenario Koheren SADA JABAR (Kas, Iuran, Faspend, Faskes, PMT, Action Tracking)...');
+      console.log('\n[4/5] Menginjeksi Skenario Koheren SADA JABAR (Kas, Iuran, Faspend, Faskes, PMT, Action Tracking)...');
       const coherenceSql = fs.readFileSync(coherencePath, 'utf8');
       await connection.query(coherenceSql);
       console.log('  ✓ Buku Kas RT/RW, Iuran KK, Faskes, Faspend, PMT Stunting, Hunian Sewa berhasil di-seed.');
+    }
+
+    // Step 5: Run Master Dashboard Visual Seeder (Posyandu 4 Bulan, Lansia, PBB, Aduan, Surat READY_TTE)
+    const visualPath = path.resolve(__dirname, '../database/seed_dashboard_visual_master.sql');
+    if (fs.existsSync(visualPath)) {
+      console.log('\n[5/5] Menginjeksi Master Visual Dashboard Seeder (Posyandu 4-Bulan, Lansia, PBB-P2, Aduan & Surat)...');
+      const visualSql = fs.readFileSync(visualPath, 'utf8');
+      await connection.query(visualSql);
+      console.log('  ✓ Data longitudinal posyandu, skrining lansia, PBB-P2 terpetakan RT, aduan & surat berhasil di-seed.');
     }
 
     // Verify Record Counts
@@ -86,6 +95,7 @@ async function seedFullProduction() {
       { name: 'desil_keluarga', label: 'Klasifikasi Desil DTKS' },
       { name: 'posyandu', label: 'Pengukuran Balita Posyandu' },
       { name: 'posyandu_ibu_hamil', label: 'Ibu Hamil & 1000 HPK' },
+      { name: 'posyandu_lansia_pemeriksaan', label: 'Skrining Lansia Komorbid' },
       { name: 'posyandu_pmt_distribusi', label: 'Penyaluran PMT Stunting' },
       { name: 'keuangan_kas', label: 'Transaksi Pembukuan Kas RT/RW' },
       { name: 'keuangan_iuran_warga', label: 'Iuran Bulanan Warga' },

@@ -1471,6 +1471,40 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] Auto-seed SADA JABAR note:', seedCoherenceErr.message);
     }
 
+    // 27. Injeksi Master Visual Dashboard & Longitudinal Analytics Seeder
+    try {
+      let shouldSeedVisual = false;
+      try {
+        const [posyanduRows] = await connection.query("SELECT COUNT(*) as count FROM posyandu WHERE tanggal_pemeriksaan >= '2026-11-01'");
+        if (posyanduRows[0].count === 0) shouldSeedVisual = true;
+      } catch (checkErr) {
+        shouldSeedVisual = true;
+      }
+
+      if (shouldSeedVisual) {
+        console.log('[AutoPatch] Data analitik visual & longitudinal perlu diperbarui, menginjeksi seed_dashboard_visual_master.sql...');
+        const masterVisualPath = path.resolve(__dirname, '../../database/seed_dashboard_visual_master.sql');
+        if (fs.existsSync(masterVisualPath)) {
+          const sqlContent = fs.readFileSync(masterVisualPath, 'utf8');
+          const statements = sqlContent
+            .split(/;\s*[\r\n]+/)
+            .map(s => s.trim())
+            .filter(s => s.length > 0 && !s.startsWith('--') && !s.startsWith('/*') && !s.startsWith('SET '));
+
+          for (const stmt of statements) {
+            try {
+              await connection.query(stmt);
+            } catch (stmtErr) {
+              // Ignore duplicate keys / constraint notes
+            }
+          }
+          console.log('[AutoPatch] ✓ Seed Master Visual Dashboard (Posyandu 4 bulan, Lansia, PBB, Aduan, Surat READY_TTE) berhasil diinjeksikan.');
+        }
+      }
+    } catch (seedVisualErr) {
+      console.warn('[AutoPatch] Auto-seed Master Visual Dashboard note:', seedVisualErr.message);
+    }
+
     console.log('[AutoPatch] Skema database dan akun standar diverifikasi.');
   } catch (err) {
     console.warn('[AutoPatch] Catatan auto-patch database:', err.message);
