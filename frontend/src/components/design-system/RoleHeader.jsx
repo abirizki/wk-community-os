@@ -10,12 +10,12 @@ const ROLE_LABELS = {
   ketua_rt: 'Ketua RT',
   ketua_rw: 'Ketua RW',
   admin_kelurahan: 'Admin Kelurahan',
-  lurah: 'Lurah Kebonjati',
+  lurah: 'Lurah',
   kader_posyandu: 'Kader Posyandu',
   warga: 'Warga Masyarakat',
   superadmin: 'Super Admin',
-  walikota: 'Walikota Sukabumi',
-  camat: 'Camat Cikole',
+  walikota: 'Walikota',
+  camat: 'Camat',
 };
 
 const CIVIC_UTILITY_THEME = {
@@ -76,7 +76,7 @@ export default function RoleHeader({
 }) {
   const roleLabel = useMemo(() => {
     const normalizedRole = (role || '').toLowerCase().trim();
-    return ROLE_LABELS[normalizedRole] || 'Petugas Kebonjati';
+    return ROLE_LABELS[normalizedRole] || 'Aparatur Wilayah';
   }, [role]);
 
   const displayGreeting = useMemo(() => {

@@ -478,12 +478,12 @@ class KkService {
         kkMap.set(noKk, {
           no_kk: noKk,
           kepala_keluarga: String(r.kepala_keluarga || r['Kepala Keluarga'] || nama).trim(),
-          alamat: String(r.alamat || r.Alamat || 'Kelurahan Kebonjati').trim(),
+          alamat: String(r.alamat || r.Alamat || (currentUser?.kelurahan ? `Kelurahan ${currentUser.kelurahan}` : 'Kelurahan Kebonjati')).trim(),
           rt: String(r.rt || r.RT || currentUser?.rt || '001').padStart(3, '0').slice(-3),
           rw: String(r.rw || r.RW || currentUser?.rw || '001').padStart(3, '0').slice(-3),
-          kelurahan: String(r.kelurahan || r.Kelurahan || 'Kebonjati').trim(),
-          kecamatan: String(r.kecamatan || r.Kecamatan || 'Andir').trim(),
-          kota: String(r.kota || r.Kota || 'Bandung').trim(),
+          kelurahan: String(r.kelurahan || r.Kelurahan || currentUser?.kelurahan || 'Kebonjati').trim(),
+          kecamatan: String(r.kecamatan || r.Kecamatan || currentUser?.kecamatan || 'Cikole').trim(),
+          kota: String(r.kota || r.Kota || currentUser?.kota || 'Sukabumi').trim(),
           provinsi: String(r.provinsi || r.Provinsi || 'Jawa Barat').trim(),
           kode_pos: String(r.kode_pos || r['Kode Pos'] || '40181').trim()
         });

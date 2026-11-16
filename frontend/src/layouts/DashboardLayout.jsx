@@ -606,9 +606,8 @@ export default function DashboardLayout() {
                 <img src="/icon-bumi-warga.png" alt="BW" className="w-full h-full object-contain rounded-md" onError={(e) => { e.target.style.display = 'none'; }} />
                 <span className="font-bold text-xs hidden only:block">BW</span>
               </div>
-              <div>
-                <span className="text-xs font-extrabold text-on-surface block leading-none">Bumi Warga</span>
-                <span className="text-[9px] text-sky-600 font-semibold">Jabar Pintar Digital</span>
+              <div className="flex items-center">
+                <span className="text-sm font-extrabold text-on-surface block leading-none">Bumi Warga</span>
               </div>
             </div>
           </div>

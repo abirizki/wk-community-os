@@ -109,7 +109,7 @@ export default function LoginPage() {
             {
               id: 'kelurahan_helpdesk',
               title: 'Loket Pelayanan Kantor Kelurahan',
-              description: 'Kunjungi loket administrasi Kelurahan Kebonjati, Kec. Cikole dengan membawa fisik e-KTP dan Kartu Keluarga asli untuk verifikasi data kependudukan langsung.',
+              description: 'Kunjungi loket administrasi kantor kelurahan setempat dengan membawa fisik e-KTP dan Kartu Keluarga asli untuk verifikasi data kependudukan langsung.',
               badge: 'Pelayanan Tatap Muka'
             }
           ],
@@ -254,7 +254,7 @@ export default function LoginPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold tracking-tight">Bumi Warga</h2>
-                <p className="text-sky-200/90 text-xs font-medium">Kota Sukabumi • Jabar Pintar</p>
+                <p className="text-sky-200/90 text-xs font-medium">Jabar Pintar Digital</p>
               </div>
             </div>
 
@@ -309,7 +309,7 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-800">Bumi Warga</h2>
-                  <p className="text-[11px] text-sky-700 font-semibold">Kota Sukabumi</p>
+                  <p className="text-[11px] text-sky-700 font-semibold">Jabar Pintar Digital</p>
                 </div>
               </div>
               <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
@@ -827,8 +827,7 @@ export default function LoginPage() {
             {/* Footer Institutional Attribution */}
             <div className="mt-8 text-center border-t border-slate-200/80 pt-5">
               <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                Pemerintah Kota Sukabumi • Kecamatan Cikole • Kelurahan Kebonjati<br/>
-                Sistem Tata Kelola Lingkungan Terpadu © 2026 Bumi Warga
+                Jabar Pintar Digital • Sistem Tata Kelola Lingkungan Terpadu © 2026 Bumi Warga
               </p>
             </div>
           </div>
