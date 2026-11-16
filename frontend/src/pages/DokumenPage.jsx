@@ -304,7 +304,7 @@ export default function DokumenPage() {
     );
   }, [detailDoc, isOfficer, isRT, isRW, isKelurahan]);
 
-  // Print Preview Modal State & Customization (Logo, Nomor Surat, Identitas)
+  // Print Preview Modal State & Customization (Logo, Nomor Surat, Identitas, Resize & Paper Size)
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printDoc, setPrintDoc] = useState(null);
   const [customLogo, setCustomLogo] = useState(() => {
@@ -314,6 +314,21 @@ export default function DokumenPage() {
       return '';
     }
   });
+  const [logoSize, setLogoSize] = useState(() => {
+    try {
+      return parseInt(localStorage.getItem('bw_kop_logo_size') || '75', 10);
+    } catch (e) {
+      return 75;
+    }
+  });
+  const [paperSize, setPaperSize] = useState(() => {
+    try {
+      return localStorage.getItem('bw_kop_paper_size') || 'A4';
+    } catch (e) {
+      return 'A4';
+    }
+  });
+  const [kopSaveStatus, setKopSaveStatus] = useState(null); // 'saved' | null
   const [showEditLetterPanel, setShowEditLetterPanel] = useState(false);
   const [showLogoPicker, setShowLogoPicker] = useState(false);
   const [editedLetterData, setEditedLetterData] = useState({
@@ -328,6 +343,27 @@ export default function DokumenPage() {
     nip_pejabat: '',
     titimangsa: ''
   });
+
+  // Notifikasi Pop-up Surat Selesai Verifikasi Lurah (Siap Cetak untuk Admin Kelurahan)
+  const [showReadyToPrintPopup, setShowReadyToPrintPopup] = useState(false);
+  const [hasDismissedReadyPopup, setHasDismissedReadyPopup] = useState(false);
+  const [approvedReadyList, setApprovedReadyList] = useState([]);
+
+  const handleSaveKopSettings = (kelurahanName) => {
+    try {
+      const kelKey = (kelurahanName || editedLetterData.kelurahan || user?.kelurahan || 'kebonjati').toLowerCase().replace(/\s+/g, '');
+      localStorage.setItem(`bw_kop_settings_${kelKey}`, JSON.stringify(editedLetterData));
+      localStorage.setItem('bw_kop_logo_size', String(logoSize));
+      localStorage.setItem('bw_kop_paper_size', paperSize);
+      if (customLogo) {
+        localStorage.setItem('bw_kop_logo', customLogo);
+      }
+      setKopSaveStatus('saved');
+      setTimeout(() => setKopSaveStatus(null), 4000);
+    } catch (err) {
+      console.warn('Gagal menyimpan pengaturan kop surat:', err);
+    }
+  };
 
   const handleLogoUpload = (e) => {
     const file = e.target.files?.[0];
@@ -351,9 +387,120 @@ export default function DokumenPage() {
 
   const handleResetLogo = () => {
     setCustomLogo('');
+    setLogoSize(75);
     try {
       localStorage.removeItem('bw_kop_logo');
+      localStorage.setItem('bw_kop_logo_size', '75');
     } catch (err) {}
+  };
+
+  // Fungsi Cetak Naskah Dinas Terisolasi (Isolated Hidden Iframe Print)
+  // Menjamin seluruh bagian surat (Kop, Logo, Tabel Identitas, QR BSrE, TTE) tercetak utuh tanpa clipping scroll
+  const executeIsolatedPrint = (selectedPaper = paperSize) => {
+    const printContent = document.getElementById('official-print-document');
+    if (!printContent) {
+      window.print();
+      return;
+    }
+
+    let printIframe = document.getElementById('bw-official-print-iframe');
+    if (!printIframe) {
+      printIframe = document.createElement('iframe');
+      printIframe.id = 'bw-official-print-iframe';
+      printIframe.style.position = 'fixed';
+      printIframe.style.right = '0';
+      printIframe.style.bottom = '0';
+      printIframe.style.width = '0';
+      printIframe.style.height = '0';
+      printIframe.style.border = '0';
+      document.body.appendChild(printIframe);
+    }
+
+    const iframeDoc = printIframe.contentDocument || printIframe.contentWindow.document;
+    const paperSizeRule = selectedPaper === 'F4' ? '215mm 330mm' : '210mm 297mm';
+
+    iframeDoc.open();
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html lang="id">
+      <head>
+        <meta charset="utf-8">
+        <title>${editedLetterData.judul_surat || 'Surat Keterangan'} - ${editedLetterData.nomor_surat || ''}</title>
+        <style>
+          @page {
+            size: ${paperSizeRule};
+            margin: 12mm 18mm 12mm 18mm;
+          }
+          * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          body {
+            font-family: 'Times New Roman', Times, serif;
+            color: #020617;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+            line-height: 1.45;
+            font-size: 11pt;
+          }
+          .font-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important; }
+          .font-serif { font-family: 'Times New Roman', Times, Georgia, serif !important; }
+          .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
+          
+          .flex { display: flex; }
+          .flex-col { flex-direction: column; }
+          .flex-1 { flex: 1; }
+          .items-center { align-items: center; }
+          .items-start { align-items: flex-start; }
+          .items-end { align-items: flex-end; }
+          .justify-between { justify-content: space-between; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          .text-justify { text-align: justify; }
+          .font-bold { font-weight: bold; }
+          .font-black { font-weight: 900; }
+          .uppercase { text-transform: uppercase; }
+          .underline { text-decoration: underline; }
+          .italic { font-style: italic; }
+          .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+          
+          .grid { display: grid; }
+          .grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+          .col-span-4 { grid-column: span 4 / span 4; }
+          .col-span-8 { grid-column: span 8 / span 8; }
+          .gap-1 { gap: 0.25rem; }
+          .gap-2 { gap: 0.5rem; }
+          .gap-3 { gap: 0.75rem; }
+          .gap-4 { gap: 1rem; }
+          .gap-6 { gap: 1.5rem; }
+          
+          .border-b { border-bottom: 1px solid #020617; }
+          .border-t { border-top: 1px solid #020617; }
+          .border-b-2 { border-bottom: 2px solid #020617; }
+          .border-b-4 { border-bottom: 4px solid #020617; }
+          .border-dashed { border-style: dashed; }
+          .rounded-lg { border-radius: 0.5rem; }
+          .rounded-xl { border-radius: 0.75rem; }
+          
+          p { margin: 0 0 0.4rem 0; }
+          strong { font-weight: bold; }
+          img { display: block; }
+          svg { display: block; }
+        </style>
+      </head>
+      <body>
+        ${printContent.innerHTML}
+      </body>
+      </html>
+    `);
+    iframeDoc.close();
+
+    setTimeout(() => {
+      printIframe.contentWindow.focus();
+      printIframe.contentWindow.print();
+    }, 450);
   };
 
   // File Upload Reader Helper
@@ -422,7 +569,16 @@ export default function DokumenPage() {
           api.get('/dokumen/me')
         ]);
         if (officerRes.status === 'fulfilled') {
-          setData(officerRes.value?.data || []);
+          const docs = officerRes.value?.data || [];
+          setData(docs);
+          // Deteksi surat selesai TTE Lurah (Siap Cetak) untuk Admin Kelurahan
+          if (isAdminKelurahan && !hasDismissedReadyPopup) {
+            const readyDocs = docs.filter(d => d.status === 'APPROVED');
+            if (readyDocs.length > 0) {
+              setApprovedReadyList(readyDocs);
+              setShowReadyToPrintPopup(true);
+            }
+          }
         }
         if (myRes.status === 'fulfilled') {
           setMyDocs(myRes.value?.data || []);
@@ -773,19 +929,27 @@ export default function DokumenPage() {
     const singkatanKel = kelurahanName.toLowerCase().includes('cikole') ? 'Kel.Ckl' : 'Kel.Kbjt';
     const fallbackNomorSurat = `${kodeKlasifikasi}/${String(doc.id).padStart(3, '0')}-${singkatanKel}/${currentMonthRoman}/${currentYear}`;
 
+    // Muat preferensi kop surat yang tersimpan jika ada di localStorage
+    let savedKop = null;
+    try {
+      const savedStr = localStorage.getItem(`bw_kop_settings_${kelurahanName.toLowerCase().replace(/\s+/g, '')}`);
+      if (savedStr) savedKop = JSON.parse(savedStr);
+    } catch (e) {}
+
     setEditedLetterData({
       nomor_surat: doc.nomor_surat || fallbackNomorSurat,
-      kota: kotaName,
-      kecamatan: kecamatanName,
-      kelurahan: kelurahanName,
-      alamat_kantor: defaultAlamat,
-      kontak_kantor: defaultKontak,
+      kota: savedKop?.kota || kotaName,
+      kecamatan: savedKop?.kecamatan || kecamatanName,
+      kelurahan: savedKop?.kelurahan || kelurahanName,
+      alamat_kantor: savedKop?.alamat_kantor || defaultAlamat,
+      kontak_kantor: savedKop?.kontak_kantor || defaultKontak,
       judul_surat: docTitle,
-      nama_pejabat: defaultLurah,
-      nip_pejabat: defaultNip,
-      titimangsa: `${kotaName}, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`
+      nama_pejabat: savedKop?.nama_pejabat || defaultLurah,
+      nip_pejabat: savedKop?.nip_pejabat || defaultNip,
+      titimangsa: `${savedKop?.kota || kotaName}, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`
     });
 
+    setKopSaveStatus(null);
     setShowEditLetterPanel(false);
     setShowLogoPicker(false);
     setPrintDoc(doc);
@@ -2341,9 +2505,14 @@ export default function DokumenPage() {
 
         return (
           <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm overflow-y-auto">
-            {/* Embedded Print CSS to isolate printable document */}
+            {/* Embedded Print CSS to isolate printable document and prevent scroll clipping */}
             <style dangerouslySetInnerHTML={{ __html: `
               @media print {
+                html, body {
+                  height: auto !important;
+                  overflow: visible !important;
+                  background: white !important;
+                }
                 body * {
                   visibility: hidden !important;
                 }
@@ -2351,15 +2520,17 @@ export default function DokumenPage() {
                   visibility: visible !important;
                 }
                 #official-print-document {
-                  position: absolute !important;
-                  left: 0 !important;
+                  position: fixed !important;
                   top: 0 !important;
+                  left: 0 !important;
+                  right: 0 !important;
                   width: 100% !important;
                   margin: 0 !important;
-                  padding: 15mm 20mm !important;
+                  padding: 10mm 16mm !important;
                   box-shadow: none !important;
                   border: none !important;
                   background: white !important;
+                  z-index: 999999 !important;
                 }
                 .no-print-zone {
                   display: none !important;
@@ -2372,18 +2543,25 @@ export default function DokumenPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white text-slate-900 rounded-2xl max-w-3xl w-full p-4 sm:p-8 shadow-2xl my-6 border border-slate-300 font-sans relative max-h-[94vh] overflow-y-auto"
             >
-              {/* TOP TOOLBAR (KONTROL ADMIN: LOGO & EDIT IDENTITAS) */}
+              {/* TOP TOOLBAR (KONTROL ADMIN: LOGO, UKURAN, EDIT IDENTITAS & SIMPAN) */}
               <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-200 no-print-zone">
                 <div className="flex items-center gap-2">
                   <FileText className="text-primary" size={20} />
                   <div>
                     <h3 className="font-bold text-sm text-slate-900">Pratinjau Naskah Dinas Resmi SPBE</h3>
-                    <p className="text-[11px] text-slate-500">Permendagri No. 83/2022 • Tersedia opsi penyesuaian Logo & Nomor Surat</p>
+                    <p className="text-[11px] text-slate-500">Permendagri No. 83/2022 • Penyesuaian Logo Proporsional & Format Kertas ({paperSize})</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  {/* Tombol Pilih / Upload Logo Daerah */}
+                  {/* Feedback Status Simpan */}
+                  {kopSaveStatus === 'saved' && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 animate-pulse">
+                      <Check size={13} /> Pengaturan Kop Tersimpan!
+                    </span>
+                  )}
+
+                  {/* Tombol Pilih / Upload & Resize Logo Daerah */}
                   <button
                     type="button"
                     onClick={() => {
@@ -2395,10 +2573,10 @@ export default function DokumenPage() {
                         ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-xs' 
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300'
                     }`}
-                    title="Atur Logo Pemda di Kop Surat"
+                    title="Atur Logo Pemda & Ukuran di Kop Surat"
                   >
                     <Image size={14} className="text-amber-700" />
-                    <span>Logo Pemda {customLogo ? '✓' : ''}</span>
+                    <span>Logo & Ukuran ({logoSize}px)</span>
                   </button>
 
                   {/* Tombol Edit Nomor Surat & Identitas (Opsional) */}
@@ -2416,7 +2594,18 @@ export default function DokumenPage() {
                     title="Sesuaikan Nomor Surat & Identitas Kop Surat (Opsional)"
                   >
                     <PenLine size={14} />
-                    <span>Edit No. Surat & Kop (Opsional)</span>
+                    <span>Edit No. Surat & Kop</span>
+                  </button>
+
+                  {/* Tombol Simpan Cepat */}
+                  <button
+                    type="button"
+                    onClick={() => handleSaveKopSettings(displayedKelurahan)}
+                    className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-1 cursor-pointer"
+                    title="Simpan pengaturan Kop Surat permanen untuk kelurahan ini"
+                  >
+                    <Check size={14} />
+                    <span>Simpan Kop</span>
                   </button>
 
                   {/* Tombol Tutup */}
@@ -2431,37 +2620,47 @@ export default function DokumenPage() {
                 </div>
               </div>
 
-              {/* PANEL 1: PENGATURAN LOGO PEMDA (EXPANDABLE) */}
+              {/* PANEL 1: PENGATURAN LOGO PEMDA & UKURAN KERTAS (EXPANDABLE) */}
               {showLogoPicker && (
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="p-4 bg-amber-50/80 border border-amber-200 rounded-xl mb-4 space-y-3 text-xs no-print-zone shadow-sm"
+                  className="p-4 bg-amber-50/90 border border-amber-300 rounded-xl mb-4 space-y-3.5 text-xs no-print-zone shadow-sm"
                 >
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-amber-200">
                     <span className="font-bold text-amber-950 flex items-center gap-1.5">
-                      <Image size={15} className="text-amber-700" /> Atur Lambang / Logo Daerah di Kop Surat
+                      <Image size={15} className="text-amber-700" /> Atur Lambang / Logo Daerah & Ukuran Kertas
                     </span>
-                    {customLogo && (
+                    <div className="flex items-center gap-2">
+                      {customLogo && (
+                        <button
+                          type="button"
+                          onClick={handleResetLogo}
+                          className="text-rose-700 hover:text-rose-900 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+                        >
+                          <RotateCcw size={12} /> Reset Logo
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={handleResetLogo}
-                        className="text-rose-700 hover:text-rose-900 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+                        onClick={() => handleSaveKopSettings(displayedKelurahan)}
+                        className="px-2.5 py-1 bg-emerald-600 text-white rounded-md text-[11px] font-bold hover:bg-emerald-700 transition-colors shadow-xs flex items-center gap-1 cursor-pointer"
                       >
-                        <RotateCcw size={12} /> Reset ke Logo Default
+                        <Check size={12} /> Simpan Pengaturan Logo
                       </button>
-                    )}
+                    </div>
                   </div>
 
+                  {/* Pilihan Sumber Logo */}
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1">
                     {/* Preset 1: Default Lambang Emas SPBE */}
                     <button
                       type="button"
                       onClick={() => { setCustomLogo('default'); try { localStorage.setItem('bw_kop_logo', 'default'); } catch(e){} }}
-                      className={`p-2.5 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                      className={`p-2 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
                         !customLogo || customLogo === 'default'
-                          ? 'bg-amber-100 border-amber-400 font-bold text-amber-900 ring-2 ring-amber-400/30'
+                          ? 'bg-amber-100 border-amber-500 font-bold text-amber-900 ring-2 ring-amber-400/30'
                           : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                       }`}
                     >
@@ -2480,7 +2679,7 @@ export default function DokumenPage() {
                     <button
                       type="button"
                       onClick={() => { setCustomLogo('sukabumi'); try { localStorage.setItem('bw_kop_logo', 'sukabumi'); } catch(e){} }}
-                      className={`p-2.5 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                      className={`p-2 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
                         customLogo === 'sukabumi'
                           ? 'bg-emerald-100 border-emerald-500 font-bold text-emerald-950 ring-2 ring-emerald-500/30'
                           : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -2503,7 +2702,7 @@ export default function DokumenPage() {
                     <button
                       type="button"
                       onClick={() => { setCustomLogo('jabar'); try { localStorage.setItem('bw_kop_logo', 'jabar'); } catch(e){} }}
-                      className={`p-2.5 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                      className={`p-2 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
                         customLogo === 'jabar'
                           ? 'bg-emerald-100 border-emerald-500 font-bold text-emerald-950 ring-2 ring-emerald-500/30'
                           : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -2523,7 +2722,7 @@ export default function DokumenPage() {
                     </button>
 
                     {/* Preset 4: Upload Custom Image File */}
-                    <label className={`p-2.5 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                    <label className={`p-2 rounded-lg border text-left flex items-center gap-2 transition-all cursor-pointer ${
                       customLogo && !['default', 'sukabumi', 'jabar'].includes(customLogo)
                         ? 'bg-blue-100 border-blue-500 font-bold text-blue-950 ring-2 ring-blue-500/30'
                         : 'bg-white border-dashed border-slate-300 text-slate-700 hover:bg-slate-50'
@@ -2541,9 +2740,87 @@ export default function DokumenPage() {
                         <div className="text-[11px] truncate max-w-[110px]">
                           {customLogo && !['default', 'sukabumi', 'jabar'].includes(customLogo) ? 'Logo Kustom Aktif' : 'Unggah File'}
                         </div>
-                        <div className="text-[9px] text-slate-500 font-normal">PNG / SVG (Maks 2MB)</div>
+                        <div className="text-[9px] text-slate-500 font-normal">PNG/SVG (Maks 2MB)</div>
                       </div>
                     </label>
+                  </div>
+
+                  {/* Kontrol Resize Slider & Pilihan Kertas Proporsional */}
+                  <div className="pt-2 border-t border-amber-200/80 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Slider Ukuran Logo */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="font-bold text-slate-800 text-[11px]">
+                          Ukuran Logo Proporsional: <span className="text-amber-800 font-mono font-black">{logoSize} px</span>
+                        </label>
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setLogoSize(55)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${logoSize === 55 ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-slate-700 border-slate-300'}`}
+                          >
+                            Kecil (55px)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLogoSize(75)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${logoSize === 75 ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-slate-700 border-slate-300'}`}
+                          >
+                            Standar (75px)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLogoSize(95)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${logoSize === 95 ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-slate-700 border-slate-300'}`}
+                          >
+                            Besar (95px)
+                          </button>
+                        </div>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="40" 
+                        max="130" 
+                        step="2"
+                        value={logoSize} 
+                        onChange={(e) => setLogoSize(parseInt(e.target.value, 10))}
+                        className="w-full accent-amber-600 cursor-pointer h-2 bg-amber-200 rounded-lg"
+                      />
+                      <span className="text-[10px] text-slate-500">Geser slider untuk menyesuaikan proporsi lambang daerah di kop surat.</span>
+                    </div>
+
+                    {/* Format Ukuran Kertas Resmi */}
+                    <div>
+                      <label className="block font-bold text-slate-800 text-[11px] mb-1">
+                        Format Kertas Resmi Naskah Dinas:
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPaperSize('A4')}
+                          className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                            paperSize === 'A4'
+                              ? 'bg-amber-100 border-amber-500 font-bold text-amber-950 ring-2 ring-amber-400/30'
+                              : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="text-[11px] font-bold">Kertas A4</div>
+                          <div className="text-[9px] text-slate-500 font-normal">210 x 297 mm (Standar SPBE)</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPaperSize('F4')}
+                          className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                            paperSize === 'F4'
+                              ? 'bg-amber-100 border-amber-500 font-bold text-amber-950 ring-2 ring-amber-400/30'
+                              : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="text-[11px] font-bold">Kertas F4 / Folio</div>
+                          <div className="text-[9px] text-slate-500 font-normal">215 x 330 mm (Arsip Pemda)</div>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -2556,32 +2833,41 @@ export default function DokumenPage() {
                   exit={{ opacity: 0, height: 0 }}
                   className="p-4 bg-slate-50 border border-slate-300 rounded-xl mb-4 space-y-3 text-xs no-print-zone shadow-sm"
                 >
-                  <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                  <div className="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-slate-200">
                     <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                      <PenLine size={15} className="text-primary" /> Penyesuaian Nomor Surat & Identitas Naskah Dinas (Opsional)
+                      <PenLine size={15} className="text-primary" /> Penyesuaian Nomor Surat & Identitas Naskah Dinas
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const defAlamat = `Jl. Surya Kencana No. 42, ${kelurahanName}, Kec. ${kecamatanName}, ${kotaName}, ${provinsiName} 43111`;
-                        const defKontak = `Telepon: (0266) 221234 • Pos-el: kelurahan.${kelurahanName.toLowerCase().replace(/\s+/g, '')}@sukabumikota.go.id • Kode Pos: 43111`;
-                        setEditedLetterData({
-                          nomor_surat: printDoc.nomor_surat || fallbackNomorSurat,
-                          kota: kotaName,
-                          kecamatan: kecamatanName,
-                          kelurahan: kelurahanName,
-                          alamat_kantor: defAlamat,
-                          kontak_kantor: defKontak,
-                          judul_surat: docTitle,
-                          nama_pejabat: namaLurah,
-                          nip_pejabat: nipLurah,
-                          titimangsa: `${kotaName}, ${tglSurat}`
-                        });
-                      }}
-                      className="text-slate-600 hover:text-slate-900 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
-                    >
-                      <RotateCcw size={12} /> Reset ke Nilai Baku
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const defAlamat = `Jl. Surya Kencana No. 42, ${kelurahanName}, Kec. ${kecamatanName}, ${kotaName}, ${provinsiName} 43111`;
+                          const defKontak = `Telepon: (0266) 221234 • Pos-el: kelurahan.${kelurahanName.toLowerCase().replace(/\s+/g, '')}@sukabumikota.go.id • Kode Pos: 43111`;
+                          setEditedLetterData({
+                            nomor_surat: printDoc.nomor_surat || fallbackNomorSurat,
+                            kota: kotaName,
+                            kecamatan: kecamatanName,
+                            kelurahan: kelurahanName,
+                            alamat_kantor: defAlamat,
+                            kontak_kantor: defKontak,
+                            judul_surat: docTitle,
+                            nama_pejabat: namaLurah,
+                            nip_pejabat: nipLurah,
+                            titimangsa: `${kotaName}, ${tglSurat}`
+                          });
+                        }}
+                        className="text-slate-600 hover:text-slate-900 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+                      >
+                        <RotateCcw size={12} /> Reset Nilai Baku
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveKopSettings(displayedKelurahan)}
+                        className="px-2.5 py-1 bg-emerald-600 text-white rounded-md text-[11px] font-bold hover:bg-emerald-700 transition-colors shadow-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        <Check size={12} /> Simpan Pengaturan Kop
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -2733,17 +3019,28 @@ export default function DokumenPage() {
               <div id="official-print-document" className="bg-white text-slate-900">
                 {/* 1. KOP SURAT RESMI PEMERINTAH DAERAH */}
                 <div className="flex items-center gap-4 pb-2 border-b-[3px] border-slate-950 mb-0.5">
-                  {/* Lambang Daerah / Logo Pemda Resmi */}
-                  <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center">
+                  {/* Lambang Daerah / Logo Pemda Resmi (Ukuran Dinamis Proporsional Sesuai Pengaturan) */}
+                  <div 
+                    style={{ width: `${logoSize}px`, height: `${logoSize}px` }} 
+                    className="flex-shrink-0 flex items-center justify-center"
+                  >
                     {customLogo && customLogo.startsWith('data:image') ? (
                       <img 
                         src={customLogo} 
                         alt="Logo Daerah" 
-                        className="max-h-20 max-w-20 object-contain drop-shadow-xs" 
+                        style={{ maxHeight: `${logoSize}px`, maxWidth: `${logoSize}px` }}
+                        className="object-contain drop-shadow-xs" 
                       />
                     ) : customLogo === 'sukabumi' || (!customLogo && displayedKota.toLowerCase().includes('sukabumi')) ? (
-                      <div className="w-18 h-18 rounded-full border-2 border-emerald-800 p-0.5 flex items-center justify-center bg-white shadow-xs">
-                        <svg viewBox="0 0 36 36" className="w-16 h-16 drop-shadow-sm">
+                      <div 
+                        style={{ width: `${logoSize}px`, height: `${logoSize}px` }} 
+                        className="rounded-full border-2 border-emerald-800 p-0.5 flex items-center justify-center bg-white shadow-xs"
+                      >
+                        <svg 
+                          viewBox="0 0 36 36" 
+                          style={{ width: `${Math.round(logoSize * 0.85)}px`, height: `${Math.round(logoSize * 0.85)}px` }}
+                          className="drop-shadow-sm"
+                        >
                           <path fill="#2E7D32" d="M18 2 L32 8 L32 24 C32 30 18 35 18 35 C18 35 4 30 4 24 L4 8 Z" />
                           <path fill="#FFD54F" d="M18 6 L28 11 L28 22 C28 26 18 31 18 31 C18 31 8 26 8 22 L8 11 Z" />
                           <path fill="#1565C0" d="M18 10 L25 20 L11 20 Z" />
@@ -2751,16 +3048,33 @@ export default function DokumenPage() {
                         </svg>
                       </div>
                     ) : customLogo === 'jabar' ? (
-                      <div className="w-18 h-18 rounded-full border-2 border-emerald-700 p-0.5 flex items-center justify-center bg-white shadow-xs">
-                        <svg viewBox="0 0 36 36" className="w-16 h-16 drop-shadow-sm">
+                      <div 
+                        style={{ width: `${logoSize}px`, height: `${logoSize}px` }} 
+                        className="rounded-full border-2 border-emerald-700 p-0.5 flex items-center justify-center bg-white shadow-xs"
+                      >
+                        <svg 
+                          viewBox="0 0 36 36" 
+                          style={{ width: `${Math.round(logoSize * 0.85)}px`, height: `${Math.round(logoSize * 0.85)}px` }}
+                          className="drop-shadow-sm"
+                        >
                           <path fill="#1B5E20" d="M18 2 L33 9 L30 25 C30 30 18 35 18 35 C18 35 6 30 6 25 L3 9 Z" />
                           <path fill="#FFF" d="M18 7 L26 18 L10 18 Z" />
                           <circle cx="18" cy="22" r="3" fill="#FBC02D" />
                         </svg>
                       </div>
                     ) : (
-                      <div className="w-16 h-16 rounded-full border-2 border-slate-900 p-1 flex items-center justify-center bg-amber-50/50">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="w-11 h-11 text-amber-800">
+                      <div 
+                        style={{ width: `${logoSize}px`, height: `${logoSize}px` }} 
+                        className="rounded-full border-2 border-slate-900 p-1 flex items-center justify-center bg-amber-50/50"
+                      >
+                        <svg 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="1.6" 
+                          style={{ width: `${Math.round(logoSize * 0.7)}px`, height: `${Math.round(logoSize * 0.7)}px` }}
+                          className="text-amber-800"
+                        >
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A2.333 2.333 0 0017.167 8H6.833A2.333 2.333 0 004.5 10.333V21h15z" />
                           <circle cx="12" cy="7" r="1.5" fill="currentColor" />
                         </svg>
@@ -2769,7 +3083,7 @@ export default function DokumenPage() {
                   </div>
 
                   {/* Header Teks Instansi Pemerintah Daerah */}
-                  <div className="flex-1 text-center pr-6">
+                  <div className="flex-1 text-center pr-4 sm:pr-6">
                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-800 leading-tight">
                       PEMERINTAH {displayedKota.toUpperCase()}
                     </h3>
@@ -2954,11 +3268,29 @@ export default function DokumenPage() {
                 </div>
               </div>
 
-              {/* ACTION BUTTONS (HIDDEN WHEN PRINTING) */}
-              <div className="flex justify-between items-center gap-3 pt-6 mt-6 border-slate-200 border-t no-print-zone">
-                <div className="text-xs text-slate-500 hidden sm:block">
-                  Tips: Pilih opsi <em>"Save as PDF"</em> pada dialog printer untuk menyimpan berkas surat digital resmi.
+              {/* ACTION BUTTONS (DENGAN ISOLATED IFRAME PRINT DAN PILIHAN KERTAS) */}
+              <div className="flex flex-wrap justify-between items-center gap-3 pt-6 mt-6 border-slate-200 border-t no-print-zone">
+                <div className="flex items-center gap-2 text-xs text-slate-600">
+                  <span className="font-bold">Ukuran Kertas:</span>
+                  <div className="inline-flex rounded-lg border border-slate-300 p-0.5 bg-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setPaperSize('A4')}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all ${paperSize === 'A4' ? 'bg-white text-primary shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                    >
+                      A4
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaperSize('F4')}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all ${paperSize === 'F4' ? 'bg-white text-primary shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                    >
+                      F4 / Folio
+                    </button>
+                  </div>
+                  <span className="text-[11px] text-slate-400 hidden md:inline">• Ukuran logo saat ini: {logoSize}px</span>
                 </div>
+
                 <div className="flex items-center gap-2 ml-auto">
                   <button
                     type="button"
@@ -2969,10 +3301,11 @@ export default function DokumenPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => window.print()}
+                    onClick={() => executeIsolatedPrint(paperSize)}
                     className="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors text-xs flex items-center gap-2 cursor-pointer shadow-md active:scale-95"
+                    title="Cetak salinan dokumen resmi ke kertas printer atau Simpan PDF"
                   >
-                    <Printer size={16} /> Cetak Salinan Resmi (Print / PDF)
+                    <Printer size={16} /> Cetak Salinan Resmi ({paperSize} / PDF)
                   </button>
                 </div>
               </div>
@@ -3004,6 +3337,135 @@ export default function DokumenPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 5: POPUP NOTIFIKASI SURAT SELESAI VERIFIKASI LURAH (SIAP CETAK)     */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {isAdminKelurahan && showReadyToPrintPopup && approvedReadyList.length > 0 && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-emerald-500/30 max-w-2xl w-full overflow-hidden flex flex-col max-h-[85vh]"
+            >
+              {/* Header Modal */}
+              <div className="p-5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl text-white">
+                    <Printer className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-white tracking-wide">
+                        Surat Selesai Verifikasi Lurah (Siap Cetak)
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-emerald-800 uppercase tracking-wider">
+                        {approvedReadyList.length} Berkas
+                      </span>
+                    </div>
+                    <p className="text-xs text-emerald-100 mt-1 leading-relaxed">
+                      Lurah telah menandatangani naskah dinas dengan TTE tersertifikasi. Dokumen resmi siap dicetak dan diserahkan kepada warga.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowReadyToPrintPopup(false);
+                    setHasDismissedReadyPopup(true);
+                  }}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                  title="Tutup Notifikasi"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Daftar Berkas Siap Cetak */}
+              <div className="p-5 overflow-y-auto space-y-3 flex-1 bg-surface-container-low/40">
+                {approvedReadyList.map((doc, idx) => (
+                  <div
+                    key={doc.id || idx}
+                    className="p-4 rounded-xl border border-emerald-500/20 bg-white dark:bg-surface-container shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40">
+                          {doc.jenis_surat}
+                        </span>
+                        <span className="text-[11px] text-on-surface-variant font-mono">
+                          {doc.nomor_surat || 'Nomor Surat Terbit'}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-on-surface truncate">
+                        {doc.nama_pemohon || doc.warga?.nama_lengkap || 'Warga Kelurahan'}
+                      </h4>
+                      <p className="text-xs text-on-surface-variant">
+                        NIK: <span className="font-mono">{doc.nik_pemohon}</span> • RT/RW: {doc.rt || '-'}/{doc.rw || '-'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                      <button
+                        onClick={() => {
+                          setShowReadyToPrintPopup(false);
+                          handlePrint(doc);
+                        }}
+                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                      >
+                        <Printer size={14} /> Cetak Naskah Dinas
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer Modal */}
+              <div className="p-4 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    setShowReadyToPrintPopup(false);
+                    setHasDismissedReadyPopup(true);
+                  }}
+                  className="px-4 py-2 text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors cursor-pointer"
+                >
+                  Tutup Sementara
+                </button>
+                <button
+                  onClick={() => {
+                    setShowReadyToPrintPopup(false);
+                    setActiveTab('ready_to_issue');
+                  }}
+                  className="px-4 py-2 bg-primary text-white text-xs font-semibold rounded-lg shadow-sm hover:bg-primary/90 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <FileCheck size={14} /> Lihat Semua di Tab Siap Terbit
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Action Pill Siap Cetak (Jika Popup ditutup sementara & ada surat siap cetak) */}
+      {isAdminKelurahan && !showReadyToPrintPopup && approvedReadyList.length > 0 && (
+        <motion.button
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowReadyToPrintPopup(true)}
+          className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2.5 border border-white/20 backdrop-blur-md cursor-pointer transition-all"
+          title="Tampilkan daftar surat yang telah diverifikasi Lurah dan siap dicetak"
+        >
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+          </span>
+          <Printer size={16} />
+          <span className="text-xs">{approvedReadyList.length} Surat Siap Dicetak</span>
+        </motion.button>
       )}
     </div>
   );
