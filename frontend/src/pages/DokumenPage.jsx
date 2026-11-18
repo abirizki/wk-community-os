@@ -37,10 +37,12 @@ import {
   Home,
   Search,
   PenLine,
-  Palette
+  Palette,
+  MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { downloadReport } from '../utils/exportHelper';
+import ModuleHeader from '../components/design-system/ModuleHeader';
 
 export const JENIS_SURAT_CONFIG = {
   'Surat Keterangan Domisili': {
@@ -1027,53 +1029,53 @@ export default function DokumenPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm">
-        <div>
-          <h1 className="text-2xl font-bold text-on-surface flex items-center gap-2">
-            <FileText className="text-primary" />
-            <span>Pelayanan Dokumen & Surat Warga</span>
-          </h1>
-          <p className="text-sm text-on-surface-variant mt-1">
-            Pengajuan dan penerbitan surat pengantar berjenjang (RT &bull; RW &bull; Kelurahan) dengan tanda tangan digital tersertifikasi.
-          </p>
-        </div>
+      <ModuleHeader
+        title="Pelayanan Dokumen & Surat Warga"
+        titleIcon={FileText}
+        badge="Standar Pelayanan Publik PATEN"
+        badgeIcon={ShieldCheck}
+        scopeLabel={
+          isOfficer
+            ? (isRT ? `Wilayah RT ${user?.rt || '001'} / RW ${user?.rw || '001'}` : isRW ? `Wilayah RW ${user?.rw || '001'}` : `Pelayanan Terpadu Kelurahan`)
+            : 'Layanan Mandiri Warga'
+        }
+        scopeIcon={MapPin}
+        description="Pengajuan dan penerbitan surat pengantar berjenjang (RT • RW • Kelurahan) dengan tanda tangan digital tersertifikasi."
+      >
+        {isOfficer && (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => handleExportRegister('xlsx')}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 px-3.5 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer disabled:opacity-50 min-h-[44px]"
+              title="Unduh Buku Register Surat dalam format Microsoft Excel"
+            >
+              <FileSpreadsheet size={16} className="text-emerald-300" />
+              <span>{isExporting ? 'Mengunduh...' : 'Ekspor Excel'}</span>
+            </button>
+            <button
+              onClick={() => handleExportRegister('csv')}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 bg-white/10 text-white hover:bg-white/20 border border-white/20 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer disabled:opacity-50 min-h-[44px]"
+              title="Unduh format CSV"
+            >
+              <Download size={14} />
+              <span>CSV</span>
+            </button>
+          </div>
+        )}
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {isOfficer && (
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => handleExportRegister('xlsx')}
-                disabled={isExporting}
-                className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 px-3.5 py-2.5 rounded-xl font-semibold hover:bg-emerald-100 transition-all text-xs cursor-pointer disabled:opacity-50"
-                title="Unduh Buku Register Surat dalam format Microsoft Excel"
-              >
-                <FileSpreadsheet size={16} className="text-emerald-600" />
-                <span>{isExporting ? 'Mengunduh...' : 'Ekspor Excel'}</span>
-              </button>
-              <button
-                onClick={() => handleExportRegister('csv')}
-                disabled={isExporting}
-                className="flex items-center gap-1.5 bg-surface-container text-on-surface border border-outline-variant px-3 py-2.5 rounded-xl font-semibold hover:bg-surface-container-high transition-all text-xs cursor-pointer disabled:opacity-50"
-                title="Unduh format CSV"
-              >
-                <Download size={14} />
-                <span>CSV</span>
-              </button>
-            </div>
-          )}
-
-          <button
-            onClick={() => {
-              setSubjekPemohon('self');
-              setShowModal(true);
-            }}
-            className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 cursor-pointer text-xs sm:text-sm"
-          >
-            <Plus size={18} />
-            <span>Ajukan Surat Baru (Mandiri)</span>
-          </button>
-        </div>
-      </div>
+        <button
+          onClick={() => {
+            setSubjekPemohon('self');
+            setShowModal(true);
+          }}
+          className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-md active:scale-95 cursor-pointer text-xs sm:text-sm min-h-[44px]"
+        >
+          <Plus size={18} />
+          <span>Ajukan Surat Baru (Mandiri)</span>
+        </button>
+      </ModuleHeader>
 
       {/* ALERTS */}
       <AnimatePresence>
@@ -1112,12 +1114,12 @@ export default function DokumenPage() {
         )}
       </AnimatePresence>
 
-      {/* TABS (OFFICERS ONLY) */}
+      {/* TABS (OFFICERS ONLY) - STANDARDIZED BENTO TABS */}
       {isOfficer && (
-        <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-hidden p-1.5 gap-1.5 flex-wrap sm:flex-nowrap">
+        <div className="flex bg-surface-container-lowest rounded-2xl border border-outline-variant p-1.5 gap-1.5 flex-wrap sm:flex-nowrap shadow-xs">
           <button
             onClick={() => setActiveTab('pending_approval')}
-            className={`flex-1 py-2.5 px-3 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`flex-1 py-2.5 px-3 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'pending_approval'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-low'
@@ -1139,7 +1141,7 @@ export default function DokumenPage() {
           {isKelurahan && (
             <button
               onClick={() => setActiveTab('ready_to_issue')}
-              className={`flex-1 py-2.5 px-3 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              className={`flex-1 py-2.5 px-3 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
                 activeTab === 'ready_to_issue'
                   ? 'bg-primary text-on-primary shadow-sm'
                   : 'text-on-surface-variant hover:bg-surface-container-low'
@@ -1156,7 +1158,7 @@ export default function DokumenPage() {
 
           <button
             onClick={() => setActiveTab('my_docs')}
-            className={`flex-1 py-2.5 px-3 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`flex-1 py-2.5 px-3 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'my_docs'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-low'
@@ -1167,7 +1169,7 @@ export default function DokumenPage() {
           </button>
           <button
             onClick={() => setActiveTab('all')}
-            className={`flex-1 py-2.5 px-3 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`flex-1 py-2.5 px-3 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'all'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-low'

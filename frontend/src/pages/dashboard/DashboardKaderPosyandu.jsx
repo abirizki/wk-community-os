@@ -950,7 +950,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       {/* 1. TOP PERSONA BAR & DUAL-PERSONA SWITCHER                                */}
       {/* ========================================================================= */}
-      <div className="bg-gradient-to-r from-teal-800 via-teal-700 to-emerald-800 rounded-3xl p-4 sm:p-6 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 border border-teal-600/30">
+      <div className="bg-gradient-to-r from-teal-800 via-teal-700 to-emerald-800 rounded-2xl p-4 sm:p-6 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 border border-teal-600/30">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center font-black border border-white/20 text-white shrink-0">
             <HeartPulse className="w-6 h-6 text-teal-200 animate-pulse" />
@@ -1242,7 +1242,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* 4. ACTION CENTER: PRIORITAS TUGAS LAPANGAN                                */}
       {/* ========================================================================= */}
       {actionItems.length > 0 && (
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs">
           <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -1344,7 +1344,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             </div>
 
             {displayedBalita.length === 0 ? (
-              <div className="p-8 text-center bg-white rounded-3xl border border-slate-200 space-y-2">
+              <div className="p-8 text-center bg-white rounded-2xl border border-slate-200 space-y-2">
                 <Baby size={36} className="mx-auto text-slate-300" />
                 <p className="text-sm font-bold text-slate-700">Tidak ada balita yang sesuai filter.</p>
                 <p className="text-xs text-slate-400">Pencatatan penimbangan balita akan langsung memperbarui kartu.</p>
@@ -1462,7 +1462,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             </div>
 
             {displayedBumil.length === 0 ? (
-              <div className="p-8 text-center bg-white rounded-3xl border border-slate-200 space-y-2">
+              <div className="p-8 text-center bg-white rounded-2xl border border-slate-200 space-y-2">
                 <Heart size={36} className="mx-auto text-pink-300" />
                 <p className="text-sm font-bold text-slate-700">Belum ada data ibu hamil yang terdaftar.</p>
                 <p className="text-xs text-slate-400">Klik "+ Sasaran Baru" di atas untuk mendaftarkan ibu hamil baru di wilayah tugas.</p>
@@ -1598,7 +1598,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             </div>
 
             {displayedLansia.length === 0 ? (
-              <div className="p-8 text-center bg-white rounded-3xl border border-slate-200 space-y-2">
+              <div className="p-8 text-center bg-white rounded-2xl border border-slate-200 space-y-2">
                 <HeartPulse size={36} className="mx-auto text-slate-300" />
                 <p className="text-sm font-bold text-slate-700">Tidak ada data lansia yang sesuai filter.</p>
               </div>
@@ -1719,7 +1719,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
         {/* PILLAR 5: ANTREAN OFFLINE & SINKRONISASI                              */}
         {/* --------------------------------------------------------------------- */}
         {activePillar === 'offline' && (
-          <div className="bg-white rounded-3xl border border-slate-200 p-4 sm:p-6 space-y-4 shadow-xs">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
@@ -1848,7 +1848,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
-              className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl border border-slate-200 shadow-2xl max-h-[92vh] flex flex-col overflow-hidden"
+              className="w-full max-w-lg bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-h-[92vh] flex flex-col overflow-hidden"
             >
               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-teal-600 text-white">
                 <div className="flex items-center gap-2.5">
@@ -2045,7 +2045,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
-              className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl border border-slate-200 shadow-2xl max-h-[92vh] flex flex-col overflow-hidden"
+              className="w-full max-w-lg bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-h-[92vh] flex flex-col overflow-hidden"
             >
               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-pink-600 text-white">
                 <div className="flex items-center gap-2.5">
@@ -2270,7 +2270,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
-              className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl border border-slate-200 shadow-2xl max-h-[92vh] flex flex-col overflow-hidden"
+              className="w-full max-w-lg bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-h-[92vh] flex flex-col overflow-hidden"
             >
               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-emerald-700 text-white">
                 <div className="flex items-center gap-2.5">
@@ -2485,7 +2485,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl p-5 space-y-4"
+              className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl p-5 space-y-4"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
@@ -2602,7 +2602,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
@@ -2916,7 +2916,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">

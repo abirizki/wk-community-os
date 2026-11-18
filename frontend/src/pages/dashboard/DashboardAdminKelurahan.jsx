@@ -602,7 +602,7 @@ export default function DashboardAdminKelurahan() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20">
       {/* 1. HERO OPERATIONAL BANNER */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-slate-900 via-sky-950 to-blue-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden border border-sky-900/50">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-slate-900 via-sky-950 to-blue-950 text-white p-6 sm:p-8 rounded-2xl shadow-xl relative overflow-hidden border border-sky-900/50">
         <div className="absolute -right-12 -bottom-12 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sky-200 text-xs font-semibold border border-white/10">
@@ -925,7 +925,7 @@ export default function DashboardAdminKelurahan() {
           {/* 3 Bento Charts: Grafik Alur Proses Semua Fitur Layanan Utama */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Chart 1: Funnel Alur Pelayanan Surat Masuk & TTE */}
-            <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-sm space-y-4 flex flex-col justify-between">
+            <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
@@ -970,7 +970,7 @@ export default function DashboardAdminKelurahan() {
             </div>
 
             {/* Chart 2: Status Kliring Bansos & Penjadwalan Tiket QR */}
-            <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-sm space-y-4 flex flex-col justify-between">
+            <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
@@ -1014,7 +1014,7 @@ export default function DashboardAdminKelurahan() {
             </div>
 
             {/* Chart 3: Kepatuhan Realisasi PBB per RW */}
-            <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant shadow-sm space-y-4 flex flex-col justify-between">
+            <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm space-y-4 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
@@ -1056,7 +1056,7 @@ export default function DashboardAdminKelurahan() {
           </div>
 
           {/* Pintasan Meja Kerja Cepat (Quick Operational Action Center) */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-sky-600 animate-pulse" />

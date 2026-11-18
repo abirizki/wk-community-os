@@ -1,7 +1,7 @@
 /**
  * frontend/src/pages/KartuKeluargaPage.jsx
  * Ringkasan Kartu Keluarga Digital - Modern, Simple, & Informatif
- * Kelurahan Kebonjati, Kecamatan Sukabumi, Kota Sukabumi (43111)
+ * wilayah kelurahan, Kecamatan Sukabumi, Kota Sukabumi (43111)
  * 
  * Karakteristik:
  * - Single-sheet modern card layout (bebas tab yang membingungkan dan bebas horizontal scrollbar)
@@ -386,7 +386,7 @@ export default function KartuKeluargaPage() {
     <div className="max-w-5xl mx-auto space-y-6 pb-16 print:p-0">
       
       {/* 1. HEADER RINGKASAN KK (Clean, Modern & Simple) */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm relative overflow-hidden">
+      <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200/90 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 pb-5 border-b border-slate-100">
           <div className="flex items-start gap-4">
             <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-sky-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">

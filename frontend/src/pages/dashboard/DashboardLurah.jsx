@@ -460,7 +460,7 @@ export default function DashboardLurah() {
       </div>
 
       {/* SUPER APPS BENTO GRID MEJA KERJA LURAH */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4 mb-6">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4 mb-6">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
@@ -679,7 +679,7 @@ export default function DashboardLurah() {
         <div className="space-y-6 mb-8 animate-fadeIn">
           {/* 1. SEKTOR PENDIDIKAN & DAYA TAMPUNG KURSUS/ROMBEL */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                   <GraduationCap className="text-sky-600" size={18} />
@@ -721,7 +721,7 @@ export default function DashboardLurah() {
             </div>
 
             {/* 2. SEKTOR KESEHATAN POSYANDU & GERIATRI */}
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                   <HeartPulse className="text-rose-600" size={18} />
@@ -787,7 +787,7 @@ export default function DashboardLurah() {
           </div>
 
           {/* 3. PIRAMIDA PENDUDUK KELURAHAN (BPS COHORTS) */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
               <div>
                 <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">

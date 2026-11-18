@@ -39,6 +39,7 @@ import {
   Ticket
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ModuleHeader from '../components/design-system/ModuleHeader';
 
 const JENIS_BANSOS_OPTIONS = [
   'PKH',
@@ -703,92 +704,89 @@ export default function BansosPage() {
   return (
     <div className="max-w-max-width mx-auto space-y-6 pb-12">
       {/* HEADER */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-2">
-            <ShieldCheck size={14} /> Tata Kelola Bantuan Berbasis Evidensi
-          </div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-on-surface flex items-center gap-3">
-            <Gift className="text-primary" size={32} />
-            Penyaluran Bantuan Sosial (Bansos)
-          </h1>
-          <p className="text-body-md text-on-surface-variant mt-1">
-            Mekanisme usulan dan persetujuan penerima manfaat secara berjenjang (RT &rarr; RW &rarr; Kelurahan).
-          </p>
-        </div>
+      <ModuleHeader
+        title="Penyaluran Bantuan Sosial (Bansos)"
+        titleIcon={Gift}
+        badge="Tata Kelola Bantuan Berbasis Evidensi"
+        badgeIcon={ShieldCheck}
+        scopeLabel={
+          isOfficer
+            ? (isRT ? `Wilayah RT ${user?.rt || '001'} / RW ${user?.rw || '001'}` : isRW ? `Wilayah RW ${user?.rw || '001'}` : `Wilayah Kelurahan`)
+            : 'Status Program Bantuan Saya'
+        }
+        scopeIcon={MapPin}
+        description="Mekanisme usulan dan verifikasi berjenjang penerima manfaat (RT → RW → Kelurahan) berbasis DTKS/P3KE."
+      >
+        {!isOfficer && (
+          <button
+            onClick={() => navigate('/dashboard/profil')}
+            className="flex items-center gap-2 px-3.5 py-2.5 bg-sky-500/20 text-sky-200 border border-sky-400/30 rounded-xl font-bold shadow-sm hover:bg-sky-500/30 transition-colors text-xs min-h-[44px]"
+          >
+            <FileCheck size={16} /> Input Bukti Bantuan & BPJS
+          </button>
+        )}
 
-        <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
-          {!isOfficer && (
+        {isOfficer && (
+          <>
             <button
-              onClick={() => navigate('/dashboard/profil')}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-sky-50 text-sky-800 border border-sky-200 rounded-xl font-semibold shadow-sm hover:bg-sky-100 transition-colors text-xs"
+              onClick={() => {
+                setAuditForm({
+                  bansos_pengajuan_id: null,
+                  nik_warga: '',
+                  nama_warga: '',
+                  no_kk: '',
+                  tipe_sanggahan: 'TIDAK_LAYAK',
+                  alasan_lapangan: '',
+                  bukti_foto_url: ''
+                });
+                setShowAuditModal(true);
+              }}
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-rose-500/20 text-rose-200 border border-rose-400/30 rounded-xl font-bold shadow-sm hover:bg-rose-500/30 transition-colors text-xs min-h-[44px]"
             >
-              <FileCheck size={16} /> Input Bukti Bantuan & BPJS
+              <AlertTriangle size={15} /> Lapor Sanggahan Bansos
             </button>
-          )}
 
-          {isOfficer && (
-            <>
+            <button
+              onClick={() => {
+                setBulkCsvRows([]);
+                setBulkPreviewStats({ total: 0, valid: 0, invalid: 0 });
+                setShowBulkUploadModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 rounded-xl font-bold shadow-sm hover:bg-emerald-500/30 transition-colors text-xs min-h-[44px]"
+            >
+              <FileSpreadsheet size={15} className="text-emerald-300" />
+              <span>Unggah Massal (CSV)</span>
+            </button>
+
+            {isKelurahan && (
               <button
                 onClick={() => {
-                  setAuditForm({
-                    bansos_pengajuan_id: null,
-                    nik_warga: '',
-                    nama_warga: '',
-                    no_kk: '',
-                    tipe_sanggahan: 'TIDAK_LAYAK',
-                    alasan_lapangan: '',
-                    bukti_foto_url: ''
-                  });
-                  setShowAuditModal(true);
-                }}
-                className="flex items-center gap-2 px-3.5 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl font-semibold shadow-sm hover:bg-rose-100 transition-colors text-xs"
-              >
-                <AlertTriangle size={15} /> Lapor Sanggahan Bansos
-              </button>
-
-              <button
-                onClick={() => {
-                  setBulkCsvRows([]);
-                  setBulkPreviewStats({ total: 0, valid: 0, invalid: 0 });
-                  setShowBulkUploadModal(true);
-                }}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl font-semibold shadow-sm hover:bg-emerald-100 transition-colors text-xs"
-              >
-                <FileSpreadsheet size={15} className="text-emerald-700" />
-                <span>Unggah Massal (CSV)</span>
-              </button>
-
-              {isKelurahan && (
-                <button
-                  onClick={() => {
-                    if (selectedBansosIds.length === 0) {
-                      const approvedIds = bansosList.filter((b) => b.status === 'APPROVED').map((b) => b.id);
-                      if (approvedIds.length === 0) {
-                        setError('Belum ada usulan bansos berstatus APPROVED untuk diterbitkan tiket.');
-                        return;
-                      }
-                      setSelectedBansosIds(approvedIds);
+                  if (selectedBansosIds.length === 0) {
+                    const approvedIds = bansosList.filter((b) => b.status === 'APPROVED').map((b) => b.id);
+                    if (approvedIds.length === 0) {
+                      setError('Belum ada usulan bansos berstatus APPROVED untuk diterbitkan tiket.');
+                      return;
                     }
-                    setShowBatchScheduleModal(true);
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 bg-purple-600 text-white rounded-xl font-semibold shadow-sm hover:bg-purple-700 transition-colors text-xs"
-                >
-                  <Ticket size={15} />
-                  <span>Jadwalkan & Tiket Masal {selectedBansosIds.length > 0 ? `(${selectedBansosIds.length})` : ''}</span>
-                </button>
-              )}
-
-              <button
-                onClick={() => setShowProposeModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold shadow-sm hover:bg-primary/90 transition-colors text-xs"
+                    setSelectedBansosIds(approvedIds);
+                  }
+                  setShowBatchScheduleModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-purple-600/80 hover:bg-purple-600 text-white border border-purple-400/30 rounded-xl font-bold shadow-sm transition-colors text-xs min-h-[44px]"
               >
-                <Plus size={16} /> Usulkan Penerima Bansos
+                <Ticket size={15} />
+                <span>Jadwalkan & Tiket Masal {selectedBansosIds.length > 0 ? `(${selectedBansosIds.length})` : ''}</span>
               </button>
-            </>
-          )}
-        </div>
-      </header>
+            )}
+
+            <button
+              onClick={() => setShowProposeModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-bold shadow-md hover:bg-primary/90 transition-colors text-xs min-h-[44px]"
+            >
+              <Plus size={16} /> Usulkan Penerima Bansos
+            </button>
+          </>
+        )}
+      </ModuleHeader>
 
       {/* ALERTS */}
       <AnimatePresence>
@@ -846,31 +844,31 @@ export default function BansosPage() {
         </div>
       )}
 
-      {/* TABS (FOR OFFICERS: RT, RW, KELURAHAN) */}
+      {/* TABS (FOR OFFICERS: RT, RW, KELURAHAN) - STANDARDIZED BENTO TABS */}
       {isOfficer && (
-        <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-x-auto p-1.5 gap-1.5 scrollbar-none">
+        <div className="flex bg-surface-container-lowest rounded-2xl border border-outline-variant p-1.5 gap-1.5 flex-wrap sm:flex-nowrap shadow-xs">
           <button
             onClick={() => setActiveTab('all')}
-            className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
+            className={`flex-1 py-2.5 px-3.5 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'all'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-low'
             }`}
           >
-            <Users size={15} />
+            <Users size={16} />
             <span>Semua Usulan Bansos ({bansosList.length})</span>
           </button>
 
           {(isRW || isKelurahan) && (
             <button
               onClick={() => setActiveTab('pending_my_action')}
-              className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
+              className={`flex-1 py-2.5 px-3.5 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'pending_my_action'
                   ? 'bg-amber-500 text-white shadow-sm'
                   : 'text-on-surface-variant hover:bg-surface-container-low'
               }`}
             >
-              <Clock size={15} />
+              <Clock size={16} />
               <span>
                 Menunggu Verifikasi ({isRW ? (stats.pending_rw || 0) : (stats.pending_kelurahan || 0)})
               </span>
@@ -879,41 +877,41 @@ export default function BansosPage() {
 
           <button
             onClick={() => setActiveTab('tickets')}
-            className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
+            className={`flex-1 py-2.5 px-3.5 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'tickets'
                 ? 'bg-emerald-600 text-white shadow-sm font-bold'
                 : 'text-emerald-700 bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200'
             }`}
           >
-            <QrCode size={15} />
+            <QrCode size={16} />
             <span>Tiket Pengambilan ({myTickets.length})</span>
           </button>
         </div>
       )}
 
-      {/* TABS (FOR NON-OFFICER / WARGA) */}
+      {/* TABS (FOR NON-OFFICER / WARGA) - STANDARDIZED BENTO TABS */}
       {!isOfficer && (
-        <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-x-auto p-1.5 gap-1.5 scrollbar-none mb-3">
+        <div className="flex bg-surface-container-lowest rounded-2xl border border-outline-variant p-1.5 gap-1.5 flex-wrap sm:flex-nowrap shadow-xs mb-3">
           <button
             onClick={() => setActiveTab('all')}
-            className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center gap-2 transition-all ${
+            className={`flex-1 py-2.5 px-3.5 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'all'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-low'
             }`}
           >
-            <Gift size={15} />
+            <Gift size={16} />
             <span>Daftar Bantuan Sosial</span>
           </button>
           <button
             onClick={() => setActiveTab('tickets')}
-            className={`py-2 px-4 rounded-lg font-semibold text-xs flex items-center gap-2 transition-all ${
+            className={`flex-1 py-2.5 px-3.5 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'tickets'
                 ? 'bg-emerald-600 text-white shadow-sm font-bold'
                 : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
             }`}
           >
-            <QrCode size={15} />
+            <QrCode size={16} />
             <span>Tiket Undangan Pengambilan ({myTickets.length})</span>
           </button>
         </div>

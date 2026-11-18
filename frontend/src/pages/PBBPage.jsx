@@ -32,8 +32,10 @@ import {
   FileSpreadsheet,
   AlertCircle,
   Home,
-  Users
+  Users,
+  MapPin
 } from 'lucide-react';
+import ModuleHeader from '../components/design-system/ModuleHeader';
 
 export default function PBBPage() {
   const { user } = useAuth();
@@ -287,39 +289,42 @@ export default function PBBPage() {
       </AnimatePresence>
 
       {/* ========================================================================= */}
-      {/* 1. HEADER UTAMA SESUAI PERAN                                              */}
+      {/* 1. HEADER UTAMA SESUAI PERAN (CIVIC UTILITY DESIGN SYSTEM)                 */}
       {/* ========================================================================= */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 border border-blue-700/30">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center font-black border border-white/20 text-white shrink-0">
-            <Building2 className="w-6 h-6 text-blue-300" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-400 text-blue-950">
-                {isAdminKelurahan ? 'Rekonsiliasi Pajak Daerah' : isOfficer ? 'Verifikasi Pajak Lingkungan' : 'Pajak Daerah Mandiri'}
-              </span>
-              <span className="text-xs text-blue-200 font-mono">
-                {isRT ? `RT ${user?.rt} / RW ${user?.rw}` : isRW ? `RW ${user?.rw}` : 'Kelurahan Kebonjati'}
-              </span>
-            </div>
-            <h1 className="text-base sm:text-xl font-bold text-white mt-0.5">
-              {isAdminKelurahan
-                ? 'Rekonsiliasi & Upload DHKP Pajak Bumi dan Bangunan (PBB-P2)'
-                : isOfficer
-                ? `Meja Verifikasi PBB Pengurus RT/RW`
-                : 'Layanan Pembayaran Pajak Bumi dan Bangunan (PBB)'}
-            </h1>
-          </div>
-        </div>
-
+      <ModuleHeader
+        title={
+          isAdminKelurahan
+            ? 'Rekonsiliasi & Upload DHKP PBB-P2'
+            : isOfficer
+            ? 'Meja Verifikasi PBB Pengurus RT/RW'
+            : 'Layanan Pembayaran Pajak Bumi & Bangunan'
+        }
+        titleIcon={Building2}
+        badge={
+          isAdminKelurahan
+            ? 'Rekonsiliasi Pajak Daerah'
+            : isOfficer
+            ? 'Verifikasi Pajak Lingkungan'
+            : 'Pajak Daerah Mandiri'
+        }
+        badgeIcon={ShieldCheck}
+        scopeLabel={
+          isRT
+            ? `RT ${user?.rt || '001'} / RW ${user?.rw || '001'}`
+            : isRW
+            ? `RW ${user?.rw || '001'}`
+            : (user?.kelurahan ? `Kelurahan ${user.kelurahan}` : 'Tingkat Kelurahan')
+        }
+        scopeIcon={MapPin}
+        description="Pengelolaan kepatuhan Pajak Bumi & Bangunan (PBB-P2) terpadu dengan konfirmasi bukti bayar dan verifikasi lapangan."
+      >
         <div className="flex flex-wrap items-center gap-2">
           {isAdminKelurahan && (
             <>
               <button
                 type="button"
                 onClick={() => setShowUploadModal(true)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-600 text-white transition-all flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-primary text-on-primary hover:bg-primary/90 transition-all flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer min-h-[44px]"
               >
                 <Upload className="w-4 h-4" />
                 <span>Upload Masal DHKP (CSV)</span>
@@ -327,10 +332,10 @@ export default function PBBPage() {
               <button
                 type="button"
                 onClick={() => handlePushReminder(null)}
-                className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-white/15 hover:bg-white/25 border border-white/25 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer min-h-[44px]"
                 title="Kirim Notifikasi Pengingat PBB ke Seluruh RW & Warga"
               >
-                <Send className="w-4 h-4 text-blue-200" />
+                <Send className="w-4 h-4 text-sky-200" />
                 <span>Blast Reminder PBB</span>
               </button>
             </>
@@ -339,13 +344,13 @@ export default function PBBPage() {
           <button
             type="button"
             onClick={loadPbbData}
-            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+            className="p-2.5 min-h-[44px] min-w-[44px] rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all cursor-pointer flex items-center justify-center shadow-sm"
             title="Muat Ulang Data"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* ========================================================================= */}
       {/* 2. RINGKASAN MAKRO KELURAHAN (BENTO KPI)                                 */}
@@ -397,7 +402,7 @@ export default function PBBPage() {
       {/* 3. TAMPILAN ADMIN KELURAHAN & PENGURUS RT/RW                              */}
       {/* ========================================================================= */}
       {isOfficer ? (
-        <div className="bg-white rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-4">
           {/* Header & Filter Bar */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
@@ -553,7 +558,7 @@ export default function PBBPage() {
         /* 4. TAMPILAN WARGA (KARTU TAGIHAN PBB SAYA)                                 */
         /* ========================================================================= */
         <div className="space-y-4">
-          <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
             <div>
               <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                 <Home className="w-5 h-5 text-blue-600" />
@@ -569,7 +574,7 @@ export default function PBBPage() {
           </div>
 
           {myPbbData.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-3">
+            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
               <Building2 className="w-12 h-12 text-slate-300 mx-auto" />
               <h4 className="text-base font-bold text-slate-800">Tidak Ada Tagihan PBB Terdaftar</h4>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
@@ -585,7 +590,7 @@ export default function PBBPage() {
                 return (
                   <div
                     key={`${item.nop}-${item.tahun}`}
-                    className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between hover:border-blue-300 transition-all space-y-4"
+                    className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between hover:border-blue-300 transition-all space-y-4"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2">
@@ -656,7 +661,7 @@ export default function PBBPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-2xl bg-white rounded-2xl border border-slate-200 shadow-2xl p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2.5">
@@ -790,7 +795,7 @@ export default function PBBPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl p-5 space-y-4"
+              className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl p-5 space-y-4"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">

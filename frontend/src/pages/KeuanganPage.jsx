@@ -32,10 +32,12 @@ import {
   Building,
   Users,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { downloadReport } from '../utils/exportHelper';
+import ModuleHeader from '../components/design-system/ModuleHeader';
 
 const KATEGORI_MASUK = [
   'Iuran Kebersihan & Sampah',
@@ -278,39 +280,38 @@ export default function KeuanganPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12">
       {/* HEADER */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-sky-50 text-sky-800 text-xs font-semibold mb-2 border border-sky-200">
-            <ShieldCheck size={14} /> Akuntabilitas Kas Lingkungan Terverifikasi
-          </div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-on-surface flex items-center gap-3">
-            <Wallet className="text-primary" size={32} />
-            Pembukuan Kas & Transparansi Iuran
-          </h1>
-          <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
-            Pengelolaan kas masuk, kas keluar, dan partisipasi iuran lingkungan RT/RW secara transparan & akuntabel.
-          </p>
-        </div>
-
+      <ModuleHeader
+        title="Pembukuan Kas & Transparansi Iuran"
+        titleIcon={Wallet}
+        badge="Akuntabilitas Kas Lingkungan Terverifikasi"
+        badgeIcon={ShieldCheck}
+        scopeLabel={
+          isOfficer
+            ? (isRT ? `Kas RT ${user?.rt || '001'} / RW ${user?.rw || '001'}` : isRW ? `Kas RW ${user?.rw || '001'}` : `Tingkat Kelurahan`)
+            : 'Transparansi Iuran Warga'
+        }
+        scopeIcon={MapPin}
+        description="Pengelolaan kas masuk, kas keluar, dan partisipasi iuran lingkungan RT/RW secara transparan & akuntabel."
+      >
         {isOfficer && (
           <div className="flex flex-wrap items-center gap-2">
             {(isRT || isRW) && (
               <button
                 onClick={() => setShowGenIuranModal(true)}
-                className="flex items-center gap-2 px-3.5 py-2.5 bg-sky-50 text-sky-800 border border-sky-200 rounded-xl font-semibold shadow-sm hover:bg-sky-100 transition-colors text-xs"
+                className="flex items-center gap-2 px-3.5 py-2.5 bg-sky-500/20 text-sky-200 border border-sky-400/30 rounded-xl font-bold shadow-sm hover:bg-sky-500/30 transition-colors text-xs min-h-[44px]"
               >
                 <Calendar size={15} /> Buat Tagihan Iuran Bulanan {isRW ? 'RW' : 'RT'}
               </button>
             )}
             <button
               onClick={() => setShowAddTxModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-bold shadow-sm hover:bg-primary/90 transition-colors text-xs"
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-bold shadow-md hover:bg-primary/90 transition-colors text-xs min-h-[44px]"
             >
               <Plus size={16} /> Catat Kas Masuk / Keluar
             </button>
           </div>
         )}
-      </header>
+      </ModuleHeader>
 
       {/* ALERTS */}
       <AnimatePresence>
@@ -389,41 +390,41 @@ export default function KeuanganPage() {
         </div>
       </div>
 
-      {/* TABS */}
-      <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-x-auto p-1.5 gap-1.5">
+      {/* TABS - STANDARDIZED BENTO TABS */}
+      <div className="flex bg-surface-container-lowest rounded-2xl border border-outline-variant p-1.5 gap-1.5 flex-wrap sm:flex-nowrap shadow-xs">
         <button
           onClick={() => setActiveTab('kas')}
-          className={`py-2 px-4 rounded-lg font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
+          className={`flex-1 py-2.5 px-3.5 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'kas'
               ? 'bg-primary text-on-primary shadow-sm'
               : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
-          <FileText size={15} />
+          <FileText size={16} />
           <span>Buku Kas Lingkungan ({transaksiList.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('iuran')}
-          className={`py-2 px-4 rounded-lg font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
+          className={`flex-1 py-2.5 px-3.5 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'iuran'
               ? 'bg-primary text-on-primary shadow-sm'
               : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
-          <CreditCard size={15} />
+          <CreditCard size={16} />
           <span>Iuran Warga Bulanan ({totalKK > 0 ? `${lunasCount}/${totalKK} Lunas` : 'Iuran'})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('transparansi')}
-          className={`py-2 px-4 rounded-lg font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
+          className={`flex-1 py-2.5 px-3.5 min-h-[44px] rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'transparansi'
               ? 'bg-primary text-on-primary shadow-sm'
               : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
-          <PieChart size={15} />
+          <PieChart size={16} />
           <span>Laporan Transparansi Warga</span>
         </button>
       </div>
