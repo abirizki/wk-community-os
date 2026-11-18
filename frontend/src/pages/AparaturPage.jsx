@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Info
 } from 'lucide-react';
+import ModuleHeader from '../components/design-system/ModuleHeader';
 
 export default function AparaturPage() {
   const { user } = useAuth();
@@ -226,17 +227,17 @@ export default function AparaturPage() {
   const getKategoriBadge = (kategori) => {
     switch (kategori) {
       case 'KEAMANAN':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200">🛡️ Mitra Keamanan (Babinsa / Bhabinkamtibmas)</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-900 text-slate-100 border border-slate-700">🛡️ Mitra Keamanan (Babinsa / Bhabinkamtibmas)</span>;
       case 'KELURAHAN':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">🏛️ Aparatur Kelurahan</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-800 border border-sky-200">🏛️ Aparatur Kelurahan</span>;
       case 'RW':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">🏘️ Pimpinan RW</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-300">🏘️ Pimpinan RW</span>;
       case 'RT':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">🏡 Ketua RT Setempat</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-300">🏡 Ketua RT Setempat</span>;
       case 'POSYANDU':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">👶 Kader Posyandu</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200">👶 Kader Posyandu</span>;
       default:
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">{kategori}</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">{kategori}</span>;
     }
   };
 
@@ -250,44 +251,39 @@ export default function AparaturPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-emerald-800 via-teal-700 to-cyan-800 rounded-2xl p-6 text-white shadow-lg">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Building2 className="w-8 h-8 text-emerald-300" />
-              <h1 className="text-2xl font-bold">Direktori Aparatur & Kontak Pelayanan Wilayah</h1>
-            </div>
-            <p className="text-emerald-100 text-sm max-w-2xl leading-relaxed">
-              Pusat informasi resmi struktur organisasi kelurahan, Mitra Keamanan (Babinsa TNI & Bhabinkamtibmas Polri), 
-              Ketua RT/RW, dan Posyandu. Terhubung langsung via WhatsApp dinamis & verifikasi terpercaya.
-            </p>
-          </div>
+    <div className="max-w-7xl mx-auto space-y-6 pb-16">
+      {/* Header Banner (Civic Utility Design System) */}
+      <ModuleHeader
+        title="Direktori Aparatur & Kontak Pelayanan Wilayah"
+        titleIcon={Building2}
+        badge="Struktur Organisasi & Tata Kelola SPBE"
+        badgeIcon={ShieldCheck}
+        scopeLabel={`Kelurahan ${selectedKelurahan}`}
+        scopeIcon={MapPin}
+        description="Pusat informasi resmi struktur organisasi kelurahan, Mitra Keamanan (Babinsa TNI & Bhabinkamtibmas Polri), Ketua RT/RW, dan Posyandu dengan kontak dinamis terverifikasi."
+      >
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Filter Kelurahan */}
+          <select
+            value={selectedKelurahan}
+            onChange={(e) => setSelectedKelurahan(e.target.value)}
+            className="bg-white/10 border border-white/20 text-white rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-white/40 min-h-[44px]"
+          >
+            <option value="Cikole" className="text-gray-900">Kelurahan Cikole (Sukabumi)</option>
+            <option value="Kebonjati" className="text-gray-900">Kelurahan Kebonjati (Sukabumi)</option>
+          </select>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Filter Kelurahan */}
-            <select
-              value={selectedKelurahan}
-              onChange={(e) => setSelectedKelurahan(e.target.value)}
-              className="bg-white/10 border border-white/20 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+          {isAdmin && (
+            <button
+              onClick={() => handleOpenModal()}
+              className="flex items-center gap-2 bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md active:scale-95 min-h-[44px]"
             >
-              <option value="Cikole" className="text-gray-900">Kelurahan Cikole (Sukabumi)</option>
-              <option value="Kebonjati" className="text-gray-900">Kelurahan Kebonjati (Sukabumi)</option>
-            </select>
-
-            {isAdmin && (
-              <button
-                onClick={() => handleOpenModal()}
-                className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md active:scale-95"
-              >
-                <Plus size={18} />
-                <span>Tambah / Tunjuk Pejabat</span>
-              </button>
-            )}
-          </div>
+              <Plus size={18} />
+              <span>Tambah / Tunjuk Pejabat</span>
+            </button>
+          )}
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Filter Tabs & Search Bar */}
       <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">

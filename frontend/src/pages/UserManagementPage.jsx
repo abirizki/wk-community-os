@@ -26,8 +26,10 @@ import {
   Calendar,
   BadgeCheck,
   RefreshCw,
-  FileText
+  FileText,
+  MapPin
 } from 'lucide-react';
+import ModuleHeader from '../components/design-system/ModuleHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import MaskedField from '../components/MaskedField';
 
@@ -36,17 +38,17 @@ const ROLE_DISPLAY = {
   superadmin: { 
     label: 'Super Admin (Diskominfo)', 
     category: 'aparatur',
-    badge: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
   },
   walikota: { 
     label: 'Walikota / Pimpinan Kota', 
     category: 'aparatur',
-    badge: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
   },
   camat: { 
     label: 'Camat Wilayah', 
     category: 'aparatur',
-    badge: 'bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
   },
   lurah: { 
     label: 'Lurah (Kepala Kelurahan)', 
@@ -56,42 +58,42 @@ const ROLE_DISPLAY = {
   admin_kelurahan: { 
     label: 'Admin Kelurahan', 
     category: 'aparatur',
-    badge: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
   },
   admin: { 
     label: 'Admin Kelurahan', 
     category: 'aparatur',
-    badge: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
   },
   staf_kelurahan: { 
     label: 'Staf Kelurahan', 
     category: 'aparatur',
-    badge: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
   },
   admin_rw: { 
     label: 'Admin RW', 
     category: 'rtrw',
-    badge: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800' 
+    badge: 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' 
   },
   ketua_rw: { 
     label: 'Ketua RW', 
     category: 'rtrw',
-    badge: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' 
+    badge: 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' 
   },
   ketua_rt: { 
     label: 'Ketua RT', 
     category: 'rtrw',
-    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' 
+    badge: 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' 
   },
   kader_posyandu: { 
     label: 'Kader Posyandu', 
     category: 'posyandu',
-    badge: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800' 
+    badge: 'bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800' 
   },
   warga: { 
     label: 'Warga Terdaftar', 
     category: 'warga',
-    badge: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700' 
+    badge: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800' 
   }
 };
 
@@ -435,19 +437,16 @@ export default function UserManagementPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
-      {/* Header Wilayah */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 text-xs font-semibold mb-2 border border-sky-200 dark:border-sky-800">
-            <ShieldCheck size={14} className="text-sky-600 dark:text-sky-400" />
-            <span>Otoritas Tata Kelola Bertingkat & Wilayah Kerja</span>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Manajemen Pengguna & Penugasan Role</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Pengelolaan aparatur RT/RW, staf kelurahan, kader posyandu, dan warga sesuai prinsip perlindungan data (UU PDP No. 27/2022).
-          </p>
-        </div>
-
+      {/* Header Wilayah (Civic Utility Design System) */}
+      <ModuleHeader
+        title="Manajemen Pengguna & Penugasan Role"
+        titleIcon={Users}
+        badge="Otoritas Tata Kelola Bertingkat & Wilayah Kerja"
+        badgeIcon={ShieldCheck}
+        scopeLabel={govProfile?.nama_kelurahan ? `Kelurahan ${govProfile.nama_kelurahan}` : 'Tingkat Wilayah'}
+        scopeIcon={MapPin}
+        description="Pengelolaan aparatur RT/RW, staf kelurahan, kader posyandu, dan warga sesuai prinsip perlindungan data (UU PDP No. 27/2022)."
+      >
         <div className="flex flex-wrap items-center gap-2">
           {['superadmin', 'admin', 'admin_kelurahan', 'lurah'].includes(currentUserRole) && (
             <button
@@ -455,7 +454,7 @@ export default function UserManagementPage() {
                 setGovForm(govProfile);
                 setGovModalOpen(true);
               }}
-              className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl shadow-sm transition-colors"
+              className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl shadow-sm transition-colors min-h-[44px]"
             >
               <Building2 size={16} />
               <span>Profil Wilayah & Pejabat</span>
@@ -464,14 +463,14 @@ export default function UserManagementPage() {
           {allowedRoles.length > 0 && (
             <button
               onClick={handleOpenCreateModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 text-white text-xs font-semibold rounded-xl hover:bg-sky-700 shadow-sm transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary hover:bg-primary/90 text-xs font-bold rounded-xl shadow-md transition-colors min-h-[44px]"
             >
               <UserPlus size={16} />
               <span>Tambah Pengguna Baru</span>
             </button>
           )}
         </div>
-      </div>
+      </ModuleHeader>
 
       {/* Global Alerts (Success / Error) */}
       {actionSuccess && (
