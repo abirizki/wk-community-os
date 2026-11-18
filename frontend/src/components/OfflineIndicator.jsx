@@ -130,7 +130,7 @@ export default function OfflineIndicator() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-6 right-6 z-50 bg-emerald-800 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 border border-emerald-600"
+            className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 bg-emerald-800 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 border border-emerald-600"
           >
             <CheckCircle2 size={18} className="text-emerald-300 flex-shrink-0" />
             <span className="text-xs font-medium">{syncToast}</span>

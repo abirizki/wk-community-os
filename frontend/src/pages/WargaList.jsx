@@ -273,7 +273,7 @@ export default function WargaList() {
             Data Kependudukan Warga
           </h1>
           <p className="text-body-md text-on-surface-variant mt-1">
-            Basis data demografi terpadu Kelurahan Kebonjati, Kec. Cikole, Kota Sukabumi.
+            Basis data demografi dan kependudukan terpadu {user?.kelurahan ? `Kelurahan ${user.kelurahan}` : 'wilayah setempat'}.
           </p>
         </div>
 
@@ -374,8 +374,83 @@ export default function WargaList() {
         </div>
       </div>
 
+      {/* MOBILE RESPONSIVE DATA CARDS (md:hidden) */}
+      <div className="block md:hidden space-y-3">
+        {loading ? (
+          <div className="p-8 text-center text-on-surface-variant bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm">
+            <Loader2 className="w-7 h-7 animate-spin mx-auto mb-2 text-primary" />
+            <p className="text-sm font-medium">Memuat data kependudukan...</p>
+          </div>
+        ) : wargaList.length === 0 ? (
+          <div className="p-8 text-center text-on-surface-variant bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm">
+            <Users className="w-8 h-8 mx-auto mb-2 text-on-surface-variant/50" />
+            <p className="text-sm font-medium">Tidak ada data warga ditemukan.</p>
+          </div>
+        ) : (
+          wargaList.map((warga) => (
+            <div
+              key={warga.nik}
+              className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4 shadow-sm space-y-3 transition-all hover:border-primary/30"
+            >
+              {/* Header: Nama & JK */}
+              <div className="flex items-start justify-between gap-2 border-b border-outline-variant/60 pb-2.5">
+                <div>
+                  <h3 className="font-bold text-on-surface text-sm sm:text-base">{warga.nama}</h3>
+                  <div className="text-[11px] text-on-surface-variant mt-0.5">
+                    {warga.tempat_lahir}, {warga.tanggal_lahir ? new Date(warga.tanggal_lahir).toLocaleDateString('id-ID', { dateStyle: 'medium' }) : '-'}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${
+                    warga.jenis_kelamin === 'P' ? 'bg-pink-100 text-pink-700 border border-pink-200' : 'bg-blue-100 text-blue-700 border border-blue-200'
+                  }`}>
+                    {warga.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-laki'}
+                  </span>
+                </div>
+              </div>
+
+              {/* NIK & KK Box */}
+              <div className="bg-surface-container-low/60 rounded-xl p-3 border border-outline-variant/50 space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-on-surface-variant text-[11px]">NIK:</span>
+                  <span className="font-mono font-semibold text-on-surface">
+                    {['superadmin', 'admin_kelurahan'].includes(user?.role) ? warga.nik : (warga.nik ? `${warga.nik.slice(0, 6)}******${warga.nik.slice(-4)}` : '-')}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-on-surface-variant text-[11px]">No. KK:</span>
+                  <span className="font-mono text-on-surface-variant" title="Disensor demi perlindungan data pribadi (UU PDP No. 27/2022)">
+                    {['superadmin', 'admin_kelurahan'].includes(user?.role) ? warga.no_kk : (warga.no_kk ? `${warga.no_kk.slice(0, 6)}******${warga.no_kk.slice(-4)}` : '-')}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-outline-variant/40">
+                  <span className="text-on-surface-variant text-[11px]">Hub. Keluarga:</span>
+                  <span className="font-medium text-xs px-2 py-0.5 bg-surface-container-high rounded text-on-surface">
+                    {warga.status_hubungan_keluarga || 'Anggota'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Detail Sosial: Pekerjaan & Wilayah */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-surface-container-lowest p-2 rounded-lg border border-outline-variant/40">
+                  <span className="text-[10px] text-on-surface-variant block uppercase font-semibold">Pekerjaan</span>
+                  <span className="font-medium text-on-surface truncate block">{warga.pekerjaan || '-'}</span>
+                  <span className="text-[10px] text-on-surface-variant truncate block">{warga.pendidikan_terakhir || '-'}</span>
+                </div>
+                <div className="bg-surface-container-lowest p-2 rounded-lg border border-outline-variant/40">
+                  <span className="text-[10px] text-on-surface-variant block uppercase font-semibold">Wilayah</span>
+                  <span className="font-semibold text-primary block">RT {warga.rt} / RW {warga.rw}</span>
+                  <span className="text-[10px] text-on-surface-variant truncate block">{warga.alamat || '-'}</span>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       {/* TABLE */}
-      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+      <div className="hidden md:block bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>

@@ -1179,8 +1179,142 @@ export default function DokumenPage() {
         </div>
       )}
 
-      {/* TABLE */}
-      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+      {/* MOBILE RESPONSIVE DATA CARDS (md:hidden) */}
+      <div className="block md:hidden space-y-3">
+        {isLoading ? (
+          <div className="p-8 text-center text-on-surface-variant bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm">
+            <Loader2 className="w-7 h-7 animate-spin mx-auto mb-2 text-primary" />
+            <p className="text-sm font-medium">Memuat antrean dokumen...</p>
+          </div>
+        ) : displayedData.length === 0 ? (
+          <div className="p-8 text-center text-on-surface-variant bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm">
+            <FileText className="w-8 h-8 mx-auto mb-2 text-on-surface-variant/50" />
+            <p className="text-sm font-medium">Tidak ada pengajuan permohonan surat.</p>
+          </div>
+        ) : (
+          displayedData.map((doc) => {
+            const canAct = (
+              (isRT && doc.approval_step === 'RT') ||
+              (isRW && doc.approval_step === 'RW') ||
+              (isKelurahan && (doc.approval_step === 'KELURAHAN' || doc.status === 'READY_TTE'))
+            ) && doc.status !== 'REJECTED' && doc.status !== 'APPROVED';
+
+            const isForFamily = doc.diajukan_oleh_nik && doc.diajukan_oleh_nik !== doc.nik_pemohon;
+
+            return (
+              <div
+                key={doc.id}
+                className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-4 shadow-sm space-y-3 transition-all hover:border-primary/30"
+              >
+                {/* Header Kartu: No. Registrasi, Tanggal & Badge Status */}
+                <div className="flex items-start justify-between gap-2 border-b border-outline-variant/60 pb-2.5">
+                  <div>
+                    <span className="font-mono font-bold text-on-surface text-xs tracking-tight block">
+                      {doc.nomor_registrasi || `REG-${doc.id}`}
+                    </span>
+                    <span className="text-[11px] text-on-surface-variant">
+                      {doc.created_at ? new Date(doc.created_at).toLocaleDateString('id-ID', { dateStyle: 'medium' }) : '-'}
+                    </span>
+                  </div>
+                  <div>{renderStatusBadge(doc)}</div>
+                </div>
+
+                {/* Info Utama: Jenis Surat & Pemohon */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-bold text-primary text-sm">
+                      {doc.jenis_dokumen || doc.jenis_surat}
+                    </span>
+                    {doc.is_auto_filled_by_ai && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                        <Sparkles size={10} className="text-blue-500" /> AI
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="bg-surface-container-low/60 rounded-xl p-3 border border-outline-variant/50 space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-semibold text-on-surface text-xs">{doc.nama_pemohon || 'Warga'}</span>
+                      {doc.hubungan_keluarga && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                          {doc.hubungan_keluarga}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-on-surface-variant font-mono">
+                      NIK: {doc.nik_pemohon}
+                    </div>
+                    {isForFamily && (
+                      <div className="text-[10px] text-sky-800 font-medium">
+                        Diajukan oleh: <span className="font-mono">{doc.diajukan_oleh_nik}</span> (KK)
+                      </div>
+                    )}
+                    <div className="text-[11px] text-on-surface-variant pt-0.5 border-t border-outline-variant/30 flex justify-between">
+                      <span>Wilayah: <strong>RT {doc.rt || '001'} / RW {doc.rw || '001'}</strong></span>
+                    </div>
+                  </div>
+
+                  {doc.keperluan && (
+                    <div className="text-xs text-on-surface-variant bg-surface-container-lowest p-2.5 rounded-lg border border-outline-variant/40">
+                      <span className="font-semibold text-on-surface text-[11px] block">Keperluan:</span>
+                      <p className="line-clamp-2 text-xs text-on-surface-variant mt-0.5">{doc.keperluan}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Aksi Cepat Mobile (Target sentuh minimal 44px) */}
+                <div className="pt-2 border-t border-outline-variant/60 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleOpenDetail(doc)}
+                    className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant transition-colors cursor-pointer"
+                  >
+                    <Eye size={15} /> Detail
+                  </button>
+
+                  {doc.status === 'APPROVED' && (
+                    <button
+                      onClick={() => handlePrint(doc)}
+                      className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors border border-primary/20 cursor-pointer"
+                    >
+                      <Printer size={15} /> Cetak
+                    </button>
+                  )}
+
+                  {canAct && (
+                    <div className="w-full flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() => openActionModal(doc, 'APPROVE')}
+                        className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer"
+                      >
+                        <Check size={16} /> {isLurah ? 'TTE Surat' : (isAdminKelurahan ? 'Verifikasi' : (isKelurahan ? 'Sahkan' : 'Setujui'))}
+                      </button>
+                      <button
+                        onClick={() => openActionModal(doc, 'REVISION')}
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors border border-amber-200 cursor-pointer"
+                        title="Revisi Berkas"
+                      >
+                        <RotateCcw size={15} />
+                        <span className="hidden xs:inline">Revisi</span>
+                      </button>
+                      <button
+                        onClick={() => openActionModal(doc, 'REJECT')}
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors border border-rose-200 cursor-pointer"
+                        title="Tolak Pengajuan"
+                      >
+                        <X size={15} />
+                        <span className="hidden xs:inline">Tolak</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* DESKTOP TABLE (hidden md:block) */}
+      <div className="hidden md:block bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-surface-container-low border-b border-outline-variant text-on-surface font-semibold">
