@@ -133,7 +133,7 @@ router.post('/lookup', requireAuth, async (req, res) => {
     if (!warga && !doc) {
       return res.status(404).json({
         success: false,
-        message: `Data tidak ditemukan untuk input "${code}". Pastikan QR Code warga atau dokumen resmi Kelurahan Kebonjati.`
+        message: `Data tidak ditemukan untuk input "${code}". Pastikan QR Code warga atau naskah dinas resmi kelurahan setempat.`
       });
     }
 

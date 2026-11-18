@@ -252,8 +252,9 @@ export default function DokumenPage() {
 
   // Mode Pengajuan Layanan RT/RW: 'WARGA_RT' (dampingan lansia/gaptek) | 'WARGA_PENDATANG' (warga pendatang) | 'MANDIRI' (pribadi)
   const isDampinganUrl = searchParams.get('mode') === 'dampingan';
+  const isMandiriUrl = searchParams.get('mode') === 'mandiri';
   const [pelayananMode, setPelayananMode] = useState(
-    isDampinganUrl ? (searchParams.get('nik') ? 'WARGA_PENDATANG' : 'WARGA_RT') : (isOfficer ? 'WARGA_RT' : 'MANDIRI')
+    isMandiriUrl ? 'MANDIRI' : (isDampinganUrl ? (searchParams.get('nik') ? 'WARGA_PENDATANG' : 'WARGA_RT') : (isOfficer ? 'WARGA_RT' : 'MANDIRI'))
   );
   const [rtWargaList, setRtWargaList] = useState([]);
   const [loadingRtWarga, setLoadingRtWarga] = useState(false);
@@ -614,9 +615,11 @@ export default function DokumenPage() {
     const namaParam = searchParams.get('nama');
     const nikParam = searchParams.get('nik');
 
-    if (action === 'new' || mode === 'dampingan') {
+    if (action === 'new' || mode === 'dampingan' || mode === 'mandiri') {
       setShowModal(true);
-      if (mode === 'dampingan') {
+      if (mode === 'mandiri') {
+        setPelayananMode('MANDIRI');
+      } else if (mode === 'dampingan') {
         if (nikParam || namaParam) {
           setPelayananMode('WARGA_PENDATANG');
           setPendatangCustom(prev => ({
