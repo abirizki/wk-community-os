@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
@@ -49,6 +49,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import MaskedField from '../../components/MaskedField';
 import { KPIGrid, UnifiedStatCard } from '../../components/design-system';
 import { downloadReport } from '../../utils/exportHelper';
+import KelurahanOnboardingChecklist from '../../components/KelurahanOnboardingChecklist';
 
 const ROLE_DISPLAY = {
   superadmin: { label: 'Super Admin', bg: 'bg-purple-100 text-purple-800 border-purple-200' },
@@ -449,6 +450,51 @@ export default function DashboardAdminKelurahan() {
     }
   };
 
+  const bulkFileInputRef = useRef(null);
+
+  // Load 5 Sample KK Simulation Data for Onboarding / Testing
+  const handleLoadSampleKKData = () => {
+    const kel = govProfile?.nama_kelurahan || 'Kebonjati';
+    const sampleText = `no_kk,kepala_keluarga,alamat,rt,rw,nik,nama,jenis_kelamin,tempat_lahir,tanggal_lahir,agama,pendidikan,pekerjaan,status_perkawinan,golongan_darah,nama_ibu,kategori_asuransi
+3273010101230001,Budi Santoso,Jl. Kenanga No. 12,001,001,3273010203850001,Budi Santoso,L,Bandung,1985-03-02,Islam,S1,Karyawan Swasta,Kawin,O,Siti Aminah,BPJS Kesehatan Mandiri
+3273010101230001,Budi Santoso,Jl. Kenanga No. 12,001,001,3273014506880002,Dewi Sartika,P,Sukabumi,1988-06-05,Islam,D3,Ibu Rumah Tangga,Kawin,A,Haryati,BPJS Kesehatan Mandiri
+3273010101230001,Budi Santoso,Jl. Kenanga No. 12,001,001,3273011210150003,Rizki Pratama,L,Sukabumi,2015-10-12,Islam,SD,Pelajar,Belum Kawin,O,Dewi Sartika,BPJS Kesehatan Mandiri
+3273010101230002,Ahmad Hidayat,Jl. Mawar Blok B No. 4,002,001,3273011102790001,Ahmad Hidayat,L,Bogor,1979-02-11,Islam,SMA,Wiraswasta,Kawin,B,Nurhasanah,BPJS PBI APBD
+3273010101230002,Ahmad Hidayat,Jl. Mawar Blok B No. 4,002,001,3273015509820002,Siti Rohmah,P,Cianjur,1982-09-15,Islam,SMA,Pedagang,Kawin,AB,Halimah,BPJS PBI APBD`;
+
+    setBulkTextInput(sampleText);
+    parseBulkInput(sampleText);
+    setActiveTab('bulk_kk');
+    setSuccessMsg('Data simulasi 5 warga (2 KK) berhasil dimuat! Silakan periksa tabel pratinjau sebelum klik Impor.');
+    setTimeout(() => setSuccessMsg(''), 4500);
+  };
+
+  // Handle Upload File .csv / .tsv / .txt
+  const handleBulkFileSelected = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result;
+        if (typeof content === 'string') {
+          setBulkTextInput(content);
+          parseBulkInput(content);
+          setSuccessMsg(`Berkas '${file.name}' berhasil dibaca (${file.size} bytes).`);
+          setTimeout(() => setSuccessMsg(''), 4000);
+        }
+      } catch (err) {
+        setErrorMsg('Gagal memproses berkas: ' + err.message);
+      }
+    };
+    reader.onerror = () => {
+      setErrorMsg('Gagal membaca berkas file.');
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   // Handle Review Sanggahan
   const handleSubmitReviewSanggahan = async (e) => {
     e.preventDefault();
@@ -638,6 +684,20 @@ export default function DashboardAdminKelurahan() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 1.5. PANDUAN AKTIVASI KELURAHAN BARU (READINESS CHECKLIST & SETUP WIZARD) */}
+      <KelurahanOnboardingChecklist
+        govProfile={govProfile}
+        userList={userList}
+        executiveData={executiveData}
+        onOpenGovModal={() => {
+          setGovForm(govProfile);
+          setGovModalOpen(true);
+        }}
+        onOpenUserModal={() => setUserModalOpen(true)}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+        onLoadSampleData={handleLoadSampleKKData}
+      />
 
       {/* 2. BENTO NAVIGATION SWITCHER (6 PILAR UTAMA ADMIN KELURAHAN) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
@@ -1284,14 +1344,39 @@ export default function DashboardAdminKelurahan() {
                 Unggah atau tempel data sensus kependudukan format CSV / Excel standar Kemendagri dengan auto-validation.
               </p>
             </div>
-            <a
-              href="/api/kk/download/template"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-50 text-teal-800 border border-teal-200 font-bold text-xs hover:bg-teal-100 transition-colors shadow-sm"
-            >
-              <Download size={14} /> Unduh Template CSV Resmi
-            </a>
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                ref={bulkFileInputRef}
+                type="file"
+                accept=".csv,.tsv,.txt,.xlsx,.xls"
+                className="hidden"
+                onChange={handleBulkFileSelected}
+              />
+              <button
+                type="button"
+                onClick={() => bulkFileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition-colors shadow-sm cursor-pointer"
+                title="Pilih file berkas CSV / Excel / TXT dari komputer"
+              >
+                <Upload size={14} /> Unggah Berkas (.csv / .txt)
+              </button>
+              <button
+                type="button"
+                onClick={handleLoadSampleKKData}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 font-bold text-xs transition-colors shadow-sm cursor-pointer"
+                title="Muat data simulasi 5 warga untuk menguji validasi dan alur naskah dinas"
+              >
+                <Sparkles size={14} className="text-sky-600" /> Muat 5 KK Contoh (Demo)
+              </button>
+              <a
+                href="/api/kk/download/template"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant font-bold text-xs transition-colors shadow-sm"
+              >
+                <Download size={14} /> Unduh Template CSV
+              </a>
+            </div>
           </div>
 
           {/* Paste / Drag Area */}
