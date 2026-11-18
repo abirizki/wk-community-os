@@ -3459,7 +3459,7 @@ export default function DokumenPage() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowReadyToPrintPopup(true)}
-          className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2.5 border border-white/20 backdrop-blur-md cursor-pointer transition-all"
+          className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2.5 border border-white/20 backdrop-blur-md cursor-pointer transition-all"
           title="Tampilkan daftar surat yang telah diverifikasi Lurah dan siap dicetak"
         >
           <span className="relative flex h-2.5 w-2.5">
