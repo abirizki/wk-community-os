@@ -397,40 +397,42 @@ export default function DesilPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+      {/* Header Banner (Clean Light Civic Theme) */}
+      <div className="bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 rounded-2xl p-6 text-slate-900 shadow-xs relative overflow-hidden border border-sky-100">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/30 text-blue-200 border border-blue-400/30 flex items-center gap-1">
-                <Sparkles size={12} /> Data Tunggal Sosial & Ekonomi Nasional (DTSEN)
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200 flex items-center gap-1 shadow-xs">
+                <Sparkles size={12} className="text-sky-600" /> Data Tunggal Sosial & Ekonomi Nasional (DTSEN)
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/30 text-emerald-200 border border-emerald-400/30">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-xs">
                 Standar BPS & Kemensos (11 Poin Faktual)
               </span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">Desil Kesejahteraan & Rekonsiliasi DTKS</h1>
-            <p className="text-blue-200 text-sm mt-1 max-w-2xl leading-relaxed">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Desil Kesejahteraan & Rekonsiliasi DTKS</h1>
+            <p className="text-slate-600 text-sm mt-1 max-w-2xl leading-relaxed">
               Pemeringkatan desil 1–10 berbasis 11 indikator riil lapangan, validasi bukti kementerian, pakta integritas SPTJM, serta ground checking berjenjang RT/RW dan Kelurahan.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             <a 
               href="https://cekbansos.kemensos.go.id/" 
               target="_blank" 
               rel="noreferrer"
-              className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center gap-1.5 transition-all shadow-sm"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5 transition-all shadow-xs min-h-[44px]"
             >
-              <ExternalLink size={14} /> Cek Bansos Kemensos
+              <ExternalLink size={14} className="text-sky-600 shrink-0" />
+              <span>Cek Bansos Kemensos</span>
             </a>
             <a 
               href="https://dtsen-form.bps.go.id/indonesia-pintar" 
               target="_blank" 
               rel="noreferrer"
-              className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center gap-1.5 transition-all shadow-sm"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5 transition-all shadow-xs min-h-[44px]"
             >
-              <ExternalLink size={14} /> DTSEN BPS PIP
+              <ExternalLink size={14} className="text-sky-600 shrink-0" />
+              <span>DTSEN BPS PIP</span>
             </a>
           </div>
         </div>

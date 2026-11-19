@@ -601,22 +601,22 @@ export default function DashboardAdminKelurahan() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20">
-      {/* 1. HERO OPERATIONAL BANNER */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-slate-900 via-sky-950 to-blue-950 text-white p-6 sm:p-8 rounded-2xl shadow-xl relative overflow-hidden border border-sky-900/50">
-        <div className="absolute -right-12 -bottom-12 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* 1. HERO OPERATIONAL BANNER (Clean Light Civic Theme) */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 text-slate-900 p-6 sm:p-8 rounded-2xl shadow-xs relative overflow-hidden border border-sky-100">
+        <div className="absolute -right-12 -bottom-12 w-80 h-80 bg-sky-200/25 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sky-200 text-xs font-semibold border border-white/10">
-            <Sparkles size={14} className="text-amber-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-semibold border border-sky-200 shadow-xs">
+            <Sparkles size={14} className="text-sky-600" />
             <span>Pusat Kendali Administrasi & Kliring Wilayah Kelurahan</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Meja Kerja Admin Kelurahan {govProfile.nama_kelurahan}
           </h1>
-          <p className="text-sm text-slate-300 leading-relaxed">
+          <p className="text-sm text-slate-600 leading-relaxed">
             Pengelolaan berjenjang akun aparatur RT/RW, orkestrasi posyandu teritorial, impor massal kependudukan, kliring sanggahan bansos, dan akselerasi kepatuhan PBB.
           </p>
-          <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-sky-300 font-medium">
-            <span className="flex items-center gap-1.5"><MapPin size={14} className="text-rose-400" /> Kelurahan {govProfile.nama_kelurahan}, Kec. {govProfile.nama_kecamatan}, {govProfile.nama_kota}</span>
+          <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-600 font-medium">
+            <span className="flex items-center gap-1.5"><MapPin size={14} className="text-sky-600" /> Kelurahan {govProfile.nama_kelurahan}, Kec. {govProfile.nama_kecamatan}, {govProfile.nama_kota}</span>
             <span>&bull; Wilayah Binaan: <strong>{govProfile.wilayah_binaan}</strong></span>
             <span>&bull; Otoritas: <strong>Verifikator & Operasional SPBE</strong></span>
           </div>
@@ -628,16 +628,16 @@ export default function DashboardAdminKelurahan() {
               setGovForm(govProfile);
               setGovModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold border border-white/15 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-xs font-bold border border-slate-200 transition-all shadow-xs"
             title="Edit Profil Kelurahan, Lurah, Camat, & Walikota"
           >
-            <Building2 size={14} className="text-amber-400" />
+            <Building2 size={14} className="text-sky-600" />
             <span>Profil Wilayah</span>
           </button>
           <button
             onClick={fetchAllDashboardData}
             disabled={refreshing}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold border border-white/15 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-xs font-bold border border-slate-200 transition-all shadow-xs"
             title="Segarkan Seluruh Data"
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />

@@ -741,9 +741,11 @@ export default function BansosPage() {
                 });
                 setShowAuditModal(true);
               }}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-rose-500/20 text-rose-200 border border-rose-400/30 rounded-xl font-bold shadow-sm hover:bg-rose-500/30 transition-colors text-xs min-h-[44px]"
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl font-bold shadow-xs transition-colors text-xs min-h-[44px]"
+              title="Lapor Anomali / Sanggahan Bansos Lapangan"
             >
-              <AlertTriangle size={15} /> Lapor Sanggahan Bansos
+              <AlertTriangle size={15} className="text-rose-600 shrink-0" />
+              <span>Lapor Sanggahan Bansos</span>
             </button>
 
             <button
@@ -752,9 +754,10 @@ export default function BansosPage() {
                 setBulkPreviewStats({ total: 0, valid: 0, invalid: 0 });
                 setShowBulkUploadModal(true);
               }}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 rounded-xl font-bold shadow-sm hover:bg-emerald-500/30 transition-colors text-xs min-h-[44px]"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-xl font-bold shadow-xs transition-colors text-xs min-h-[44px]"
+              title="Unggah Massal Calon Penerima Bansos (CSV)"
             >
-              <FileSpreadsheet size={15} className="text-emerald-300" />
+              <FileSpreadsheet size={15} className="text-sky-600 shrink-0" />
               <span>Unggah Massal (CSV)</span>
             </button>
 
@@ -771,18 +774,19 @@ export default function BansosPage() {
                   }
                   setShowBatchScheduleModal(true);
                 }}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-purple-600/80 hover:bg-purple-600 text-white border border-purple-400/30 rounded-xl font-bold shadow-sm transition-colors text-xs min-h-[44px]"
+                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-xl font-bold shadow-xs transition-colors text-xs min-h-[44px]"
               >
-                <Ticket size={15} />
+                <Ticket size={15} className="text-sky-600 shrink-0" />
                 <span>Jadwalkan & Tiket Masal {selectedBansosIds.length > 0 ? `(${selectedBansosIds.length})` : ''}</span>
               </button>
             )}
 
             <button
               onClick={() => setShowProposeModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-bold shadow-md hover:bg-primary/90 transition-colors text-xs min-h-[44px]"
+              className="flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold shadow-xs transition-colors text-xs min-h-[44px]"
             >
-              <Plus size={16} /> Usulkan Penerima Bansos
+              <Plus size={16} className="text-white shrink-0" />
+              <span>Usulkan Penerima Bansos</span>
             </button>
           </>
         )}

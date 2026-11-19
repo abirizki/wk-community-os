@@ -280,27 +280,27 @@ export default function ProfilePage() {
   if (isKelurahanAdmin && demografi) {
     return (
       <div className="max-w-6xl mx-auto space-y-6 pb-14">
-        {/* EXECUTIVE BANNER BENTO: PROFIL KELURAHAN & APARATUR */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-indigo-800/40">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        {/* EXECUTIVE BANNER BENTO: PROFIL KELURAHAN & APARATUR (Clean Light Theme) */}
+        <div className="bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 rounded-3xl p-6 sm:p-8 text-slate-900 shadow-xs relative overflow-hidden border border-sky-100">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-sky-200/20 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center font-black text-2xl shadow-lg border-2 border-amber-300 flex-shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-black text-2xl shadow-xs border border-sky-200 flex-shrink-0">
                 <Landmark size={32} />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-200">
                     Pusat Pemerintahan SPBE
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                     Smart Governance Terpadu
                   </span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-black mt-1.5 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-black mt-1.5 tracking-tight text-slate-900">
                   {demografi.kantor?.nama_kelurahan || 'Kelurahan Kebonjati'}
                 </h1>
-                <p className="text-xs text-indigo-200/90 mt-1 flex items-center gap-2 flex-wrap">
+                <p className="text-xs text-slate-600 mt-1 flex items-center gap-2 flex-wrap">
                   <span>{demografi.kantor?.kecamatan || 'Kecamatan Cikole'}</span>
                   <span>&bull;</span>
                   <span>{demografi.kantor?.kota || 'Kota Sukabumi'}</span>

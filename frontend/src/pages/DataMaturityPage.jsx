@@ -109,40 +109,40 @@ export default function DataMaturityPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
-      {/* HEADER UTAMA: DATA MATURITY INDEX & FIDELITY CONFIDENCE */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-6 sm:p-8 text-white shadow-2xl border border-blue-900/50">
+      {/* HEADER UTAMA: DATA MATURITY INDEX & FIDELITY CONFIDENCE (Clean Light Theme) */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 p-6 sm:p-8 text-slate-900 shadow-xs border border-sky-100">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/30">
-              <Sparkles size={14} className="text-blue-400" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-semibold border border-sky-200 shadow-xs">
+              <Sparkles size={14} className="text-sky-600" />
               <span>Sistem Kematangan Data & Multi-Role AI</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Indeks Kematangan Data Profil Warga
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Pemantauan kualitas data kependudukan berjenjang ($0 - 100\%$) Kelurahan Kebonjati. Menghadirkan Auto-Fill Surat bagi warga dan Pengingat Sambang Warga bagi Ketua RT.
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Pemantauan kualitas data kependudukan berjenjang (0 - 100%) Kelurahan Kebonjati. Menghadirkan Auto-Fill Surat bagi warga dan Pengingat Sambang Warga bagi Ketua RT.
             </p>
           </div>
 
           {/* KPI Card Komposit */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 bg-white/10 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/15">
-            <div className="text-center sm:text-left pr-4 sm:border-r border-white/20">
-              <span className="text-[11px] uppercase tracking-wider text-blue-200 font-semibold block">Data Maturity</span>
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-sky-100 shadow-xs">
+            <div className="text-center sm:text-left pr-4 sm:border-r border-slate-200">
+              <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold block">Data Maturity</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-3xl sm:text-4xl font-black text-white">
+                <span className="text-3xl sm:text-4xl font-black text-slate-900">
                   {kelurahanData?.overall_maturity_score || 0}%
                 </span>
-                <span className="text-xs text-emerald-300 font-bold">Grade {kelurahanData?.maturity_grade || 'C'}</span>
+                <span className="text-xs text-sky-700 font-bold">Grade {kelurahanData?.maturity_grade || 'C'}</span>
               </div>
-              <span className="text-[10px] text-blue-200/80 block mt-0.5">{kelurahanData?.maturity_level || 'Memuat...'}</span>
+              <span className="text-[10px] text-slate-500 block mt-0.5">{kelurahanData?.maturity_level || 'Memuat...'}</span>
             </div>
 
             <div className="text-center sm:text-left">
-              <span className="text-[11px] uppercase tracking-wider text-blue-200 font-semibold block">Evidence Confidence</span>
+              <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold block">Evidence Confidence</span>
               <div className="flex items-center gap-1.5 mt-1">
-                <ShieldCheck size={18} className="text-emerald-400" />
-                <span className="text-sm font-bold text-white">
+                <ShieldCheck size={18} className="text-sky-600" />
+                <span className="text-sm font-bold text-slate-900">
                   {kelurahanData?.fidelity?.confidence_score || 85}% ({kelurahanData?.fidelity?.level || 'HIGH'})
                 </span>
               </div>

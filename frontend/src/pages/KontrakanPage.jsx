@@ -133,31 +133,31 @@ export default function KontrakanPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12">
-      {/* HERO BANNER */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-teal-900 via-emerald-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-emerald-800/40">
+      {/* HERO BANNER (Clean Light Civic Theme) */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 p-6 sm:p-8 text-slate-900 shadow-xs border border-sky-100">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-400/30">
-              <KeyRound size={14} className="text-emerald-400" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-semibold border border-sky-200 shadow-xs">
+              <KeyRound size={14} className="text-sky-600" />
               <span>Tertib Hunian & Wajib Lapor RT/RW 1x24 Jam</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Rumah Sewa, Kontrakan & Kos-Kosan
             </h1>
-            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               Layanan terpadu bagi warga pemilik kontrakan untuk mendaftarkan unit sewa, serta bagi penyewa/pengontrak untuk memastikan domisili tercatat resmi dan tertib administrasi di Kelurahan Kebonjati.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
-            <div className="text-center sm:text-left pr-4 sm:border-r border-white/20">
-              <span className="text-[10px] uppercase tracking-wider text-emerald-200 font-semibold block">Total Terdata</span>
-              <span className="text-2xl sm:text-3xl font-black text-white">{hunianList.length} Unit</span>
+          <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-sky-100 shadow-xs">
+            <div className="text-center sm:text-left pr-4 sm:border-r border-slate-200">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold block">Total Terdata</span>
+              <span className="text-2xl sm:text-3xl font-black text-slate-900">{hunianList.length} Unit</span>
             </div>
             <div className="text-center sm:text-left">
-              <span className="text-[10px] uppercase tracking-wider text-emerald-200 font-semibold block">Kepatuhan Wajib Lapor</span>
-              <span className="text-sm font-bold text-emerald-300 flex items-center gap-1 mt-0.5">
-                <ShieldCheck size={16} /> 100% Terintegrasi RT
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold block">Kepatuhan Wajib Lapor</span>
+              <span className="text-sm font-bold text-sky-700 flex items-center gap-1 mt-0.5">
+                <ShieldCheck size={16} className="text-sky-600" /> 100% Terintegrasi RT
               </span>
             </div>
           </div>

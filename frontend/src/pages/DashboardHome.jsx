@@ -174,22 +174,22 @@ export default function DashboardHome() {
 
     return (
       <div className="max-w-max-width mx-auto space-y-8 pb-16">
-        {/* HEADER & EXECUTIVE DIRECTIVE BANNER */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden">
-          <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        {/* HEADER & EXECUTIVE DIRECTIVE BANNER (Clean Light Civic Theme) */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 text-slate-900 p-6 sm:p-8 rounded-3xl shadow-xs relative overflow-hidden border border-sky-100">
+          <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-sky-200/25 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-blue-200 text-xs font-semibold backdrop-blur-md border border-white/10">
-              <Sparkles size={14} className="text-amber-400" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-semibold border border-sky-200 shadow-xs">
+              <Sparkles size={14} className="text-sky-600" />
               <span>Pusat Komando & Keputusan Berbasis Evidens</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Dashboard Pimpinan Kebonjati
             </h1>
-            <p className="text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm text-slate-600 leading-relaxed">
               Analitik presisi, deteksi dini risiko kesehatan siklus hidup, dan penyeimbangan jaring pengaman sosial berbasis bukti nyata.
             </p>
-            <div className="flex items-center gap-2 pt-1 text-xs text-blue-300 font-medium">
-              <MapPin size={14} />
+            <div className="flex items-center gap-2 pt-1 text-xs text-slate-600 font-medium">
+              <MapPin size={14} className="text-sky-600" />
               <span>{scopeLabel}</span>
             </div>
           </div>
@@ -198,17 +198,17 @@ export default function DashboardHome() {
             <button
               onClick={fetchOfficerData}
               disabled={loadingOfficer}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-white/15 transition-all shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-xs font-bold border border-slate-200 transition-all shadow-xs"
             >
-              <RefreshCw size={14} className={loadingOfficer ? 'animate-spin' : ''} />
+              <RefreshCw size={14} className={`text-sky-600 ${loadingOfficer ? 'animate-spin' : ''}`} />
               <span>Segarkan Analitik</span>
             </button>
             <Link
               to="/dashboard/dokumen"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-semibold hover:bg-primary/90 transition-all shadow-md"
+              className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-sky-600 text-white rounded-xl text-xs font-bold hover:bg-sky-700 transition-all shadow-xs"
             >
-              <FileCheck size={14} />
-              <span>Verifikasi Dokumen ({docVelocity.total_dalam_proses || 0})</span>
+              <FileCheck size={14} className="text-white" />
+              <span>Buka Layanan Surat ({docVelocity.total_dalam_proses || 0})</span>
             </Link>
           </div>
         </header>

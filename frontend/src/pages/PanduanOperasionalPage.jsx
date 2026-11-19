@@ -460,35 +460,35 @@ export default function PanduanOperasionalPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-16">
-      {/* Header Banner (Soft Sky Blue Theme) */}
-      <div className="bg-gradient-to-r from-sky-700 via-sky-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-elevated relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-white/5 pointer-events-none rounded-r-3xl transform skew-x-12 translate-x-10" />
+      {/* Header Banner (Clean Light Civic Theme) */}
+      <div className="bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 rounded-3xl p-6 sm:p-8 text-slate-900 shadow-xs relative overflow-hidden border border-sky-100">
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-sky-200/10 pointer-events-none rounded-r-3xl transform skew-x-12 translate-x-10" />
 
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-sky-200 text-xs font-semibold mb-3 border border-white/15">
-            <BookOpen size={14} />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-semibold mb-3 border border-sky-200 shadow-xs">
+            <BookOpen size={14} className="text-sky-600" />
             Bumi Warga · Standar Operasional Prosedur (SOP) Tata Kelola Warga
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Buku Panduan Operasional Platform Bumi Warga
           </h1>
-          <p className="text-sm text-sky-100/90 mt-2 max-w-2xl leading-relaxed">
+          <p className="text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">
             Pedoman tata laksana digital resmi bagi Pengurus RT, Pengurus RW, Kader Posyandu, Aparatur Lingkungan, dan Warga dalam platform <strong>Bumi Warga</strong> yang dikembangkan secara mandiri oleh <strong>Jabar Pintar Digital</strong>.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-2 bg-white text-sky-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-sky-50 transition shadow-sm"
+              className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition shadow-xs active:scale-98"
             >
               <Printer size={15} /> Cetak / Ekspor SOP
             </button>
             <a
               href="/dashboard/command-center"
-              className="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-white/20 transition border border-white/20"
+              className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-800 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition border border-slate-200 shadow-xs active:scale-98"
             >
-              <Building2 size={15} /> Buka Command Center
+              <Building2 size={15} className="text-sky-600" /> Buka Command Center
             </a>
           </div>
         </div>

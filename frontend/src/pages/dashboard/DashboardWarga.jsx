@@ -286,19 +286,19 @@ export default function DashboardWarga() {
       </AnimatePresence>
 
       {/* ========================================================================= */}
-      {/* 1. HERO SECTION SUPER APP: PROFIL CITIZEN & DIRECT AVATAR UPLOADER       */}
+      {/* 1. HERO SECTION SUPER APP: PROFIL CITIZEN & DIRECT AVATAR UPLOADER (Clean Light Theme) */}
       {/* ========================================================================= */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-xl p-6 sm:p-8 border border-white/10">
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 text-slate-900 shadow-xs p-6 sm:p-8 border border-sky-100">
         {/* Glow ambient background */}
-        <div className="absolute -right-10 -bottom-10 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-10 -top-10 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-10 -bottom-10 w-80 h-80 bg-sky-200/25 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-10 -top-10 w-80 h-80 bg-blue-100/30 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           {/* Avatar & User Core Details */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-5">
             {/* Avatar Upload Bubble */}
             <div className="relative group shrink-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/10 border-2 border-white/30 backdrop-blur-md overflow-hidden flex items-center justify-center shadow-lg">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border-2 border-sky-200 overflow-hidden flex items-center justify-center shadow-xs">
                 {currentAvatarSrc ? (
                   <img
                     src={currentAvatarSrc}
@@ -306,7 +306,7 @@ export default function DashboardWarga() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-2xl sm:text-3xl font-black">
+                  <div className="w-full h-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-black">
                     {user?.nama?.charAt(0) || 'W'}
                   </div>
                 )}
@@ -317,7 +317,7 @@ export default function DashboardWarga() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="absolute -bottom-1 -right-1 p-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md transition-all active:scale-95 group-hover:scale-105"
+                className="absolute -bottom-1 -right-1 p-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white shadow-xs transition-all active:scale-95 group-hover:scale-105"
                 title="Unggah / Ubah Foto Profil Warga"
               >
                 {uploadingAvatar ? (
@@ -339,42 +339,42 @@ export default function DashboardWarga() {
             {/* Nama & Kredensial Kependudukan */}
             <div className="space-y-1.5 text-center sm:text-left">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/20 text-blue-200 border border-blue-400/30">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-200">
                   Warga Terverifikasi Dukcapil
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
                   {familyDesil?.desil_resmi_pemerintah ? `Desil ${familyDesil.desil_resmi_pemerintah}` : 'DTSEN Aktif'}
                 </span>
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 {user?.nama || 'Warga Terdaftar'}
               </h1>
 
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs text-blue-200/90 font-mono">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs text-slate-600 font-mono">
                 <span className="inline-flex items-center gap-1.5">
                   <span>NIK:</span> 
-                  <MaskedField value={user?.username || user?.nik} type="nik" className="text-white font-bold" />
+                  <MaskedField value={user?.username || user?.nik} type="nik" className="text-slate-900 font-bold" />
                 </span>
                 <span>&bull;</span>
                 <span className="inline-flex items-center gap-1.5">
                   <span>No. KK:</span> 
-                  <MaskedField value={user?.no_kk} type="kk" className="text-white font-bold" />
+                  <MaskedField value={user?.no_kk} type="kk" className="text-slate-900 font-bold" />
                 </span>
               </div>
 
-              <p className="text-[11px] text-blue-300/80 flex items-center justify-center sm:justify-start gap-1">
-                <MapPin size={12} />
+              <p className="text-[11px] text-slate-500 flex items-center justify-center sm:justify-start gap-1">
+                <MapPin size={12} className="text-sky-600" />
                 <span>RT {user?.rt || '001'} / RW {user?.rw || '001'} &bull; Kelurahan Kebonjati</span>
               </p>
             </div>
           </div>
 
-          {/* Quick Actions at Hero */}
+          {/* Quick Actions at Hero - Symmetric & High Contrast */}
           <div className="flex flex-col sm:flex-row items-center gap-2.5 shrink-0">
             <button
               onClick={() => navigate('/dashboard/dokumen')}
-              className="w-full sm:w-auto px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+              className="w-full sm:w-auto px-4 py-2.5 min-h-[44px] bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95"
             >
               <Plus size={15} />
               <span>Ajukan Permohonan Surat</span>
@@ -383,7 +383,7 @@ export default function DashboardWarga() {
             <button
               onClick={loadCitizenData}
               disabled={refreshing}
-              className="w-full sm:w-auto px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/20 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-3.5 py-2.5 min-h-[44px] bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs rounded-xl border border-slate-200 shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95"
             >
               <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
               <span>Segarkan Data</span>

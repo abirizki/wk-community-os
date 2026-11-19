@@ -230,21 +230,21 @@ export default function CommandCenterPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans">
-      {/* 1. Header Banner Eksekutif */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-sky-950 to-sky-900 text-white p-6 md:p-8 shadow-xl border border-sky-800/40">
+      {/* 1. Header Banner Eksekutif (Clean Light Civic Theme) */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 text-slate-900 p-6 md:p-8 shadow-xs border border-sky-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
-            <div className="flex items-center gap-2 mb-2.5">
-              <span className="px-3 py-1 text-[11px] font-bold tracking-wide rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/30 uppercase flex items-center gap-1.5 backdrop-blur-sm">
-                <BarChart3 size={13} />
+            <div className="flex flex-wrap items-center gap-2 mb-2.5">
+              <span className="px-3 py-1 text-[11px] font-bold tracking-wide rounded-full bg-sky-100 text-sky-800 border border-sky-200 uppercase flex items-center gap-1.5 shadow-xs">
+                <BarChart3 size={13} className="text-sky-600" />
                 <span>Executive Data Analytics Command Center</span>
               </span>
-              <span className="text-xs text-sky-200/80">33 Kelurahan · 7 Kecamatan</span>
+              <span className="text-xs text-slate-500 font-semibold">33 Kelurahan · 7 Kecamatan</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">
               Pusat Komando Analisis Data Spasial
             </h1>
-            <p className="text-xs md:text-sm text-sky-100/80 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-xs md:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
               Dashboard komparasi multivariat berbasis grafik dan storytelling untuk monitoring stunting, kemiskinan ekstrem, kecepatan SLA surat, dan kesiapan data digital.
             </p>
           </div>

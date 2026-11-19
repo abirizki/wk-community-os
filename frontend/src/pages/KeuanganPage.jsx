@@ -298,16 +298,19 @@ export default function KeuanganPage() {
             {(isRT || isRW) && (
               <button
                 onClick={() => setShowGenIuranModal(true)}
-                className="flex items-center gap-2 px-3.5 py-2.5 bg-sky-500/20 text-sky-200 border border-sky-400/30 rounded-xl font-bold shadow-sm hover:bg-sky-500/30 transition-colors text-xs min-h-[44px]"
+                className="flex items-center gap-2 px-3.5 py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-xl font-bold shadow-xs transition-colors text-xs min-h-[44px]"
+                title="Generate Tagihan Iuran Bulanan Warga"
               >
-                <Calendar size={15} /> Buat Tagihan Iuran Bulanan {isRW ? 'RW' : 'RT'}
+                <Calendar size={15} className="text-sky-600 shrink-0" />
+                <span>Generate Tagihan Iuran Bulanan {isRW ? 'RW' : 'RT'}</span>
               </button>
             )}
             <button
               onClick={() => setShowAddTxModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-bold shadow-md hover:bg-primary/90 transition-colors text-xs min-h-[44px]"
+              className="flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold shadow-xs transition-colors text-xs min-h-[44px]"
             >
-              <Plus size={16} /> Catat Kas Masuk / Keluar
+              <Plus size={16} className="text-white shrink-0" />
+              <span>Catat Kas Masuk / Keluar</span>
             </button>
           </div>
         )}
