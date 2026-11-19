@@ -44,7 +44,8 @@ import {
   Coins,
   Sparkles,
   Eye,
-  EyeOff
+  EyeOff,
+  Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -1210,6 +1211,14 @@ export default function ProfilePage() {
                   <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
                     <span className="text-on-surface-variant block mb-1">Status Perkawinan</span>
                     <span className="font-semibold text-on-surface">{warga?.status_perkawinan || '-'}</span>
+                  </div>
+
+                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">
+                    <span className="text-on-surface-variant block mb-1">Status Tempat Tinggal</span>
+                    <span className="font-semibold text-on-surface flex items-center gap-1.5 text-xs">
+                      <Home size={14} className="text-sky-600 shrink-0" />
+                      {warga?.status_rumah || warga?.status_tempat_tinggal || 'Milik Sendiri (Pribadi)'}
+                    </span>
                   </div>
 
                   <div className="sm:col-span-2 p-3 bg-surface-container-low rounded-xl border border-outline-variant/60">

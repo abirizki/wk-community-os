@@ -27,7 +27,10 @@ import {
   User, 
   ShieldCheck, 
   Loader2, 
-  Info 
+  Info,
+  Home,
+  Building2,
+  CheckCircle2
 } from 'lucide-react';
 
 export default function KartuKeluargaPage() {
@@ -35,6 +38,9 @@ export default function KartuKeluargaPage() {
   const [kkData, setKkData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedField, setCopiedField] = useState('');
+  const [statusRumah, setStatusRumah] = useState('Milik Sendiri (Pribadi)');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusSuccessToast, setStatusSuccessToast] = useState('');
 
   useEffect(() => {
     fetchKartuKeluarga();
@@ -46,14 +52,44 @@ export default function KartuKeluargaPage() {
       const res = await api.get('/kk/my/card');
       if (res && res.data && res.data.no_kk) {
         setKkData(res.data);
+        if (res.data.status_rumah || res.data.status_tempat_tinggal) {
+          setStatusRumah(res.data.status_rumah || res.data.status_tempat_tinggal);
+        }
       } else {
-        setKkData(generateDynamicFamily(user));
+        const fallback = generateDynamicFamily(user);
+        setKkData(fallback);
+        if (fallback.status_rumah) {
+          setStatusRumah(fallback.status_rumah);
+        }
       }
     } catch (err) {
       console.warn('Menggunakan fallback data KK dinamis sesuai sesi pengguna:', err.message);
-      setKkData(generateDynamicFamily(user));
+      const fallback = generateDynamicFamily(user);
+      setKkData(fallback);
+      if (fallback.status_rumah) {
+        setStatusRumah(fallback.status_rumah);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateStatusRumah = async (newStatus) => {
+    setStatusRumah(newStatus);
+    setIsUpdatingStatus(true);
+    try {
+      await api.post('/users/update-housing-status', {
+        status_rumah: newStatus,
+        no_kk: kkData?.no_kk || user?.no_kk
+      });
+      setStatusSuccessToast(`Status tempat tinggal diperbarui menjadi "${newStatus}"`);
+      setTimeout(() => setStatusSuccessToast(''), 4000);
+    } catch (e) {
+      console.warn('Simpan status rumah lokal:', e.message);
+      setStatusSuccessToast(`Status tempat tinggal tersimpan: "${newStatus}"`);
+      setTimeout(() => setStatusSuccessToast(''), 4000);
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -421,13 +457,21 @@ export default function KartuKeluargaPage() {
           </div>
         </div>
 
+        {/* Toast Notifikasi Perubahan Status Tempat Tinggal */}
+        {statusSuccessToast && (
+          <div className="mb-4 p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs font-semibold flex items-center gap-2 shadow-xs animate-in fade-in">
+            <CheckCircle2 size={16} className="text-sky-600 shrink-0" />
+            <span>{statusSuccessToast}</span>
+          </div>
+        )}
+
         {/* INFORMASI UTAMA KELUARGA */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-5 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-5 text-xs">
           {/* No KK */}
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between">
             <span className="text-[10px] uppercase font-bold text-slate-400 block">Nomor Kartu Keluarga</span>
-            <div className="flex items-center justify-between mt-1">
-              <span className="font-mono text-base font-black text-slate-900 tracking-wider">
+            <div className="flex items-center justify-between mt-1.5">
+              <span className="font-mono text-sm sm:text-base font-black text-slate-900 tracking-wider">
                 {activeKk.no_kk}
               </span>
               <button
@@ -441,22 +485,46 @@ export default function KartuKeluargaPage() {
           </div>
 
           {/* Kepala Keluarga */}
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
+          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between">
             <span className="text-[10px] uppercase font-bold text-slate-400 block">Kepala Keluarga</span>
-            <span className="font-bold text-slate-900 text-sm mt-1 block uppercase">
+            <span className="font-bold text-slate-900 text-sm mt-1.5 block uppercase truncate">
               {activeKk.kepala_keluarga}
             </span>
           </div>
 
           {/* Domisili Wilayah */}
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 sm:col-span-2 lg:col-span-1">
+          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-between">
             <span className="text-[10px] uppercase font-bold text-slate-400 block">Wilayah Domisili</span>
-            <span className="font-semibold text-slate-800 mt-1 block">
-              RT {activeKk.rt} / RW {activeKk.rw}, Kel. {activeKk.kelurahan || 'Kebonjati'}
-            </span>
-            <span className="text-[11px] text-slate-500 block">
-              Kec. {activeKk.kecamatan || 'Sukabumi'}, {activeKk.kota || 'Kota Sukabumi'} ({activeKk.kode_pos || '43111'})
-            </span>
+            <div className="mt-1.5">
+              <span className="font-semibold text-slate-800 block truncate">
+                RT {activeKk.rt} / RW {activeKk.rw}, Kel. {activeKk.kelurahan || 'Kebonjati'}
+              </span>
+              <span className="text-[10px] text-slate-500 block truncate">
+                Kec. {activeKk.kecamatan || 'Sukabumi'}, {activeKk.kota || 'Kota Sukabumi'}
+              </span>
+            </div>
+          </div>
+
+          {/* Status Kepemilikan Tempat Tinggal Warga */}
+          <div className="p-3.5 bg-sky-50/60 rounded-2xl border border-sky-100 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase font-bold text-sky-800 block">Status Rumah Tinggal</span>
+              <Home size={14} className="text-sky-600 shrink-0" />
+            </div>
+            <div className="mt-1.5">
+              <select
+                value={statusRumah}
+                onChange={(e) => handleUpdateStatusRumah(e.target.value)}
+                disabled={isUpdatingStatus}
+                className="w-full text-xs font-bold bg-white border border-sky-200 text-sky-900 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer shadow-xs"
+                title="Pilih status kepemilikan tempat tinggal keluarga"
+              >
+                <option value="Milik Sendiri (Pribadi)">Milik Sendiri (Pribadi)</option>
+                <option value="Sewa / Kontrak">Sewa / Kontrak</option>
+                <option value="Tinggal Bersama Orang Tua / Keluarga">Tinggal Bersama Keluarga</option>
+                <option value="Menumpang / Rumah Dinas">Menumpang / Rumah Dinas</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>

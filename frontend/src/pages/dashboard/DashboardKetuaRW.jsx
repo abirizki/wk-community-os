@@ -329,14 +329,14 @@ export default function DashboardKetuaRW() {
         )}
       </AnimatePresence>
 
-      {/* 0. Persona Mode Switcher (Single Identity, Dual Role) */}
-      <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-sky-800 via-blue-900 to-slate-900 text-white shadow-md border border-sky-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <label className="w-11 h-11 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center shrink-0 relative group cursor-pointer overflow-hidden shadow-sm" title="Klik untuk unggah foto profil">
+      {/* 0. Persona Mode Switcher (Single Identity, Dual Role) - Clean Light Civic Theme */}
+      <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-white border border-sky-100 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <label className="w-11 h-11 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center shrink-0 relative group cursor-pointer overflow-hidden shadow-xs" title="Klik untuk unggah foto profil">
             {user?.photo_url ? (
               <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover rounded-xl" />
             ) : (
-              <ShieldCheck className="w-6 h-6 text-sky-300" />
+              <ShieldCheck className="w-6 h-6 text-sky-600" />
             )}
             <input 
               type="file" 
@@ -360,50 +360,51 @@ export default function DashboardKetuaRW() {
                 }
               }}
             />
-            <div className="absolute inset-0 bg-black/50 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 bg-slate-900/60 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <span className="text-[8px] font-bold text-white uppercase text-center leading-tight">Unggah<br/>Foto</span>
             </div>
           </label>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-400 text-sky-950">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-200">
                 Mode Pejabat Aktif
               </span>
-              <span className="text-xs text-sky-200/90 font-mono">Wilayah RW {rwNomor}</span>
+              <span className="text-xs text-slate-500 font-mono">Wilayah RW {rwNomor}</span>
             </div>
-            <h2 className="text-sm sm:text-base font-bold text-white mt-0.5">
+            <h2 className="text-base sm:text-lg font-black text-slate-900 mt-0.5">
               {user?.nama || user?.name ? `${user?.nama || user?.name} • Ketua RW ${rwNomor}` : `Meja Kerja Otoritas Ketua RW ${rwNomor}`}
             </h2>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-                    <button
+        {/* Action Buttons: Symmetric, Precision Size, Clean 3-Color Palette */}
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+          <button
             type="button"
             onClick={() => setShowScanRegisterModal(true)}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 transition-all shadow-xs active:scale-98"
             title="Pindai QR KK & Input Data Warga Baru"
           >
-            <Camera className="w-4 h-4 text-emerald-300" />
-            <span>Scan QR KK & Input Warga</span>
+            <Camera className="w-4 h-4 text-sky-600 shrink-0" />
+            <span>Scan QR KK</span>
           </button>
           <button
             type="button"
             onClick={() => setShowActivationModal(true)}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 transition-all shadow-xs active:scale-98"
             title="Terbitkan Kupon Aktivasi Sekali Pakai untuk Warga"
           >
-            <Ticket className="w-4 h-4 text-amber-300" />
-            <span>Kupon Aktivasi Warga</span>
+            <Ticket className="w-4 h-4 text-sky-600 shrink-0" />
+            <span>Kupon Warga</span>
           </button>
-          <span className="text-xs text-emerald-200/70 hidden md:inline">Perlu urus surat/KK keluarga sendiri?</span>
           <Link
             to="/dashboard/dokumen?mode=mandiri&action=new"
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white transition-all shadow-xs active:scale-98"
+            title="Buka Layanan Mandiri Warga untuk urus surat/KK keluarga sendiri"
           >
-            <Home className="w-4 h-4 text-emerald-300" />
-            <span>Buka Layanan Mandiri Warga Saya</span>
-            <ArrowRight className="w-3.5 h-3.5 opacity-70" />
+            <Home className="w-4 h-4 text-white shrink-0" />
+            <span>Layanan Mandiri</span>
+            <ArrowRight className="w-3.5 h-3.5 text-sky-100 shrink-0" />
           </Link>
         </div>
       </div>

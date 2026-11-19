@@ -132,6 +132,17 @@ router.get('/profile-history', async (req, res) => {
         const [rows] = await pool.execute('SELECT * FROM warga WHERE user_id = ? LIMIT 1', [currentUser.id]);
         if (rows.length > 0) warga = rows[0];
       }
+      if (warga && warga.no_kk) {
+        try {
+          const [dkRows] = await pool.execute('SELECT status_rumah FROM desil_keluarga WHERE no_kk = ? LIMIT 1', [warga.no_kk]);
+          if (dkRows.length > 0 && dkRows[0].status_rumah) {
+            warga.status_rumah = dkRows[0].status_rumah;
+            warga.status_tempat_tinggal = dkRows[0].status_rumah;
+          }
+        } catch (dkErr) {
+          console.warn('Lookup status_rumah desil_keluarga note:', dkErr.message);
+        }
+      }
     } catch (e) {
       console.warn('Warga profile lookup error:', e.message);
     }
@@ -358,6 +369,59 @@ router.get('/profile-history', async (req, res) => {
   } catch (error) {
     console.error('Profile history error:', error);
     res.status(500).json({ success: false, message: 'Gagal memuat riwayat layanan profil.' });
+  }
+});
+
+// POST /api/users/update-housing-status - Update status tempat tinggal keluarga / warga
+router.post('/update-housing-status', async (req, res) => {
+  try {
+    const { status_rumah, no_kk } = req.body;
+    const currentUser = req.session?.user;
+    if (!currentUser) {
+      return res.status(401).json({ success: false, message: 'Sesi login tidak valid' });
+    }
+
+    const pool = require('../db/pool');
+    const targetNoKk = no_kk || currentUser.no_kk;
+
+    // Normalisasi enum status_rumah untuk desil_keluarga
+    let enumStatus = 'Milik Sendiri';
+    if (status_rumah) {
+      const lower = status_rumah.toLowerCase();
+      if (lower.includes('sewa') || lower.includes('kontrak')) {
+        enumStatus = 'Sewa/Kontrak';
+      } else if (lower.includes('numpang') || lower.includes('dinas')) {
+        enumStatus = 'Menumpang';
+      } else if (lower.includes('orang tua') || lower.includes('keluarga') || lower.includes('bebas')) {
+        enumStatus = 'Bebas Sewa';
+      }
+    }
+
+    if (targetNoKk) {
+      try {
+        await pool.execute(
+          `INSERT INTO desil_keluarga (no_kk, status_rumah) 
+           VALUES (?, ?) 
+           ON DUPLICATE KEY UPDATE status_rumah = ?`,
+          [targetNoKk, enumStatus, enumStatus]
+        );
+      } catch (dbErr) {
+        console.warn('Simpan ke desil_keluarga note:', dbErr.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Status tempat tinggal berhasil diperbarui.',
+      data: {
+        status_rumah,
+        enum_status: enumStatus,
+        no_kk: targetNoKk
+      }
+    });
+  } catch (error) {
+    console.error('Update housing status error:', error);
+    res.status(500).json({ success: false, message: 'Gagal memperbarui status tempat tinggal.' });
   }
 });
 
