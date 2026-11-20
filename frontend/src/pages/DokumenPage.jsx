@@ -1047,19 +1047,19 @@ export default function DokumenPage() {
             <button
               onClick={() => handleExportRegister('xlsx')}
               disabled={isExporting}
-              className="flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 px-3.5 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer disabled:opacity-50 min-h-[44px]"
+              className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-3.5 py-2.5 rounded-xl font-bold transition-all text-xs cursor-pointer disabled:opacity-50 min-h-[44px] shadow-xs active:scale-95"
               title="Unduh Buku Register Surat dalam format Microsoft Excel"
             >
-              <FileSpreadsheet size={16} className="text-emerald-300" />
+              <FileSpreadsheet size={16} className="text-emerald-700" />
               <span>{isExporting ? 'Mengunduh...' : 'Ekspor Excel'}</span>
             </button>
             <button
               onClick={() => handleExportRegister('csv')}
               disabled={isExporting}
-              className="flex items-center gap-1.5 bg-white/10 text-white hover:bg-white/20 border border-white/20 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer disabled:opacity-50 min-h-[44px]"
+              className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 px-3 py-2.5 rounded-xl font-bold transition-all text-xs cursor-pointer disabled:opacity-50 min-h-[44px] shadow-xs active:scale-95"
               title="Unduh format CSV"
             >
-              <Download size={14} />
+              <Download size={14} className="text-slate-600" />
               <span>CSV</span>
             </button>
           </div>
@@ -1070,7 +1070,7 @@ export default function DokumenPage() {
             setSubjekPemohon('self');
             setShowModal(true);
           }}
-          className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-md active:scale-95 cursor-pointer text-xs sm:text-sm min-h-[44px]"
+          className="flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all shadow-xs active:scale-95 cursor-pointer text-xs sm:text-sm min-h-[44px]"
         >
           <Plus size={18} />
           <span>Ajukan Surat Baru (Mandiri)</span>

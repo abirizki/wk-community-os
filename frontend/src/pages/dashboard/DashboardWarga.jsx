@@ -395,11 +395,11 @@ export default function DashboardWarga() {
       {/* ========================================================================= */}
       {/* 2. AI CITIZEN SMART BRIEFING & ACTION CARD                               */}
       {/* ========================================================================= */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-cyan-50/90 via-blue-50/60 to-white border-2 border-cyan-300 shadow-md relative overflow-hidden shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+      <div className="p-5 rounded-2xl bg-sky-50/40 border border-sky-200/80 shadow-xs relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
         <div className="space-y-1.5 max-w-2xl">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
-              <Sparkles size={11} className="text-blue-700" /> KANAYA AI &bull; Smart Citizen Briefing
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200 flex items-center gap-1">
+              <Sparkles size={11} className="text-sky-600" /> KANAYA AI &bull; Smart Citizen Briefing
             </span>
             <span className="text-[10px] text-slate-500 font-mono">Real-Time Update</span>
           </div>
@@ -423,7 +423,7 @@ export default function DashboardWarga() {
           {myTickets.length > 0 ? (
             <Link
               to="/dashboard/bansos"
-              className="px-3.5 py-2 min-h-[40px] bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs"
+              className="px-3.5 py-2 min-h-[40px] bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all text-xs"
             >
               <QrCode size={14} />
               <span>Lihat Tiket QR Bansos</span>
@@ -431,7 +431,7 @@ export default function DashboardWarga() {
           ) : (
             <Link
               to="/dashboard/kk"
-              className="px-3.5 py-2 min-h-[40px] bg-blue-700 hover:bg-blue-800 active:scale-95 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs"
+              className="px-3.5 py-2 min-h-[40px] bg-sky-600 hover:bg-sky-700 active:scale-95 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all text-xs"
             >
               <FileCheck size={14} />
               <span>Buka Kartu Keluarga</span>
@@ -484,7 +484,7 @@ export default function DashboardWarga() {
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+              <span className="w-2 h-2 rounded-full bg-sky-600"></span>
               <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                 Administrasi & Identitas Warga
               </h2>
@@ -496,13 +496,13 @@ export default function DashboardWarga() {
             {/* KK Digital */}
             <Link
               to="/dashboard/kk"
-              className="p-4 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Users size={20} />
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
                   Resmi SIAK
                 </span>
               </div>
@@ -515,14 +515,14 @@ export default function DashboardWarga() {
             {/* Pengajuan Surat */}
             <Link
               to="/dashboard/dokumen"
-              className="p-4 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <FileText size={20} />
                 </div>
                 {activeDocs.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
                     {activeDocs.length} Proses
                   </span>
                 )}
@@ -536,13 +536,13 @@ export default function DashboardWarga() {
             {/* Profil & Skor Kelengkapan */}
             <Link
               to="/dashboard/profil"
-              className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3 col-span-2 sm:col-span-1"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3 col-span-2 sm:col-span-1"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <ShieldCheck size={20} />
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                   4 Pilar
                 </span>
               </div>
@@ -558,7 +558,7 @@ export default function DashboardWarga() {
         <div className="space-y-2.5 pt-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+              <span className="w-2 h-2 rounded-full bg-sky-600"></span>
               <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                 Bantuan Sosial & Ekonomi Warga
               </h2>
@@ -570,14 +570,14 @@ export default function DashboardWarga() {
             {/* Bansos & Tiket QR */}
             <Link
               to="/dashboard/bansos"
-              className="p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Gift size={20} />
                 </div>
                 {myTickets.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 animate-pulse">
                     Tiket QR Siap
                   </span>
                 )}
@@ -591,13 +591,13 @@ export default function DashboardWarga() {
             {/* Desil Kesejahteraan DTSEN */}
             <Link
               to="/dashboard/desil"
-              className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Layers size={20} />
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
                   DTSEN
                 </span>
               </div>
@@ -610,13 +610,13 @@ export default function DashboardWarga() {
             {/* Daftarkan Usaha Warga (DIRECT ACTION KE FORM) */}
             <Link
               to="/dashboard/daya-dukung?tab=ekonomi&action=daftar-usaha"
-              className="p-4 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200 hover:border-teal-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Store size={20} />
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                   Daftar Langsung
                 </span>
               </div>
@@ -632,7 +632,7 @@ export default function DashboardWarga() {
         <div className="space-y-2.5 pt-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+              <span className="w-2 h-2 rounded-full bg-sky-600"></span>
               <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                 Lingkungan, Keuangan & Aspirasi RT/RW
               </h2>
@@ -644,13 +644,13 @@ export default function DashboardWarga() {
             {/* Tagihan PBB */}
             <Link
               to="/dashboard/pbb"
-              className="p-4 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <FileText size={20} />
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                   Bapenda
                 </span>
               </div>
@@ -663,14 +663,14 @@ export default function DashboardWarga() {
             {/* Kas & Iuran RT */}
             <Link
               to="/dashboard/keuangan"
-              className="p-4 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Coins size={20} />
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                  iuranStatus.isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  iuranStatus.isPaid ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'
                 }`}>
                   {iuranStatus.label}
                 </span>
@@ -684,13 +684,13 @@ export default function DashboardWarga() {
             {/* Rumah Sewa & Kontrakan */}
             <Link
               to="/dashboard/kontrakan"
-              className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <KeyRound size={20} />
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
                   Hunian
                 </span>
               </div>
@@ -703,13 +703,13 @@ export default function DashboardWarga() {
             {/* Lapor Pengaduan */}
             <Link
               to="/dashboard/pengaduan"
-              className="p-4 rounded-2xl bg-white hover:bg-purple-50/50 border border-slate-200 hover:border-purple-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
+              className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all group flex flex-col justify-between space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <MessageSquareWarning size={20} />
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                   Aspirasi
                 </span>
               </div>

@@ -222,16 +222,16 @@ export default function ComplaintPage() {
 
   return (
     <div className="max-w-max-width mx-auto space-y-6 pb-12">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <header className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 border border-sky-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-sky-50 text-sky-800 text-xs font-semibold mb-2 border border-sky-200">
-            <ShieldCheck size={14} /> Kanal Aspirasi & Aduan Warga Lingkungan
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold mb-2 border border-sky-200">
+            <ShieldCheck size={14} className="text-sky-700" /> Kanal Aspirasi & Aduan Warga Lingkungan
           </div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <MessageSquare className="text-sky-600" size={32} />
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <MessageSquare className="text-sky-600" size={26} />
             Layanan Pengaduan & Ketertiban
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1">
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
             {isOfficer
               ? `Pusat penanganan dan mediasi aduan ketertiban lingkungan untuk wilayah ${isRT ? `RT ${user?.rt} / RW ${user?.rw}` : isRW ? `RW ${user?.rw}` : 'Kelurahan Kebonjati'}.`
               : 'Sampaikan aduan fasilitas, sampah, kebersihan, atau ketertiban lingkungan secara langsung ke pengurus.'}
@@ -240,7 +240,7 @@ export default function ComplaintPage() {
 
         <button
           onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-sky-700 transition-colors cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-sky-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-sky-700 active:scale-95 transition-all cursor-pointer self-start sm:self-auto shrink-0"
         >
           {showForm ? 'Tutup Formulir' : <><Plus size={16} /> Buat Aduan Baru</>}
         </button>
