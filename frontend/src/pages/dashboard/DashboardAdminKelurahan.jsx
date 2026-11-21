@@ -645,7 +645,7 @@ export default function DashboardAdminKelurahan() {
           </button>
           <button
             onClick={() => setUserModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 text-white rounded-xl text-xs font-bold hover:bg-sky-600 transition-all shadow-md shadow-sky-500/25"
+            className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
           >
             <UserPlus size={15} />
             <span>Buat Akun RT/RW/Staf</span>
@@ -704,23 +704,23 @@ export default function DashboardAdminKelurahan() {
         {/* Bento 1: Overview Operasional */}
         <button
           onClick={() => setActiveTab('overview')}
-          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer ${
             activeTab === 'overview'
-              ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-blue-500 shadow-lg shadow-blue-600/20 scale-[1.02]'
-              : 'bg-surface-container-lowest hover:bg-surface-container-low border-outline-variant text-on-surface'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'overview' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'overview' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Activity size={18} />
             </div>
-            <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${activeTab === 'overview' ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-800'}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === 'overview' ? 'bg-white text-sky-900' : 'bg-sky-50 text-sky-700 border border-sky-200'}`}>
               Harian
             </span>
           </div>
           <div className="mt-3">
             <span className="text-xs font-bold block">Meja Kerja Harian</span>
-            <span className={`text-[11px] block ${activeTab === 'overview' ? 'text-blue-100' : 'text-on-surface-variant'}`}>
+            <span className={`text-[11px] block ${activeTab === 'overview' ? 'text-sky-100' : 'text-slate-500'}`}>
               Alur Proses Layanan
             </span>
           </div>
@@ -729,23 +729,23 @@ export default function DashboardAdminKelurahan() {
         {/* Bento 2: Manajemen Akun Aparatur */}
         <button
           onClick={() => setActiveTab('users')}
-          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer ${
             activeTab === 'users'
-              ? 'bg-gradient-to-br from-sky-600 to-blue-700 text-white border-sky-500 shadow-lg shadow-sky-600/20 scale-[1.02]'
-              : 'bg-surface-container-lowest hover:bg-surface-container-low border-outline-variant text-on-surface'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'users' ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'users' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Users size={18} />
             </div>
-            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activeTab === 'users' ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-800'}`}>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === 'users' ? 'bg-white text-sky-900' : 'bg-sky-50 text-sky-700 border border-sky-200'}`}>
               {userList.length} User
             </span>
           </div>
           <div className="mt-3">
             <span className="text-xs font-bold block">Akun & Role RT/RW</span>
-            <span className={`text-[11px] block ${activeTab === 'users' ? 'text-sky-100' : 'text-on-surface-variant'}`}>
+            <span className={`text-[11px] block ${activeTab === 'users' ? 'text-sky-100' : 'text-slate-500'}`}>
               Staf & Posyandu
             </span>
           </div>
@@ -754,23 +754,23 @@ export default function DashboardAdminKelurahan() {
         {/* Bento 3: Data Posyandu Berdasarkan Wilayah Kerja */}
         <button
           onClick={() => setActiveTab('posyandu')}
-          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer ${
             activeTab === 'posyandu'
-              ? 'bg-gradient-to-br from-pink-600 to-rose-700 text-white border-pink-500 shadow-lg shadow-pink-600/20 scale-[1.02]'
-              : 'bg-surface-container-lowest hover:bg-surface-container-low border-outline-variant text-on-surface'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'posyandu' ? 'bg-white/20 text-white' : 'bg-pink-100 text-pink-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'posyandu' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Baby size={18} />
             </div>
-            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activeTab === 'posyandu' ? 'bg-white/20 text-white' : 'bg-pink-100 text-pink-800'}`}>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === 'posyandu' ? 'bg-white text-sky-900' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
               {posyanduList.length} Pos
             </span>
           </div>
           <div className="mt-3">
             <span className="text-xs font-bold block">Posyandu Wilayah</span>
-            <span className={`text-[11px] block ${activeTab === 'posyandu' ? 'text-pink-100' : 'text-on-surface-variant'}`}>
+            <span className={`text-[11px] block ${activeTab === 'posyandu' ? 'text-sky-100' : 'text-slate-500'}`}>
               Pemetaan RW Binaan
             </span>
           </div>
@@ -779,23 +779,23 @@ export default function DashboardAdminKelurahan() {
         {/* Bento 4: Impor Masal KK & Template */}
         <button
           onClick={() => setActiveTab('bulk_kk')}
-          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer ${
             activeTab === 'bulk_kk'
-              ? 'bg-gradient-to-br from-teal-600 to-emerald-700 text-white border-teal-500 shadow-lg shadow-teal-600/20 scale-[1.02]'
-              : 'bg-surface-container-lowest hover:bg-surface-container-low border-outline-variant text-on-surface'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'bulk_kk' ? 'bg-white/20 text-white' : 'bg-teal-100 text-teal-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'bulk_kk' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Upload size={18} />
             </div>
-            <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${activeTab === 'bulk_kk' ? 'bg-white/20 text-white' : 'bg-teal-100 text-teal-800'}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === 'bulk_kk' ? 'bg-white text-sky-900' : 'bg-sky-50 text-sky-700 border border-sky-200'}`}>
               CSV Kemendagri
             </span>
           </div>
           <div className="mt-3">
             <span className="text-xs font-bold block">Input KK Masal</span>
-            <span className={`text-[11px] block ${activeTab === 'bulk_kk' ? 'text-teal-100' : 'text-on-surface-variant'}`}>
+            <span className={`text-[11px] block ${activeTab === 'bulk_kk' ? 'text-sky-100' : 'text-slate-500'}`}>
               Validasi & Template
             </span>
           </div>
@@ -804,23 +804,23 @@ export default function DashboardAdminKelurahan() {
         {/* Bento 5: Bansos, Sanggahan & Tiket QR */}
         <button
           onClick={() => setActiveTab('bansos')}
-          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer ${
             activeTab === 'bansos'
-              ? 'bg-gradient-to-br from-amber-600 to-orange-700 text-white border-amber-500 shadow-lg shadow-amber-600/20 scale-[1.02]'
-              : 'bg-surface-container-lowest hover:bg-surface-container-low border-outline-variant text-on-surface'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'bansos' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'bansos' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Gift size={18} />
             </div>
-            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activeTab === 'bansos' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'}`}>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === 'bansos' ? 'bg-white text-sky-900' : 'bg-amber-100 text-amber-800 border border-amber-200'}`}>
               {auditList.filter(a => a.status_review === 'PENDING_KELURAHAN').length} Sanggahan
             </span>
           </div>
           <div className="mt-3">
             <span className="text-xs font-bold block">Kliring Bansos</span>
-            <span className={`text-[11px] block ${activeTab === 'bansos' ? 'text-amber-100' : 'text-on-surface-variant'}`}>
+            <span className={`text-[11px] block ${activeTab === 'bansos' ? 'text-sky-100' : 'text-slate-500'}`}>
               Sanggahan & Tiket QR
             </span>
           </div>
@@ -829,23 +829,23 @@ export default function DashboardAdminKelurahan() {
         {/* Bento 6: Pajak PBB & Push Broadcast */}
         <button
           onClick={() => setActiveTab('pbb')}
-          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer ${
             activeTab === 'pbb'
-              ? 'bg-gradient-to-br from-emerald-600 to-green-800 text-white border-emerald-500 shadow-lg shadow-emerald-600/20 scale-[1.02]'
-              : 'bg-surface-container-lowest hover:bg-surface-container-low border-outline-variant text-on-surface'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'pbb' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'pbb' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Landmark size={18} />
             </div>
-            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activeTab === 'pbb' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === 'pbb' ? 'bg-white text-sky-900' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
               {pbbSummary?.summary?.persen_kepatuhan ?? 0}%
             </span>
           </div>
           <div className="mt-3">
             <span className="text-xs font-bold block">PBB & Push Reminder</span>
-            <span className={`text-[11px] block ${activeTab === 'pbb' ? 'text-emerald-100' : 'text-on-surface-variant'}`}>
+            <span className={`text-[11px] block ${activeTab === 'pbb' ? 'text-sky-100' : 'text-slate-500'}`}>
               Broadcast Tagihan
             </span>
           </div>
@@ -854,23 +854,23 @@ export default function DashboardAdminKelurahan() {
         {/* Bento 7: Pusat Laporan & Ekspor Berita Acara */}
         <button
           onClick={() => setActiveTab('laporan')}
-          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer ${
             activeTab === 'laporan'
-              ? 'bg-gradient-to-br from-indigo-700 to-violet-900 text-white border-indigo-500 shadow-lg shadow-indigo-600/20 scale-[1.02]'
-              : 'bg-surface-container-lowest hover:bg-surface-container-low border-outline-variant text-on-surface'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'laporan' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'laporan' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <FileText size={18} />
             </div>
-            <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${activeTab === 'laporan' ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-800'}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === 'laporan' ? 'bg-white text-sky-900' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
               Rekap
             </span>
           </div>
           <div className="mt-3">
             <span className="text-xs font-bold block">Pusat Laporan</span>
-            <span className={`text-[11px] block ${activeTab === 'laporan' ? 'text-indigo-100' : 'text-on-surface-variant'}`}>
+            <span className={`text-[11px] block ${activeTab === 'laporan' ? 'text-sky-100' : 'text-slate-500'}`}>
               Ekspor Dokumen & BA
             </span>
           </div>

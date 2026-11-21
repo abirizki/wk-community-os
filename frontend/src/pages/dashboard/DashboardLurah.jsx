@@ -460,15 +460,15 @@ export default function DashboardLurah() {
       </div>
 
       {/* SUPER APPS BENTO GRID MEJA KERJA LURAH */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4 mb-6">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4 mb-6">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">
+            <div className="w-2 h-2 rounded-full bg-sky-600" />
+            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-900">
               Pintasan Meja Kerja Eksekutif Lurah Kebonjati
             </h3>
           </div>
-          <span className="text-[11px] text-slate-400 font-mono">8 Layanan Cepat</span>
+          <span className="text-[11px] text-slate-500 font-mono">8 Layanan Cepat</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
@@ -476,20 +476,20 @@ export default function DashboardLurah() {
           <button
             type="button"
             onClick={() => setActiveView('tte')}
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-primary/5 hover:from-primary/10 hover:to-primary/20 border border-slate-200/80 hover:border-primary/40 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-primary text-on-primary flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <FileCheck size={18} />
               </div>
               {readyTTEDocs.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 text-rose-800 animate-pulse">
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-800 border border-rose-200 animate-pulse">
                   {readyTTEDocs.length} siap TTE
                 </span>
               )}
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-primary">Pengesahan TTE Digital</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Pengesahan TTE Digital</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Tanda Tangan Elektronik</p>
             </div>
           </button>
@@ -497,16 +497,16 @@ export default function DashboardLurah() {
           {/* 2. Bansos & Sanggahan */}
           <Link
             to="/dashboard/bansos"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-amber-50/40 hover:from-amber-50 hover:to-amber-100/60 border border-slate-200/80 hover:border-amber-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <Gift size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-100 text-amber-800">Tiket QR</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-50 text-sky-700 border border-sky-200">Tiket QR</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-amber-700">Penetapan Bansos</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Penetapan Bansos</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Distribusi & Sanggahan</p>
             </div>
           </Link>
@@ -514,16 +514,16 @@ export default function DashboardLurah() {
           {/* 3. Pengesahan Desil */}
           <Link
             to="/dashboard/desil"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/40 hover:from-indigo-50 hover:to-indigo-100/60 border border-slate-200/80 hover:border-indigo-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <Layers size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-100 text-indigo-800">DTKS</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-50 text-sky-700 border border-sky-200">DTKS</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-indigo-700">Pengesahan Desil</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Pengesahan Desil</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Regsosek & DTSEN</p>
             </div>
           </Link>
@@ -531,16 +531,16 @@ export default function DashboardLurah() {
           {/* 4. Monitoring Posyandu */}
           <Link
             to="/dashboard/posyandu"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-rose-50/40 hover:from-rose-50 hover:to-rose-100/60 border border-slate-200/80 hover:border-rose-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <HeartPulse size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 text-rose-800">KIA</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">KIA</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-rose-700">Zero Stunting Kelurahan</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Zero Stunting Kelurahan</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Penimbangan 7 Posyandu</p>
             </div>
           </Link>
@@ -548,20 +548,20 @@ export default function DashboardLurah() {
           {/* 5. Evaluasi Aduan Warga */}
           <Link
             to="/dashboard/pengaduan"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-red-50/40 hover:from-red-50 hover:to-red-100/60 border border-slate-200/80 hover:border-red-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <MessageSquareWarning size={18} />
               </div>
               {criticalComplaints.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-red-100 text-red-800 animate-pulse">
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-800 border border-rose-200 animate-pulse">
                   {criticalComplaints.length} darurat
                 </span>
               )}
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-red-700">Aduan Warga</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Aduan Warga</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Disposisi & Penanganan</p>
             </div>
           </Link>
@@ -569,16 +569,16 @@ export default function DashboardLurah() {
           {/* 6. Pajak PBB-P2 */}
           <Link
             to="/dashboard/pbb"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-emerald-50/40 hover:from-emerald-50 hover:to-emerald-100/60 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <Landmark size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800">SPPT</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">SPPT</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700">Rekonsiliasi PBB</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Rekonsiliasi PBB</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Kolektivitas Pajak</p>
             </div>
           </Link>
@@ -586,13 +586,13 @@ export default function DashboardLurah() {
           {/* 7. Kelola Pengguna & Aparatur */}
           <Link
             to="/dashboard/users"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-sky-50/40 hover:from-sky-50 hover:to-sky-100/60 border border-slate-200/80 hover:border-sky-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <ShieldCheck size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">RT / RW</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-50 text-sky-700 border border-sky-200">RT / RW</span>
             </div>
             <div>
               <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Aparatur & Pengguna</h4>
@@ -603,16 +603,16 @@ export default function DashboardLurah() {
           {/* 8. Panduan SOP Kelurahan */}
           <Link
             to="/dashboard/panduan"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-purple-50/40 hover:from-purple-50 hover:to-purple-100/60 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <BookOpen size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-100 text-purple-800">SOP</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">SOP</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-purple-700">Panduan Operasional</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Panduan Operasional</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Standar Pelayanan SPBE</p>
             </div>
           </Link>
@@ -634,18 +634,22 @@ export default function DashboardLurah() {
       </AnimatePresence>
 
       {/* TAB NAVIGATION: TTE WORKSPACE VS EXECUTIVE DSS */}
-      <div className="mt-8 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-2 bg-surface-container-low rounded-2xl border border-outline-variant">
+      <div className="mt-8 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-2 bg-white rounded-2xl border border-slate-200 shadow-xs">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveView('tte')}
-            className={'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ' + (activeView === 'tte' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeView === 'tte' ? 'bg-sky-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-50'
+            }`}
           >
             <FileCheck size={16} />
             <span>Meja Pengesahan TTE ({readyTTEDocs.length})</span>
           </button>
           <button
             onClick={() => setActiveView('dss')}
-            className={'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ' + (activeView === 'dss' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeView === 'dss' ? 'bg-sky-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-50'
+            }`}
           >
             <BarChart3 size={16} />
             <span>Pusat Kendali Keputusan Kelurahan (DSS)</span>
@@ -665,10 +669,10 @@ export default function DashboardLurah() {
               }
             }}
             disabled={isExportingLurah}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold hover:bg-emerald-100 transition cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 min-h-[44px] rounded-xl bg-white text-slate-800 border border-slate-200 text-xs font-bold hover:bg-slate-50 transition-all shadow-xs cursor-pointer disabled:opacity-50 active:scale-95"
             title="Unduh Register Pelayanan Surat Kelurahan"
           >
-            <FileSpreadsheet size={14} className="text-emerald-700" />
+            <FileSpreadsheet size={15} className="text-slate-600" />
             <span>{isExportingLurah ? 'Mengunduh...' : 'Unduh Register'}</span>
           </button>
         </div>
