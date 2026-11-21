@@ -265,14 +265,17 @@ export default function WargaList() {
 
   return (
     <div className="max-w-max-width mx-auto space-y-6 pb-12">
-      {/* HEADER */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* HEADER BANNER */}
+      <header className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 border border-sky-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-on-surface flex items-center gap-3">
-            <Users className="text-primary" size={32} />
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold mb-2 border border-sky-200">
+            <Users size={14} className="text-sky-700" /> Buku Induk Kependudukan Lingkungan
+          </div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Users className="text-sky-600" size={26} />
             Data Kependudukan Warga
           </h1>
-          <p className="text-body-md text-on-surface-variant mt-1">
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
             Basis data demografi dan kependudukan terpadu {user?.kelurahan ? `Kelurahan ${user.kelurahan}` : 'wilayah setempat'}.
           </p>
         </div>
@@ -287,18 +290,18 @@ export default function WargaList() {
                 setParsedRows([]);
                 setFileName('');
               }}
-              className="flex items-center gap-2 px-3.5 py-2 bg-surface-container-high text-on-surface rounded-xl font-semibold hover:bg-surface-container-highest transition-colors text-sm border border-outline-variant"
+              className="flex items-center gap-2 px-3.5 py-2.5 min-h-[44px] bg-white text-slate-800 rounded-xl font-bold hover:bg-slate-50 transition-all text-xs border border-slate-200 shadow-xs cursor-pointer active:scale-95"
             >
-              <FileUp size={16} /> Import Massal (CSV)
+              <FileUp size={16} className="text-slate-600" /> Import Massal (CSV)
             </button>
           )}
 
           {canAssisted && (
             <button
               onClick={() => setShowAssistedModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-semibold hover:bg-primary/90 transition-colors text-sm shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-sky-600 text-white rounded-xl font-bold hover:bg-sky-700 transition-all text-xs shadow-xs cursor-pointer active:scale-95"
             >
-              <UserPlus size={16} /> Input Warga (Asistensi RT)
+              <UserPlus size={16} className="text-white" /> Input Warga (Asistensi RT)
             </button>
           )}
         </div>
@@ -311,13 +314,13 @@ export default function WargaList() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="p-4 bg-error-container text-on-error-container rounded-xl flex items-center justify-between shadow-sm"
+            className="p-4 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl flex items-center justify-between shadow-xs"
           >
             <div className="flex items-center gap-3">
-              <AlertCircle size={20} className="text-error" />
+              <AlertCircle size={20} className="text-rose-600" />
               <p className="text-sm font-medium">{error}</p>
             </div>
-            <button onClick={() => setError('')} className="text-on-error-container/70 hover:text-on-error-container">
+            <button onClick={() => setError('')} className="text-rose-700 hover:text-rose-900 cursor-pointer">
               <X size={18} />
             </button>
           </motion.div>
@@ -328,13 +331,13 @@ export default function WargaList() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="p-4 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm"
+            className="p-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl flex items-center justify-between shadow-xs"
           >
             <div className="flex items-center gap-3">
               <CheckCircle size={20} className="text-emerald-700" />
               <p className="text-sm font-semibold">{successMsg}</p>
             </div>
-            <button onClick={() => setSuccessMsg('')} className="text-emerald-700 hover:text-emerald-900">
+            <button onClick={() => setSuccessMsg('')} className="text-emerald-700 hover:text-emerald-900 cursor-pointer">
               <X size={18} />
             </button>
           </motion.div>
@@ -342,21 +345,21 @@ export default function WargaList() {
       </AnimatePresence>
 
       {/* FILTER & SEARCH */}
-      <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
         <form onSubmit={handleSearchSubmit} className="relative w-full md:w-96">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant" size={18} />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
             placeholder="Cari berdasarkan NIK atau Nama..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-on-surface"
+            className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-sky-500 focus:bg-white text-slate-900 transition-colors"
           />
         </form>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
-            <Filter size={16} /> Filter RT:
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+            <Filter size={16} className="text-slate-500" /> Filter RT:
           </div>
           <select
             value={filterRT}
@@ -364,7 +367,7 @@ export default function WargaList() {
               setFilterRT(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-2 text-sm bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-on-surface font-medium"
+            className="px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-sky-500 text-slate-900 font-bold transition-colors cursor-pointer"
           >
             <option value="">Semua RT (RW 001)</option>
             <option value="001">RT 001</option>

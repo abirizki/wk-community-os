@@ -442,9 +442,9 @@ export default function DesilPage() {
       <div className="flex border-b border-slate-200 gap-4 overflow-x-auto">
         <button
           onClick={() => setActiveTab('kuesioner')}
-          className={`pb-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap ${
+          className={`pb-3 text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
             activeTab === 'kuesioner'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-sky-600 text-sky-600'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -453,9 +453,9 @@ export default function DesilPage() {
 
         <button
           onClick={() => setActiveTab('bukti')}
-          className={`pb-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap ${
+          className={`pb-3 text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
             activeTab === 'bukti'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-sky-600 text-sky-600'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -468,15 +468,15 @@ export default function DesilPage() {
         {isOfficer && (
           <button
             onClick={() => setActiveTab('verifikasi')}
-            className={`pb-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap ${
+            className={`pb-3 text-sm font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'verifikasi'
-                ? 'border-blue-600 text-blue-600'
+                ? 'border-sky-600 text-sky-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             <ShieldCheck size={16} /> Meja Verifikasi & Rekonsiliasi Wilayah
             {stats?.pending_verifikasi > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-red-600 text-white font-bold">
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-600 text-white font-bold">
                 {stats.pending_verifikasi}
               </span>
             )}
@@ -720,7 +720,7 @@ export default function DesilPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+                  className="px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 shadow-xs flex items-center gap-2 cursor-pointer active:scale-95 transition-all disabled:opacity-50"
                 >
                   <Check size={16} /> Simpan Draft Indikator Mandiri
                 </button>

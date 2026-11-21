@@ -416,19 +416,19 @@ export default function DashboardKetuaRW() {
         <button
           type="button"
           onClick={() => setActiveTab('surat')}
-          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'surat'
-              ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-500 shadow-md shadow-emerald-600/20 scale-[1.02]'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'surat' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'surat' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <FileCheck size={18} />
             </div>
             {dokumenList.length > 0 && (
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-                activeTab === 'surat' ? 'bg-white text-emerald-900' : 'bg-amber-100 text-amber-800 animate-pulse'
+                activeTab === 'surat' ? 'bg-white text-sky-900' : 'bg-amber-100 text-amber-800 animate-pulse'
               }`}>
                 {dokumenList.length} Terusan
               </span>
@@ -436,7 +436,7 @@ export default function DashboardKetuaRW() {
           </div>
           <div className="mt-2.5">
             <span className="text-xs font-bold block">Validasi Terusan RT</span>
-            <span className={`text-[10px] block ${activeTab === 'surat' ? 'text-emerald-100' : 'text-slate-500'}`}>
+            <span className={`text-[10px] block ${activeTab === 'surat' ? 'text-sky-100' : 'text-slate-500'}`}>
               TTE Pengesahan RW
             </span>
           </div>
@@ -446,25 +446,25 @@ export default function DashboardKetuaRW() {
         <button
           type="button"
           onClick={() => setActiveTab('scorecard')}
-          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'scorecard'
-              ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-blue-500 shadow-md shadow-blue-600/20 scale-[1.02]'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'scorecard' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'scorecard' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Layers size={18} />
             </div>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-              activeTab === 'scorecard' ? 'bg-white text-blue-900' : 'bg-blue-100 text-blue-700'
+              activeTab === 'scorecard' ? 'bg-white text-sky-900' : 'bg-sky-50 text-sky-700 border border-sky-200'
             }`}>
               {scorecardData.length} RT
             </span>
           </div>
           <div className="mt-2.5">
             <span className="text-xs font-bold block">Scorecard Antar-RT</span>
-            <span className={`text-[10px] block ${activeTab === 'scorecard' ? 'text-blue-100' : 'text-slate-500'}`}>
+            <span className={`text-[10px] block ${activeTab === 'scorecard' ? 'text-sky-100' : 'text-slate-500'}`}>
               Radar Kinerja Wilayah
             </span>
           </div>
@@ -474,25 +474,25 @@ export default function DashboardKetuaRW() {
         <button
           type="button"
           onClick={() => setActiveTab('rentan')}
-          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'rentan'
-              ? 'bg-gradient-to-br from-rose-600 to-pink-700 text-white border-rose-500 shadow-md shadow-rose-600/20 scale-[1.02]'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'rentan' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'rentan' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Heart size={18} />
             </div>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-              activeTab === 'rentan' ? 'bg-white text-rose-900' : 'bg-rose-100 text-rose-700'
+              activeTab === 'rentan' ? 'bg-white text-sky-900' : 'bg-slate-100 text-slate-700 border border-slate-200'
             }`}>
               {kelompokRentanList.length} Jiwa
             </span>
           </div>
           <div className="mt-2.5">
             <span className="text-xs font-bold block">Radar Warga Rentan</span>
-            <span className={`text-[10px] block ${activeTab === 'rentan' ? 'text-rose-100' : 'text-slate-500'}`}>
+            <span className={`text-[10px] block ${activeTab === 'rentan' ? 'text-sky-100' : 'text-slate-500'}`}>
               Yatim & Lansia Binaan
             </span>
           </div>
@@ -502,25 +502,25 @@ export default function DashboardKetuaRW() {
         <button
           type="button"
           onClick={() => setActiveTab('analitik')}
-          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'analitik'
-              ? 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-indigo-500 shadow-md shadow-indigo-600/20 scale-[1.02]'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'analitik' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'analitik' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Sparkles size={18} />
             </div>
             <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-              activeTab === 'analitik' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800'
+              activeTab === 'analitik' ? 'bg-white text-sky-900' : 'bg-sky-50 text-sky-700 border border-sky-200'
             }`}>
               AI Policy
             </span>
           </div>
           <div className="mt-2.5">
             <span className="text-xs font-bold block">Kebijakan Cerdas RW</span>
-            <span className={`text-[10px] block ${activeTab === 'analitik' ? 'text-indigo-100' : 'text-slate-500'}`}>
+            <span className={`text-[10px] block ${activeTab === 'analitik' ? 'text-sky-100' : 'text-slate-500'}`}>
               Looker BI & Analisis
             </span>
           </div>

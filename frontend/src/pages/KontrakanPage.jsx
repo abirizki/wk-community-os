@@ -188,13 +188,13 @@ export default function KontrakanPage() {
       </AnimatePresence>
 
       {/* NAVIGATION TABS */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-outline-variant pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('daftar')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'daftar'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+              ? 'bg-sky-600 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
           }`}
         >
           <Building2 size={16} />
@@ -206,10 +206,10 @@ export default function KontrakanPage() {
 
         <button
           onClick={() => setActiveTab('tambah')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'tambah'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+              ? 'bg-sky-600 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
           }`}
         >
           <Plus size={16} />
@@ -218,10 +218,10 @@ export default function KontrakanPage() {
 
         <button
           onClick={() => setActiveTab('tatatertib')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'tatatertib'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+              ? 'bg-sky-600 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
           }`}
         >
           <FileText size={16} />
@@ -233,22 +233,22 @@ export default function KontrakanPage() {
       {activeTab === 'daftar' && (
         <div className="space-y-4">
           {/* SEARCH & FILTERS */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="text"
                 placeholder="Cari nama hunian, alamat, atau nama pemilik..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-surface-container-high/40 border border-outline-variant rounded-xl text-xs focus:outline-none focus:border-emerald-500"
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500 focus:bg-white transition-colors"
               />
             </div>
             <div className="flex items-center gap-2">
               <select
                 value={filterJenis}
                 onChange={(e) => setFilterJenis(e.target.value)}
-                className="px-3 py-2 bg-surface-container-high/40 border border-outline-variant rounded-xl text-xs focus:outline-none focus:border-emerald-500"
+                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500 focus:bg-white transition-colors"
               >
                 <option value="ALL">Semua Jenis Hunian</option>
                 <option value="Rumah Kontrakan">Rumah Kontrakan</option>
@@ -260,21 +260,21 @@ export default function KontrakanPage() {
 
           {/* LIST CARDS */}
           {loading ? (
-            <div className="py-12 text-center text-xs text-on-surface-variant">
+            <div className="py-12 text-center text-xs text-slate-500">
               Memuat data hunian sewa...
             </div>
           ) : filteredHunian.length === 0 ? (
-            <div className="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-sky-50 text-sky-600 mx-auto flex items-center justify-center">
                 <Home size={24} />
               </div>
-              <h3 className="font-bold text-slate-800 text-sm">Belum Ada Unit Kontrakan/Kos yang Terdaftar</h3>
+              <h3 className="font-bold text-slate-900 text-sm">Belum Ada Unit Kontrakan/Kos yang Terdaftar</h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
                 Jika Anda memiliki rumah kontrakan atau kamar kos yang disewakan di wilayah ini, silakan daftarkan melalui tab &ldquo;Daftarkan Kontrakan/Kos Baru&rdquo;.
               </p>
               <button
                 onClick={() => setActiveTab('tambah')}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-sky-600 text-white text-xs font-bold hover:bg-sky-700 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 <Plus size={14} /> Daftarkan Sekarang
               </button>
@@ -284,21 +284,21 @@ export default function KontrakanPage() {
               {filteredHunian.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow space-y-4"
+                  className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-sky-300 transition-all space-y-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 font-bold">
+                      <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center flex-shrink-0 font-bold">
                         <Home size={20} />
                       </div>
                       <div>
                         <h4 className="font-bold text-slate-900 text-sm">{item.nama_hunian}</h4>
-                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mt-0.5">
+                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 mt-0.5">
                           {item.jenis_hunian}
                         </span>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
                       {item.status_verifikasi || 'TERVERIFIKASI'}
                     </span>
                   </div>
@@ -403,7 +403,7 @@ export default function KontrakanPage() {
                     maxLength={3}
                     value={formData.rt}
                     onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-high/20 text-center font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-center font-mono focus:outline-none focus:border-sky-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -414,7 +414,7 @@ export default function KontrakanPage() {
                     maxLength={3}
                     value={formData.rw}
                     onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-high/20 text-center font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-center font-mono focus:outline-none focus:border-sky-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -424,7 +424,7 @@ export default function KontrakanPage() {
                     min={1}
                     value={formData.jumlah_kamar_pintu}
                     onChange={(e) => setFormData({ ...formData, jumlah_kamar_pintu: Number(e.target.value) })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-high/20 text-center font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-center font-mono focus:outline-none focus:border-sky-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -434,7 +434,7 @@ export default function KontrakanPage() {
                     min={0}
                     value={formData.jumlah_penghuni_aktif}
                     onChange={(e) => setFormData({ ...formData, jumlah_penghuni_aktif: Number(e.target.value) })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-high/20 text-center font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-center font-mono focus:outline-none focus:border-sky-500"
                   />
                 </div>
               </div>
@@ -448,7 +448,7 @@ export default function KontrakanPage() {
                     placeholder="Nama lengkap pemilik"
                     value={formData.nama_pemilik}
                     onChange={(e) => setFormData({ ...formData, nama_pemilik: e.target.value })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-high/20 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-sky-500"
                   />
                 </div>
 
@@ -460,7 +460,7 @@ export default function KontrakanPage() {
                     placeholder="0812xxxxxxxx"
                     value={formData.no_kontak_pemilik}
                     onChange={(e) => setFormData({ ...formData, no_kontak_pemilik: e.target.value })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-high/20 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-sky-500"
                   />
                 </div>
               </div>
@@ -483,14 +483,14 @@ export default function KontrakanPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('daftar')}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                  className="px-4 py-2.5 min-h-[44px] text-xs font-bold text-slate-600 hover:text-slate-800 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 shadow-md transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-sky-600 text-white text-xs font-bold hover:bg-sky-700 shadow-xs cursor-pointer active:scale-95 transition-all disabled:opacity-50"
                 >
                   <Sparkles size={14} />
                   <span>{submitting ? 'Menyimpan...' : 'Simpan Data Kontrakan'}</span>

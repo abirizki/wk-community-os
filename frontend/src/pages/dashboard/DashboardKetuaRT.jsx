@@ -776,17 +776,17 @@ export default function DashboardKetuaRT() {
           onClick={() => handleTabChange('surat')}
           className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'surat'
-              ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-500 shadow-md shadow-emerald-600/20 scale-[1.02]'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'surat' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'surat' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <FileCheck size={18} />
             </div>
             {pendingDocs.length > 0 && (
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-                activeTab === 'surat' ? 'bg-white text-emerald-900' : 'bg-rose-100 text-rose-700 animate-pulse'
+                activeTab === 'surat' ? 'bg-white text-sky-900' : 'bg-rose-50 text-rose-800 border border-rose-200 animate-pulse'
               }`}>
                 {pendingDocs.length} Antrean
               </span>
@@ -794,7 +794,7 @@ export default function DashboardKetuaRT() {
           </div>
           <div className="mt-2.5">
             <span className="text-xs font-bold block">Verifikasi Surat & TTE</span>
-            <span className={`text-[10px] block ${activeTab === 'surat' ? 'text-emerald-100' : 'text-slate-500'}`}>
+            <span className={`text-[10px] block ${activeTab === 'surat' ? 'text-sky-100' : 'text-slate-500'}`}>
               SLA & 3-Aksi Cepat
             </span>
           </div>
@@ -806,16 +806,16 @@ export default function DashboardKetuaRT() {
           onClick={() => handleTabChange('pendatang')}
           className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'pendatang'
-              ? 'bg-gradient-to-br from-sky-600 to-blue-700 text-white border-sky-500 shadow-md shadow-sky-600/20 scale-[1.02]'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'pendatang' ? 'bg-white/20 text-white' : 'bg-sky-100 text-sky-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'pendatang' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Users size={18} />
             </div>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-              activeTab === 'pendatang' ? 'bg-white text-sky-900' : 'bg-sky-100 text-sky-800'
+              activeTab === 'pendatang' ? 'bg-white text-sky-900' : 'bg-sky-50 text-sky-700 border border-sky-200'
             }`}>
               {wargaPendatangList.filter(p => p.status_layanan === 'SIAP_LAYANAN').length} Siap Layanan
             </span>
@@ -834,23 +834,23 @@ export default function DashboardKetuaRT() {
           onClick={() => handleTabChange('rentan')}
           className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'rentan'
-              ? 'bg-gradient-to-br from-rose-600 to-pink-700 text-white border-rose-500 shadow-md shadow-rose-600/20 scale-[1.02]'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'rentan' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'rentan' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Heart size={18} />
             </div>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-              activeTab === 'rentan' ? 'bg-white text-rose-900' : 'bg-rose-100 text-rose-700'
+              activeTab === 'rentan' ? 'bg-white text-sky-900' : 'bg-slate-100 text-slate-700 border border-slate-200'
             }`}>
               {kelompokRentanList.length} Jiwa
             </span>
           </div>
           <div className="mt-2.5">
             <span className="text-xs font-bold block">Pengingat Sambang Warga</span>
-            <span className={`text-[10px] block ${activeTab === 'rentan' ? 'text-rose-100' : 'text-slate-500'}`}>
+            <span className={`text-[10px] block ${activeTab === 'rentan' ? 'text-sky-100' : 'text-slate-500'}`}>
               Lansia & Warga Rentan
             </span>
           </div>
@@ -862,23 +862,23 @@ export default function DashboardKetuaRT() {
           onClick={() => handleTabChange('keuangan')}
           className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
             activeTab === 'keuangan'
-              ? 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-indigo-500 shadow-md shadow-indigo-600/20 scale-[1.02]'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+              ? 'bg-sky-600 text-white border-sky-600 shadow-xs scale-[1.01]'
+              : 'bg-white hover:bg-sky-50/40 border-slate-200 text-slate-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className={`p-2 rounded-xl ${activeTab === 'keuangan' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
+            <div className={`p-2 rounded-xl ${activeTab === 'keuangan' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
               <Wallet size={18} />
             </div>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-              activeTab === 'keuangan' ? 'bg-white text-indigo-900' : 'bg-indigo-100 text-indigo-800'
+              activeTab === 'keuangan' ? 'bg-white text-sky-900' : 'bg-sky-50 text-sky-700 border border-sky-200'
             }`}>
               {iuranSummary.persentase || '0%'} Lunas
             </span>
           </div>
           <div className="mt-2.5">
             <span className="text-xs font-bold block">Kas & Iuran Lingkungan</span>
-            <span className={`text-[10px] block ${activeTab === 'keuangan' ? 'text-indigo-100' : 'text-slate-500'}`}>
+            <span className={`text-[10px] block ${activeTab === 'keuangan' ? 'text-sky-100' : 'text-slate-500'}`}>
               {iuranSummary.sudah_bayar || 0}/{iuranSummary.total_kk || 0} KK Terkumpul
             </span>
           </div>
@@ -889,12 +889,12 @@ export default function DashboardKetuaRT() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-700">
+            <div className="w-2 h-2 rounded-full bg-sky-600" />
+            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-900">
               Pintasan Meja Kerja Super Apps
             </h3>
           </div>
-          <span className="text-[11px] text-slate-400 font-mono">8 Layanan Cepat</span>
+          <span className="text-[11px] text-slate-500 font-mono">8 Layanan Cepat</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -902,176 +902,175 @@ export default function DashboardKetuaRT() {
           <button
             type="button"
             onClick={() => handleTabChange('surat')}
-            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <FileCheck className="w-5 h-5" />
               </div>
               {pendingDocs.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-100 text-rose-700 animate-pulse">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-50 text-rose-800 border border-rose-200 animate-pulse">
                   {pendingDocs.length} antrean
                 </span>
               )}
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Verifikasi Surat & TTE</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">SOP 3-Aksi & SLA</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Verifikasi Surat & TTE</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">SOP 3-Aksi & SLA</p>
             </div>
           </button>
 
-                    {/* 2. Scan QR KK & Input Warga */}
+          {/* 2. Scan QR KK & Input Warga */}
           <button
             type="button"
             onClick={() => setShowScanRegisterModal(true)}
-            className="p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <QrCode className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-sky-50 text-sky-700 border border-sky-200">
                 Kamera QR
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">Scan QR KK & Input Warga</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Pindai KK & Input Baru</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Scan QR KK & Input Warga</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Pindai KK & Input Baru</p>
             </div>
           </button>
 
-          {/* 2. Loket Dampingan Warga */}
+          {/* 3. Loket Dampingan Warga */}
           <Link
             to="/dashboard/dokumen?mode=dampingan"
-            className="p-3.5 rounded-2xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <CheckSquare className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-teal-100 text-teal-800">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">
                 Offline
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-teal-700">Loket Dampingan</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Bantu warga lansia/gaptek</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Loket Dampingan</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Bantu warga lansia/gaptek</p>
             </div>
           </Link>
 
-          {/* 3. Layanan Surat Mandiri RT */}
+          {/* 4. Layanan Surat Mandiri RT */}
           <Link
             to="/dashboard/dokumen?mode=mandiri"
-            className="p-3.5 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <FileCheck className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-100 text-blue-800 font-mono">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-sky-50 text-sky-700 border border-sky-200 font-mono">
                 Mandiri
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700">Layanan Surat Mandiri</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Pengajuan surat KK sendiri</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Layanan Surat Mandiri</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Pengajuan surat KK sendiri</p>
             </div>
           </Link>
 
-          {/* 4. Kas & Iuran RT */}
+          {/* 5. Kas & Iuran RT */}
           <Link
             to="/dashboard/keuangan"
-            className="p-3.5 rounded-2xl bg-white hover:bg-amber-50/50 border border-slate-200/80 hover:border-amber-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Wallet className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold font-mono text-amber-700">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-sky-50 text-sky-700 border border-sky-200">
                 {iuranSummary.persentase}
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-amber-700">Kas & Iuran RT</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Monitoring setoran warga</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Kas & Iuran RT</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Monitoring setoran warga</p>
             </div>
           </Link>
 
-          {/* 5. Pajak PBB RT */}
+          {/* 6. Pajak PBB RT */}
           <Link
             to="/dashboard/pbb"
-            className="p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 border border-slate-200/80 hover:border-indigo-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Landmark className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-indigo-100 text-indigo-800">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">
                 SPPT
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-indigo-700">Monitoring PBB</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Kolektivitas pajak bumi</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Monitoring PBB</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Kolektivitas pajak bumi</p>
             </div>
           </Link>
 
-          {/* 6. Pengingat Sambang Warga */}
+          {/* 7. Pengingat Sambang Warga */}
           <button
             type="button"
             onClick={() => handleTabChange('rentan')}
-            className="p-3.5 rounded-2xl bg-white hover:bg-rose-50/50 border border-slate-200/80 hover:border-rose-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Heart className="w-5 h-5" />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-100 text-rose-700">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-slate-100 text-slate-700 border border-slate-200">
                 {kelompokRentanList.length} jiwa
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-rose-700">Pengingat Sambang Warga</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Lansia, Balita & Rentan</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Pengingat Sambang Warga</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Lansia, Balita & Rentan</p>
             </div>
           </button>
 
-          {/* 7. Pemeriksaan Warga Pendatang & Domisili */}
+          {/* 8. Pemeriksaan Warga Pendatang & Domisili */}
           <button
             type="button"
             onClick={() => handleTabChange('pendatang')}
-            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200/80 hover:border-sky-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Users className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-sky-100 text-sky-800">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-sky-50 text-sky-700 border border-sky-200">
                 {wargaPendatangList.length} Jiwa
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-sky-700">Warga Pendatang</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Kelayakan Layanan Kelurahan</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Warga Pendatang</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Kelayakan Layanan Kelurahan</p>
             </div>
           </button>
-
           {/* 8. Tanya KANAYA Copilot */}
           <Link
             to="/dashboard/daya-dukung"
-            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200/80 hover:border-sky-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28"
+            className="p-3.5 rounded-2xl bg-white hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 shadow-xs transition-all text-left group flex flex-col justify-between h-28"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Building2 className="w-5 h-5" />
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-sky-100 text-sky-800">
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">
                 Fasilitas
               </span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-800 group-hover:text-sky-700">Daya Dukung RT</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Sekolah, Faskes, UMKM</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Daya Dukung RT</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Sekolah, Faskes, UMKM</p>
             </div>
           </Link>
         </div>
