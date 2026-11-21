@@ -166,50 +166,7 @@ export default function DashboardKetuaRT() {
   const [rentanSubmitting, setRentanSubmitting] = useState(false);
 
   // State: Pemeriksaan Pendataan Warga Pendatang & Kelayakan Layanan Kelurahan
-  const [wargaPendatangList, setWargaPendatangList] = useState([
-    {
-      id: 'p-1',
-      nik: '3204123456780001',
-      nama: 'Asep Saepuloh',
-      jenis_kelamin: 'L',
-      no_hp: '081234567890',
-      asal_domisili: 'Kec. Cililin, Kab. Bandung Barat',
-      lokasi_tinggal: 'Kontrakan Barokah Pintu 2 (Bpk. Mulyadi)',
-      status_tinggal: 'Pekerja Kontrak Pabrik',
-      tanggal_lapor: '2026-09-15',
-      durasi_bulan: 3,
-      status_layanan: 'SIAP_LAYANAN',
-      catatan: 'KTP asal terverifikasi, bekerja di industri sekitar. Berhak mengajukan Surat Keterangan Domisili Kelurahan.'
-    },
-    {
-      id: 'p-2',
-      nik: '3302198765430002',
-      nama: 'Siti Rahmawati',
-      jenis_kelamin: 'P',
-      no_hp: '085712345678',
-      asal_domisili: 'Kec. Purwokerto Timur, Kab. Banyumas',
-      lokasi_tinggal: 'Kos Putri Melati Kamar 05 (Ibu Hj. Aminah)',
-      status_tinggal: 'Mahasiswi Magang',
-      tanggal_lapor: '2026-10-02',
-      durasi_bulan: 2,
-      status_layanan: 'SIAP_LAYANAN',
-      catatan: 'Dokumen KTP & Surat Pengantar Kampus lengkap. Berhak memohon surat keterangan tinggal sementara.'
-    },
-    {
-      id: 'p-3',
-      nik: '3515123498760003',
-      nama: 'Bambang Sugeng',
-      jenis_kelamin: 'L',
-      no_hp: '081398765432',
-      asal_domisili: 'Kec. Waru, Kab. Sidoarjo',
-      lokasi_tinggal: 'Kontrakan Bpk. Dedi No. 14B',
-      status_tinggal: 'Wiraswasta Kuliner',
-      tanggal_lapor: '2026-11-01',
-      durasi_bulan: 1,
-      status_layanan: 'PERLU_VERIFIKASI',
-      catatan: 'Baru pindah masuk, dokumen KTP asal belum difotokopi untuk arsip RT. Belum bisa diterbitkan pengantar kelurahan.'
-    }
-  ]);
+  const [wargaPendatangList, setWargaPendatangList] = useState([]);
   const [pendatangSearch, setPendatangSearch] = useState('');
   const [pendatangFilter, setPendatangFilter] = useState('ALL');
   const [showAddPendatangModal, setShowAddPendatangModal] = useState(false);
@@ -1390,128 +1347,148 @@ export default function DashboardKetuaRT() {
           </div>
 
           {/* Daftar Kartu Warga Pendatang */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {wargaPendatangList
-              .filter(p => {
-                const matchesFilter = pendatangFilter === 'ALL' || p.status_layanan === pendatangFilter;
-                const matchesSearch = !pendatangSearch || 
-                  p.nama.toLowerCase().includes(pendatangSearch.toLowerCase()) ||
-                  p.nik.includes(pendatangSearch) ||
-                  p.lokasi_tinggal.toLowerCase().includes(pendatangSearch.toLowerCase()) ||
-                  p.asal_domisili.toLowerCase().includes(pendatangSearch.toLowerCase());
-                return matchesFilter && matchesSearch;
-              })
-              .map((p) => {
-                const isSiap = p.status_layanan === 'SIAP_LAYANAN';
-                return (
-                  <div
-                    key={p.id}
-                    className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between space-y-4"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-extrabold text-sm text-slate-900">{p.nama}</h4>
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
-                              {p.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
+          {wargaPendatangList.length === 0 ? (
+            <div className="p-8 sm:p-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200 shadow-xs space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mx-auto border border-sky-100 shadow-xs">
+                <Users size={28} />
+              </div>
+              <h4 className="text-sm font-extrabold text-slate-800">Belum Ada Data Warga Pendatang di RT {rtNomor}</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                Warga pendatang atau penghuni sewa yang melapor 1x24 jam dapat dicatat langsung untuk memverifikasi hak layanan surat pengantar kelurahan.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAddPendatangModal(true)}
+                className="mt-2 inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 active:translate-y-0.5 text-white shadow-[0_2px_0_0_#0369a1] active:shadow-none transition-all cursor-pointer"
+              >
+                <Plus size={16} />
+                <span>+ Catat Warga Pendatang Baru</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {wargaPendatangList
+                .filter(p => {
+                  const matchesFilter = pendatangFilter === 'ALL' || p.status_layanan === pendatangFilter;
+                  const matchesSearch = !pendatangSearch || 
+                    p.nama.toLowerCase().includes(pendatangSearch.toLowerCase()) ||
+                    p.nik.includes(pendatangSearch) ||
+                    p.lokasi_tinggal.toLowerCase().includes(pendatangSearch.toLowerCase()) ||
+                    p.asal_domisili.toLowerCase().includes(pendatangSearch.toLowerCase());
+                  return matchesFilter && matchesSearch;
+                })
+                .map((p) => {
+                  const isSiap = p.status_layanan === 'SIAP_LAYANAN';
+                  return (
+                    <div
+                      key={p.id}
+                      className="p-4 sm:p-5 bg-white rounded-2xl border-2 border-slate-200/90 shadow-[0_3px_0_0_#cbd5e1] hover:border-sky-300 transition-all flex flex-col justify-between space-y-4"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-extrabold text-sm text-slate-900">{p.nama}</h4>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
+                                {p.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
+                              </span>
+                            </div>
+                            <p className="font-mono text-xs text-slate-500 mt-0.5">
+                              NIK: {p.nik ? `${p.nik.slice(0, 6)}******${p.nik.slice(-4)}` : '—'}
+                            </p>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                            isSiap
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-amber-100 text-amber-800 border border-amber-300'
+                          }`}>
+                            {isSiap ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                            <span>{isSiap ? 'Siap Layanan' : 'Perlu Cek RT'}</span>
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+                          <div>
+                            <span className="text-slate-400 text-[10px] uppercase font-bold block">Lokasi Tinggal di RT {rtNomor}</span>
+                            <span className="font-semibold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                              <Home size={13} className="text-sky-600 shrink-0" />
+                              {p.lokasi_tinggal}
                             </span>
                           </div>
-                          <p className="font-mono text-xs text-slate-500 mt-0.5">
-                            NIK: {p.nik ? `${p.nik.slice(0, 6)}******${p.nik.slice(-4)}` : '—'}
-                          </p>
+                          <div>
+                            <span className="text-slate-400 text-[10px] uppercase font-bold block">Asal Domisili KTP</span>
+                            <span className="text-slate-700 flex items-center gap-1.5 mt-0.5">
+                              <MapPin size={13} className="text-slate-400 shrink-0" />
+                              {p.asal_domisili}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[11px]">
+                            <span className="text-slate-500">Status: <strong>{p.status_tinggal}</strong></span>
+                            <span className="text-slate-500 font-mono">Lapor: {p.tanggal_lapor}</span>
+                          </div>
                         </div>
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+
+                        {/* Catatan Status Kelayakan */}
+                        <div className={`p-2.5 rounded-xl text-xs leading-relaxed ${
                           isSiap
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : 'bg-amber-100 text-amber-800 border border-amber-300'
+                            ? 'bg-emerald-50/70 border border-emerald-200 text-emerald-900'
+                            : 'bg-amber-50/70 border border-amber-200 text-amber-900'
                         }`}>
-                          {isSiap ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                          <span>{isSiap ? 'Siap Layanan' : 'Perlu Cek RT'}</span>
-                        </span>
-                      </div>
-
-                      <div className="space-y-2 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <div>
-                          <span className="text-slate-400 text-[10px] uppercase font-bold block">Lokasi Tinggal di RT {rtNomor}</span>
-                          <span className="font-semibold text-slate-800 flex items-center gap-1.5 mt-0.5">
-                            <Home size={13} className="text-sky-600 shrink-0" />
-                            {p.lokasi_tinggal}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 text-[10px] uppercase font-bold block">Asal Domisili KTP</span>
-                          <span className="text-slate-700 flex items-center gap-1.5 mt-0.5">
-                            <MapPin size={13} className="text-slate-400 shrink-0" />
-                            {p.asal_domisili}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[11px]">
-                          <span className="text-slate-500">Status: <strong>{p.status_tinggal}</strong></span>
-                          <span className="text-slate-500 font-mono">Lapor: {p.tanggal_lapor}</span>
+                          <p className="font-semibold text-[11px] flex items-center gap-1.5 mb-0.5">
+                            {isSiap ? <ShieldCheck size={13} className="text-emerald-600" /> : <AlertCircle size={13} className="text-amber-600" />}
+                            {isSiap ? 'Hak Layanan Kelurahan Aktif' : 'Status Verifikasi Belum Lengkap'}
+                          </p>
+                          <p className="text-[11px] opacity-90">{p.catatan}</p>
                         </div>
                       </div>
 
-                      {/* Catatan Status Kelayakan */}
-                      <div className={`p-2.5 rounded-xl text-xs leading-relaxed ${
-                        isSiap
-                          ? 'bg-emerald-50/70 border border-emerald-200 text-emerald-900'
-                          : 'bg-amber-50/70 border border-amber-200 text-amber-900'
-                      }`}>
-                        <p className="font-semibold text-[11px] flex items-center gap-1.5 mb-0.5">
-                          {isSiap ? <ShieldCheck size={13} className="text-emerald-600" /> : <AlertCircle size={13} className="text-amber-600" />}
-                          {isSiap ? 'Hak Layanan Kelurahan Aktif' : 'Status Verifikasi Belum Lengkap'}
-                        </p>
-                        <p className="text-[11px] opacity-90">{p.catatan}</p>
+                      {/* Tombol Aksi Cepat RT */}
+                      <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setWargaPendatangList(prev => prev.map(item => {
+                              if (item.id === p.id) {
+                                const nextStatus = item.status_layanan === 'SIAP_LAYANAN' ? 'PERLU_VERIFIKASI' : 'SIAP_LAYANAN';
+                                const nextCatatan = nextStatus === 'SIAP_LAYANAN'
+                                  ? 'KTP asal terverifikasi dan dinyatakan berhak mengajukan Surat Keterangan Domisili Kelurahan.'
+                                  : 'Dokumen KTP asal sedang diperiksa ulang oleh Ketua RT.';
+                                return { ...item, status_layanan: nextStatus, catatan: nextCatatan };
+                              }
+                              return item;
+                            }));
+                            setActionSuccessToast(`Status layanan untuk ${p.nama} berhasil diperbarui.`);
+                            setTimeout(() => setActionSuccessToast(''), 3000);
+                          }}
+                          className={`flex-1 py-2 px-3 min-h-[44px] rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer active:translate-y-0.5 shadow-[0_2px_0_0_#cbd5e1] active:shadow-none ${
+                            isSiap
+                              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                              : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700 shadow-[0_2px_0_0_#047857]'
+                          }`}
+                        >
+                          {isSiap ? 'Ubah Status' : '✓ Sahkan Hak Layanan'}
+                        </button>
+
+                        <Link
+                          to={`/dashboard/dokumen?mode=dampingan&nama=${encodeURIComponent(p.nama)}&nik=${p.nik}`}
+                          className="py-2 px-3 min-h-[44px] rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold transition flex items-center gap-1 shrink-0 border border-sky-200 cursor-pointer shadow-[0_2px_0_0_#bae6fd] active:shadow-none active:translate-y-0.5"
+                          title="Buatkan Surat Keterangan Domisili / Pengantar Kelurahan"
+                        >
+                          <FileText size={13} />
+                          <span>Buat Pengantar</span>
+                        </Link>
                       </div>
                     </div>
-
-                    {/* Tombol Aksi Cepat RT */}
-                    <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setWargaPendatangList(prev => prev.map(item => {
-                            if (item.id === p.id) {
-                              const nextStatus = item.status_layanan === 'SIAP_LAYANAN' ? 'PERLU_VERIFIKASI' : 'SIAP_LAYANAN';
-                              const nextCatatan = nextStatus === 'SIAP_LAYANAN'
-                                ? 'KTP asal terverifikasi dan dinyatakan berhak mengajukan Surat Keterangan Domisili Kelurahan.'
-                                : 'Dokumen KTP asal sedang diperiksa ulang oleh Ketua RT.';
-                              return { ...item, status_layanan: nextStatus, catatan: nextCatatan };
-                            }
-                            return item;
-                          }));
-                          setActionSuccessToast(`Status layanan untuk ${p.nama} berhasil diperbarui.`);
-                          setTimeout(() => setActionSuccessToast(''), 3000);
-                        }}
-                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                          isSiap
-                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
-                        }`}
-                      >
-                        {isSiap ? 'Ubah Status' : '✓ Sahkan Hak Layanan'}
-                      </button>
-
-                      <Link
-                        to={`/dashboard/dokumen?mode=dampingan&nama=${encodeURIComponent(p.nama)}&nik=${p.nik}`}
-                        className="py-2 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold transition flex items-center gap-1 shrink-0 border border-sky-200 cursor-pointer"
-                        title="Buatkan Surat Keterangan Domisili / Pengantar Kelurahan"
-                      >
-                        <FileText size={13} />
-                        <span>Buat Pengantar</span>
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
+                  );
+                })}
+            </div>
+          )}
 
           {/* Modal Form Tambah Warga Pendatang Baru */}
           {showAddPendatangModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-              <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="bg-white rounded-3xl border-2 border-slate-200/90 max-w-lg w-full p-6 sm:p-7 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4">
+                <div className="flex items-center justify-between bg-gradient-to-r from-sky-50/80 via-white to-sky-50/40 p-3.5 rounded-2xl border border-sky-100">
                   <div>
                     <h3 className="text-base font-extrabold text-slate-900">
                       Form Pendataan Warga Pendatang Baru
@@ -1521,7 +1498,7 @@ export default function DashboardKetuaRT() {
                   <button
                     type="button"
                     onClick={() => setShowAddPendatangModal(false)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white border border-transparent hover:border-slate-200 cursor-pointer"
                   >
                     <X size={18} />
                   </button>
@@ -1641,7 +1618,7 @@ export default function DashboardKetuaRT() {
                   <button
                     type="button"
                     onClick={() => setShowAddPendatangModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                    className="px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 active:shadow-none cursor-pointer"
                   >
                     Batal
                   </button>
@@ -1674,7 +1651,7 @@ export default function DashboardKetuaRT() {
                       setActionSuccessToast('Data warga pendatang berhasil dicatat!');
                       setTimeout(() => setActionSuccessToast(''), 3000);
                     }}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-sm"
+                    className="px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 active:translate-y-0.5 text-white shadow-[0_2px_0_0_#0369a1] active:shadow-none transition-all cursor-pointer"
                   >
                     Simpan Pendataan
                   </button>

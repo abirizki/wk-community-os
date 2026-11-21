@@ -144,23 +144,22 @@ export default function DashboardWalikota() {
       </AnimatePresence>
 
       {/* 1. Header Eksekutif Walikota Sukabumi */}
-      <header className="rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 text-white p-6 sm:p-8 shadow-xl border border-slate-800 relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      <header className="rounded-3xl bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 text-slate-900 p-6 sm:p-8 shadow-xs border border-sky-200/80 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 text-[10px] font-extrabold uppercase tracking-wider">
+              <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-800 border border-sky-200 text-[10px] font-extrabold uppercase tracking-wider">
                 Dashboard Eksekutif Kepala Daerah
               </span>
-              <span className="text-xs text-slate-300 font-mono">
+              <span className="text-xs text-slate-500 font-mono">
                 Kota Sukabumi · 7 Kecamatan · 33 Kelurahan
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Pusat Kendali Kebijakan Walikota
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Ringkasan bukti data spasial makro kota untuk monitoring zero stunting, kepatuhan SLA pelayanan publik, realisasi fiskal PBB-P2, dan integrasi perlindungan sosial.
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Ringkasan data makro kota untuk monitoring zero stunting, kepatuhan SLA pelayanan publik, realisasi fiskal PBB-P2, dan integrasi perlindungan sosial terpadu.
             </p>
           </div>
 
@@ -168,9 +167,9 @@ export default function DashboardWalikota() {
             <button
               onClick={() => { setRefreshing(true); loadData(); }}
               disabled={refreshing || loading}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1.5 border border-white/20 cursor-pointer"
+              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 text-xs font-bold border border-slate-300 shadow-[0_2px_0_0_#cbd5e1] active:shadow-none active:translate-y-0.5 transition flex items-center gap-1.5 cursor-pointer"
             >
-              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+              <RefreshCw size={14} className={refreshing ? 'animate-spin text-sky-600' : ''} />
               <span>Perbarui Data</span>
             </button>
 
@@ -186,19 +185,19 @@ export default function DashboardWalikota() {
                 }
               }}
               disabled={isExportingCity}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-[0_2px_0_0_#0369a1] active:shadow-none active:translate-y-0.5 cursor-pointer disabled:opacity-50"
               title="Unduh Buku Profil Pembangunan Kota Sukabumi"
             >
               <FileSpreadsheet size={14} />
-              <span>{isExportingCity ? 'Mengunduh...' : 'Unduh Buku Profil Kota (.xlsx)'}</span>
+              <span>{isExportingCity ? 'Mengunduh...' : 'Unduh Buku Profil (.xlsx)'}</span>
             </button>
 
             <Link
               to="/dashboard/command-center"
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-500/30"
+              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 text-xs font-bold border border-slate-300 shadow-[0_2px_0_0_#cbd5e1] active:shadow-none active:translate-y-0.5 transition flex items-center gap-1.5 cursor-pointer"
             >
-              <span>Data Analitik Spasial</span>
-              <ArrowRight size={14} />
+              <span>Data Spasial</span>
+              <ArrowRight size={14} className="text-sky-600" />
             </Link>
           </div>
         </div>
@@ -208,10 +207,10 @@ export default function DashboardWalikota() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-            <ShieldCheck size={16} className="text-blue-700" />
+            <ShieldCheck size={16} className="text-sky-600" />
             <span>Indikator Makro Pembangunan & Pelayanan Publik Kota</span>
           </h2>
-          <span className="text-[11px] text-slate-500 font-mono">Siklus Real-Time</span>
+          <span className="text-[11px] text-slate-500 font-mono">Pembaruan Berkala · Sumber SDI & Pilot Live</span>
         </div>
 
         <KPIGrid columns={4}>
@@ -220,7 +219,7 @@ export default function DashboardWalikota() {
             value={data?.kota?.proyeksi_baseline_sdi?.total_kasus_stunting_proyeksi ?? data?.kota?.pilot_actual?.kasus_stunting ?? '-'}
             unit="balita"
             context={`Pilot Hub Kebonjati: ${data?.kota?.pilot_actual?.kasus_stunting ?? 0} balita terverifikasi`}
-            icon={<HeartPulse size={20} className="text-red-600" />}
+            icon={<HeartPulse size={20} className="text-sky-600" />}
             urgency="high"
             trend={data?.kota?.pilot_actual ? { direction: 'down', isPositive: true, label: 'Data Posyandu Terintegrasi' } : null}
             denominatorLabel="Target Zero Stunting Kota Sukabumi"
@@ -228,10 +227,10 @@ export default function DashboardWalikota() {
 
           <UnifiedStatCard
             label="Kepatuhan SLA Surat Kota"
-            value={data?.kota?.pilot_actual?.sla_proses_surat_jam ? `${data.kota.pilot_actual.sla_proses_surat_jam}` : '1.2'}
+            value={data?.kota?.pilot_actual?.sla_proses_surat_jam ? `${data.kota.pilot_actual.sla_proses_surat_jam}` : '-'}
             unit="jam"
             context="Standar SOP SPBE Maksimal 2.0 Jam"
-            icon={<Clock size={20} className="text-emerald-700" />}
+            icon={<Clock size={20} className="text-sky-600" />}
             urgency="low"
             trend={{ direction: 'up', isPositive: true, label: 'Pilot Live TTE Cepat' }}
             denominatorLabel="1 Kelurahan Pilot Live (Kebonjati)"
@@ -239,10 +238,10 @@ export default function DashboardWalikota() {
 
           <UnifiedStatCard
             label="Cakupan Integrasi Digital"
-            value={data?.kota?.cakupan_integrasi?.persentase_cakupan || '3.0%'}
+            value={data?.kota?.cakupan_integrasi?.persentase_cakupan || '-'}
             unit="terintegrasi"
             context="1 dari 33 Kelurahan Live Produksi"
-            icon={<Building2 size={20} className="text-blue-700" />}
+            icon={<Building2 size={20} className="text-sky-600" />}
             urgency="low"
             trend={{ direction: 'up', isPositive: true, label: 'Fase 1 Pilot Hub Sukabumi' }}
             denominatorLabel="32 Kelurahan Terjadwal Integrasi SDI"
@@ -250,10 +249,10 @@ export default function DashboardWalikota() {
 
           <UnifiedStatCard
             label="Kemiskinan Ekstrem (Desil 1)"
-            value={data?.kota?.pilot_actual?.kemiskinan_ekstrem_desil_1_2 ?? 14}
+            value={data?.kota?.pilot_actual?.kemiskinan_ekstrem_desil_1_2 !== undefined && data?.kota?.pilot_actual?.kemiskinan_ekstrem_desil_1_2 !== null ? data.kota.pilot_actual.kemiskinan_ekstrem_desil_1_2 : '-'}
             unit="KK (Pilot)"
             context={`Proyeksi Kota: ${data?.kota?.proyeksi_baseline_sdi?.total_keluarga_desil_1_2_proyeksi ?? '-'} KK`}
-            icon={<Users size={20} className="text-amber-700" />}
+            icon={<Users size={20} className="text-amber-600" />}
             urgency="medium"
             trend={{ direction: 'down', isPositive: true, label: 'Verifikasi faktual' }}
             denominatorLabel="Terpadu DTKS & DTSEN Mandiri"
@@ -264,15 +263,15 @@ export default function DashboardWalikota() {
       {/* 2.2. AI STRATEGY & STRATEGIC DECISION SUPPORT ENGINE (TEPAT DI BAWAH HERO & KPI) */}
       <AIStrategyInsightEngine
         scope={{}}
-        title="Pusat Kendali AI Strategy: Rekomendasi Kebijakan Makro Kota Sukabumi"
+        title="Pusat Analisis Kebijakan Makro Kota Sukabumi"
         subtitle="Analisis prediktif kohort tahun depan (T+1) vs kapasitas riil layanan pendidikan, kesehatan 1000 HPK, bansos desil, dan serapan kerja"
       />
 
       {/* 2.5. SUPER APPS BENTO GRID MEJA KERJA WALIKOTA */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+      <div className="bg-white rounded-3xl p-6 border-2 border-slate-200/90 shadow-[0_3px_0_0_#cbd5e1] space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
+            <div className="w-2.5 h-2.5 rounded-full bg-sky-600 animate-pulse" />
             <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">
               Pintasan Meja Kerja Eksekutif Pimpinan Kota
             </h3>
@@ -284,16 +283,16 @@ export default function DashboardWalikota() {
           {/* 1. Command Center Spasial */}
           <Link
             to="/dashboard/command-center"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 hover:from-blue-50 hover:to-blue-100/60 border border-slate-200/80 hover:border-blue-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <Landmark size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-100 text-blue-800">33 Kel</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">33 Kel</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-700">Command Center</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Command Center</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Peta Spasial 7 Kecamatan</p>
             </div>
           </Link>
@@ -301,16 +300,16 @@ export default function DashboardWalikota() {
           {/* 2. Monitoring Zero Stunting */}
           <Link
             to="/dashboard/posyandu"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-rose-50/40 hover:from-rose-50 hover:to-rose-100/60 border border-slate-200/80 hover:border-rose-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <HeartPulse size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 text-rose-800">SPM</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">SPM</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-rose-700">Zero Stunting Terpadu</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Zero Stunting Terpadu</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">KIA Posyandu & Puskesmas</p>
             </div>
           </Link>
@@ -318,16 +317,16 @@ export default function DashboardWalikota() {
           {/* 3. Desil & DTKS Kemiskinan Ekstrem */}
           <Link
             to="/dashboard/desil"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-amber-50/40 hover:from-amber-50 hover:to-amber-100/60 border border-slate-200/80 hover:border-amber-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <Users size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-100 text-amber-800">Desil 1-2</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">Desil 1-2</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-amber-700">Kemiskinan Ekstrem</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Kemiskinan Ekstrem</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Penetapan Bansos & Pangan</p>
             </div>
           </Link>
@@ -335,16 +334,16 @@ export default function DashboardWalikota() {
           {/* 4. Kepatuhan SLA Pelayanan */}
           <Link
             to="/dashboard/data-maturity"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-emerald-50/40 hover:from-emerald-50 hover:to-emerald-100/60 border border-slate-200/80 hover:border-emerald-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <Clock size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800">SOP 2 Jam</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">SOP 2 Jam</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700">Kepatuhan SLA SPBE</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Kepatuhan SLA SPBE</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Audit Kecepatan Pelayanan</p>
             </div>
           </Link>
@@ -352,16 +351,16 @@ export default function DashboardWalikota() {
           {/* 5. Realisasi Fiskal PBB-P2 */}
           <Link
             to="/dashboard/pbb"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/40 hover:from-indigo-50 hover:to-indigo-100/60 border border-slate-200/80 hover:border-indigo-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <FileText size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-100 text-indigo-800">PAD</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">PAD</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-indigo-700">Realisasi Pajak PBB</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Realisasi Pajak PBB</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Penerimaan & Kepatuhan</p>
             </div>
           </Link>
@@ -369,16 +368,16 @@ export default function DashboardWalikota() {
           {/* 6. Aduan & Aspirasi Publik */}
           <Link
             to="/dashboard/pengaduan"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-rose-50/40 hover:from-rose-50 hover:to-rose-100/60 border border-slate-200/80 hover:border-rose-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <AlertTriangle size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 text-rose-800">Warga</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">Warga</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-rose-700">Aduan Publik Sukabumi</h4>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Aduan Publik Sukabumi</h4>
               <p className="text-[10px] text-slate-500 mt-0.5">Monitoring Disposisi Camat</p>
             </div>
           </Link>
@@ -386,10 +385,10 @@ export default function DashboardWalikota() {
           {/* 7. Kelola Pengguna & Aparatur */}
           <Link
             to="/dashboard/users"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-sky-50/40 hover:from-sky-50 hover:to-sky-100/60 border border-slate-200/80 hover:border-sky-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <ShieldCheck size={18} />
               </div>
               <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">Aparatur</span>
@@ -403,17 +402,17 @@ export default function DashboardWalikota() {
           {/* 8. Panduan Eksekutif Kota */}
           <Link
             to="/dashboard/panduan"
-            className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-purple-50/40 hover:from-purple-50 hover:to-purple-100/60 border border-slate-200/80 hover:border-purple-300 shadow-sm transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                 <BookOpen size={18} />
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-100 text-purple-800">SOP</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800">SOP</span>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 group-hover:text-purple-700">Panduan Eksekutif</h4>
-              <p className="text-[10px] text-slate-500 mt-0.5">Regulasi & Tata Kelola</p>
+              <h4 className="text-xs font-bold text-slate-900 group-hover:text-sky-700">Panduan Eksekutif</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5">Tata Kelola & SOP SPBE</p>
             </div>
           </Link>
         </div>

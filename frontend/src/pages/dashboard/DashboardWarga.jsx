@@ -401,14 +401,14 @@ export default function DashboardWarga() {
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200 flex items-center gap-1">
               <Sparkles size={11} className="text-sky-600" /> KANAYA AI &bull; Smart Citizen Briefing
             </span>
-            <span className="text-[10px] text-slate-500 font-mono">Real-Time Update</span>
+            <span className="text-[10px] text-slate-500 font-mono">Pembaruan Status Terkini</span>
           </div>
           <h2 className="text-sm font-bold text-slate-900">
             {myTickets.length > 0 
               ? `Tiket Pengambilan Bantuan Sosial Anda Sudah Siap!` 
               : activeDocs.length > 0 
               ? `Surat ${activeDocs[0].jenis_dokumen || activeDocs[0].jenis_surat} sedang diverifikasi di tingkat ${activeDocs[0].approval_step || 'RT'}.` 
-              : `Seluruh data kependudukan dan jaring pengaman keluarga dalam status prima.`}
+              : `Tidak ada berkas permohonan atau antrean bantuan aktif saat ini.`}
           </h2>
           <p className="text-[11px] text-slate-600">
             {myTickets.length > 0 

@@ -115,7 +115,7 @@ export default function AIStrategyInsightEngine({
   }, [scope.rw, scope.rt]);
 
   const insights = data?.executive_insights || [];
-  const indexDayaDukung = data?.index_daya_dukung || { score: 82, status: 'MEMADAI', color: 'blue' };
+  const indexDayaDukung = data?.index_daya_dukung || { score: null, status: 'MENUNGGU DATA', color: 'slate' };
 
   const filteredInsights = insights.filter(item => {
     if (selectedFilter === 'ALL') return true;
@@ -125,40 +125,38 @@ export default function AIStrategyInsightEngine({
   return (
     <div className={`bg-white rounded-3xl border border-sky-200/90 shadow-sm overflow-hidden ${className}`}>
       {/* 1. Header Banner AI Strategy */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-sky-950 text-white p-5 sm:p-6 relative">
-        <div className="absolute right-0 top-0 w-72 h-72 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
-
+      <div className="bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 text-slate-900 p-5 sm:p-6 border-b border-sky-100 relative">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/30 text-[10px] font-black uppercase tracking-wider">
-                <Sparkles size={12} className="text-sky-300 animate-pulse" />
-                <span>AI Strategy & Decision Support Engine</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-100 text-sky-800 border border-sky-200 text-[10px] font-extrabold uppercase tracking-wider">
+                <Sparkles size={12} className="text-sky-600" />
+                <span>Rekomendasi Kebijakan & Dukungan Keputusan</span>
               </span>
-              <span className="text-[11px] text-slate-300 font-mono">
-                Siklus Perencanaan T vs T+1
+              <span className="text-[11px] text-slate-500 font-mono">
+                Siklus Perencanaan Wilayah
               </span>
             </div>
 
-            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               {title}
             </h2>
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               {subtitle}
             </p>
           </div>
 
           {/* Indeks Daya Dukung & Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <div className="px-3.5 py-2 rounded-2xl bg-white/10 border border-white/20 flex items-center gap-2.5">
-              <Compass size={18} className="text-sky-400" />
+            <div className="px-3.5 py-2 min-h-[44px] rounded-2xl bg-white border-2 border-slate-200/90 shadow-[0_2px_0_0_#cbd5e1] flex items-center gap-2.5">
+              <Compass size={18} className="text-sky-600" />
               <div>
-                <div className="text-[10px] text-slate-300 font-medium uppercase tracking-wider">
+                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                   Indeks Daya Dukung
                 </div>
-                <div className="text-sm font-black text-white flex items-center gap-1.5">
-                  <span>{indexDayaDukung.score}%</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-200 border border-sky-400/30">
+                <div className="text-sm font-black text-slate-900 flex items-center gap-1.5 font-mono">
+                  <span>{indexDayaDukung.score !== null ? `${indexDayaDukung.score}%` : '-'}</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
                     {indexDayaDukung.status}
                   </span>
                 </div>
@@ -168,19 +166,19 @@ export default function AIStrategyInsightEngine({
             <button
               onClick={() => { setRefreshing(true); loadStrategyData(); }}
               disabled={refreshing || loading}
-              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition border border-white/20 cursor-pointer"
-              title="Perbarui Rekomendasi AI"
+              className="p-2.5 min-h-[44px] min-w-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 transition border border-slate-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center"
+              title="Perbarui Rekomendasi"
             >
-              <RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />
+              <RefreshCw size={15} className={`text-sky-600 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
 
         {/* 2. Sektor Filter Tabs */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center gap-2">
+        <div className="mt-5 pt-4 border-t border-sky-100 flex flex-wrap items-center gap-2">
           {[
             { id: 'ALL', label: 'Semua Wawasan', icon: Layers },
-            { id: 'PENDIDIKAN', label: 'Pendidikan & PPDB T+1', icon: GraduationCap },
+            { id: 'PENDIDIKAN', label: 'Pendidikan & PPDB', icon: GraduationCap },
             { id: 'KESEHATAN', label: 'Kesehatan & 1000 HPK', icon: HeartPulse },
             { id: 'PERLINDUNGAN_SOSIAL', label: 'Bansos & Desil', icon: Users },
             { id: 'KETENAGAKERJAAN', label: 'Ketenagakerjaan Muda', icon: TrendingUp },
@@ -191,13 +189,13 @@ export default function AIStrategyInsightEngine({
               <button
                 key={tab.id}
                 onClick={() => setSelectedFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-2 min-h-[38px] rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:translate-y-0.5 ${
                   active
-                    ? 'bg-sky-500 text-white shadow-sm'
-                    : 'bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10'
+                    ? 'bg-sky-600 text-white shadow-[0_2px_0_0_#0369a1]'
+                    : 'bg-white hover:bg-sky-50 text-slate-700 border border-slate-200 shadow-[0_2px_0_0_#cbd5e1] active:shadow-none'
                 }`}
               >
-                <IconComponent size={13} />
+                <IconComponent size={13} className={active ? 'text-white' : 'text-sky-600'} />
                 <span>{tab.label}</span>
               </button>
             );

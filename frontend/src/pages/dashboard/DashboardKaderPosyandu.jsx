@@ -199,13 +199,18 @@ export default function DashboardKaderPosyandu() {
     catatan: ''
   });
 
-  // Form State: Undangan WhatsApp Broadcast
-  const [waBroadcastForm, setWaBroadcastForm] = useState({
-    hari_tanggal: 'Selasa, 20 Oktober 2026',
-    jam: '08:30 - 11:30 WIB',
-    tempat: 'Pos RW 001 Kelurahan Kebonjati',
-    target_rt: 'RT 001 & RT 002',
-    catatan_khusus: 'Membawa Buku KIA / KMS dan fotokopi KK'
+  // Form State: Undangan WhatsApp Broadcast (Dinamis sesuai tanggal berjalan)
+  const [waBroadcastForm, setWaBroadcastForm] = useState(() => {
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + 3);
+    const dateFormatted = nextDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    return {
+      hari_tanggal: dateFormatted,
+      jam: '08:30 - 11:30 WIB',
+      tempat: 'Balai Warga / Posyandu Wilayah',
+      target_rt: 'Seluruh RT Wilayah Tugas',
+      catatan_khusus: 'Membawa Buku KIA / KMS dan fotokopi KK'
+    };
   });
 
   // Load all dashboard data

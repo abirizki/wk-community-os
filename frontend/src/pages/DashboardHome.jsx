@@ -39,6 +39,8 @@ import DashboardLurah from './dashboard/DashboardLurah';
 import DashboardAdminKelurahan from './dashboard/DashboardAdminKelurahan';
 import DashboardWarga from './dashboard/DashboardWarga';
 import DashboardWalikota from './dashboard/DashboardWalikota';
+import CommandCenterPage from './CommandCenterPage';
+import DataMaturityPage from './DataMaturityPage';
 
 export default function DashboardHome() {
   const { user } = useAuth();
@@ -69,7 +71,15 @@ export default function DashboardHome() {
   if (user?.role === 'walikota') {
     return <DashboardWalikota />;
   }
-  // 7. Warga (Citizen Experience & Workflow Stepper)
+  // 7. Camat (Kecamatan Territorial Command Center)
+  if (user?.role === 'camat') {
+    return <CommandCenterPage />;
+  }
+  // 8. Superadmin (System Health & Data Maturity Platform)
+  if (user?.role === 'superadmin') {
+    return <DataMaturityPage />;
+  }
+  // 9. Warga (Citizen Experience & Workflow Stepper)
   if (user?.role === 'warga' || user?.role === 'pengguna' || user?.role === 'user' || !user?.role) {
     return <DashboardWarga />;
   }
