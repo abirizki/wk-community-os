@@ -950,19 +950,19 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       {/* 1. TOP PERSONA BAR & DUAL-PERSONA SWITCHER                                */}
       {/* ========================================================================= */}
-      <div className="bg-gradient-to-r from-teal-800 via-teal-700 to-emerald-800 rounded-2xl p-4 sm:p-6 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 border border-teal-600/30">
+      <div className="bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 rounded-2xl p-4 sm:p-6 text-slate-900 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-100">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center font-black border border-white/20 text-white shrink-0">
-            <HeartPulse className="w-6 h-6 text-teal-200 animate-pulse" />
+          <div className="w-12 h-12 rounded-2xl bg-sky-600 text-white flex items-center justify-center font-black shadow-xs shrink-0">
+            <HeartPulse className="w-6 h-6 text-white animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-teal-300 text-teal-950">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-200">
                 Mode Kader Posyandu Aktif
               </span>
-              <span className="text-xs text-teal-100 font-mono">{wilayahTugasLabel}</span>
+              <span className="text-xs text-slate-500 font-mono">{wilayahTugasLabel}</span>
             </div>
-            <h1 className="text-base sm:text-lg font-bold text-white mt-0.5">
+            <h1 className="text-base sm:text-lg font-bold text-slate-900 mt-0.5">
               {kaderProfile?.nama_lengkap || user?.nama || 'Kader Posyandu'} · Meja Kerja Digital Posyandu
             </h1>
           </div>
@@ -973,10 +973,10 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
           <button
             type="button"
             onClick={() => setShowWhatsAppModal(true)}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-300/40 text-emerald-100 transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+            className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-white hover:bg-sky-50 border border-slate-200 text-slate-700 transition-all flex items-center gap-1.5 shadow-xs active:scale-95 cursor-pointer"
             title="Kirim Undangan Posyandu ke Grup WhatsApp RT"
           >
-            <Share2 className="w-4 h-4 text-emerald-300" />
+            <Share2 className="w-4 h-4 text-sky-600" />
             <span>Broadcast Undangan WA</span>
           </button>
 
@@ -988,20 +988,20 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               setModalSuccessMsg('');
               setShowDaftarSasaranModal(true);
             }}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/15 hover:bg-white/25 border border-white/25 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+            className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white transition-all flex items-center gap-1.5 shadow-xs active:scale-95 cursor-pointer"
             title="Daftarkan Bayi, Bumil, atau Lansia Baru"
           >
-            <UserPlus className="w-4 h-4 text-teal-200" />
+            <UserPlus className="w-4 h-4 text-white" />
             <span>+ Sasaran Baru</span>
           </button>
 
           {/* Dual Persona Switcher */}
           <Link
             to="/dashboard/dokumen?mode=dampingan"
-            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+            className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-white hover:bg-sky-50 border border-slate-200 text-slate-700 transition-all flex items-center gap-1.5 shadow-xs active:scale-95"
             title="Buka Layanan Mandiri Warga Saya (Urus Surat, PBB & Profil Pribadi)"
           >
-            <Home className="w-4 h-4 text-emerald-300" />
+            <Home className="w-4 h-4 text-sky-600" />
             <span className="hidden sm:inline">Layanan Mandiri Warga Saya</span>
             <span className="sm:hidden">Warga Saya</span>
             <ArrowRight className="w-3.5 h-3.5 opacity-70" />
@@ -1028,18 +1028,15 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       {/* 2. KANAYA AI STRATEGIC HEALTH COPILOT BENTO CARD                          */}
       {/* ========================================================================= */}
-      <div className="p-5 sm:p-6 rounded-[2rem] bg-gradient-to-br from-teal-50 via-emerald-50/80 to-sky-50/60 border border-teal-200/70 shadow-sm relative overflow-hidden group">
-        <div className="absolute right-0 top-0 w-48 h-48 bg-teal-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-        <div className="absolute left-0 bottom-0 w-36 h-36 bg-emerald-300/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
-
+      <div className="p-5 sm:p-6 rounded-2xl bg-sky-50/40 border border-sky-200/80 shadow-xs relative overflow-hidden group">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5 flex-1">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-sky-600 text-white flex items-center justify-center shadow-xs shrink-0">
               <Sparkles className="w-6 h-6 animate-pulse" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 text-[10px] font-extrabold uppercase tracking-wider border border-teal-200">
+                <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 text-[10px] font-extrabold uppercase tracking-wider border border-sky-200">
                   Kanaya AI Strategic Health Policy
                 </span>
                 <span className="text-[11px] font-semibold text-slate-500 font-mono">1000 HPK & Posyandu Integratif</span>
@@ -1053,17 +1050,17 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
           <button
             type="button"
             onClick={loadDashboardData}
-            className="self-start md:self-auto px-4 py-2 rounded-xl bg-white hover:bg-teal-50 text-teal-800 text-xs font-bold border border-teal-200 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+            className="self-start md:self-auto px-4 py-2 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 text-xs font-bold border border-slate-200 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Perbarui Analitik</span>
           </button>
         </div>
 
-        <div className="relative z-10 mt-4 pt-3.5 border-t border-teal-100">
+        <div className="relative z-10 mt-4 pt-3.5 border-t border-sky-100">
           <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
             {loadingBrief ? (
-              <span className="flex items-center gap-2 text-teal-700">
+              <span className="flex items-center gap-2 text-sky-700">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Menganalisis pertumbuhan balita, status gizi ibu hamil, dan lansia...
               </span>
             ) : (
@@ -1073,26 +1070,26 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
         </div>
 
         {/* 4 Micro KPI Badges */}
-        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4 pt-3 border-t border-teal-100/60">
-          <div className="p-2.5 rounded-xl bg-white/90 border border-teal-100 flex flex-col justify-center">
+        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4 pt-3 border-t border-sky-100">
+          <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex flex-col justify-center">
             <span className="text-[10px] font-semibold text-slate-500">Cakupan Timbang (D/S)</span>
-            <span className="text-xs sm:text-sm font-extrabold text-teal-800 font-mono mt-0.5">
+            <span className="text-xs sm:text-sm font-extrabold text-sky-700 font-mono mt-0.5">
               {kpiMetrics.persenTimbangBalita}% ({kpiMetrics.sudahTimbangBalita}/{kpiMetrics.totalBalita})
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-white/90 border border-teal-100 flex flex-col justify-center">
+          <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex flex-col justify-center">
             <span className="text-[10px] font-semibold text-slate-500">Perhatian Gizi Balita</span>
             <span className="text-xs sm:text-sm font-extrabold text-rose-600 font-mono mt-0.5">
               {kpiMetrics.balitaGiziKurang} balita
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-white/90 border border-teal-100 flex flex-col justify-center">
+          <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex flex-col justify-center">
             <span className="text-[10px] font-semibold text-slate-500">Bumil Risiko KEK</span>
             <span className="text-xs sm:text-sm font-extrabold text-amber-600 font-mono mt-0.5">
               {kpiMetrics.bumilKek} dari {kpiMetrics.totalBumil} ibu
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-white/90 border border-teal-100 flex flex-col justify-center">
+          <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex flex-col justify-center">
             <span className="text-[10px] font-semibold text-slate-500">Lansia Berisiko / PTM</span>
             <span className="text-xs sm:text-sm font-extrabold text-purple-700 font-mono mt-0.5">
               {kpiMetrics.lansiaRisiko} jiwa
@@ -1107,7 +1104,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-ping" />
+            <div className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-ping" />
             <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-700">
               Pilar Meja Kerja Super App Kader Posyandu
             </h3>
@@ -1122,20 +1119,20 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             onClick={() => handlePillarChange('balita')}
             className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
               activePillar === 'balita'
-                ? 'bg-teal-600 text-white border-teal-700 shadow-md ring-2 ring-teal-400/40'
-                : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200 shadow-xs'
+                ? 'bg-sky-600 text-white border-sky-700 shadow-xs ring-2 ring-sky-300'
+                : 'bg-white hover:bg-sky-50/40 text-slate-800 border-slate-200 shadow-xs'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'balita' ? 'bg-white/20 text-white' : 'bg-teal-50 text-teal-700'}`}>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'balita' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
                 <Baby size={18} />
               </div>
-              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activePillar === 'balita' ? 'bg-teal-700 text-teal-100' : 'bg-slate-100 text-slate-700'}`}>
+              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activePillar === 'balita' ? 'bg-white text-sky-900 font-bold' : 'bg-slate-100 text-slate-700'}`}>
                 {targetBalita.length} Anak
               </span>
             </div>
             <p className="text-xs sm:text-sm font-extrabold leading-tight">Buku KIA Balita</p>
-            <p className={`text-[11px] mt-0.5 ${activePillar === 'balita' ? 'text-teal-100' : 'text-slate-500'}`}>
+            <p className={`text-[11px] mt-0.5 ${activePillar === 'balita' ? 'text-sky-100' : 'text-slate-500'}`}>
               {kpiMetrics.sudahTimbangBalita} ditimbang · {kpiMetrics.totalBalita - kpiMetrics.sudahTimbangBalita} belum
             </p>
           </button>
@@ -1146,20 +1143,20 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             onClick={() => handlePillarChange('bumil')}
             className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
               activePillar === 'bumil'
-                ? 'bg-pink-600 text-white border-pink-700 shadow-md ring-2 ring-pink-400/40'
-                : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200 shadow-xs'
+                ? 'bg-sky-600 text-white border-sky-700 shadow-xs ring-2 ring-sky-300'
+                : 'bg-white hover:bg-sky-50/40 text-slate-800 border-slate-200 shadow-xs'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'bumil' ? 'bg-white/20 text-white' : 'bg-pink-50 text-pink-700'}`}>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'bumil' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
                 <Heart size={18} />
               </div>
-              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activePillar === 'bumil' ? 'bg-pink-700 text-pink-100' : 'bg-slate-100 text-slate-700'}`}>
+              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activePillar === 'bumil' ? 'bg-white text-sky-900 font-bold' : 'bg-slate-100 text-slate-700'}`}>
                 {targetBumil.length} Bumil
               </span>
             </div>
             <p className="text-xs sm:text-sm font-extrabold leading-tight">Ibu Hamil & 1000 HPK</p>
-            <p className={`text-[11px] mt-0.5 ${activePillar === 'bumil' ? 'text-pink-100' : 'text-slate-500'}`}>
+            <p className={`text-[11px] mt-0.5 ${activePillar === 'bumil' ? 'text-sky-100' : 'text-slate-500'}`}>
               LILA, KEK & Suplemen TTD
             </p>
           </button>
@@ -1170,20 +1167,20 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             onClick={() => handlePillarChange('lansia')}
             className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
               activePillar === 'lansia'
-                ? 'bg-emerald-700 text-white border-emerald-800 shadow-md ring-2 ring-emerald-400/40'
-                : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200 shadow-xs'
+                ? 'bg-sky-600 text-white border-sky-700 shadow-xs ring-2 ring-sky-300'
+                : 'bg-white hover:bg-sky-50/40 text-slate-800 border-slate-200 shadow-xs'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'lansia' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700'}`}>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'lansia' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
                 <HeartPulse size={18} />
               </div>
-              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activePillar === 'lansia' ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-100 text-slate-700'}`}>
+              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activePillar === 'lansia' ? 'bg-white text-sky-900 font-bold' : 'bg-slate-100 text-slate-700'}`}>
                 {targetLansia.length} Jiwa
               </span>
             </div>
             <p className="text-xs sm:text-sm font-extrabold leading-tight">Skrining Lansia</p>
-            <p className={`text-[11px] mt-0.5 ${activePillar === 'lansia' ? 'text-emerald-100' : 'text-slate-500'}`}>
+            <p className={`text-[11px] mt-0.5 ${activePillar === 'lansia' ? 'text-sky-100' : 'text-slate-500'}`}>
               Hipertensi, GDS & ADL
             </p>
           </button>
@@ -1194,20 +1191,20 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             onClick={() => handlePillarChange('pmt')}
             className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
               activePillar === 'pmt'
-                ? 'bg-amber-600 text-white border-amber-700 shadow-md ring-2 ring-amber-400/40'
-                : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200 shadow-xs'
+                ? 'bg-sky-600 text-white border-sky-700 shadow-xs ring-2 ring-sky-300'
+                : 'bg-white hover:bg-sky-50/40 text-slate-800 border-slate-200 shadow-xs'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'pmt' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-700'}`}>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'pmt' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
                 <Scale size={18} />
               </div>
-              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activePillar === 'pmt' ? 'bg-amber-700 text-amber-100' : 'bg-slate-100 text-slate-700'}`}>
+              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${activePillar === 'pmt' ? 'bg-white text-sky-900 font-bold' : 'bg-slate-100 text-slate-700'}`}>
                 {pmtList.length} Distribusi
               </span>
             </div>
             <p className="text-xs sm:text-sm font-extrabold leading-tight">PMT & Suplementasi</p>
-            <p className={`text-[11px] mt-0.5 ${activePillar === 'pmt' ? 'text-amber-100' : 'text-slate-500'}`}>
+            <p className={`text-[11px] mt-0.5 ${activePillar === 'pmt' ? 'text-sky-100' : 'text-slate-500'}`}>
               Biskuit, Vit A & Cacing
             </p>
           </button>
@@ -1218,20 +1215,20 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             onClick={() => handlePillarChange('offline')}
             className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group col-span-2 sm:col-span-1 lg:col-span-1 ${
               activePillar === 'offline'
-                ? 'bg-slate-800 text-white border-slate-900 shadow-md ring-2 ring-slate-400/40'
-                : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200 shadow-xs'
+                ? 'bg-sky-600 text-white border-sky-700 shadow-xs ring-2 ring-sky-300'
+                : 'bg-white hover:bg-sky-50/40 text-slate-800 border-slate-200 shadow-xs'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'offline' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'}`}>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${activePillar === 'offline' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600 border border-sky-100'}`}>
                 <Database size={18} />
               </div>
-              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${offlinePendingCount > 0 ? 'bg-rose-500 text-white animate-pulse' : 'bg-emerald-100 text-emerald-800'}`}>
+              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${offlinePendingCount > 0 ? 'bg-rose-500 text-white animate-pulse' : activePillar === 'offline' ? 'bg-white text-sky-900 font-bold' : 'bg-slate-100 text-slate-700'}`}>
                 {offlinePendingCount} Antrean
               </span>
             </div>
             <p className="text-xs sm:text-sm font-extrabold leading-tight">Offline & Sync</p>
-            <p className={`text-[11px] mt-0.5 ${activePillar === 'offline' ? 'text-slate-200' : 'text-slate-500'}`}>
+            <p className={`text-[11px] mt-0.5 ${activePillar === 'offline' ? 'text-sky-100' : 'text-slate-500'}`}>
               IndexedDB Aktif
             </p>
           </button>
@@ -1303,7 +1300,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                  <Baby size={18} className="text-teal-600" />
+                  <Baby size={18} className="text-sky-600" />
                   <span>Buku KIA Balita ({targetBalita.length} Anak Terdaftar di Wilayah Tugas)</span>
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -1316,8 +1313,8 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                 <button
                   type="button"
                   onClick={() => setBalitaFilter('all')}
-                  className={`px-3 py-1.5 rounded-xl font-extrabold transition-all cursor-pointer ${
-                    balitaFilter === 'all' ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  className={`px-3 py-1.5 min-h-[44px] sm:min-h-0 rounded-xl font-extrabold transition-all cursor-pointer ${
+                    balitaFilter === 'all' ? 'bg-sky-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   Semua ({targetBalita.length})
@@ -1325,8 +1322,8 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                 <button
                   type="button"
                   onClick={() => setBalitaFilter('unweighed')}
-                  className={`px-3 py-1.5 rounded-xl font-extrabold transition-all cursor-pointer ${
-                    balitaFilter === 'unweighed' ? 'bg-amber-500 text-amber-950 shadow-xs' : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                  className={`px-3 py-1.5 min-h-[44px] sm:min-h-0 rounded-xl font-extrabold transition-all cursor-pointer ${
+                    balitaFilter === 'unweighed' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
                   }`}
                 >
                   Belum Ditimbang ({targetBalita.filter(b => b.sudah_ditimbang_bulan_ini === 0).length})
@@ -1334,7 +1331,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                 <button
                   type="button"
                   onClick={() => setBalitaFilter('at_risk')}
-                  className={`px-3 py-1.5 rounded-xl font-extrabold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 min-h-[44px] sm:min-h-0 rounded-xl font-extrabold transition-all cursor-pointer ${
                     balitaFilter === 'at_risk' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-800 hover:bg-rose-100'
                   }`}
                 >
@@ -1415,7 +1412,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                  <Heart size={18} className="text-pink-600" />
+                  <Heart size={18} className="text-sky-600" />
                   <span>Pemantauan Ibu Hamil & 1000 HPK ({targetBumil.length} Ibu Hamil)</span>
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -1432,7 +1429,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                     setFormError('');
                     setShowBumilModal(true);
                   }}
-                  className="px-3.5 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  className="px-3.5 py-2.5 min-h-[44px] rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                 >
                   <Plus size={14} />
                   <span>+ Catat Bumil</span>
@@ -1442,8 +1439,8 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                   <button
                     type="button"
                     onClick={() => setBumilFilter('all')}
-                    className={`px-2.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
-                      bumilFilter === 'all' ? 'bg-pink-600 text-white' : 'bg-slate-100 text-slate-700'
+                    className={`px-3 py-2 min-h-[44px] sm:min-h-0 rounded-xl font-bold transition-all cursor-pointer ${
+                      bumilFilter === 'all' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-700'
                     }`}
                   >
                     Semua ({targetBumil.length})
@@ -1451,8 +1448,8 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                   <button
                     type="button"
                     onClick={() => setBumilFilter('kek')}
-                    className={`px-2.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
-                      bumilFilter === 'kek' ? 'bg-amber-500 text-amber-950' : 'bg-amber-50 text-amber-900'
+                    className={`px-3 py-2 min-h-[44px] sm:min-h-0 rounded-xl font-bold transition-all cursor-pointer ${
+                      bumilFilter === 'kek' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-900'
                     }`}
                   >
                     Risiko KEK ({kpiMetrics.bumilKek})
@@ -1463,7 +1460,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
 
             {displayedBumil.length === 0 ? (
               <div className="p-8 text-center bg-white rounded-2xl border border-slate-200 space-y-2">
-                <Heart size={36} className="mx-auto text-pink-300" />
+                <Heart size={36} className="mx-auto text-slate-300" />
                 <p className="text-sm font-bold text-slate-700">Belum ada data ibu hamil yang terdaftar.</p>
                 <p className="text-xs text-slate-400">Klik "+ Sasaran Baru" di atas untuk mendaftarkan ibu hamil baru di wilayah tugas.</p>
               </div>
@@ -1474,7 +1471,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                   return (
                     <div
                       key={bumil.nik}
-                      className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col justify-between hover:border-pink-300 transition-all space-y-3"
+                      className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col justify-between hover:border-sky-300 transition-all space-y-3"
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2">
@@ -1497,8 +1494,8 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                         </div>
 
                         <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100 text-center">
-                          <div className="p-2 rounded-xl bg-pink-50/60 border border-pink-100">
-                            <span className="text-[10px] font-bold text-pink-800 block">Usia Kehamilan</span>
+                          <div className="p-2 rounded-xl bg-sky-50/60 border border-sky-100">
+                            <span className="text-[10px] font-bold text-sky-800 block">Usia Kehamilan</span>
                             <span className="text-xs font-black text-slate-800 font-mono">
                               {bumil.usia_kehamilan_minggu || 12} Minggu
                             </span>
@@ -1509,8 +1506,8 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                               {bumil.lila_cm ? `${bumil.lila_cm} cm` : '-'}
                             </span>
                           </div>
-                          <div className="p-2 rounded-xl bg-purple-50/60 border border-purple-100">
-                            <span className="text-[10px] font-bold text-purple-800 block">Konsumsi TTD</span>
+                          <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
+                            <span className="text-[10px] font-bold text-slate-700 block">Konsumsi TTD</span>
                             <span className="text-xs font-black text-slate-800 font-mono">
                               {bumil.jumlah_konsumsi_ttd || 30}/90 Tab
                             </span>
@@ -1536,7 +1533,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                             setFormError('');
                             setShowBumilModal(true);
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-800 font-extrabold text-xs transition-all flex items-center gap-1 cursor-pointer"
+                          className="px-3.5 py-2 min-h-[44px] rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 font-extrabold text-xs transition-all flex items-center gap-1 cursor-pointer"
                         >
                           <Plus size={13} />
                           <span>Catat Pemeriksaan</span>
@@ -1558,7 +1555,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                  <HeartPulse size={18} className="text-emerald-700" />
+                  <HeartPulse size={18} className="text-sky-600" />
                   <span>Kartu Lansia & Skrining PTM ({targetLansia.length} Warga Senior)</span>
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -1570,8 +1567,8 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                 <button
                   type="button"
                   onClick={() => setLansiaFilter('all')}
-                  className={`px-3 py-1.5 rounded-xl font-extrabold transition-all cursor-pointer ${
-                    lansiaFilter === 'all' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  className={`px-3 py-2 min-h-[44px] sm:min-h-0 rounded-xl font-extrabold transition-all cursor-pointer ${
+                    lansiaFilter === 'all' ? 'bg-sky-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   Semua ({targetLansia.length})
@@ -1579,8 +1576,8 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                 <button
                   type="button"
                   onClick={() => setLansiaFilter('unexamined')}
-                  className={`px-3 py-1.5 rounded-xl font-extrabold transition-all cursor-pointer ${
-                    lansiaFilter === 'unexamined' ? 'bg-amber-500 text-amber-950 shadow-xs' : 'bg-amber-50 text-amber-900'
+                  className={`px-3 py-2 min-h-[44px] sm:min-h-0 rounded-xl font-extrabold transition-all cursor-pointer ${
+                    lansiaFilter === 'unexamined' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-900'
                   }`}
                 >
                   Belum Diperiksa ({targetLansia.filter(l => l.sudah_diperiksa_bulan_ini === 0).length})
@@ -1588,7 +1585,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                 <button
                   type="button"
                   onClick={() => setLansiaFilter('at_risk')}
-                  className={`px-3 py-1.5 rounded-xl font-extrabold transition-all cursor-pointer ${
+                  className={`px-3 py-2 min-h-[44px] sm:min-h-0 rounded-xl font-extrabold transition-all cursor-pointer ${
                     lansiaFilter === 'at_risk' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-900'
                   }`}
                 >
@@ -1656,7 +1653,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                  <Scale size={18} className="text-amber-600" />
+                  <Scale size={18} className="text-sky-600" />
                   <span>Log Distribusi PMT & Suplementasi Kesehatan</span>
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -1671,7 +1668,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                   setModalSuccessMsg('');
                   setShowPmtModal(true);
                 }}
-                className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0"
+                className="px-3.5 py-2.5 min-h-[44px] rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0"
               >
                 <Plus size={15} />
                 <span>+ Catat Distribusi PMT</span>
@@ -1697,7 +1694,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                       <td className="py-2.5 px-3 font-mono text-slate-500">{item.tanggal_distribusi}</td>
                       <td className="py-2.5 px-3">
                         <span className={`px-2 py-0.5 rounded-full font-bold ${
-                          item.target_kategori.includes('BALITA') ? 'bg-teal-50 text-teal-800' : 'bg-pink-50 text-pink-800'
+                          item.target_kategori.includes('BALITA') ? 'bg-sky-50 text-sky-800' : 'bg-pink-50 text-pink-800'
                         }`}>
                           {item.target_kategori}
                         </span>
@@ -1722,7 +1719,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
           <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-800 flex items-center justify-center font-bold">
                   <Database size={20} />
                 </div>
                 <div>
@@ -1745,7 +1742,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
                     console.error(e);
                   }
                 }}
-                className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer shrink-0"
+                className="px-4 py-2.5 min-h-[44px] rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer shrink-0"
               >
                 <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
                 <span>Sinkronkan Sekarang</span>
@@ -1790,7 +1787,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* 6. THUMB-ZONE FLOATING ACTIONS (MOBILE-FIRST)                             */}
       {/* ========================================================================= */}
       <div className="fixed bottom-20 lg:bottom-6 left-0 right-0 z-30 px-4 pointer-events-none">
-        <div className="max-w-md mx-auto flex items-center gap-2 pointer-events-auto">
+        <div className="max-w-md mx-auto p-1.5 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-xl flex items-center gap-2 pointer-events-auto">
           {/* Quick Catat Balita */}
           <button
             type="button"
@@ -1800,7 +1797,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               setFormError('');
               setShowBalitaModal(true);
             }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-3.5 px-3 rounded-2xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-extrabold text-xs shadow-lg border border-teal-500 transition-all cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 px-3 min-h-[44px] rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-extrabold text-xs shadow-xs transition-all cursor-pointer"
           >
             <Baby size={16} />
             <span>+ Timbang Balita</span>
@@ -1815,9 +1812,9 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               setFormError('');
               setShowBumilModal(true);
             }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-3.5 px-3 rounded-2xl bg-pink-600 hover:bg-pink-700 active:scale-95 text-white font-extrabold text-xs shadow-lg border border-pink-500 transition-all cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 px-3 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 active:scale-95 text-slate-800 border border-slate-200 font-extrabold text-xs shadow-xs transition-all cursor-pointer"
           >
-            <Heart size={16} />
+            <Heart size={16} className="text-sky-600" />
             <span>+ Catat Bumil</span>
           </button>
 
@@ -1830,9 +1827,9 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               setFormError('');
               setShowLansiaModal(true);
             }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-3.5 px-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-extrabold text-xs shadow-lg border border-emerald-600 transition-all cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 px-3 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 active:scale-95 text-slate-800 border border-slate-200 font-extrabold text-xs shadow-xs transition-all cursor-pointer"
           >
-            <HeartPulse size={16} />
+            <HeartPulse size={16} className="text-sky-600" />
             <span>+ Catat Lansia</span>
           </button>
         </div>

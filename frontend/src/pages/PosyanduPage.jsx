@@ -495,20 +495,20 @@ export default function PosyanduPage() {
   return (
     <div className="max-w-max-width mx-auto space-y-6 pb-12">
       {/* HEADER */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 text-slate-900 border border-sky-100 shadow-xs">
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-semibold mb-2">
-            <Activity size={14} /> Posyandu Integratif Siklus Hidup
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 border border-sky-200 text-xs font-extrabold uppercase tracking-wider mb-2">
+            <Activity size={14} className="text-sky-600" /> Posyandu Integratif Siklus Hidup
           </div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-on-surface flex items-center gap-3">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 flex items-center gap-3">
             {activeTab === 'balita' ? (
-              <Baby className="text-primary" size={32} />
+              <Baby className="text-sky-600" size={32} />
             ) : (
-              <HeartPulse className="text-rose-600" size={32} />
+              <HeartPulse className="text-sky-600" size={32} />
             )}
             Layanan Posyandu Kebonjati
           </h1>
-          <p className="text-body-md text-on-surface-variant mt-1">
+          <p className="text-body-md text-slate-600 mt-1">
             Surveilans kesehatan balita (KMS & Stunting) dan lansia (Skrining PTM & Kemandirian ADL).
           </p>
         </div>
@@ -518,7 +518,7 @@ export default function PosyanduPage() {
           {activeTab === 'balita' ? (
             <button
               onClick={() => setShowBalitaModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-xl font-semibold shadow-sm hover:bg-primary/90 transition-colors text-sm"
+              className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold shadow-xs transition-colors text-sm cursor-pointer"
             >
               <Plus size={18} /> Catat Balita
             </button>
@@ -527,13 +527,13 @@ export default function PosyanduPage() {
               <>
                 <button
                   onClick={() => setShowRegLansiaModal(true)}
-                  className="flex items-center gap-2 px-3.5 py-2 bg-surface-container-high text-on-surface rounded-xl font-semibold hover:bg-surface-container-highest transition-colors text-sm border border-outline-variant"
+                  className="flex items-center gap-2 px-3.5 py-2.5 min-h-[44px] bg-white hover:bg-sky-50 text-slate-700 rounded-xl font-bold transition-colors text-sm border border-slate-200 shadow-xs cursor-pointer"
                 >
-                  <UserPlus size={16} /> Daftar Lansia
+                  <UserPlus size={16} className="text-sky-600" /> Daftar Lansia
                 </button>
                 <button
                   onClick={() => setShowCheckupLansiaModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-xl font-semibold shadow-sm hover:bg-rose-700 transition-colors text-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold shadow-xs transition-colors text-sm cursor-pointer"
                 >
                   <Plus size={18} /> Catat Pemeriksaan
                 </button>
@@ -576,13 +576,13 @@ export default function PosyanduPage() {
       />
 
       {/* TABS SELECTOR */}
-      <div className="flex border-b border-outline-variant bg-surface-container-lowest rounded-t-xl overflow-hidden p-1.5 gap-1.5">
+      <div className="flex border border-slate-200 bg-slate-50 rounded-2xl overflow-hidden p-1.5 gap-1.5 shadow-xs">
         <button
           onClick={() => setActiveTab('balita')}
-          className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-3 px-4 min-h-[44px] rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === 'balita'
-              ? 'bg-primary text-on-primary shadow-sm'
-              : 'text-on-surface-variant hover:bg-surface-container-low'
+              ? 'bg-sky-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-white hover:text-slate-900'
           }`}
         >
           <Baby size={18} />
@@ -590,10 +590,10 @@ export default function PosyanduPage() {
         </button>
         <button
           onClick={() => setActiveTab('lansia')}
-          className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-3 px-4 min-h-[44px] rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === 'lansia'
-              ? 'bg-rose-600 text-white shadow-sm'
-              : 'text-on-surface-variant hover:bg-surface-container-low'
+              ? 'bg-sky-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-white hover:text-slate-900'
           }`}
         >
           <HeartPulse size={18} />
