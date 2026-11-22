@@ -955,17 +955,17 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       {/* ========================================================================= */}
       {/* 1. TOP PERSONA BAR & DUAL-PERSONA SWITCHER                                */}
       {/* ========================================================================= */}
-      <div className="bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 rounded-2xl p-4 sm:p-6 text-slate-900 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-100">
+      <div className="bg-gradient-to-br from-sky-100/80 via-sky-50/50 to-white rounded-2xl p-4 sm:p-6 text-slate-900 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-200/80">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-sky-600 text-white flex items-center justify-center font-black shadow-xs shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-sky-700 text-white flex items-center justify-center font-black shadow-xs shrink-0">
             <HeartPulse className="w-6 h-6 text-white animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-200">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white text-sky-800 border border-sky-200 shadow-xs">
                 Mode Kader Posyandu Aktif
               </span>
-              <span className="text-xs text-slate-500 font-mono">{wilayahTugasLabel}</span>
+              <span className="text-xs text-slate-600 font-mono font-medium">{wilayahTugasLabel}</span>
             </div>
             <h1 className="text-base sm:text-lg font-bold text-slate-900 mt-0.5">
               {kaderProfile?.nama_lengkap || user?.nama || 'Kader Posyandu'} · Meja Kerja Digital Posyandu
@@ -978,14 +978,14 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
           <button
             type="button"
             onClick={() => setShowWhatsAppModal(true)}
-            className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-white hover:bg-sky-50 border border-slate-200 text-slate-700 transition-all flex items-center gap-1.5 shadow-xs active:scale-95 cursor-pointer"
+            className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-white hover:bg-sky-50 border border-slate-300 text-slate-700 transition-all flex items-center gap-1.5 shadow-xs active:translate-y-0.5 cursor-pointer"
             title="Kirim Undangan Posyandu ke Grup WhatsApp RT"
           >
-            <Share2 className="w-4 h-4 text-sky-600" />
+            <Share2 className="w-4 h-4 text-sky-700" />
             <span>Broadcast Undangan WA</span>
           </button>
 
-          {/* Daftarkan Sasaran Baru */}
+          {/* Daftarkan Sasaran Baru - Focus Primary Action */}
           <button
             type="button"
             onClick={() => {
@@ -993,7 +993,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
               setModalSuccessMsg('');
               setShowDaftarSasaranModal(true);
             }}
-            className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white transition-all flex items-center gap-1.5 shadow-xs active:scale-95 cursor-pointer"
+            className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-700 hover:bg-sky-800 text-white border border-sky-800 shadow-[0_2px_0_0_#075985] active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-1.5 cursor-pointer"
             title="Daftarkan Bayi, Bumil, atau Lansia Baru"
           >
             <UserPlus className="w-4 h-4 text-white" />
@@ -1003,10 +1003,10 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
           {/* Dual Persona Switcher */}
           <Link
             to="/dashboard/dokumen?mode=dampingan"
-            className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-white hover:bg-sky-50 border border-slate-200 text-slate-700 transition-all flex items-center gap-1.5 shadow-xs active:scale-95"
+            className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-white hover:bg-sky-50 border border-slate-300 text-slate-700 transition-all flex items-center gap-1.5 shadow-xs active:translate-y-0.5"
             title="Buka Layanan Mandiri Warga Saya (Urus Surat, PBB & Profil Pribadi)"
           >
-            <Home className="w-4 h-4 text-sky-600" />
+            <Home className="w-4 h-4 text-sky-700" />
             <span className="hidden sm:inline">Layanan Mandiri Warga Saya</span>
             <span className="sm:hidden">Warga Saya</span>
             <ArrowRight className="w-3.5 h-3.5 opacity-70" />
@@ -1031,12 +1031,12 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
       )}
 
       {/* ========================================================================= */}
-      {/* 2. KANAYA AI STRATEGIC HEALTH COPILOT BENTO CARD                          */}
+      {/* 2. KANAYA AI STRATEGIC HEALTH COPILOT BENTO CARD (Clean White Panel)       */}
       {/* ========================================================================= */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-sky-50/40 border border-sky-200/80 shadow-xs relative overflow-hidden group">
+      <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden group">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5 flex-1">
-            <div className="w-12 h-12 rounded-2xl bg-sky-600 text-white flex items-center justify-center shadow-xs shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-sky-700 text-white flex items-center justify-center shadow-xs shrink-0">
               <Sparkles className="w-6 h-6 animate-pulse" />
             </div>
             <div>
@@ -1055,7 +1055,7 @@ _Mari bersama wujudkan generasi bebas stunting & lingkungan sehat!_
           <button
             type="button"
             onClick={loadDashboardData}
-            className="self-start md:self-auto px-4 py-2 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 text-xs font-bold border border-slate-200 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+            className="self-start md:self-auto px-4 py-2 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 text-xs font-semibold border border-slate-300 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0 active:translate-y-0.5"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Perbarui Analitik</span>

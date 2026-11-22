@@ -288,11 +288,7 @@ export default function DashboardWarga() {
       {/* ========================================================================= */}
       {/* 1. HERO SECTION SUPER APP: PROFIL CITIZEN & DIRECT AVATAR UPLOADER (Clean Light Theme) */}
       {/* ========================================================================= */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 text-slate-900 shadow-xs p-6 sm:p-8 border border-sky-100">
-        {/* Glow ambient background */}
-        <div className="absolute -right-10 -bottom-10 w-80 h-80 bg-sky-200/25 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-10 -top-10 w-80 h-80 bg-blue-100/30 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-sky-100/80 via-sky-50/50 to-white text-slate-900 shadow-sm p-6 sm:p-8 border border-sky-200/80">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           {/* Avatar & User Core Details */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-5">
@@ -317,7 +313,7 @@ export default function DashboardWarga() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="absolute -bottom-1 -right-1 p-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white shadow-xs transition-all active:scale-95 group-hover:scale-105"
+                className="absolute -bottom-1 -right-1 p-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white shadow-xs transition-all active:scale-95 group-hover:scale-105"
                 title="Unggah / Ubah Foto Profil Warga"
               >
                 {uploadingAvatar ? (
@@ -339,7 +335,7 @@ export default function DashboardWarga() {
             {/* Nama & Kredensial Kependudukan */}
             <div className="space-y-1.5 text-center sm:text-left">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-200">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white text-sky-800 border border-sky-200 shadow-xs">
                   Warga Terverifikasi Dukcapil
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
@@ -363,18 +359,18 @@ export default function DashboardWarga() {
                 </span>
               </div>
 
-              <p className="text-[11px] text-slate-500 flex items-center justify-center sm:justify-start gap-1">
-                <MapPin size={12} className="text-sky-600" />
+              <p className="text-[11px] text-slate-600 flex items-center justify-center sm:justify-start gap-1">
+                <MapPin size={12} className="text-sky-700" />
                 <span>RT {user?.rt || '001'} / RW {user?.rw || '001'} &bull; Kelurahan Kebonjati</span>
               </p>
             </div>
           </div>
 
-          {/* Quick Actions at Hero - Symmetric & High Contrast */}
+          {/* Quick Actions at Hero - High Contrast Focus CTA */}
           <div className="flex flex-col sm:flex-row items-center gap-2.5 shrink-0">
             <button
               onClick={() => navigate('/dashboard/dokumen')}
-              className="w-full sm:w-auto px-4 py-2.5 min-h-[44px] bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95"
+              className="w-full sm:w-auto px-4 py-2.5 min-h-[44px] bg-sky-700 hover:bg-sky-800 text-white font-bold text-xs rounded-xl border border-sky-800 shadow-[0_2px_0_0_#075985] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2"
             >
               <Plus size={15} />
               <span>Ajukan Permohonan Surat</span>
@@ -383,7 +379,7 @@ export default function DashboardWarga() {
             <button
               onClick={loadCitizenData}
               disabled={refreshing}
-              className="w-full sm:w-auto px-3.5 py-2.5 min-h-[44px] bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs rounded-xl border border-slate-200 shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95"
+              className="w-full sm:w-auto px-3.5 py-2.5 min-h-[44px] bg-white hover:bg-sky-50/60 active:translate-y-0.5 text-slate-700 font-semibold text-xs rounded-xl border border-slate-300 shadow-xs transition-all flex items-center justify-center gap-2"
             >
               <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
               <span>Segarkan Data</span>
@@ -393,13 +389,13 @@ export default function DashboardWarga() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. AI CITIZEN SMART BRIEFING & ACTION CARD                               */}
+      {/* 2. AI CITIZEN SMART BRIEFING & ACTION CARD (Clean White Elevation)         */}
       {/* ========================================================================= */}
-      <div className="p-5 rounded-2xl bg-sky-50/40 border border-sky-200/80 shadow-xs relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+      <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
         <div className="space-y-1.5 max-w-2xl">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200 flex items-center gap-1">
-              <Sparkles size={11} className="text-sky-600" /> KANAYA AI &bull; Smart Citizen Briefing
+              <Sparkles size={11} className="text-sky-700" /> KANAYA AI &bull; Smart Citizen Briefing
             </span>
             <span className="text-[10px] text-slate-500 font-mono">Pembaruan Status Terkini</span>
           </div>

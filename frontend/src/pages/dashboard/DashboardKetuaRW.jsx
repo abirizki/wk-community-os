@@ -330,13 +330,13 @@ export default function DashboardKetuaRW() {
       </AnimatePresence>
 
       {/* 0. Persona Mode Switcher (Single Identity, Dual Role) - Clean Light Civic Theme */}
-      <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-white border border-sky-100 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-100/80 via-sky-50/50 to-white border border-sky-200/80 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <label className="w-11 h-11 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center shrink-0 relative group cursor-pointer overflow-hidden shadow-xs" title="Klik untuk unggah foto profil">
+          <label className="w-11 h-11 rounded-xl bg-white border border-sky-200 flex items-center justify-center shrink-0 relative group cursor-pointer overflow-hidden shadow-xs" title="Klik untuk unggah foto profil">
             {user?.photo_url ? (
               <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover rounded-xl" />
             ) : (
-              <ShieldCheck className="w-6 h-6 text-sky-600" />
+              <ShieldCheck className="w-6 h-6 text-sky-700" />
             )}
             <input 
               type="file" 
@@ -366,10 +366,10 @@ export default function DashboardKetuaRW() {
           </label>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-200">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white text-sky-800 border border-sky-200 shadow-xs">
                 Mode Pejabat Aktif
               </span>
-              <span className="text-xs text-slate-500 font-mono">Wilayah RW {rwNomor}</span>
+              <span className="text-xs text-slate-600 font-mono font-medium">Wilayah RW {rwNomor}</span>
             </div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 mt-0.5">
               {user?.nama || user?.name ? `${user?.nama || user?.name} • Ketua RW ${rwNomor}` : `Meja Kerja Otoritas Ketua RW ${rwNomor}`}
@@ -382,24 +382,24 @@ export default function DashboardKetuaRW() {
           <button
             type="button"
             onClick={() => setShowScanRegisterModal(true)}
-            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 transition-all shadow-xs active:scale-98"
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-white hover:bg-sky-50 text-slate-700 border border-slate-300 transition-all shadow-xs active:translate-y-0.5 cursor-pointer"
             title="Pindai QR KK & Input Data Warga Baru"
           >
-            <Camera className="w-4 h-4 text-sky-600 shrink-0" />
+            <Camera className="w-4 h-4 text-sky-700 shrink-0" />
             <span>Scan QR KK</span>
           </button>
           <button
             type="button"
             onClick={() => setShowActivationModal(true)}
-            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 transition-all shadow-xs active:scale-98"
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-white hover:bg-sky-50 text-slate-700 border border-slate-300 transition-all shadow-xs active:translate-y-0.5 cursor-pointer"
             title="Terbitkan Kupon Aktivasi Sekali Pakai untuk Warga"
           >
-            <Ticket className="w-4 h-4 text-sky-600 shrink-0" />
+            <Ticket className="w-4 h-4 text-sky-700 shrink-0" />
             <span>Kupon Warga</span>
           </button>
           <Link
             to="/dashboard/dokumen?mode=mandiri&action=new"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white transition-all shadow-xs active:scale-98"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-sky-700 hover:bg-sky-800 text-white border border-sky-800 shadow-[0_2px_0_0_#075985] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
             title="Buka Layanan Mandiri Warga untuk urus surat/KK keluarga sendiri"
           >
             <Home className="w-4 h-4 text-white shrink-0" />

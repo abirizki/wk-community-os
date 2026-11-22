@@ -144,14 +144,14 @@ export default function DashboardWalikota() {
       </AnimatePresence>
 
       {/* 1. Header Eksekutif Walikota Sukabumi */}
-      <header className="rounded-3xl bg-gradient-to-r from-sky-50/90 via-white to-sky-50/40 text-slate-900 p-6 sm:p-8 shadow-xs border border-sky-200/80 relative overflow-hidden">
+      <header className="rounded-3xl bg-gradient-to-br from-sky-100/80 via-sky-50/50 to-white text-slate-900 p-6 sm:p-8 shadow-sm border border-sky-200/80 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-800 border border-sky-200 text-[10px] font-extrabold uppercase tracking-wider">
+              <span className="px-3 py-1 rounded-full bg-white text-sky-800 border border-sky-200 shadow-xs text-[10px] font-extrabold uppercase tracking-wider">
                 Dashboard Eksekutif Kepala Daerah
               </span>
-              <span className="text-xs text-slate-500 font-mono">
+              <span className="text-xs text-slate-600 font-mono font-medium">
                 Kota Sukabumi · 7 Kecamatan · 33 Kelurahan
               </span>
             </div>
@@ -167,9 +167,9 @@ export default function DashboardWalikota() {
             <button
               onClick={() => { setRefreshing(true); loadData(); }}
               disabled={refreshing || loading}
-              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 text-xs font-bold border border-slate-300 shadow-[0_2px_0_0_#cbd5e1] active:shadow-none active:translate-y-0.5 transition flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 text-xs font-semibold border border-slate-300 shadow-xs active:translate-y-0.5 transition flex items-center gap-1.5 cursor-pointer"
             >
-              <RefreshCw size={14} className={refreshing ? 'animate-spin text-sky-600' : ''} />
+              <RefreshCw size={14} className={refreshing ? 'animate-spin text-sky-700' : ''} />
               <span>Perbarui Data</span>
             </button>
 
@@ -185,7 +185,7 @@ export default function DashboardWalikota() {
                 }
               }}
               disabled={isExportingCity}
-              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-[0_2px_0_0_#0369a1] active:shadow-none active:translate-y-0.5 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold transition flex items-center gap-1.5 border border-sky-800 shadow-[0_2px_0_0_#075985] active:translate-y-0.5 active:shadow-none cursor-pointer disabled:opacity-50"
               title="Unduh Buku Profil Pembangunan Kota Sukabumi"
             >
               <FileSpreadsheet size={14} />
@@ -194,10 +194,10 @@ export default function DashboardWalikota() {
 
             <Link
               to="/dashboard/command-center"
-              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 text-xs font-bold border border-slate-300 shadow-[0_2px_0_0_#cbd5e1] active:shadow-none active:translate-y-0.5 transition flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2.5 min-h-[44px] rounded-xl bg-white hover:bg-sky-50 text-slate-700 text-xs font-semibold border border-slate-300 shadow-xs active:translate-y-0.5 transition flex items-center gap-1.5 cursor-pointer"
             >
               <span>Data Spasial</span>
-              <ArrowRight size={14} className="text-sky-600" />
+              <ArrowRight size={14} className="text-sky-700" />
             </Link>
           </div>
         </div>
@@ -268,7 +268,7 @@ export default function DashboardWalikota() {
       />
 
       {/* 2.5. SUPER APPS BENTO GRID MEJA KERJA WALIKOTA */}
-      <div className="bg-white rounded-3xl p-6 border-2 border-slate-200/90 shadow-[0_3px_0_0_#cbd5e1] space-y-4">
+      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-sky-600 animate-pulse" />
@@ -283,7 +283,7 @@ export default function DashboardWalikota() {
           {/* 1. Command Center Spasial */}
           <Link
             to="/dashboard/command-center"
-            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm hover:shadow active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
@@ -300,7 +300,7 @@ export default function DashboardWalikota() {
           {/* 2. Monitoring Zero Stunting */}
           <Link
             to="/dashboard/posyandu"
-            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm hover:shadow active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
@@ -317,7 +317,7 @@ export default function DashboardWalikota() {
           {/* 3. Desil & DTKS Kemiskinan Ekstrem */}
           <Link
             to="/dashboard/desil"
-            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm hover:shadow active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
@@ -334,7 +334,7 @@ export default function DashboardWalikota() {
           {/* 4. Kepatuhan SLA Pelayanan */}
           <Link
             to="/dashboard/data-maturity"
-            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm hover:shadow active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
@@ -351,7 +351,7 @@ export default function DashboardWalikota() {
           {/* 5. Realisasi Fiskal PBB-P2 */}
           <Link
             to="/dashboard/pbb"
-            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm hover:shadow active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
@@ -368,7 +368,7 @@ export default function DashboardWalikota() {
           {/* 6. Aduan & Aspirasi Publik */}
           <Link
             to="/dashboard/pengaduan"
-            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm hover:shadow active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
@@ -385,7 +385,7 @@ export default function DashboardWalikota() {
           {/* 7. Kelola Pengguna & Aparatur */}
           <Link
             to="/dashboard/users"
-            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm hover:shadow active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
@@ -402,7 +402,7 @@ export default function DashboardWalikota() {
           {/* 8. Panduan Eksekutif Kota */}
           <Link
             to="/dashboard/panduan"
-            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border-2 border-slate-200/90 hover:border-sky-300 shadow-[0_2px_0_0_#cbd5e1] active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
+            className="p-4 rounded-2xl bg-white hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 shadow-sm hover:shadow active:translate-y-0.5 transition-all text-left group flex flex-col justify-between h-28 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
