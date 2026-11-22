@@ -9,6 +9,7 @@ export default {
       colors: {
         /* === Soft Sky Blue Identity Tokens (Jabar Pintar Digital) === */
         primary: '#0284c7', /* Soft Sky Blue 600 */
+        'primary-action': '#0369a1', /* Sky 700 High-Contrast Action / Link (5.93:1) */
         'on-primary': '#ffffff',
         'primary-container': '#e0f2fe', /* Sky 100 */
         'on-primary-container': '#0369a1', /* Sky 700 */

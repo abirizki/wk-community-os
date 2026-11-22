@@ -19,9 +19,9 @@ const ROLE_LABELS = {
 };
 
 const CIVIC_UTILITY_THEME = {
-  gradient: 'from-sky-50/90 via-white to-sky-50/40 border border-sky-100 shadow-xs',
-  badge: 'bg-sky-100 text-sky-800 border-sky-200 shadow-xs',
-  sparkleColor: 'text-sky-600',
+  gradient: 'from-sky-100/80 via-sky-50/50 to-white border border-sky-200/80 shadow-xs',
+  badge: 'bg-white text-sky-800 border-sky-200 shadow-xs',
+  sparkleColor: 'text-sky-700',
 };
 
 /**
@@ -91,15 +91,9 @@ export default function RoleHeader({
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${CIVIC_UTILITY_THEME.gradient} text-slate-900 p-5 sm:p-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5 ${className}`.trim()}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${CIVIC_UTILITY_THEME.gradient} text-slate-900 p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 ${className}`.trim()}
       role="banner"
     >
-      {/* Subtle Sky Accent Glow */}
-      <div
-        className="absolute right-0 top-0 w-80 h-80 bg-sky-200/20 rounded-full blur-3xl pointer-events-none"
-        aria-hidden="true"
-      />
-
       {/* Main Content Area: Role Pill, Headline Greeting, Scope */}
       <div className="relative z-10 space-y-2 max-w-2xl">
         {/* Top Role Badge Pill */}
@@ -119,8 +113,8 @@ export default function RoleHeader({
 
         {/* Territory Scope Label with MapPin Icon */}
         {scopeLabel ? (
-          <div className="flex items-center gap-2 pt-0.5 text-xs text-slate-500 font-medium">
-            <MapPin size={14} className="text-sky-600 shrink-0" aria-hidden="true" />
+          <div className="flex items-center gap-2 pt-0.5 text-xs text-slate-600 font-medium">
+            <MapPin size={14} className="text-sky-700 shrink-0" aria-hidden="true" />
             <span className="tracking-wide">{scopeLabel}</span>
           </div>
         ) : null}
@@ -137,7 +131,7 @@ export default function RoleHeader({
               onClick={onRefresh}
               disabled={loading}
               aria-label="Segarkan data"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold border border-slate-200 transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-sky-500/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-sky-50/60 active:translate-y-0.5 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold border border-slate-300 transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-sky-500/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             >
               <RefreshCw
                 size={14}
