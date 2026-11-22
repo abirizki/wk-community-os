@@ -474,9 +474,9 @@ export default function AnalyticsDashboardPage() {
             type="button"
             onClick={() => setSelectedPeriod(period.id)}
             aria-pressed={selectedPeriod === period.id}
-            className={`rounded-lg px-3 py-2 text-xs font-medium transition ${
+            className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
               selectedPeriod === period.id
-                ? 'bg-slate-900 text-white'
+                ? 'bg-sky-700 text-white shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -1429,17 +1429,19 @@ export default function AnalyticsDashboardPage() {
 
   return (
     <main className="mx-auto max-w-[1440px] space-y-5 px-3 py-5 sm:px-6 lg:px-8">
-      <header className="rounded-2xl bg-slate-950 px-5 py-6 text-white sm:px-7">
+      <header className="rounded-2xl border border-sky-200/90 bg-gradient-to-br from-sky-100/80 via-sky-50/50 to-white px-5 py-6 text-slate-900 shadow-sm sm:px-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-300">Pusat analitik · decision support</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Dashboard Analitik Wilayah</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white text-sky-800 border border-sky-200 shadow-xs">
+              Pusat analitik · decision support
+            </span>
+            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Dashboard Analitik Wilayah</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
               Hubungkan profil penduduk dengan pemerataan kesehatan, perlindungan sosial, dan kinerja layanan untuk menentukan prioritas kerja.
             </p>
           </div>
-          <div className="flex flex-col gap-1 text-xs text-slate-300 lg:items-end">
-            <span className="inline-flex items-center gap-2"><MapPin size={14} />{areaLabel}</span>
+          <div className="flex flex-col gap-1 text-xs text-slate-600 lg:items-end">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700"><MapPin size={14} className="text-sky-700" />{areaLabel}</span>
             <span>{lastUpdated ? `Ringkasan diperbarui ${lastUpdated}` : 'Waktu pembaruan belum tersedia'}</span>
           </div>
         </div>

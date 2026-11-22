@@ -481,27 +481,27 @@ export default function UserManagementPage() {
       )}
 
       {/* Profil Wilayah & Pejabat Eksekutif Banner (Soft Sky Blue Civic Palette) */}
-      <div className="p-5 bg-slate-900 rounded-2xl text-white border border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="p-5 bg-gradient-to-br from-sky-100/80 via-sky-50/50 to-white rounded-2xl text-slate-900 border border-sky-200/90 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3.5">
-          <div className="p-3 bg-sky-950/80 rounded-xl text-sky-400 border border-sky-800/60 shrink-0">
+          <div className="p-3 bg-white rounded-xl text-sky-700 border border-sky-200 shadow-xs shrink-0">
             <Building2 size={24} />
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold text-amber-300 tracking-wider uppercase px-2 py-0.5 rounded bg-amber-950/60 border border-amber-800/60">
+              <span className="text-[10px] font-extrabold text-sky-800 tracking-wider uppercase px-2 py-0.5 rounded bg-sky-100 border border-sky-200">
                 Pemerintahan Daerah & Wilayah Binaan
               </span>
-              <span className="text-xs text-sky-200">
+              <span className="text-xs font-semibold text-slate-600">
                 {govProfile.wilayah_binaan}
               </span>
             </div>
-            <h4 className="text-base font-bold text-white">
+            <h4 className="text-base font-bold text-slate-900">
               Kelurahan {govProfile.nama_kelurahan}, Kec. {govProfile.nama_kecamatan}, {govProfile.nama_kota}
             </h4>
-            <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-300">
-              <span>Lurah: <strong className="text-white">{govProfile.nama_lurah}</strong> <span className="text-[10px] text-slate-400 font-mono">({govProfile.nip_lurah})</span></span>
-              <span>&bull; Camat: <strong className="text-white">{govProfile.nama_camat}</strong></span>
-              <span>&bull; Walikota: <strong className="text-white">{govProfile.nama_walikota}</strong></span>
+            <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-600">
+              <span>Lurah: <strong className="text-slate-900">{govProfile.nama_lurah}</strong> <span className="text-[10px] text-slate-500 font-mono">({govProfile.nip_lurah})</span></span>
+              <span>&bull; Camat: <strong className="text-slate-900">{govProfile.nama_camat}</strong></span>
+              <span>&bull; Walikota: <strong className="text-slate-900">{govProfile.nama_walikota}</strong></span>
             </div>
           </div>
         </div>
@@ -511,9 +511,9 @@ export default function UserManagementPage() {
               setGovForm(govProfile);
               setGovModalOpen(true);
             }}
-            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-colors flex items-center gap-2 shadow-sm shrink-0"
+            className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-sky-50 text-sky-800 border border-sky-300 font-bold text-xs transition-all flex items-center gap-2 shadow-xs shrink-0 active:translate-y-0.5"
           >
-            <Edit2 size={14} /> Edit Pejabat & Wilayah
+            <Edit2 size={14} className="text-sky-700" /> Edit Pejabat & Wilayah
           </button>
         )}
       </div>

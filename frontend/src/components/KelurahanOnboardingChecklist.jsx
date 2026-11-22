@@ -161,28 +161,28 @@ export default function KelurahanOnboardingChecklist({
     <motion.div
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-2xl border border-sky-200 dark:border-sky-900/60 bg-gradient-to-br from-sky-50/70 via-white to-sky-50/40 dark:from-slate-900/90 dark:via-slate-900 dark:to-sky-950/40 shadow-sm overflow-hidden ${className}`.trim()}
+      className={`rounded-2xl border border-sky-200/90 bg-gradient-to-br from-sky-100/70 via-white to-sky-50/40 shadow-sm overflow-hidden ${className}`.trim()}
     >
       {/* Header Banner */}
-      <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-sky-100 dark:border-sky-900/40">
+      <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-sky-100">
         <div className="flex items-start gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-sky-500/20">
+          <div className="w-10 h-10 rounded-xl bg-sky-700 text-white flex items-center justify-center shrink-0 shadow-sm">
             <Rocket size={20} className="animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-sm sm:text-base font-bold text-on-surface tracking-tight">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                 Aktivasi Kelurahan Baru: Kesiapan Operasional SPBE
               </h2>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
                 isAllCompleted 
-                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300/40' 
-                  : 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-300/40'
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300/60' 
+                  : 'bg-sky-100 text-sky-800 border border-sky-300/60'
               }`}>
                 {isAllCompleted ? 'Siap Operasional 100%' : `${completedCount} dari 4 Selesai`}
               </span>
             </div>
-            <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">
+            <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
               Panduan 4 langkah praktis mempersiapkan tata kelola administrasi digital sebelum melayani permohonan surat warga.
             </p>
           </div>
@@ -193,7 +193,7 @@ export default function KelurahanOnboardingChecklist({
           <button
             type="button"
             onClick={handleToggleMinimize}
-            className="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
             title={isMinimized ? "Perluas Panduan" : "Perkecil Panduan"}
           >
             {isMinimized ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
@@ -201,7 +201,7 @@ export default function KelurahanOnboardingChecklist({
           <button
             type="button"
             onClick={handleDismiss}
-            className="p-1.5 rounded-lg text-on-surface-variant hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
             title="Sembunyikan Panduan Kesiapan"
           >
             <X size={18} />
@@ -211,11 +211,11 @@ export default function KelurahanOnboardingChecklist({
 
       {/* Progress Bar */}
       <div className="px-4 sm:px-5 pt-3 pb-1">
-        <div className="flex items-center justify-between text-xs font-semibold text-on-surface-variant mb-1.5">
+        <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-1.5">
           <span>Tingkat Kesiapan Kelurahan:</span>
-          <span className="font-mono text-sky-700 dark:text-sky-300 font-bold">{progressPercent}%</span>
+          <span className="font-mono text-sky-800 font-bold">{progressPercent}%</span>
         </div>
-        <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+        <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
@@ -223,7 +223,7 @@ export default function KelurahanOnboardingChecklist({
             className={`h-full rounded-full transition-all ${
               isAllCompleted 
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-500' 
-                : 'bg-gradient-to-r from-sky-500 to-teal-500'
+                : 'bg-gradient-to-r from-sky-600 to-teal-500'
             }`}
           />
         </div>
@@ -246,46 +246,46 @@ export default function KelurahanOnboardingChecklist({
                     key={step.id}
                     className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between gap-3 ${
                       step.isDone
-                        ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-900/40'
-                        : 'bg-white dark:bg-surface-container border-sky-200/70 dark:border-sky-900/40 hover:border-sky-300'
+                        ? 'bg-emerald-50/70 border-emerald-200/80'
+                        : 'bg-white border-sky-200/80 hover:border-sky-300 shadow-xs'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="shrink-0 mt-0.5">
                         {step.isDone ? (
-                          <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
+                          <CheckCircle2 size={18} className="text-emerald-600" />
                         ) : (
-                          <div className="w-4 h-4 rounded-full border-2 border-slate-400 dark:border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                          <div className="w-4 h-4 rounded-full border-2 border-slate-400 flex items-center justify-center text-[10px] font-bold text-slate-600">
                             {step.stepNumber}
                           </div>
                         )}
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="text-xs font-bold text-on-surface">
+                          <h4 className="text-xs font-bold text-slate-900">
                             {step.title}
                           </h4>
                           {step.isDone && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">
                               Selesai
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
                           {step.description}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80 justify-end flex-wrap">
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100 justify-end flex-wrap">
                       {step.allowSampleData && !step.isDone && onLoadSampleData && (
                         <button
                           type="button"
                           onClick={onLoadSampleData}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-200 text-[11px] font-semibold border border-teal-200 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-semibold border border-teal-200 transition-colors cursor-pointer"
                           title="Muat 5 Data KK Contoh untuk menguji alur layanan langsung"
                         >
-                          <PlayCircle size={13} className="text-teal-600 dark:text-teal-400" />
+                          <PlayCircle size={13} className="text-teal-600" />
                           <span>Muat 5 KK Contoh (Demo)</span>
                         </button>
                       )}
@@ -295,8 +295,8 @@ export default function KelurahanOnboardingChecklist({
                         onClick={step.onAction}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-xs cursor-pointer ${
                           step.isDone
-                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                            : 'bg-primary text-white hover:bg-primary/90 shadow-sm'
+                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            : 'bg-sky-700 text-white hover:bg-sky-800 shadow-sm'
                         }`}
                       >
                         <IconComponent size={13} />
@@ -310,9 +310,9 @@ export default function KelurahanOnboardingChecklist({
             </div>
 
             {/* Quick Sandbox / Simulation Notice Footer */}
-            <div className="p-3 rounded-xl bg-sky-100/60 dark:bg-sky-950/30 border border-sky-200/60 dark:border-sky-900/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-2 text-sky-900 dark:text-sky-200">
-                <Sparkles size={15} className="text-amber-500 shrink-0" />
+            <div className="p-3 rounded-xl bg-sky-100/70 border border-sky-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 text-sky-950">
+                <Sparkles size={15} className="text-amber-600 shrink-0" />
                 <span>
                   <strong>Tips Uji Coba Lapangan:</strong> Anda dapat menggunakan tombol <em>Muat 5 KK Contoh</em> untuk langsung menguji pengajuan surat, verifikasi lurah, dan cetak TTE tanpa harus menyiapkan file asli terlebih dahulu.
                 </span>
@@ -320,7 +320,7 @@ export default function KelurahanOnboardingChecklist({
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="text-xs text-sky-700 hover:text-sky-900 dark:text-sky-300 font-semibold underline underline-offset-2 shrink-0 cursor-pointer"
+                className="text-xs text-sky-800 hover:text-sky-950 font-semibold underline underline-offset-2 shrink-0 cursor-pointer"
               >
                 Tutup Sementara
               </button>

@@ -720,9 +720,10 @@ export default function BansosPage() {
         {!isOfficer && (
           <button
             onClick={() => navigate('/dashboard/profil')}
-            className="flex items-center gap-2 px-3.5 py-2.5 bg-sky-500/20 text-sky-200 border border-sky-400/30 rounded-xl font-bold shadow-sm hover:bg-sky-500/30 transition-colors text-xs min-h-[44px]"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-sky-50 active:translate-y-0.5 text-sky-700 font-bold text-xs rounded-xl border border-sky-300 shadow-xs transition-all cursor-pointer min-h-[44px]"
           >
-            <FileCheck size={16} /> Input Bukti Bantuan & BPJS
+            <FileCheck size={16} className="text-sky-600" />
+            <span>Input Bukti Bantuan & BPJS</span>
           </button>
         )}
 
