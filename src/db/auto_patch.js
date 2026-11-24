@@ -160,6 +160,47 @@ async function autoPatchDatabase() {
       console.warn('[AutoPatch] CREATE posyandu_lansia_pemeriksaan note:', e.message);
     }
 
+    // 3.B. Pastikan tabel posyandu_jadwal ada (Jadwal Pemeriksaan Balita & Lansia oleh Kader)
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`posyandu_jadwal\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`nama_posyandu\` VARCHAR(100) NOT NULL,
+          \`kategori\` ENUM('BALITA', 'LANSIA', 'INTEGRASI_ILP') NOT NULL DEFAULT 'INTEGRASI_ILP',
+          \`tanggal_pelaksanaan\` DATE NOT NULL,
+          \`jam_mulai\` TIME NOT NULL DEFAULT '08:30:00',
+          \`jam_selesai\` TIME NOT NULL DEFAULT '11:30:00',
+          \`lokasi\` VARCHAR(255) NOT NULL,
+          \`kelurahan\` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
+          \`rw\` VARCHAR(5) NOT NULL DEFAULT '001',
+          \`rt\` VARCHAR(5) NULL,
+          \`agenda_kegiatan\` TEXT NOT NULL,
+          \`kader_penanggung_jawab\` VARCHAR(150) NULL,
+          \`status\` ENUM('DIJADWALKAN', 'SEDANG_BERLANGSUNG', 'SELESAI', 'DIBATALKAN') DEFAULT 'DIJADWALKAN',
+          \`catatan_khusus\` TEXT NULL,
+          \`created_by\` INT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_jadwal_tgl\` (\`tanggal_pelaksanaan\`),
+          INDEX \`idx_jadwal_rw_rt\` (\`rw\`, \`rt\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+
+      const [jadwalCount] = await connection.query('SELECT COUNT(*) AS total FROM `posyandu_jadwal`');
+      if (jadwalCount[0]?.total === 0) {
+        await connection.query(`
+          INSERT INTO \`posyandu_jadwal\` 
+            (\`nama_posyandu\`, \`kategori\`, \`tanggal_pelaksanaan\`, \`jam_mulai\`, \`jam_selesai\`, \`lokasi\`, \`kelurahan\`, \`rw\`, \`rt\`, \`agenda_kegiatan\`, \`kader_penanggung_jawab\`, \`status\`, \`catatan_khusus\`)
+          VALUES
+            ('Posyandu Melati RW 001', 'INTEGRASI_ILP', DATE_ADD(CURDATE(), INTERVAL 6 DAY), '08:30:00', '11:30:00', 'Balai Pertemuan RW 001, Jl. Kebonjati Gg. Mesjid', 'Kebonjati', '001', NULL, 'Penimbangan Balita, Pengukuran TB/LILA, Suplementasi Vitamin A Merah & Zat Besi, Skrining Hipertensi & Gula Darah Lansia', 'Bdn. Imas Rohayati', 'DIJADWALKAN', 'Membawa Buku KIA fisik atau menunjukkan Buku KIA Digital Bumi Warga.'),
+            ('Posyandu Melati RW 001', 'BALITA', DATE_ADD(CURDATE(), INTERVAL 20 DAY), '08:30:00', '11:00:00', 'Pos Terpadu Melati RW 001', 'Kebonjati', '001', NULL, 'Pemeriksaan Tumbuh Kembang, Imunisasi Lanjutan MR 2, dan Konseling Gizi PMT Balita', 'Bdn. Imas Rohayati', 'DIJADWALKAN', 'Khusus balita usia 0-59 bulan sasaran 1000 HPK.'),
+            ('Posyandu Mawar RW 001', 'INTEGRASI_ILP', DATE_ADD(CURDATE(), INTERVAL 7 DAY), '08:30:00', '11:30:00', 'Pos RW 001, Jl. Cikole Barat No. 37', 'Cikole', '001', NULL, 'Penimbangan Balita, Pemberian PMT Pemulihan, Cek Tensi dan Gula Darah Lansia', 'Bdn. Rina Marlina', 'DIJADWALKAN', 'Terbuka untuk seluruh warga RW 001 Cikole.')
+        `);
+      }
+    } catch (e) {
+      console.warn('[AutoPatch] CREATE posyandu_jadwal note:', e.message);
+    }
+
     // 4. Pastikan tabel bansos_pengajuan ada
     try {
       await connection.query(`

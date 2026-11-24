@@ -16,6 +16,7 @@ const pool = require('../db/pool');
 const aparaturRepository = require('../repositories/aparatur.repository');
 const wargaRepository = require('../repositories/warga.repository');
 const dokumenRepository = require('../repositories/dokumen.repository');
+const posyanduRepository = require('../repositories/posyandu.repository');
 const { BUMI_WARGA_SOP_REGISTRY, searchSop } = require('./kanaya.sop');
 
 // Route Allowlist for Navigation Action Chips
@@ -175,6 +176,17 @@ class KanayaService {
         break;
       }
 
+      case 'posyandu_schedule_and_health': {
+        const posyanduResult = await this._retrievePosyanduScheduleAndHealth(context, rawLower);
+        reply = posyanduResult.reply;
+        actionChips.push(...posyanduResult.chips);
+        rationale.push(...posyanduResult.rationale);
+        evidence.push(...posyanduResult.evidence);
+        limitations.push(...posyanduResult.limitations);
+        confidence = posyanduResult.confidence;
+        break;
+      }
+
       default: {
         // Unknown or general query
         confidence = 'low';
@@ -308,16 +320,25 @@ class KanayaService {
       return { intent: 'family_service_status' };
     }
 
-    // 7. Kontak Aparatur / Pengurus RT/RW
+    // 7. Jadwal Posyandu & Kesehatan Balita/Lansia
     if (
-      q.includes('kontak') || q.includes('nomor') || q.includes('wa') || q.includes('lurah') ||
+      q.includes('posyandu') || q.includes('timbang') || q.includes('balita') || 
+      q.includes('lansia') || q.includes('kia') || q.includes('kms') ||
+      q.includes('imunisasi') || q.includes('stunting') || q.includes('faris')
+    ) {
+      return { intent: 'posyandu_schedule_and_health' };
+    }
+
+    // 8. Kontak Aparatur / Pengurus RT/RW (Gunakan regex agar kata 'jadwal'/'warga' tidak salah terdeteksi sebagai 'wa')
+    if (
+      q.includes('kontak') || q.includes('nomor') || /\b(wa|whatsapp|no wa)\b/i.test(q) || q.includes('lurah') ||
       q.includes('babinsa') || q.includes('bhabin') || q.includes('ketua rt') || q.includes('ketua rw') ||
       q.includes('aparatur') || q.includes('pejabat')
     ) {
       return { intent: 'contact_directory' };
     }
 
-    // 8. SOP Publik
+    // 9. SOP Publik
     const matchedSop = searchSop(msg);
     if (matchedSop) {
       return { intent: 'public_sop', sop: matchedSop };
@@ -674,6 +695,134 @@ class KanayaService {
         evidence,
         limitations: ['Gagal query direktori'],
         confidence: 'low'
+      };
+    }
+  }
+
+  async _retrievePosyanduScheduleAndHealth(context, query) {
+    const chips = [
+      { label: 'Buka Buku KIA & Posyandu', type: 'navigate', url: '/dashboard/posyandu' },
+      { label: 'Lihat Kartu Keluarga Digital', type: 'navigate', url: '/dashboard/kk' },
+      { label: 'Direktori Kader & Aparatur', type: 'navigate', url: '/dashboard/aparatur' }
+    ];
+    const rationale = ['Mencari data jadwal posyandu aktif dan mendeteksi anggota keluarga balita/lansia dalam Kartu Keluarga.'];
+    const evidence = [];
+    const limitations = [];
+
+    try {
+      const namaWarga = context.nama || 'Warga';
+      const targetRw = context.rw || '001';
+      const noKk = context.noKk || 'Keluarga';
+
+      // 1. Ambil Data Balita & Lansia Keluarga menggunakan posyanduRepository
+      let familyBalita = [];
+      let familyLansia = [];
+
+      try {
+        familyBalita = await posyanduRepository.findBalitaByFamily(context.activeNik, context);
+      } catch (eBalita) {
+        familyBalita = posyanduRepository.findBalitaByFamilyFallback(context.activeNik, context);
+      }
+
+      try {
+        familyLansia = await posyanduRepository.findLansiaByFamilyNik(context.activeNik, context);
+      } catch (eLansia) {
+        familyLansia = posyanduRepository.findLansiaByFamilyFallback(context.activeNik, context);
+      }
+
+      evidence.push({
+        label: 'Data Kependudukan Keluarga',
+        source: 'Master Warga & Kartu Keluarga Kelurahan Kebonjati',
+        as_of: new Date().toISOString(),
+        scope: `No. KK: ${noKk}`
+      });
+
+      // 2. Ambil Jadwal Posyandu Terdekat
+      let schedules = [];
+      try {
+        schedules = await posyanduRepository.getUpcomingJadwal({ rw: targetRw, limit: 2 });
+      } catch (eJadwal) {
+        schedules = await posyanduRepository.listJadwal({ rw: targetRw, future_only: true });
+      }
+
+      evidence.push({
+        label: 'Jadwal Posyandu Resmi',
+        source: 'Kalender Posyandu Terpadu Kelurahan Kebonjati',
+        as_of: new Date().toISOString(),
+        scope: `RW ${targetRw}`
+      });
+
+      // 3. Bangun Kalimat Rekomendasi Pintar (Empatik & Proaktif)
+      let reply = `Sampurasun **${namaWarga}**! Berikut informasi jadwal pemeriksaan Posyandu dan pemantauan kesehatan keluarga Anda di **RW ${targetRw} Kelurahan Kebonjati**:\n\n`;
+
+      // Status Sasaran Keluarga
+      if (familyBalita.length > 0 || familyLansia.length > 0) {
+        reply += `📋 **Status Anggota Keluarga Sasaran Rutin:**\n`;
+        if (familyBalita.length > 0) {
+          const bList = familyBalita.map(b => {
+            const namaAnak = b.nama_anak || b.nama || 'Balita';
+            const gender = (b.jenis_kelamin_anak || b.jenis_kelamin) === 'P' ? 'Perempuan' : 'Laki-laki';
+            const usia = b.umur_bulan !== null && b.umur_bulan !== undefined ? `${b.umur_bulan} bulan` : 'Balita';
+            const gizi = b.status_gizi ? ` · Status Gizi: *${b.status_gizi}*` : '';
+            return `• 👶 **${namaAnak}** (${usia}, ${gender})${gizi}`;
+          }).join('\n');
+          reply += `${bList}\n`;
+        }
+        if (familyLansia.length > 0) {
+          const lList = familyLansia.map(l => {
+            const namaL = l.nama || 'Lansia';
+            const usiaL = l.usia || l.umur_tahun || 60;
+            const genderL = l.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-laki';
+            const tensi = l.last_tensi_sistolik || l.tensi_sistolik ? ` · Tensi Terakhir: ${l.last_tensi_sistolik || l.tensi_sistolik}/${l.last_tensi_diastolik || l.tensi_diastolik || 80} mmHg` : '';
+            return `• 🧓 **${namaL}** (${usiaL} tahun, ${genderL})${tensi}`;
+          }).join('\n');
+          reply += `${lList}\n`;
+        }
+        reply += `\n`;
+      } else {
+        reply += `ℹ️ Pada Kartu Keluarga Anda, saat ini tidak tercatat balita (< 5 tahun) maupun lansia (≥ 60 tahun). Namun layanan Posyandu tetap terbuka untuk seluruh warga yang memerlukan konsultasi kesehatan dasar.\n\n`;
+      }
+
+      // Rincian Jadwal
+      if (schedules && schedules.length > 0) {
+        reply += `📅 **Jadwal Pemeriksaan Rutin Posyandu Terdekat:**\n`;
+        schedules.forEach((sch, idx) => {
+          const tglFormatted = new Date(sch.tanggal_pelaksanaan).toLocaleDateString('id-ID', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          });
+          const jam = (sch.jam_mulai ? sch.jam_mulai.substring(0, 5) : '08:30') + ' - ' + (sch.jam_selesai ? sch.jam_selesai.substring(0, 5) : '11:30') + ' WIB';
+          reply += `**${idx + 1}. ${sch.nama_posyandu}** (${sch.kategori || 'INTEGRASI_ILP'})\n` +
+            `• **Hari & Tanggal**: ${tglFormatted}\n` +
+            `• **Waktu**: ${jam}\n` +
+            `• **Tempat / Lokasi**: ${sch.lokasi || 'Balai Posyandu RW'}\n` +
+            `• **Agenda**: ${sch.agenda_kegiatan || 'Penimbangan Balita & Skrining Lansia'}\n`;
+          if (sch.catatan_khusus) {
+            reply += `• 💡 **Catatan Kader**: ${sch.catatan_khusus}\n`;
+          }
+          reply += `\n`;
+        });
+
+        if (familyBalita.length > 0) {
+          const namaBalitaUtama = familyBalita[0].nama_anak || familyBalita[0].nama || 'ananda balita';
+          reply += `💡 **Rekomendasi Kanaya:** Mohon membawa **Buku KIA / KMS** dan fotokopi KK saat mengantar ananda **${namaBalitaUtama}** ke posyandu untuk pencatatan berat badan, tinggi badan, serta pemberian vitamin/imunisasi rutin.\n`;
+        }
+      } else {
+        reply += `Saat ini belum ada jadwal Posyandu terbit untuk RW ${targetRw}. Kader Posyandu akan mengumumkan tanggal pelaksanaan berkala setiap awal bulan.\n`;
+      }
+
+      return { reply, chips, rationale, evidence, limitations, confidence: 'high' };
+    } catch (err) {
+      console.error('[KanayaService] Error retrievePosyanduScheduleAndHealth:', err);
+      return {
+        reply: `Sampurasun! Layanan Posyandu Balita & Lansia di Kelurahan Kebonjati diselenggarakan secara rutin setiap bulan di Balai RW. Silakan cek menu Posyandu untuk rekam medis keluarga Anda.`,
+        chips,
+        rationale,
+        evidence,
+        limitations: [err.message],
+        confidence: 'medium'
       };
     }
   }

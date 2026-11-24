@@ -80,6 +80,7 @@ export default function DashboardWarga() {
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [familyBalita, setFamilyBalita] = useState([]);
   const [familyLansia, setFamilyLansia] = useState([]);
+  const [upcomingJadwal, setUpcomingJadwal] = useState([]);
   const [healthActiveTab, setHealthActiveTab] = useState('balita'); // 'balita' | 'lansia'
 
   // Load Citizen Dashboard Data
@@ -87,14 +88,15 @@ export default function DashboardWarga() {
     try {
       setRefreshing(true);
 
-      const [docRes, bansosRes, iuranRes, posyanduRes, lansiaRes, desilRes, ticketRes] = await Promise.allSettled([
+      const [docRes, bansosRes, iuranRes, posyanduRes, lansiaRes, desilRes, ticketRes, jadwalRes] = await Promise.allSettled([
         api.get('/dokumen/me'),
         api.get('/bansos'),
         api.get('/keuangan/iuran'),
         api.get('/posyandu/me'),
         api.get('/posyandu/lansia/my'),
         api.get('/desil/my-family'),
-        api.get('/bansos/my-tickets')
+        api.get('/bansos/my-tickets'),
+        api.get('/posyandu/jadwal/upcoming')
       ]);
 
       // Handle Documents
@@ -154,6 +156,13 @@ export default function DashboardWarga() {
         setFamilyLansia(lansiaRes.value.data);
       } else {
         setFamilyLansia([]);
+      }
+
+      // Handle Jadwal Pemeriksaan Posyandu Terdekat
+      if (jadwalRes.status === 'fulfilled' && jadwalRes.value?.success && jadwalRes.value.data?.length > 0) {
+        setUpcomingJadwal(jadwalRes.value.data);
+      } else {
+        setUpcomingJadwal([]);
       }
     } catch (err) {
       console.error('Error loading citizen data:', err);
@@ -762,6 +771,83 @@ export default function DashboardWarga() {
             </button>
           </div>
         </div>
+
+        {/* JADWAL PEMERIKSAAN RUTIN TERDEKAT (KADER TO WARGA NOTIFICATION) */}
+        {upcomingJadwal.length > 0 && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-50 via-white to-emerald-50 border border-sky-200 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 bg-sky-600 text-white rounded-xl shadow-xs">
+                  <Calendar size={16} />
+                </span>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-extrabold text-slate-900">
+                    Jadwal Pemeriksaan Rutin Posyandu Wilayah RW {user?.rw || '001'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Diterbitkan oleh Kader Posyandu untuk balita dan lansia di lingkungan Anda
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                to="/dashboard/posyandu"
+                className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-sky-700 hover:text-sky-800"
+              >
+                <span>Lihat Selengkapnya</span>
+                <ChevronRight size={14} />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {upcomingJadwal.slice(0, 2).map((jdw) => (
+                <div
+                  key={jdw.id}
+                  className="bg-white p-3.5 rounded-xl border border-sky-100 shadow-xs flex flex-col justify-between gap-2.5"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-100 text-sky-800">
+                        {jdw.kategori}
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        {jdw.status}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                      {jdw.nama_posyandu} · {jdw.agenda_kegiatan || 'Pemeriksaan Rutin'}
+                    </h4>
+
+                    <div className="text-[11px] text-slate-600 space-y-0.5 pt-1">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Clock size={12} className="text-sky-600 shrink-0" />
+                        <span>
+                          {new Date(jdw.tanggal_pelaksanaan).toLocaleDateString('id-ID', {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })} · {jdw.jam_mulai || '08:00'} - {jdw.jam_selesai || '11:30'} WIB
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <MapPin size={12} className="text-sky-600 shrink-0" />
+                        <span>{jdw.lokasi || 'Balai Posyandu RW'} (RT {jdw.rt || 'Semua RT'})</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {jdw.catatan_khusus && (
+                    <p className="text-[10px] bg-amber-50 text-amber-900 p-2 rounded-lg border border-amber-200">
+                      💡 <strong>Pesan Kader:</strong> {jdw.catatan_khusus}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Content Tab KIA Balita */}
         {healthActiveTab === 'balita' && (

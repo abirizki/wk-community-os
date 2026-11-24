@@ -138,6 +138,29 @@ CREATE TABLE IF NOT EXISTS `posyandu` (
   CONSTRAINT `fk_posyandu_warga` FOREIGN KEY (`nik_warga`) REFERENCES `warga` (`nik`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 6.B. Tabel posyandu_jadwal (Penjadwalan Pemeriksaan Balita & Lansia oleh Kader)
+CREATE TABLE IF NOT EXISTS `posyandu_jadwal` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `nama_posyandu` VARCHAR(100) NOT NULL,
+  `kategori` ENUM('BALITA', 'LANSIA', 'INTEGRASI_ILP') NOT NULL DEFAULT 'INTEGRASI_ILP',
+  `tanggal_pelaksanaan` DATE NOT NULL,
+  `jam_mulai` TIME NOT NULL DEFAULT '08:30:00',
+  `jam_selesai` TIME NOT NULL DEFAULT '11:30:00',
+  `lokasi` VARCHAR(255) NOT NULL,
+  `kelurahan` VARCHAR(100) NOT NULL DEFAULT 'Kebonjati',
+  `rw` VARCHAR(5) NOT NULL DEFAULT '001',
+  `rt` VARCHAR(5) NULL,
+  `agenda_kegiatan` TEXT NOT NULL,
+  `kader_penanggung_jawab` VARCHAR(150) NULL,
+  `status` ENUM('DIJADWALKAN', 'SEDANG_BERLANGSUNG', 'SELESAI', 'DIBATALKAN') DEFAULT 'DIJADWALKAN',
+  `catatan_khusus` TEXT NULL,
+  `created_by` INT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_jadwal_tgl` (`tanggal_pelaksanaan`),
+  INDEX `idx_jadwal_rw_rt` (`rw`, `rt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 7. Tabel dokumen_request (Pengajuan Dokumen Kelurahan & Surat Warga)
 CREATE TABLE IF NOT EXISTS `dokumen_request` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,

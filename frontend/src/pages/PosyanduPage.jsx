@@ -14,7 +14,10 @@ import {
   History, 
   UserPlus, 
   TrendingUp, 
-  X 
+  X,
+  Calendar,
+  Clock,
+  MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { enqueueOfflineAction, cacheData, getCachedData } from '../utils/offlineStorage';
@@ -38,6 +41,7 @@ export default function PosyanduPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [search, setSearch] = useState('');
   const [filterRT, setFilterRT] = useState('');
+  const [upcomingJadwal, setUpcomingJadwal] = useState([]);
 
   // ---------------------------------------------------------------------------
   // BALITA STATE
@@ -204,20 +208,31 @@ export default function PosyanduPage() {
     try {
       setLoading(true);
       setError(null);
-      const [listRes, statsRes] = await Promise.all([
-        api.get(`/posyandu/lansia?search=${encodeURIComponent(search)}${filterRT ? `&rt=${filterRT}` : ''}`),
-        api.get(`/posyandu/lansia/stats${filterRT ? `?rt=${filterRT}` : ''}`)
-      ]);
-      const list = listRes.data || [];
-      const stats = statsRes.data || {};
-      setLansiaList(list);
-      setLansiaStats(stats);
-      cacheData('bw_posyandu_lansia', { list, stats });
+      if (isOfficer) {
+        const [listRes, statsRes] = await Promise.all([
+          api.get(`/posyandu/lansia?search=${encodeURIComponent(search)}${filterRT ? `&rt=${filterRT}` : ''}`),
+          api.get(`/posyandu/lansia/stats${filterRT ? `?rt=${filterRT}` : ''}`)
+        ]);
+        const list = listRes.data || [];
+        const stats = statsRes.data || {};
+        setLansiaList(list);
+        setLansiaStats(stats);
+        cacheData('bw_posyandu_lansia', { list, stats });
+      } else {
+        const res = await api.get('/posyandu/lansia/my');
+        const list = res.data || [];
+        setLansiaList(list);
+        cacheData('bw_posyandu_lansia_my', list);
+      }
     } catch (err) {
-      const cached = await getCachedData('bw_posyandu_lansia');
+      const cached = await getCachedData(isOfficer ? 'bw_posyandu_lansia' : 'bw_posyandu_lansia_my');
       if (cached) {
-        setLansiaList(cached.list || []);
-        setLansiaStats(cached.stats || {});
+        if (isOfficer) {
+          setLansiaList(cached.list || []);
+          setLansiaStats(cached.stats || {});
+        } else {
+          setLansiaList(cached || []);
+        }
         setError('Menampilkan data Lansia tersimpan (Mode Offline)');
       } else {
         setError(err.message || 'Gagal memuat data Posyandu Lansia');
@@ -226,6 +241,15 @@ export default function PosyanduPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Fetch upcoming posyandu schedules
+    api.get('/posyandu/jadwal/upcoming')
+      .then((res) => {
+        if (res.success && res.data) setUpcomingJadwal(res.data);
+      })
+      .catch((err) => console.warn('[PosyanduPage] Jadwal upcoming err:', err.message));
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'balita') {
@@ -575,6 +599,78 @@ export default function PosyanduPage() {
         scope={{ rt: user?.rt, rw: user?.rw, kelurahan: user?.kelurahan }}
       />
 
+      {/* JADWAL PEMERIKSAAN POSYANDU TERDEKAT */}
+      {upcomingJadwal.length > 0 && (
+        <div className="bg-gradient-to-r from-sky-50 via-white to-emerald-50 border border-sky-200 rounded-2xl p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center shadow-xs">
+                <Calendar size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+                  Jadwal Pemeriksaan Rutin Posyandu Terdekat
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Wilayah binaan RW {user?.rw || '001'} Kelurahan Kebonjati · Terbuka untuk seluruh warga KK binaan
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-sky-800 bg-sky-100 px-3 py-1 rounded-full border border-sky-200">
+              {upcomingJadwal.length} Jadwal Terjadwal
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+            {upcomingJadwal.map((jdw) => (
+              <div
+                key={jdw.id}
+                className="bg-white p-4 rounded-xl border border-sky-100 shadow-xs flex flex-col justify-between gap-3"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-100 text-sky-800">
+                      Sasaran: {jdw.kategori}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                      {jdw.status}
+                    </span>
+                  </div>
+
+                  <h4 className="text-sm font-extrabold text-slate-900 leading-snug">
+                    {jdw.nama_posyandu} · {jdw.agenda_kegiatan || 'Pemeriksaan Rutin Terpadu'}
+                  </h4>
+
+                  <div className="mt-2 space-y-1 text-xs text-slate-600 font-medium">
+                    <div className="flex items-center gap-2">
+                      <Clock size={13} className="text-sky-600 shrink-0" />
+                      <span>
+                        {new Date(jdw.tanggal_pelaksanaan).toLocaleDateString('id-ID', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })} · {jdw.jam_mulai || '08:00'} - {jdw.jam_selesai || '11:30'} WIB
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin size={13} className="text-sky-600 shrink-0" />
+                      <span>{jdw.lokasi || 'Balai Posyandu'} (RT {jdw.rt || 'Semua RT'})</span>
+                    </div>
+                  </div>
+                </div>
+
+                {jdw.catatan_khusus && (
+                  <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+                    💡 <strong>Catatan Kader:</strong> {jdw.catatan_khusus}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* TABS SELECTOR */}
       <div className="flex border border-slate-200 bg-slate-50 rounded-2xl overflow-hidden p-1.5 gap-1.5 shadow-xs">
         <button
@@ -689,7 +785,9 @@ export default function PosyanduPage() {
                   ) : balitaList.length === 0 ? (
                     <tr>
                       <td colSpan={isOfficer ? 7 : 6} className="p-8 text-center text-on-surface-variant">
-                        Belum ada data pemeriksaan balita yang tercatat.
+                        {isOfficer
+                          ? 'Belum ada data pemeriksaan balita yang tercatat.'
+                          : 'Tidak ada anak balita (usia 0–5 tahun) yang tercatat pada Kartu Keluarga ini.'}
                       </td>
                     </tr>
                   ) : (
@@ -833,7 +931,9 @@ export default function PosyanduPage() {
                   ) : lansiaList.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="p-8 text-center text-on-surface-variant">
-                        Belum ada lansia yang terdaftar di sistem.
+                        {isOfficer
+                          ? 'Belum ada lansia yang terdaftar di sistem.'
+                          : 'Tidak ada lansia (usia 60+ tahun) yang tercatat pada Kartu Keluarga ini.'}
                       </td>
                     </tr>
                   ) : (

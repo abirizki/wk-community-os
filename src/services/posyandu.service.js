@@ -113,19 +113,19 @@ class PosyanduService {
   }
 
   /**
-   * Ambil riwayat posyandu berdasarkan NIK ortu/wali
+   * Ambil riwayat posyandu balita keluarga (Family & KK-Scoped)
    * @param {string} nik 
+   * @param {Object} currentUser 
    * @returns {Promise<Array>}
-   * Ambil riwayat posyandu balita keluarga
    */
-  async getHistoryByNik(nik) {
-    if (!nik) {
-      const err = new Error('NIK tidak valid');
+  async getHistoryByNik(nik, currentUser = null) {
+    if (!nik && !currentUser?.no_kk) {
+      const err = new Error('Identitas keluarga tidak valid');
       err.status = 400;
       throw err;
     }
 
-    return await posyanduRepository.findByNik(nik);
+    return await posyanduRepository.findBalitaByFamily(nik, currentUser);
   }
 
   /**
@@ -353,7 +353,7 @@ class PosyanduService {
    */
   async getFamilyLansia(currentUser) {
     const activeNik = currentUser.active_nik || currentUser.username;
-    const list = await posyanduRepository.findLansiaByFamilyNik(activeNik);
+    const list = await posyanduRepository.findLansiaByFamilyNik(activeNik, currentUser);
     return list.map((item) => {
       const health = this.classifyLansiaHealth(
         item.imt,
@@ -579,6 +579,127 @@ class PosyanduService {
     const kaderProfile = await posyanduRepository.getKaderProfile(currentUser.id, currentUser);
     const posyanduName = kaderProfile?.nama_posyandu || 'Posyandu Melati RW 001';
     return await posyanduRepository.listKaderTeam(posyanduName, currentUser);
+  }
+
+  // ----------------------------------------------------
+  // FASE 4: JADWAL POSYANDU & NOTIFIKASI WARGA
+  // ----------------------------------------------------
+
+  /**
+   * Kader membuat jadwal pemeriksaan posyandu baru & otomatis mengirim notifikasi ke keluarga sasaran
+   */
+  async createJadwal(payload, currentUser) {
+    if (!payload.tanggal_pelaksanaan || !payload.lokasi || !payload.agenda_kegiatan) {
+      const err = new Error('Tanggal pelaksanaan, lokasi, dan agenda kegiatan posyandu wajib diisi');
+      err.status = 400;
+      throw err;
+    }
+
+    const kaderProfile = await posyanduRepository.getKaderProfile(currentUser?.id, currentUser);
+    const nama_posyandu = payload.nama_posyandu || kaderProfile?.nama_posyandu || 'Posyandu Melati RW 001';
+    const rw = payload.rw || currentUser?.rw || '001';
+    const rt = payload.rt || null;
+    const kelurahan = payload.kelurahan || currentUser?.kelurahan || 'Kebonjati';
+
+    let kategori = payload.kategori || 'INTEGRASI_ILP';
+    if (kategori === 'SEMUA' || kategori === 'ALL') {
+      kategori = 'INTEGRASI_ILP';
+    }
+
+    const newJadwal = await posyanduRepository.createJadwal({
+      ...payload,
+      kategori,
+      nama_posyandu,
+      rw,
+      rt,
+      kelurahan,
+      kader_penanggung_jawab: payload.kader_penanggung_jawab || currentUser?.nama || 'Kader Posyandu',
+      created_by: currentUser?.id || null
+    });
+
+    // Otomatis buat notifikasi in-app untuk warga di RW/RT yang memiliki balita atau lansia
+    try {
+      const pool = require('../db/pool');
+      const targetQuery = rt
+        ? `SELECT DISTINCT w.nik, w.nama 
+           FROM warga w
+           JOIN warga member ON w.no_kk = member.no_kk
+           WHERE w.rw = ? AND w.rt = ?
+             AND w.status_hubungan_keluarga IN ('Kepala Keluarga', 'Istri')
+             AND (TIMESTAMPDIFF(MONTH, member.tanggal_lahir, CURDATE()) < 60 OR TIMESTAMPDIFF(YEAR, member.tanggal_lahir, CURDATE()) >= 60)
+           LIMIT 100`
+        : `SELECT DISTINCT w.nik, w.nama 
+           FROM warga w
+           JOIN warga member ON w.no_kk = member.no_kk
+           WHERE w.rw = ?
+             AND w.status_hubungan_keluarga IN ('Kepala Keluarga', 'Istri')
+             AND (TIMESTAMPDIFF(MONTH, member.tanggal_lahir, CURDATE()) < 60 OR TIMESTAMPDIFF(YEAR, member.tanggal_lahir, CURDATE()) >= 60)
+           LIMIT 100`;
+
+      const [targetWarga] = await pool.execute(targetQuery, rt ? [rw, rt] : [rw]);
+      const formattedTgl = new Date(payload.tanggal_pelaksanaan).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const notifMsg = `Jadwal posyandu baru telah diterbitkan untuk wilayah Anda: ${nama_posyandu} pada ${formattedTgl} pukul ${payload.jam_mulai || '08:30'} WIB di ${payload.lokasi}. Agenda: ${payload.agenda_kegiatan}.`;
+
+      for (const tw of targetWarga) {
+        try {
+          await pool.execute(
+            `INSERT INTO notifikasi (nik_target, judul, pesan, tipe, link)
+             VALUES (?, 'Jadwal Pemeriksaan Posyandu', ?, 'info', '/dashboard/posyandu')`,
+            [tw.nik, notifMsg]
+          );
+        } catch (eN) {}
+      }
+    } catch (notifErr) {
+      console.warn('[PosyanduService] Gagal broadcast notifikasi jadwal:', notifErr.message);
+    }
+
+    return newJadwal;
+  }
+
+  /**
+   * Mengambil daftar seluruh jadwal posyandu
+   */
+  async listJadwal(currentUser, query = {}) {
+    const rw = query.rw || (currentUser?.role === 'warga' || currentUser?.role === 'ketua_rt' || currentUser?.role === 'ketua_rw' || currentUser?.role === 'kader_posyandu' ? currentUser?.rw : null);
+    const rt = query.rt || (currentUser?.role === 'ketua_rt' ? currentUser?.rt : null);
+    const kelurahan = query.kelurahan || currentUser?.kelurahan || 'Kebonjati';
+
+    return await posyanduRepository.listJadwal({
+      ...query,
+      rw,
+      rt,
+      kelurahan,
+      limit: parseInt(query.limit, 10) || 50,
+      offset: parseInt(query.offset, 10) || 0
+    });
+  }
+
+  /**
+   * Mengambil jadwal terdekat untuk warga / asisten AI
+   */
+  async getUpcomingJadwal(currentUser, query = {}) {
+    const rw = query.rw || currentUser?.rw || '001';
+    const rt = query.rt || currentUser?.rt || null;
+    const kelurahan = query.kelurahan || currentUser?.kelurahan || 'Kebonjati';
+
+    return await posyanduRepository.getUpcomingJadwal({
+      rw,
+      rt,
+      kelurahan,
+      kategori: query.kategori || null
+    });
+  }
+
+  /**
+   * Memperbarui status pelaksanaan jadwal
+   */
+  async updateJadwalStatus(id, status, currentUser) {
+    if (!id || !status) {
+      const err = new Error('ID jadwal dan status baru wajib ditentukan');
+      err.status = 400;
+      throw err;
+    }
+    return await posyanduRepository.updateJadwalStatus(id, status);
   }
 }
 

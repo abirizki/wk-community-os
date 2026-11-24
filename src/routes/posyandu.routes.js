@@ -18,7 +18,7 @@ const router = express.Router();
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const nik = req.session.user.active_nik || req.session.user.username;
-    const riwayat = await posyanduService.getHistoryByNik(nik);
+    const riwayat = await posyanduService.getHistoryByNik(nik, req.session.user);
     res.json({ success: true, data: riwayat });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });
@@ -319,6 +319,55 @@ router.get('/stunting-cluster', requireAuth, async (req, res) => {
         total_kasus_terpantau: 0
       }
     });
+  }
+});
+
+// ==========================================
+// JADWAL PEMERIKSAAN POSYANDU
+// ==========================================
+
+// GET /api/posyandu/jadwal - Daftar jadwal posyandu (berfilter RW, RT, status, dll)
+router.get('/jadwal', requireAuth, async (req, res) => {
+  try {
+    const list = await posyanduService.listJadwal(req.session.user, req.query);
+    res.json({ success: true, data: list });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/posyandu/jadwal/upcoming - Jadwal terdekat untuk wilayah warga aktif
+router.get('/jadwal/upcoming', requireAuth, async (req, res) => {
+  try {
+    const upcoming = await posyanduService.getUpcomingJadwal(req.session.user, req.query);
+    res.json({ success: true, data: upcoming });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/posyandu/jadwal - Buat jadwal posyandu baru oleh Kader / Aparatur
+router.post('/jadwal', requireAuth, async (req, res) => {
+  try {
+    const result = await posyanduService.createJadwal(req.body, req.session.user);
+    res.status(201).json({
+      success: true,
+      message: 'Jadwal Posyandu berhasil dibuat dan notifikasi dikirimkan ke warga sasaran',
+      data: result
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
+  }
+});
+
+// PATCH /api/posyandu/jadwal/:id/status - Update status pelaksanaan jadwal
+router.patch('/jadwal/:id/status', requireAuth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const result = await posyanduService.updateJadwalStatus(req.params.id, status, req.session.user);
+    res.json({ success: true, message: 'Status jadwal posyandu berhasil diperbarui', data: result });
+  } catch (error) {
+    res.status(error.status || 500).json({ success: false, message: error.message });
   }
 });
 
