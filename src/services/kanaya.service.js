@@ -246,19 +246,19 @@ class KanayaService {
   // ================= PRIVATE HELPERS & ADAPTERS =================
 
   _buildContext(user) {
-    const rawRole = (user?.role || 'warga').toLowerCase();
+    const rawRole = (user?.role || 'guest').toLowerCase();
     return {
-      userId: user?.id,
-      username: user?.username,
-      nama: user?.nama || user?.username || 'Warga',
+      userId: user?.id || null,
+      username: user?.username || 'tamu',
+      nama: user?.nama || (rawRole === 'guest' ? 'Wargi' : 'Warga'),
       role: rawRole,
-      activeNik: user?.active_nik || user?.username || null,
+      activeNik: user?.active_nik || null,
       noKk: user?.no_kk || null,
-      rt: user?.rt || '001',
-      rw: user?.rw || '001',
-      kelurahan: user?.kelurahan || 'Kebonjati',
-      kecamatan: user?.kecamatan || 'Sukabumi',
-      kota: user?.kota || 'Kota Sukabumi'
+      rt: user?.rt || null,
+      rw: user?.rw || null,
+      kelurahan: user?.kelurahan || null,
+      kecamatan: user?.kecamatan || null,
+      kota: user?.kota || null
     };
   }
 
@@ -348,7 +348,19 @@ class KanayaService {
   }
 
   _handleGreeting(context) {
-    const isSundanese = true;
+    if (context.role === 'guest') {
+      const chips = [
+        { label: 'Aktivasi Akun dengan Kupon RT', type: 'navigate', url: '/login' },
+        { label: 'Syarat Surat Usaha (SKU)', type: 'navigate', url: '/login' },
+        { label: 'Bantuan Lupa Kata Sandi', type: 'navigate', url: '/login' }
+      ];
+      return {
+        reply: `Sampurasun, Wargi! Wilujeng sumping di Asisten Cerdas Kanaya.\n\nAda yang bisa Kanaya bantu seputar pendaftaran akun warga, aktivasi kupon RT, persyaratan surat pengajuan, atau panduan masuk ke aplikasi?`,
+        chips
+      };
+    }
+
+    const wilayahText = context.kelurahan ? `Kelurahan ${context.kelurahan}` : 'lingkungan Anda';
     const chips = [
       { label: 'Cek Status Surat Saya', type: 'navigate', url: '/dashboard/dokumen' },
       { label: 'Informasi Bantuan Sosial', type: 'navigate', url: '/dashboard/bansos' },
@@ -357,7 +369,7 @@ class KanayaService {
 
     return {
       reply: `Sampurasun **${context.nama}**! Wilujeng sumping di Asisten Cerdas Kanaya. ` +
-        `Ada yang bisa Kanaya bantu seputar Kartu Keluarga Digital, pengajuan surat online, bantuan sosial, atau kontak pengurus wilayah di Kelurahan Kebonjati?`,
+        `Ada yang bisa Kanaya bantu seputar Kartu Keluarga Digital, pengajuan surat online, bantuan sosial, atau kontak pengurus di ${wilayahText}?`,
       chips
     };
   }
@@ -373,12 +385,15 @@ class KanayaService {
 
     if (!nik) {
       return {
-        reply: `Kanaya belum dapat memeriksa status surat karena NIK akun Anda belum terhubung. Silakan periksa menu profil kependudukan Anda.`,
-        chips,
-        rationale,
-        evidence,
-        limitations: ['NIK tidak ditemukan pada sesi pengguna'],
-        confidence: 'low'
+        reply: `Sampurasun wargi! Untuk memeriksa riwayat pengajuan surat pribadi, silakan masuk ke akun Anda terlebih dahulu. Jika baru pertama kali, Anda dapat mengaktifkannya menggunakan Kupon Aktivasi RT.`,
+        chips: [
+          { label: 'Masuk ke Layanan', type: 'navigate', url: '/login' },
+          { label: 'Aktivasi Kupon RT', type: 'navigate', url: '/login' }
+        ],
+        rationale: ['Pengguna berstatus tamu atau belum login.'],
+        evidence: [],
+        limitations: ['Memerlukan autentikasi akun warga untuk melihat data pribadi'],
+        confidence: 'high'
       };
     }
 
@@ -470,6 +485,20 @@ class KanayaService {
     const rationale = ['Mencari data kepesertaan bansos pada bansos_penerima berdasarkan NIK dan No KK.'];
     const evidence = [];
     const limitations = [];
+
+    if (!nik && !context.noKk) {
+      return {
+        reply: `Sampurasun wargi! Untuk memeriksa data kepesertaan bansos atau desil keluarga, silakan masuk ke akun Anda terlebih dahulu.`,
+        chips: [
+          { label: 'Masuk ke Layanan', type: 'navigate', url: '/login' },
+          { label: 'Aktivasi Kupon RT', type: 'navigate', url: '/login' }
+        ],
+        rationale: ['Pengguna berstatus tamu atau belum login.'],
+        evidence: [],
+        limitations: ['Memerlukan autentikasi akun keluarga untuk melihat status bansos'],
+        confidence: 'high'
+      };
+    }
 
     try {
       let bansosList = [];

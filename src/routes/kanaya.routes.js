@@ -19,8 +19,8 @@ router.get('/sop', (req, res) => {
   });
 });
 
-// POST /api/ai/kanaya/chat - Interaksi reasoning AI Kanaya
-router.post('/chat', requireAuth, async (req, res) => {
+// POST /api/ai/kanaya/chat - Interaksi reasoning AI Kanaya (Mendukung Tamu Publik & Sesi Terdaftar)
+router.post('/chat', async (req, res) => {
   const reqId = crypto.randomUUID ? crypto.randomUUID() : `req-${Date.now()}`;
   try {
     const { message, history } = req.body;
@@ -60,20 +60,32 @@ router.post('/chat', requireAuth, async (req, res) => {
       }));
     }
 
-    // 3. Keamanan: Role dan Scope HANYA diambil dari req.session.user
-    // Abaikan segala bentuk role/scope/nik palsu yang dikirim di body
-    const userPrincipal = {
-      id: req.session.user.id,
-      username: req.session.user.username,
-      nama: req.session.user.nama,
-      role: req.session.user.role,
-      active_nik: req.session.user.active_nik,
-      no_kk: req.session.user.no_kk,
-      rt: req.session.user.rt,
-      rw: req.session.user.rw,
-      kelurahan: req.session.user.kelurahan,
-      kecamatan: req.session.user.kecamatan,
-      kota: req.session.user.kota
+    // 3. Keamanan: Role dan Scope HANYA diambil dari req.session.user jika login, atau default guest aman
+    const sessionUser = req.session && req.session.user;
+    const userPrincipal = sessionUser ? {
+      id: sessionUser.id,
+      username: sessionUser.username,
+      nama: sessionUser.nama,
+      role: sessionUser.role,
+      active_nik: sessionUser.active_nik,
+      no_kk: sessionUser.no_kk,
+      rt: sessionUser.rt,
+      rw: sessionUser.rw,
+      kelurahan: sessionUser.kelurahan,
+      kecamatan: sessionUser.kecamatan,
+      kota: sessionUser.kota
+    } : {
+      id: null,
+      username: 'tamu',
+      nama: 'Wargi',
+      role: 'guest',
+      active_nik: null,
+      no_kk: null,
+      rt: null,
+      rw: null,
+      kelurahan: null,
+      kecamatan: null,
+      kota: null
     };
 
     const result = await kanayaService.processQuery({
@@ -103,10 +115,18 @@ router.post('/chat', requireAuth, async (req, res) => {
 
 // GET /api/ai/kanaya/quick-prompts - Saran pertanyaan cepat adaptif berdasarkan role
 router.get('/quick-prompts', (req, res) => {
-  const role = (req.session?.user?.role || 'warga').toLowerCase();
+  const sessionUser = req.session && req.session.user;
+  const role = sessionUser ? (sessionUser.role || 'warga').toLowerCase() : 'guest';
 
   let prompts = [];
-  if (role === 'warga') {
+  if (role === 'guest') {
+    prompts = [
+      'Bagaimana cara aktivasi akun dengan Kupon RT?',
+      'Apa yang harus dilakukan jika lupa kata sandi?',
+      'Apa saja syarat Surat Keterangan Usaha (SKU)?',
+      'Bagaimana cara daftar bantuan sosial (bansos)?'
+    ];
+  } else if (role === 'warga') {
     prompts = [
       'Surat pengajuan saya sudah sampai mana?',
       'Bagaimana cara mengajukan Surat Keterangan Usaha (SKU)?',
@@ -117,7 +137,7 @@ router.get('/quick-prompts', (req, res) => {
   } else if (role === 'ketua_rt') {
     prompts = [
       'Berapa berkas surat yang sedang menunggu verifikasi RT saya?',
-      'Siapa nomor kontak Babinsa dan Bhabinkamtibmas Kebonjati?',
+      'Siapa nomor kontak Babinsa dan Bhabinkamtibmas?',
       'Bagaimana prosedur ground check sanggah desil warga?',
       'Bagaimana alur pengesahan surat pengantar nikah?'
     ];
@@ -141,7 +161,7 @@ router.get('/quick-prompts', (req, res) => {
     ];
   } else {
     prompts = [
-      'Siapa nama Lurah, Babinsa, dan Bhabinkamtibmas Kebonjati?',
+      'Siapa nama Lurah, Babinsa, dan Bhabinkamtibmas?',
       'Bagaimana alur pengajuan Surat Keterangan Usaha (SKU)?',
       'Bagaimana format resmi Kartu Keluarga Digital Kemendagri?',
       'Apa perbedaan Bansos APBN dan Bansos Muskel Kelurahan?'

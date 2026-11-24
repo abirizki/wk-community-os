@@ -119,6 +119,39 @@ const BUMI_WARGA_SOP_REGISTRY = [
     quickLink: '/dashboard/keuangan'
   },
   {
+    id: 'kupon_aktivasi',
+    title: 'Aktivasi Akun Mandiri dengan Kupon RT',
+    category: 'Akses & Akun',
+    source_name: 'Panduan Registrasi Digital Mandiri Warga',
+    version: '2026.1',
+    effective_date: '2026-01-01',
+    keywords: ['kupon', 'voucher', 'aktivasi', 'daftar akun', 'registrasi', 'buat akun', 'baru', 'kupon rt'],
+    roles: ['tamu', 'warga', 'ketua_rt'],
+    body: `Cara mudah mengaktifkan akun warga menggunakan Kupon RT:
+1. Dapatkan **Kupon Aktivasi RT** (8 digit kode unik) dari Ketua RT tempat domisili Anda.
+2. Buka halaman utama aplikasi > pilih tab **Aktivasi**.
+3. Masukkan 8 digit Kode Kupon dan nomor NIK 16 digit Anda.
+4. Buat kata sandi baru yang aman (minimal 8 karakter), lalu klik **Aktifkan Akun**.
+5. Setelah aktif, Anda dapat langsung masuk untuk menikmati seluruh layanan administrasi mandiri.`,
+    quickLink: '/login'
+  },
+  {
+    id: 'lupa_sandi',
+    title: 'Pemulihan Kata Sandi & Bantuan Akses',
+    category: 'Akses & Akun',
+    source_name: 'Pedoman Keamanan & Privasi Akun SPBE',
+    version: '2026.1',
+    effective_date: '2026-01-01',
+    keywords: ['lupa kata sandi', 'lupa password', 'lupa sandi', 'reset password', 'ganti sandi', 'tidak bisa login', 'terkunci'],
+    roles: ['tamu', 'warga', 'ketua_rt'],
+    body: `Jika Anda lupa kata sandi akun:
+1. Hubungi Ketua RT setempat untuk meminta Kupon Pemulihan / Aktivasi Ulang akun Anda demi menjaga perlindungan data kependudukan (UU PDP No. 27/2022).
+2. Setelah menerima kode kupon dari Ketua RT, buka halaman login dan pilih tab **Aktivasi**.
+3. Masukkan kode kupon beserta NIK Anda, lalu tentukan kata sandi yang baru.
+4. Jika mengalami kendala teknis lebih lanjut, silakan hubungi pusat layanan pengaduan kelurahan.`,
+    quickLink: '/login'
+  },
+  {
     id: 'kk_digital',
     title: 'Kartu Keluarga Digital & Anggota Keluarga Lainnya',
     category: 'Kependudukan',
