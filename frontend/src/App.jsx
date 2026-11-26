@@ -50,6 +50,7 @@ const ProfilePage = lazyWithRetry(() => import('./pages/ProfilePage'));
 const KeuanganPage = lazyWithRetry(() => import('./pages/KeuanganPage'));
 const AparaturPage = lazyWithRetry(() => import('./pages/AparaturPage'));
 const AnalyticsDashboardPage = lazyWithRetry(() => import('./pages/AnalyticsDashboardPage'));
+const UIShowcase = lazyWithRetry(() => import('./pages/UIShowcase'));
 
 class RouteErrorBoundary extends React.Component {
   constructor(props) {
@@ -162,6 +163,7 @@ function App() {
               <Route path="profil" element={<ProfilePage />} />
               <Route path="panduan" element={<PanduanOperasionalPage />} />
               <Route path="aparatur" element={<AparaturPage />} />
+              <Route path="ui-showcase" element={<UIShowcase />} />
             </Route>
 
             {/* Fallback Route */}
