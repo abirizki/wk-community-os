@@ -4,6 +4,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "cd frontend && npm install && npm run build",
+    "postinstall": "npm run build",
     "db:init": "node src/db/init.js",
     "db:seed": "node src/db/seed.js",
     "db:test:setup": "node scripts/setup_test_db.js",
