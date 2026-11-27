@@ -312,42 +312,42 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-slate-50 font-sans flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8 relative">
+    <div className="min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-sky-100/70 via-sky-50/50 to-slate-50 font-sans flex items-center justify-center p-3 sm:p-6 lg:p-8 relative">
       {/* Soft Sky Background Tone dengan Watermark Nuansa Pasundan */}
-      <div className="absolute inset-0 bg-gradient-to-b from-sky-50/70 via-slate-50 to-slate-100 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-sky-200/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-200/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-b from-sky-100/60 via-sky-50/30 to-slate-50 pointer-events-none" />
+      <div className="fixed top-0 right-0 w-96 h-96 bg-sky-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-96 h-96 bg-cyan-200/20 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Main Civic Container (Fit 100dvh Viewport) */}
-      <div className="w-full max-w-[980px] h-full sm:h-auto max-h-[96dvh] flex flex-col lg:flex-row bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-slate-200/60 overflow-hidden relative z-10 border border-slate-200/80">
+      {/* Main Civic Container (Mobile-First Responsive) */}
+      <div className="w-full max-w-[960px] flex flex-col lg:flex-row bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl shadow-sky-900/5 overflow-hidden relative z-10 border border-sky-100">
         
-        {/* Left Side: Kanaya & Identity Gedung Sate (Desktop Only) */}
-        <div className="hidden lg:flex flex-col justify-between w-[40%] bg-gradient-to-br from-sky-800 via-sky-900 to-slate-900 p-8 text-white relative overflow-hidden">
+        {/* Left Side: Kanaya & Identity Gedung Sate (Desktop Only - Soft Blue Sky) */}
+        <div className="hidden lg:flex flex-col justify-between w-[42%] bg-gradient-to-br from-sky-500 via-sky-600 to-sky-700 p-8 text-white relative overflow-hidden">
           {/* Subtle Watermark Silhouette */}
-          <div className="absolute -right-6 -bottom-10 opacity-10 pointer-events-none text-white">
+          <div className="absolute -right-6 -bottom-10 opacity-15 pointer-events-none text-white">
             <GedungSateIcon className="w-72 h-72" glow={false} />
           </div>
 
           <div className="relative z-10">
             {/* Logo & Civic Title dengan Gedung Sate Icon */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md p-2 flex items-center justify-center border border-white/20 text-white shadow-inner">
-                <GedungSateIcon className="w-8 h-8 text-amber-300" glow={true} />
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md p-2 flex items-center justify-center border border-white/30 text-white shadow-inner">
+                <GedungSateIcon className="w-8 h-8 text-amber-200" glow={true} />
               </div>
               <div>
                 <h2 className="text-xl font-extrabold tracking-tight">Bumi Warga</h2>
-                <p className="text-sky-200 text-xs font-semibold">Jabar Pintar Digital</p>
+                <p className="text-sky-100 text-xs font-semibold">Jabar Pintar Digital</p>
               </div>
             </div>
 
             {/* Kanaya Public Assistant Intro (Khusus Sapaan Wargi) */}
-            <div className="space-y-3.5 my-6 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+            <div className="space-y-3 my-6 p-4 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 shadow-sm">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl shadow-sm border border-white/20">
+                <div className="w-10 h-10 rounded-xl bg-white/25 flex items-center justify-center text-xl shadow-sm border border-white/25">
                   👩🏻
                 </div>
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-300 flex items-center gap-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-200 flex items-center gap-1">
                     <Sparkles size={12} /> Asisten Cerdas Kanaya
                   </span>
                   <h3 className="text-lg font-bold text-white leading-tight">
@@ -355,23 +355,23 @@ export default function LoginPage() {
                   </h3>
                 </div>
               </div>
-              <p className="text-sky-100 text-xs leading-relaxed font-normal">
+              <p className="text-sky-50 text-xs leading-relaxed font-normal">
                 Saya <strong>Kanaya</strong>, asisten pintar layanan publik terpadu Bumi Warga. Masuk untuk mengakses administrasi kependudukan, pengajuan surat pengantar, pantau bansos, dan iuran lingkungan.
               </p>
             </div>
 
             {/* Factual Security Architecture */}
-            <div className="border-t border-white/15 pt-4 space-y-2 text-xs text-sky-100/80">
+            <div className="border-t border-white/20 pt-4 space-y-2 text-xs text-sky-50/90">
               <div className="flex items-start gap-2">
-                <CheckCircle2 size={14} className="text-sky-300 shrink-0 mt-0.5" />
+                <CheckCircle2 size={14} className="text-sky-200 shrink-0 mt-0.5" />
                 <span>Kredensial terenkripsi standar industri Bcrypt (10 rounds).</span>
               </div>
               <div className="flex items-start gap-2">
-                <CheckCircle2 size={14} className="text-sky-300 shrink-0 mt-0.5" />
+                <CheckCircle2 size={14} className="text-sky-200 shrink-0 mt-0.5" />
                 <span>Sesi aman berbasis cookie HttpOnly terverifikasi.</span>
               </div>
               <div className="flex items-start gap-2">
-                <CheckCircle2 size={14} className="text-sky-300 shrink-0 mt-0.5" />
+                <CheckCircle2 size={14} className="text-sky-200 shrink-0 mt-0.5" />
                 <span>Audit trail berjenjang (RT, RW, dan Kelurahan).</span>
               </div>
             </div>
@@ -379,71 +379,71 @@ export default function LoginPage() {
 
           {/* Privacy Law Compliance */}
           <div className="relative z-10 pt-4">
-            <div className="inline-flex items-center gap-2 text-[11px] text-sky-200 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
-              <ShieldCheck size={13} className="text-sky-300 shrink-0" />
+            <div className="inline-flex items-center gap-2 text-[11px] text-sky-50 bg-white/15 px-3 py-1.5 rounded-xl border border-white/20">
+              <ShieldCheck size={13} className="text-sky-100 shrink-0" />
               <span>Prinsip Perlindungan Data Pribadi (UU PDP No. 27/2022)</span>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Interactive Forms (Mobile Zero-Scroll Fitted) */}
-        <div className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 justify-between bg-white relative overflow-y-auto sm:overflow-visible">
-          <div className="max-w-md w-full mx-auto my-auto space-y-3 sm:space-y-4">
+        {/* Right Side: Interactive Forms (Clean & Mobile-First) */}
+        <div className="flex-1 flex flex-col p-5 sm:p-8 justify-between bg-white relative">
+          <div className="max-w-md w-full mx-auto my-auto space-y-4">
             
             {/* Mobile Header Branding dengan Animasi Gedung Sate */}
-            <div className="lg:hidden flex items-center justify-between pb-2.5 border-b border-slate-100">
+            <div className="lg:hidden flex items-center justify-between -mx-5 -mt-5 px-5 py-3.5 bg-gradient-to-r from-sky-50 via-sky-50/60 to-white border-b border-sky-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-700">
-                  <GedungSateIcon className="w-5 h-5 text-sky-700" glow={true} />
+                <div className="w-9 h-9 rounded-xl bg-white border border-sky-200 shadow-xs flex items-center justify-center text-sky-600">
+                  <GedungSateIcon className="w-5 h-5 text-sky-600" glow={true} />
                 </div>
                 <div>
-                  <h2 className="text-sm font-extrabold text-slate-800 leading-tight">Bumi Warga</h2>
+                  <h2 className="text-sm font-extrabold text-slate-900 leading-tight">Bumi Warga</h2>
                   <p className="text-[10px] text-sky-700 font-semibold">Jabar Pintar Digital</p>
                 </div>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white text-sky-700 border border-sky-200 shadow-2xs">
                 Layanan Publik
               </span>
             </div>
 
-            {/* Segmented Control Tabs (Zero-Scroll Switcher) */}
-            <div className="grid grid-cols-3 p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 gap-1 text-xs font-bold text-slate-600">
+            {/* Segmented Control Tabs (Mobile-First Touch Target) */}
+            <div className="grid grid-cols-3 p-1 bg-sky-50/80 rounded-xl border border-sky-100 gap-1 text-xs font-bold text-slate-600">
               <button
                 type="button"
                 onClick={() => switchView('login')}
-                className={`py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`min-h-[40px] py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                   activeView === 'login'
-                    ? 'bg-white text-sky-800 shadow-xs'
-                    : 'hover:text-slate-900'
+                    ? 'bg-white text-sky-700 shadow-xs border border-sky-100'
+                    : 'hover:text-sky-900'
                 }`}
               >
-                <LogIn size={13} />
+                <LogIn size={14} />
                 <span>Masuk</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => switchView('claim')}
-                className={`py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`min-h-[40px] py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                   activeView === 'claim'
-                    ? 'bg-white text-amber-800 shadow-xs'
-                    : 'hover:text-slate-900'
+                    ? 'bg-white text-amber-700 shadow-xs border border-amber-100'
+                    : 'hover:text-sky-900'
                 }`}
               >
-                <Ticket size={13} />
+                <Ticket size={14} />
                 <span>Kupon RT</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => switchView('register')}
-                className={`py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`min-h-[40px] py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                   activeView === 'register'
-                    ? 'bg-white text-emerald-800 shadow-xs'
-                    : 'hover:text-slate-900'
+                    ? 'bg-white text-emerald-700 shadow-xs border border-emerald-100'
+                    : 'hover:text-sky-900'
                 }`}
               >
-                <UserPlus size={13} />
+                <UserPlus size={14} />
                 <span>Aktivasi</span>
               </button>
             </div>
@@ -533,12 +533,12 @@ export default function LoginPage() {
                         autoComplete="username"
                         required
                         disabled={isLoading}
-                        className={`w-full min-h-[42px] h-10.5 bg-slate-50/80 border rounded-xl pl-9.5 pr-9 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 transition-all placeholder:text-slate-400
+                        className={`w-full min-h-[44px] bg-sky-50/30 border rounded-xl pl-9.5 pr-9 text-sm font-medium focus:outline-none focus:ring-2 transition-all placeholder:text-slate-400
                           ${loginError 
                             ? 'border-red-300 focus:border-red-500 focus:ring-red-100 text-red-900 bg-red-50/30' 
                             : identifierValid 
-                              ? 'border-sky-300 focus:border-sky-600 focus:ring-sky-100 text-slate-900 bg-white' 
-                              : 'border-slate-300 focus:border-sky-600 focus:ring-sky-100 text-slate-900'}`}
+                              ? 'border-sky-300 focus:border-sky-500 focus:ring-sky-500/20 text-slate-900 bg-white' 
+                              : 'border-sky-200/80 focus:bg-white focus:border-sky-500 focus:ring-sky-500/20 text-slate-900'}`}
                       />
                       {identifierValid && !loginError && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sky-600">
@@ -577,10 +577,10 @@ export default function LoginPage() {
                         autoComplete="current-password"
                         required
                         disabled={isLoading}
-                        className={`w-full min-h-[42px] h-10.5 bg-slate-50/80 border rounded-xl pl-9.5 pr-10 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 transition-all placeholder:text-slate-400
+                        className={`w-full min-h-[44px] bg-sky-50/30 border rounded-xl pl-9.5 pr-10 text-sm font-medium focus:outline-none focus:ring-2 transition-all placeholder:text-slate-400
                           ${loginError 
                             ? 'border-red-300 focus:border-red-500 focus:ring-red-100 text-red-900 bg-red-50/30' 
-                            : 'border-slate-300 focus:border-sky-600 focus:ring-sky-100 text-slate-900'}`}
+                            : 'border-sky-200/80 focus:bg-white focus:border-sky-500 focus:ring-sky-500/20 text-slate-900'}`}
                       />
                       <button
                         type="button"
@@ -603,7 +603,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={isLoading || !identifierValid || !hasMinLen}
-                    className="w-full min-h-[44px] h-11 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 active:scale-[0.99]"
+                    className="w-full min-h-[46px] bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold shadow-sm shadow-sky-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 active:scale-[0.99]"
                   >
                     {isLoading ? (
                       <><Loader2 size={16} className="animate-spin" /> Memeriksa Kredensial...</>
@@ -658,7 +658,7 @@ export default function LoginPage() {
                   )}
                 </AnimatePresence>
 
-                <form onSubmit={handleClaimSubmit} className="space-y-2">
+                <form onSubmit={handleClaimSubmit} className="space-y-3">
                   <div className="space-y-1">
                     <label htmlFor="claim-nik" className="text-xs font-bold text-slate-700">
                       NIK Warga (16 Digit)
@@ -675,7 +675,7 @@ export default function LoginPage() {
                         onChange={(e) => setClaimNik(e.target.value.replace(/\D/g, ''))}
                         placeholder="3272xxxxxxxxxxxx"
                         required
-                        className="w-full min-h-[40px] h-10 bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl pl-9 pr-3 text-sm font-mono font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
                   </div>
@@ -695,12 +695,12 @@ export default function LoginPage() {
                         onChange={(e) => setClaimToken(e.target.value.toUpperCase())}
                         placeholder="BW-9X7M2K"
                         required
-                        className="w-full min-h-[40px] h-10 bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 text-xs font-mono font-bold tracking-wider uppercase focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl pl-9 pr-3 text-sm font-mono font-bold tracking-wider uppercase focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label htmlFor="claim-password" className="text-xs font-bold text-slate-700">
                         Kata Sandi Baru
@@ -713,7 +713,7 @@ export default function LoginPage() {
                         onChange={(e) => setClaimPassword(e.target.value)}
                         placeholder="Min. 8 karakter"
                         required
-                        className="w-full min-h-[40px] h-10 bg-slate-50 border border-slate-300 rounded-xl px-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl px-3 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
                     <div className="space-y-1">
@@ -728,7 +728,7 @@ export default function LoginPage() {
                         onChange={(e) => setClaimConfirmPassword(e.target.value)}
                         placeholder="Ulangi kata sandi"
                         required
-                        className="w-full min-h-[40px] h-10 bg-slate-50 border border-slate-300 rounded-xl px-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl px-3 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
                   </div>
@@ -736,7 +736,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={claimLoading || !claimNik || !claimToken || !claimPassword}
-                    className="mt-2 w-full min-h-[42px] h-10.5 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                    className="mt-2 w-full min-h-[46px] bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold shadow-sm shadow-sky-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                   >
                     {claimLoading ? (
                       <><Loader2 size={15} className="animate-spin" /> Mengaktifkan Akun...</>
@@ -779,10 +779,10 @@ export default function LoginPage() {
                   )}
                 </AnimatePresence>
 
-                <form onSubmit={handleRegSubmit} className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-0.5">
-                      <label htmlFor="reg-nik" className="text-[11px] font-bold text-slate-700">NIK (16 Digit)</label>
+                <form onSubmit={handleRegSubmit} className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label htmlFor="reg-nik" className="text-xs font-bold text-slate-700">NIK (16 Digit)</label>
                       <input
                         id="reg-nik"
                         name="nik"
@@ -793,11 +793,11 @@ export default function LoginPage() {
                         onChange={(e) => setRegNik(e.target.value.replace(/\D/g, ''))}
                         placeholder="3272xxxxxxxxxxxx"
                         required
-                        className="w-full min-h-[38px] h-9.5 bg-slate-50 border border-slate-300 rounded-xl px-2.5 text-xs font-mono"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl px-3 text-sm font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
-                    <div className="space-y-0.5">
-                      <label htmlFor="reg-kk" className="text-[11px] font-bold text-slate-700">Nomor KK</label>
+                    <div className="space-y-1">
+                      <label htmlFor="reg-kk" className="text-xs font-bold text-slate-700">Nomor KK</label>
                       <input
                         id="reg-kk"
                         name="no_kk"
@@ -808,14 +808,14 @@ export default function LoginPage() {
                         onChange={(e) => setRegKK(e.target.value.replace(/\D/g, ''))}
                         placeholder="3272xxxxxxxxxxxx"
                         required
-                        className="w-full min-h-[38px] h-9.5 bg-slate-50 border border-slate-300 rounded-xl px-2.5 text-xs font-mono"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl px-3 text-sm font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-0.5">
-                      <label htmlFor="reg-birthdate" className="text-[11px] font-bold text-slate-700">Tanggal Lahir</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label htmlFor="reg-birthdate" className="text-xs font-bold text-slate-700">Tanggal Lahir</label>
                       <input
                         id="reg-birthdate"
                         name="tanggal_lahir"
@@ -823,11 +823,11 @@ export default function LoginPage() {
                         value={regBirthdate}
                         onChange={(e) => setRegBirthdate(e.target.value)}
                         required
-                        className="w-full min-h-[38px] h-9.5 bg-slate-50 border border-slate-300 rounded-xl px-2.5 text-xs"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl px-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
-                    <div className="space-y-0.5">
-                      <label htmlFor="reg-phone" className="text-[11px] font-bold text-slate-700">No. WhatsApp</label>
+                    <div className="space-y-1">
+                      <label htmlFor="reg-phone" className="text-xs font-bold text-slate-700">No. WhatsApp</label>
                       <input
                         id="reg-phone"
                         name="no_telepon"
@@ -836,14 +836,14 @@ export default function LoginPage() {
                         value={regPhone}
                         onChange={(e) => setRegPhone(e.target.value)}
                         placeholder="08xxxxxxxxxx"
-                        className="w-full min-h-[38px] h-9.5 bg-slate-50 border border-slate-300 rounded-xl px-2.5 text-xs font-mono"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl px-3 text-sm font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-0.5">
-                      <label htmlFor="reg-password" className="text-[11px] font-bold text-slate-700">Kata Sandi</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label htmlFor="reg-password" className="text-xs font-bold text-slate-700">Kata Sandi</label>
                       <input
                         id="reg-password"
                         name="new_password"
@@ -852,11 +852,11 @@ export default function LoginPage() {
                         onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="Min. 8 karakter"
                         required
-                        className="w-full min-h-[38px] h-9.5 bg-slate-50 border border-slate-300 rounded-xl px-2.5 text-xs"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl px-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
-                    <div className="space-y-0.5">
-                      <label htmlFor="reg-confirm-password" className="text-[11px] font-bold text-slate-700">Ulangi Sandi</label>
+                    <div className="space-y-1">
+                      <label htmlFor="reg-confirm-password" className="text-xs font-bold text-slate-700">Ulangi Sandi</label>
                       <input
                         id="reg-confirm-password"
                         name="confirm_password"
@@ -865,7 +865,7 @@ export default function LoginPage() {
                         onChange={(e) => setRegConfirmPassword(e.target.value)}
                         placeholder="Ulangi sandi"
                         required
-                        className="w-full min-h-[38px] h-9.5 bg-slate-50 border border-slate-300 rounded-xl px-2.5 text-xs"
+                        className="w-full min-h-[44px] bg-sky-50/30 border border-sky-200/80 rounded-xl px-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                       />
                     </div>
                   </div>
@@ -873,7 +873,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={regLoading || !regNik || !regKK || !regBirthdate || !regPassword}
-                    className="mt-2 w-full min-h-[42px] h-10.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                    className="mt-2 w-full min-h-[46px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                   >
                     {regLoading ? (
                       <><Loader2 size={15} className="animate-spin" /> Mencocokkan Data...</>

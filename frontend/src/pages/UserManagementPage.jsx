@@ -38,62 +38,62 @@ const ROLE_DISPLAY = {
   superadmin: { 
     label: 'Super Admin (Diskominfo)', 
     category: 'aparatur',
-    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200' 
   },
   walikota: { 
     label: 'Walikota / Pimpinan Kota', 
     category: 'aparatur',
-    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200' 
   },
   camat: { 
     label: 'Camat Wilayah', 
     category: 'aparatur',
-    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200' 
   },
   lurah: { 
     label: 'Lurah (Kepala Kelurahan)', 
     category: 'aparatur',
-    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200' 
   },
   admin_kelurahan: { 
     label: 'Admin Kelurahan', 
     category: 'aparatur',
-    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200' 
   },
   admin: { 
     label: 'Admin Kelurahan', 
     category: 'aparatur',
-    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200' 
   },
   staf_kelurahan: { 
     label: 'Staf Kelurahan', 
     category: 'aparatur',
-    badge: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800' 
+    badge: 'bg-sky-50 text-sky-800 border-sky-200' 
   },
   admin_rw: { 
     label: 'Admin RW', 
     category: 'rtrw',
-    badge: 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' 
+    badge: 'bg-slate-100 text-slate-800 border-slate-300' 
   },
   ketua_rw: { 
     label: 'Ketua RW', 
     category: 'rtrw',
-    badge: 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' 
+    badge: 'bg-slate-100 text-slate-800 border-slate-300' 
   },
   ketua_rt: { 
     label: 'Ketua RT', 
     category: 'rtrw',
-    badge: 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' 
+    badge: 'bg-slate-100 text-slate-800 border-slate-300' 
   },
   kader_posyandu: { 
     label: 'Kader Posyandu', 
     category: 'posyandu',
-    badge: 'bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800' 
+    badge: 'bg-teal-50 text-teal-800 border-teal-200' 
   },
   warga: { 
     label: 'Warga Terdaftar', 
     category: 'warga',
-    badge: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800' 
+    badge: 'bg-slate-50 text-slate-600 border-slate-200' 
   }
 };
 
@@ -474,7 +474,7 @@ export default function UserManagementPage() {
 
       {/* Global Alerts (Success / Error) */}
       {actionSuccess && (
-        <div className="p-4 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl flex items-center gap-2 text-xs font-bold shadow-sm dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800">
+        <div className="p-4 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl flex items-center gap-2 text-xs font-bold shadow-sm">
           <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
           <span>{actionSuccess}</span>
         </div>
@@ -519,71 +519,71 @@ export default function UserManagementPage() {
       </div>
 
       {/* Bento Grid Analytics Pengguna */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Bento 1: Total Pengguna */}
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pengguna</span>
-            <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 flex items-center justify-center">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-white via-white to-sky-50/50 border border-sky-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Pengguna</span>
+            <div className="w-8 h-8 rounded-xl bg-sky-100/70 text-sky-700 flex items-center justify-center shrink-0">
               <Users size={16} />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</div>
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              {stats.active} akun aktif dalam yurisdiksi
+            <div className="text-2xl font-extrabold text-slate-900">{stats.total}</div>
+            <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+              <span>{stats.active} akun aktif dalam yurisdiksi</span>
             </p>
           </div>
         </div>
 
         {/* Bento 2: Aparatur Kelurahan */}
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aparatur & Pimpinan</span>
-            <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 flex items-center justify-center">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-white via-white to-sky-50/50 border border-sky-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">Aparatur & Pimpinan</span>
+            <div className="w-8 h-8 rounded-xl bg-sky-100/70 text-sky-700 flex items-center justify-center shrink-0">
               <Building2 size={16} />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white">{stats.aparatur}</div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Lurah, Staf & Pejabat Wilayah</p>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.aparatur}</div>
+            <p className="text-[11px] text-slate-500 mt-1">Lurah, Staf & Pejabat Wilayah</p>
           </div>
         </div>
 
         {/* Bento 3: Pengurus RT & RW */}
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pengurus RT & RW</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 flex items-center justify-center">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-white via-white to-sky-50/50 border border-sky-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pengurus RT & RW</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
               <Home size={16} />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white">{stats.rtrw}</div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Verifikator akar rumput di RW/RT</p>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.rtrw}</div>
+            <p className="text-[11px] text-slate-500 mt-1">Verifikator akar rumput di RW/RT</p>
           </div>
         </div>
 
         {/* Bento 4: Kader Posyandu */}
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kader Posyandu</span>
-            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 flex items-center justify-center">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-white via-white to-sky-50/50 border border-sky-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kader Posyandu</span>
+            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
               <HeartPulse size={16} />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white">{stats.posyandu}</div>
-            <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-1">Pencatatan Balita & Lansia</p>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.posyandu}</div>
+            <p className="text-[11px] text-rose-600 font-medium mt-1">Pencatatan Balita & Lansia</p>
           </div>
         </div>
       </div>
 
       {/* Structured Category Tabs & Clean Control Bar */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+      <div className="bg-white p-4 rounded-2xl border border-sky-100/90 shadow-sm space-y-3">
         {/* Row 1: Category Tab Bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 border-b border-sky-100">
           {CATEGORY_TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             const count = tabCounts[tab.id] || 0;
@@ -594,15 +594,15 @@ export default function UserManagementPage() {
                   setActiveTab(tab.id);
                   setRoleFilter(''); // reset specific role when switching category tab
                 }}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 ${
+                className={`px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 ${
                   isActive
                     ? 'bg-sky-600 text-white shadow-sm'
-                    : 'bg-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    : 'bg-transparent text-slate-600 hover:text-sky-900 hover:bg-sky-50/80'
                 }`}
               >
                 <span>{tab.label}</span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                  isActive ? 'bg-sky-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  isActive ? 'bg-sky-700 text-white' : 'bg-sky-50 text-sky-700'
                 }`}>
                   {count}
                 </span>
@@ -619,13 +619,13 @@ export default function UserManagementPage() {
               placeholder="Cari nama, NIK, username, SK, posyandu..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full min-h-[40px] pl-9 pr-8 py-2 text-xs rounded-xl border border-sky-200/80 bg-sky-50/30 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
             />
-            <Search size={15} className="absolute left-3 top-2.5 text-slate-400" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-sky-600/70" />
             {search && (
               <button 
                 onClick={() => setSearch('')}
-                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
               >
                 <X size={14} />
               </button>
@@ -637,7 +637,7 @@ export default function UserManagementPage() {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="min-h-[40px] px-3 py-2 text-xs rounded-xl border border-sky-200/80 bg-sky-50/30 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
             >
               <option value="">Semua Peran Spesifik</option>
               {Object.keys(ROLE_DISPLAY).map((r) => (
@@ -649,7 +649,7 @@ export default function UserManagementPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="min-h-[40px] px-3 py-2 text-xs rounded-xl border border-sky-200/80 bg-sky-50/30 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
             >
               <option value="">Semua Status</option>
               <option value="active">Aktif</option>
@@ -661,7 +661,7 @@ export default function UserManagementPage() {
               <select
                 value={rwFilter}
                 onChange={(e) => setRwFilter(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="min-h-[40px] px-3 py-2 text-xs rounded-xl border border-sky-200/80 bg-sky-50/30 text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
               >
                 <option value="">Semua RW</option>
                 {availableRws.map((rw) => (
@@ -674,7 +674,7 @@ export default function UserManagementPage() {
             <button
               onClick={fetchUsers}
               title="Segarkan data pengguna"
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+              className="min-h-[40px] min-w-[40px] flex items-center justify-center p-2 rounded-xl border border-sky-200/80 bg-sky-50/40 text-sky-700 hover:bg-sky-100/70 transition shrink-0"
             >
               <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             </button>
@@ -682,8 +682,8 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      {/* Users Table & Mobile Card View */}
+      <div className="bg-white rounded-2xl border border-sky-100/90 shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center p-12 space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-sky-600" />
@@ -691,44 +691,156 @@ export default function UserManagementPage() {
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="text-center p-12 space-y-2">
-            <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto" />
-            <p className="text-sm font-bold text-slate-900 dark:text-white">Tidak ada pengguna yang cocok</p>
+            <Users className="w-12 h-12 text-slate-300 mx-auto" />
+            <p className="text-sm font-bold text-slate-900">Tidak ada pengguna yang cocok</p>
             <p className="text-xs text-slate-500">Gunakan filter pencarian lain atau tambahkan akun baru.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold">
-                  <th className="p-3.5">Nama & Jabatan</th>
-                  <th className="p-3.5">Username / NIK</th>
-                  <th className="p-3.5">Peran (Role)</th>
-                  <th className="p-3.5">Wilayah Kerja / Posko</th>
-                  <th className="p-3.5">SK / Penugasan</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5 text-center">Aksi Pengelolaan</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-900 dark:text-white">
-                {filteredUsers.map((u) => {
-                  const roleMeta = ROLE_DISPLAY[u.role] || { 
-                    label: u.role, 
-                    badge: 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300' 
-                  };
-                  return (
-                    <tr key={u.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="p-3.5">
+          <>
+            {/* Mobile-First Card View (< md) */}
+            <div className="md:hidden divide-y divide-sky-100/80">
+              {filteredUsers.map((u) => {
+                const roleMeta = ROLE_DISPLAY[u.role] || {
+                  label: u.role,
+                  badge: 'bg-slate-100 text-slate-800 border-slate-200'
+                };
+                return (
+                  <div key={u.id} className="p-4 space-y-3 hover:bg-sky-50/30 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <button
                           onClick={() => setDetailUser(u)}
-                          className="font-bold text-slate-900 dark:text-white text-left hover:text-sky-600 transition"
+                          className="font-bold text-sm text-slate-900 text-left hover:text-sky-700 transition truncate block max-w-full"
                         >
                           {u.nama}
                         </button>
                         {u.jabatan && (
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">{u.jabatan}</div>
+                          <div className="text-[11px] text-slate-500 font-medium mt-0.5">{u.jabatan}</div>
+                        )}
+                        <div className="text-[11px] font-mono text-slate-500 mt-1">
+                          {u.role === 'warga' || (u.username && u.username.length === 16) ? (
+                            <MaskedField value={u.username} type="nik" />
+                          ) : (
+                            u.username
+                          )}
+                        </div>
+                      </div>
+                      <span className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                        u.status === 'active'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${u.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                        {u.status === 'active' ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${roleMeta.badge}`}>
+                        {roleMeta.label}
+                      </span>
+                      {u.role === 'kader_posyandu' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 font-medium text-[10px] border border-rose-200">
+                          <HeartPulse size={11} />
+                          {u.nama_posyandu || 'Posyandu Wilayah'} {u.rw ? `(RW ${u.rw})` : ''}
+                        </span>
+                      ) : u.role === 'staf_kelurahan' || ['lurah', 'admin_kelurahan', 'admin'].includes(u.role) ? (
+                        <span className="inline-flex items-center gap-1 text-slate-600 text-[11px]">
+                          <Building2 size={12} className="text-sky-600" />
+                          Kantor Kelurahan
+                        </span>
+                      ) : (
+                        <span className="text-slate-600 text-[11px] font-medium">
+                          {u.rw ? `RW ${u.rw}` : '-'} {u.rt ? `/ RT ${u.rt}` : ''}
+                        </span>
+                      )}
+                      {u.nomor_sk && (
+                        <span className="inline-flex items-center gap-1 text-[10px] bg-sky-50 text-sky-800 px-2 py-0.5 rounded border border-sky-200 font-mono">
+                          <Award size={10} className="text-amber-500" /> {u.nomor_sk}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-slate-100">
+                      <button
+                        onClick={() => setDetailUser(u)}
+                        title="Lihat Detail Pengguna"
+                        className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-sky-50/70 text-sky-700 hover:bg-sky-100 transition"
+                      >
+                        <Eye size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleOpenEditModal(u)}
+                        title="Edit Data Pengguna"
+                        className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition"
+                      >
+                        <Edit2 size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleToggleStatus(u.id, u.status)}
+                        title={u.status === 'active' ? 'Nonaktifkan Akun' : 'Aktifkan Akun'}
+                        className={`min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl transition ${
+                          u.status === 'active'
+                            ? 'bg-rose-50 text-rose-600 hover:bg-rose-100'
+                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                        }`}
+                      >
+                        {u.status === 'active' ? <UserX size={15} /> : <UserCheck size={15} />}
+                      </button>
+                      <button
+                        onClick={() => { setActionError(null); setNewPassword(''); setResetModalUser(u); }}
+                        title="Reset Password"
+                        className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-sky-50 hover:text-sky-700 transition"
+                      >
+                        <KeyRound size={15} />
+                      </button>
+                      <button
+                        onClick={() => { setActionError(null); setDeleteUser(u); }}
+                        title="Hapus Akun Pengguna"
+                        className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View (>= md) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-sky-50/70 border-b border-sky-100 text-sky-900 font-bold">
+                    <th className="p-3.5">Nama & Jabatan</th>
+                    <th className="p-3.5">Username / NIK</th>
+                    <th className="p-3.5">Peran (Role)</th>
+                    <th className="p-3.5">Wilayah Kerja / Posko</th>
+                    <th className="p-3.5">SK / Penugasan</th>
+                    <th className="p-3.5">Status</th>
+                    <th className="p-3.5 text-center">Aksi Pengelolaan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-900">
+                  {filteredUsers.map((u) => {
+                    const roleMeta = ROLE_DISPLAY[u.role] || { 
+                      label: u.role, 
+                      badge: 'bg-slate-100 text-slate-800 border-slate-200' 
+                    };
+                    return (
+                      <tr key={u.id} className="hover:bg-sky-50/40 transition-colors">
+                      <td className="p-3.5">
+                        <button
+                          onClick={() => setDetailUser(u)}
+                          className="font-bold text-slate-900 text-left hover:text-sky-600 transition"
+                        >
+                          {u.nama}
+                        </button>
+                        {u.jabatan && (
+                          <div className="text-[10px] text-slate-500 font-medium mt-0.5">{u.jabatan}</div>
                         )}
                       </td>
-                      <td className="p-3.5 font-mono text-slate-600 dark:text-slate-400">
+                      <td className="p-3.5 font-mono text-slate-600">
                         {u.role === 'warga' || (u.username && u.username.length === 16) ? (
                           <MaskedField value={u.username} type="nik" />
                         ) : (
@@ -742,24 +854,24 @@ export default function UserManagementPage() {
                       </td>
                       <td className="p-3.5">
                         {u.role === 'kader_posyandu' ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 font-medium text-[11px] border border-rose-200 dark:border-rose-900">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 font-medium text-[11px] border border-rose-200">
                             <HeartPulse size={13} />
                             <span>{u.nama_posyandu || 'Posyandu Wilayah'} {u.rw ? `(RW ${u.rw})` : ''}</span>
                           </div>
                         ) : u.role === 'staf_kelurahan' || ['lurah', 'admin_kelurahan', 'admin'].includes(u.role) ? (
-                          <div className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 text-[11px]">
+                          <div className="inline-flex items-center gap-1.5 text-slate-600 text-[11px]">
                             <Building2 size={13} className="text-sky-600" />
                             <span>Kantor Kelurahan</span>
                           </div>
                         ) : (
-                          <div className="text-slate-700 dark:text-slate-300 text-[11px] font-medium">
+                          <div className="text-slate-700 text-[11px] font-medium">
                             {u.rw ? `RW ${u.rw}` : '-'} {u.rt ? `/ RT ${u.rt}` : ''}
                           </div>
                         )}
                       </td>
-                      <td className="p-3.5 text-slate-600 dark:text-slate-400 text-[11px]">
+                      <td className="p-3.5 text-slate-600 text-[11px]">
                         {u.nomor_sk ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono">
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-mono">
                             <Award size={11} className="text-amber-500" /> {u.nomor_sk}
                           </span>
                         ) : (
@@ -769,8 +881,8 @@ export default function UserManagementPage() {
                       <td className="p-3.5">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
                           u.status === 'active' 
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' 
-                            : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${u.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                           {u.status === 'active' ? 'Aktif' : 'Nonaktif'}
@@ -782,7 +894,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => setDetailUser(u)}
                             title="Lihat Detail Pengguna"
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-slate-700 transition"
+                            className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-sky-50 hover:text-sky-600 transition"
                           >
                             <Eye size={13} />
                           </button>
@@ -791,7 +903,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => handleOpenEditModal(u)}
                             title="Edit Data Pengguna"
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-slate-700 transition"
+                            className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-600 transition"
                           >
                             <Edit2 size={13} />
                           </button>
@@ -802,8 +914,8 @@ export default function UserManagementPage() {
                             title={u.status === 'active' ? 'Nonaktifkan Akun' : 'Aktifkan Akun'}
                             className={`p-1.5 rounded-lg transition ${
                               u.status === 'active'
-                                ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300'
-                                : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                ? 'bg-rose-50 text-rose-600 hover:bg-rose-100'
+                                : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
                             }`}
                           >
                             {u.status === 'active' ? <UserX size={13} /> : <UserCheck size={13} />}
@@ -813,7 +925,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => { setActionError(null); setNewPassword(''); setResetModalUser(u); }}
                             title="Reset Password"
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-slate-700 transition"
+                            className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-sky-50 hover:text-sky-600 transition"
                           >
                             <KeyRound size={13} />
                           </button>
@@ -822,7 +934,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => { setActionError(null); setDeleteUser(u); }}
                             title="Hapus Akun Pengguna"
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 transition"
+                            className="p-1.5 rounded-lg bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
                           >
                             <Trash2 size={13} />
                           </button>
@@ -833,7 +945,8 @@ export default function UserManagementPage() {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -847,21 +960,21 @@ export default function UserManagementPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl w-full max-w-lg overflow-hidden"
+              className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-lg overflow-hidden"
             >
-              <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold">
+                  <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
                     <Users size={18} />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Detail Profil & Penugasan Pengguna</h2>
+                    <h2 className="text-sm font-bold text-slate-900">Detail Profil & Penugasan Pengguna</h2>
                     <p className="text-[11px] text-slate-500">ID Akun: #{detailUser.id}</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setDetailUser(null)}
-                  className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="p-1 rounded-lg text-slate-400 hover:bg-slate-100"
                 >
                   <X size={18} />
                 </button>
@@ -869,9 +982,9 @@ export default function UserManagementPage() {
 
               <div className="p-5 space-y-4 text-xs">
                 {/* User Header Card */}
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-start justify-between">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">{detailUser.nama}</h3>
+                    <h3 className="text-base font-bold text-slate-900">{detailUser.nama}</h3>
                     <p className="font-mono text-slate-500 mt-0.5">
                       Username: {detailUser.role === 'warga' || (detailUser.username && detailUser.username.length === 16) ? (
                         <MaskedField value={detailUser.username} type="nik" />
@@ -888,7 +1001,7 @@ export default function UserManagementPage() {
                     </span>
                     <div>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                        detailUser.status === 'active' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                        detailUser.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${detailUser.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                         {detailUser.status === 'active' ? 'Status: Aktif' : 'Status: Nonaktif'}
@@ -899,36 +1012,36 @@ export default function UserManagementPage() {
 
                 {/* Details Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  <div className="p-3 rounded-xl border border-slate-200 bg-white">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Wilayah Rukun Warga</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                    <p className="font-semibold text-slate-800 mt-0.5">
                       {detailUser.rw ? `RW ${detailUser.rw}` : 'Seluruh Wilayah Kelurahan'}
                     </p>
                   </div>
-                  <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  <div className="p-3 rounded-xl border border-slate-200 bg-white">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Wilayah Rukun Tetangga</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                    <p className="font-semibold text-slate-800 mt-0.5">
                       {detailUser.rt ? `RT ${detailUser.rt}` : 'Seluruh RT di RW'}
                     </p>
                   </div>
-                  <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  <div className="p-3 rounded-xl border border-slate-200 bg-white">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Posko / Posyandu</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                    <p className="font-semibold text-slate-800 mt-0.5">
                       {detailUser.nama_posyandu || '-'}
                     </p>
                   </div>
-                  <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  <div className="p-3 rounded-xl border border-slate-200 bg-white">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Jabatan Formal</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                    <p className="font-semibold text-slate-800 mt-0.5">
                       {detailUser.jabatan || '-'}
                     </p>
                   </div>
                 </div>
 
                 {/* SK & Legalitas */}
-                <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <div className="p-3 rounded-xl border border-slate-200 bg-white">
                   <span className="text-[10px] uppercase font-bold text-slate-400">Nomor SK Penetapan / Masa Bakti</span>
-                  <p className="font-mono text-slate-800 dark:text-slate-200 mt-0.5">
+                  <p className="font-mono text-slate-800 mt-0.5">
                     {detailUser.nomor_sk || 'Belum ada SK terdaftar'}
                   </p>
                 </div>
@@ -948,14 +1061,14 @@ export default function UserManagementPage() {
                 </div>
 
                 {/* Actions Footer */}
-                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
                   <button
                     onClick={() => {
                       const userToDel = detailUser;
                       setDetailUser(null);
                       setDeleteUser(userToDel);
                     }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 inline-flex items-center gap-1.5 transition"
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 inline-flex items-center gap-1.5 transition"
                   >
                     <Trash2 size={13} /> Hapus Akun
                   </button>
@@ -967,7 +1080,7 @@ export default function UserManagementPage() {
                         setDetailUser(null);
                         setResetModalUser(userToReset);
                       }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 inline-flex items-center gap-1.5 transition"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 inline-flex items-center gap-1.5 transition"
                     >
                       <KeyRound size={13} /> Reset Password
                     </button>
@@ -995,21 +1108,21 @@ export default function UserManagementPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl w-full max-w-lg overflow-hidden"
+              className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-lg overflow-hidden"
             >
-              <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-xs">
+                  <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-xs">
                     <UserPlus size={16} />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Daftarkan Akun & Penugasan Wilayah</h2>
+                    <h2 className="text-sm font-bold text-slate-900">Daftarkan Akun & Penugasan Wilayah</h2>
                     <p className="text-[11px] text-slate-500">Konfigurasi akun aparatur atau warga dalam yurisdiksi Anda</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setCreateModalOpen(false)}
-                  className="p-1 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="p-1 rounded-md text-slate-400 hover:bg-slate-100"
                 >
                   <X size={18} />
                 </button>
@@ -1024,12 +1137,12 @@ export default function UserManagementPage() {
                 )}
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Peran Akun (Role)</label>
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">Peran Akun (Role)</label>
                   <select
                     value={createForm.role}
                     onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
                     required
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     {allowedRoles.map(r => (
                       <option key={r} value={r}>{ROLE_DISPLAY[r]?.label || r}</option>
@@ -1039,7 +1152,7 @@ export default function UserManagementPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">
                       {createForm.role === 'warga' ? 'NIK Warga (16 digit)' : 'Username Akun'}
                     </label>
                     <input
@@ -1048,25 +1161,25 @@ export default function UserManagementPage() {
                       placeholder={createForm.role === 'warga' ? '3273010203850003' : 'Contoh: rt02_rw01 / posyandu_melati'}
                       value={createForm.username}
                       onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Nama Lengkap</label>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">Nama Lengkap</label>
                     <input
                       type="text"
                       required
                       placeholder="Contoh: Siti Nurhaliza, S.Tr.Keb"
                       value={createForm.nama}
                       onChange={(e) => setCreateForm({ ...createForm, nama: e.target.value })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Password Awal Akun</label>
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">Password Awal Akun</label>
                   <input
                     type="password"
                     required
@@ -1074,44 +1187,44 @@ export default function UserManagementPage() {
                     placeholder="Minimal 6 karakter"
                     value={createForm.password}
                     onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
                 {/* Conditional Fields based on Role */}
                 {createForm.role === 'kader_posyandu' && (
-                  <div className="p-3 bg-rose-50/60 dark:bg-rose-950/20 rounded-xl border border-rose-200 dark:border-rose-900/40 space-y-2">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-rose-800 dark:text-rose-300">
+                  <div className="p-3 bg-rose-50/60 rounded-xl border border-rose-200 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-rose-800">
                       <HeartPulse size={14} />
                       <span>Unit Posko Posyandu & Wilayah Binaan</span>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Unit Posyandu / Posko</label>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Unit Posyandu / Posko</label>
                       <input
                         type="text"
                         placeholder="Contoh: Posyandu Melati 01"
                         value={createForm.nama_posyandu}
                         onChange={(e) => setCreateForm({ ...createForm, nama_posyandu: e.target.value })}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                       />
                     </div>
                   </div>
                 )}
 
                 {createForm.role === 'staf_kelurahan' && (
-                  <div className="p-3 bg-sky-50/60 dark:bg-sky-950/20 rounded-xl border border-sky-200 dark:border-sky-900/40 space-y-2">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-sky-800 dark:text-sky-300">
+                  <div className="p-3 bg-sky-50/60 rounded-xl border border-sky-200 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-sky-800">
                       <Building2 size={14} />
                       <span>Seksi & Jabatan Penugasan Kelurahan</span>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Seksi / Jabatan</label>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Seksi / Jabatan</label>
                       <input
                         type="text"
                         placeholder="Contoh: Seksi Pelayanan Publik & Kependudukan"
                         value={createForm.jabatan}
                         onChange={(e) => setCreateForm({ ...createForm, jabatan: e.target.value })}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                       />
                     </div>
                   </div>
@@ -1121,25 +1234,25 @@ export default function UserManagementPage() {
                 {['ketua_rw', 'admin_rw', 'ketua_rt', 'kader_posyandu', 'warga'].includes(createForm.role) && (
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Wilayah RW Binaan</label>
+                      <label className="block text-xs font-semibold text-slate-800 mb-1">Wilayah RW Binaan</label>
                       <input
                         type="text"
                         placeholder="Contoh: 001"
                         disabled={['ketua_rw', 'admin_rw', 'ketua_rt'].includes(currentUserRole)}
                         value={createForm.rw}
                         onChange={(e) => setCreateForm({ ...createForm, rw: e.target.value })}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono disabled:opacity-60"
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-mono disabled:opacity-60"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Wilayah RT</label>
+                      <label className="block text-xs font-semibold text-slate-800 mb-1">Wilayah RT</label>
                       <input
                         type="text"
                         placeholder={createForm.role === 'ketua_rw' ? 'Semua RT' : 'Contoh: 001'}
                         disabled={currentUserRole === 'ketua_rt' || createForm.role === 'ketua_rw'}
                         value={createForm.rt}
                         onChange={(e) => setCreateForm({ ...createForm, rt: e.target.value })}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono disabled:opacity-60"
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-mono disabled:opacity-60"
                       />
                     </div>
                   </div>
@@ -1147,7 +1260,7 @@ export default function UserManagementPage() {
 
                 {/* Nomor SK */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">
                     Nomor SK Penetapan / Catatan Penugasan (Opsional)
                   </label>
                   <input
@@ -1155,15 +1268,15 @@ export default function UserManagementPage() {
                     placeholder="Contoh: SK Lurah No. 140/09/2026 / Masa Bakti 2024-2029"
                     value={createForm.nomor_sk}
                     onChange={(e) => setCreateForm({ ...createForm, nomor_sk: e.target.value })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
-                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+                <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setCreateModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
                   >
                     Batal
                   </button>
@@ -1192,21 +1305,21 @@ export default function UserManagementPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl w-full max-w-lg overflow-hidden"
+              className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-lg overflow-hidden"
             >
-              <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
                     <Edit2 size={16} />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Edit Data & Penugasan Pengguna</h2>
+                    <h2 className="text-sm font-bold text-slate-900">Edit Data & Penugasan Pengguna</h2>
                     <p className="text-[11px] text-slate-500">Memperbarui informasi akun #{editUser.id} ({editUser.nama})</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setEditUser(null)}
-                  className="p-1 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="p-1 rounded-md text-slate-400 hover:bg-slate-100"
                 >
                   <X size={18} />
                 </button>
@@ -1222,36 +1335,36 @@ export default function UserManagementPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Nama Lengkap</label>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">Nama Lengkap</label>
                     <input
                       type="text"
                       required
                       value={editForm.nama}
                       onChange={(e) => setEditForm({ ...editForm, nama: e.target.value })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Username / NIK</label>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">Username / NIK</label>
                     <input
                       type="text"
                       required
                       value={editForm.username}
                       onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Peran (Role)</label>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">Peran (Role)</label>
                     <select
                       value={editForm.role}
                       onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                       disabled={currentUserRole !== 'superadmin' && currentUserRole !== 'lurah' && currentUserRole !== 'admin_kelurahan'}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-60"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-60"
                     >
                       {Object.keys(ROLE_DISPLAY).map((r) => (
                         <option key={r} value={r}>{ROLE_DISPLAY[r].label}</option>
@@ -1260,11 +1373,11 @@ export default function UserManagementPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Status Akun</label>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">Status Akun</label>
                     <select
                       value={editForm.status}
                       onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="active">Aktif (Dapat Login)</option>
                       <option value="inactive">Nonaktif (Akses Dinonaktifkan)</option>
@@ -1275,23 +1388,23 @@ export default function UserManagementPage() {
                 {/* Wilayah RT & RW */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Wilayah RW</label>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">Wilayah RW</label>
                     <input
                       type="text"
                       placeholder="Contoh: 001"
                       value={editForm.rw}
                       onChange={(e) => setEditForm({ ...editForm, rw: e.target.value })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Wilayah RT</label>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">Wilayah RT</label>
                     <input
                       type="text"
                       placeholder="Contoh: 001"
                       value={editForm.rt}
                       onChange={(e) => setEditForm({ ...editForm, rt: e.target.value })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
@@ -1299,30 +1412,30 @@ export default function UserManagementPage() {
                 {/* Nama Posyandu & Jabatan */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Nama Posyandu / Posko</label>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">Nama Posyandu / Posko</label>
                     <input
                       type="text"
                       placeholder="Contoh: Posyandu Melati 01"
                       value={editForm.nama_posyandu}
                       onChange={(e) => setEditForm({ ...editForm, nama_posyandu: e.target.value })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Jabatan Formal / Seksi</label>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">Jabatan Formal / Seksi</label>
                     <input
                       type="text"
                       placeholder="Contoh: Kepala Seksi Tata Praja"
                       value={editForm.jabatan}
                       onChange={(e) => setEditForm({ ...editForm, jabatan: e.target.value })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
 
                 {/* Nomor SK */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">
                     Nomor SK Penetapan / Catatan Penugasan
                   </label>
                   <input
@@ -1330,13 +1443,13 @@ export default function UserManagementPage() {
                     placeholder="Contoh: SK Lurah No. 140/09/2026"
                     value={editForm.nomor_sk}
                     onChange={(e) => setEditForm({ ...editForm, nomor_sk: e.target.value })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
                 {/* Optional Change Password */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                <div className="pt-2 border-t border-slate-100">
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">
                     Ganti Password (Opsional)
                   </label>
                   <input
@@ -1345,15 +1458,15 @@ export default function UserManagementPage() {
                     placeholder="Kosongkan jika tidak ingin mengubah password"
                     value={editForm.new_password}
                     onChange={(e) => setEditForm({ ...editForm, new_password: e.target.value })}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
-                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+                <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setEditUser(null)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
                   >
                     Batal
                   </button>
@@ -1382,18 +1495,18 @@ export default function UserManagementPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-rose-200 dark:border-rose-900/40 shadow-xl w-full max-w-md overflow-hidden"
+              className="bg-white rounded-2xl border border-rose-200 shadow-xl w-full max-w-md overflow-hidden"
             >
-              <div className="p-5 border-b border-rose-100 dark:border-rose-900/40 flex items-center justify-between bg-rose-50/50 dark:bg-rose-950/20">
+              <div className="p-5 border-b border-rose-100 flex items-center justify-between bg-rose-50/50">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
+                  <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center font-bold">
                     <Trash2 size={16} />
                   </div>
-                  <h2 className="text-sm font-bold text-rose-900 dark:text-rose-200">Konfirmasi Hapus Akun</h2>
+                  <h2 className="text-sm font-bold text-rose-900">Konfirmasi Hapus Akun</h2>
                 </div>
                 <button 
                   onClick={() => setDeleteUser(null)}
-                  className="p-1 rounded-md text-slate-400 hover:bg-rose-100 dark:hover:bg-rose-900/40"
+                  className="p-1 rounded-md text-slate-400 hover:bg-rose-100"
                 >
                   <X size={18} />
                 </button>
@@ -1407,27 +1520,27 @@ export default function UserManagementPage() {
                   </div>
                 )}
 
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-slate-600 leading-relaxed">
                   Apakah Anda yakin ingin menghapus akun pengguna berikut secara permanen?
                 </p>
 
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <div className="font-bold text-slate-900 dark:text-white text-sm">{deleteUser.nama}</div>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <div className="font-bold text-slate-900 text-sm">{deleteUser.nama}</div>
                   <div className="font-mono text-slate-500">Username/NIK: {deleteUser.username}</div>
-                  <div className="text-[11px] text-slate-600 dark:text-slate-400">
-                    Peran: <strong className="text-slate-800 dark:text-slate-200">{ROLE_DISPLAY[deleteUser.role]?.label || deleteUser.role}</strong>
+                  <div className="text-[11px] text-slate-600">
+                    Peran: <strong className="text-slate-800">{ROLE_DISPLAY[deleteUser.role]?.label || deleteUser.role}</strong>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-[11px] leading-relaxed">
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] leading-relaxed">
                   <strong>Catatan Integritas Data:</strong> Akun autentikasi akan dihapus. Jika akun ini terhubung dengan data master warga, keterhubungan akun akan dilepas secara aman tanpa menghapus riwayat kependudukan.
                 </div>
 
-                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+                <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setDeleteUser(null)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
                   >
                     Batal
                   </button>
@@ -1457,21 +1570,21 @@ export default function UserManagementPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 dark:border-slate-800 text-xs space-y-4"
+              className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 text-xs space-y-4"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
                     <Building2 size={18} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">Profil Wilayah & Pejabat Eksekutif</h3>
+                    <h3 className="font-bold text-sm text-slate-900">Profil Wilayah & Pejabat Eksekutif</h3>
                     <p className="text-[11px] text-slate-500">Konfigurasi nama kelurahan, kecamatan, kota, lurah, camat, dan walikota</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setGovModalOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="p-1 rounded-lg text-slate-400 hover:bg-slate-100"
                 >
                   <X size={18} />
                 </button>
@@ -1480,32 +1593,32 @@ export default function UserManagementPage() {
               <form onSubmit={handleSaveGovProfile} className="space-y-3.5">
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Kelurahan</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Kelurahan</label>
                     <input
                       type="text"
                       value={govForm.nama_kelurahan}
                       onChange={(e) => setGovForm({ ...govForm, nama_kelurahan: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Kecamatan</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Kecamatan</label>
                     <input
                       type="text"
                       value={govForm.nama_kecamatan}
                       onChange={(e) => setGovForm({ ...govForm, nama_kecamatan: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Kota / Kab.</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Kota / Kab.</label>
                     <input
                       type="text"
                       value={govForm.nama_kota}
                       onChange={(e) => setGovForm({ ...govForm, nama_kota: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
                       required
                     />
                   </div>
@@ -1513,75 +1626,75 @@ export default function UserManagementPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lurah</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Nama Lurah</label>
                     <input
                       type="text"
                       value={govForm.nama_lurah}
                       onChange={(e) => setGovForm({ ...govForm, nama_lurah: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">NIP Lurah</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">NIP Lurah</label>
                     <input
                       type="text"
                       value={govForm.nip_lurah}
                       onChange={(e) => setGovForm({ ...govForm, nip_lurah: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Camat</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Nama Camat</label>
                     <input
                       type="text"
                       value={govForm.nama_camat}
                       onChange={(e) => setGovForm({ ...govForm, nama_camat: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">NIP Camat</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">NIP Camat</label>
                     <input
                       type="text"
                       value={govForm.nip_camat}
                       onChange={(e) => setGovForm({ ...govForm, nip_camat: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Walikota / Pj. Walikota</label>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Nama Walikota / Pj. Walikota</label>
                   <input
                     type="text"
                     value={govForm.nama_walikota}
                     onChange={(e) => setGovForm({ ...govForm, nama_walikota: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Cakupan Wilayah Binaan RW</label>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Cakupan Wilayah Binaan RW</label>
                   <input
                     type="text"
                     value={govForm.wilayah_binaan}
                     onChange={(e) => setGovForm({ ...govForm, wilayah_binaan: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
                     required
                   />
                 </div>
 
-                <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-800">
+                <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => setGovModalOpen(false)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-100 transition"
                   >
                     Batal
                   </button>
@@ -1609,12 +1722,12 @@ export default function UserManagementPage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl w-full max-w-sm overflow-hidden"
+              className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-sm overflow-hidden"
             >
-              <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Lock size={16} className="text-sky-600" />
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-white">Reset Password Pengguna</h3>
+                  <h3 className="text-xs font-bold text-slate-900">Reset Password Pengguna</h3>
                 </div>
                 <button onClick={() => setResetModalUser(null)}>
                   <X size={16} className="text-slate-400 hover:text-slate-600" />
@@ -1633,7 +1746,7 @@ export default function UserManagementPage() {
                 )}
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Password Baru</label>
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">Password Baru</label>
                   <input
                     type="password"
                     required
@@ -1641,7 +1754,7 @@ export default function UserManagementPage() {
                     placeholder="Minimal 6 karakter"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 
@@ -1649,7 +1762,7 @@ export default function UserManagementPage() {
                   <button
                     type="button"
                     onClick={() => setResetModalUser(null)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
                   >
                     Batal
                   </button>
