@@ -8,6 +8,20 @@
     padding: 0;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+  
+  /* Clean Soft Blue Sky Background System */
+  html {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-gradient-to-b from-sky-50 to-slate-50;
+    @apply text-slate-900;
+  }
+  
+  #root {
+    @apply min-h-screen;
+  }
 }
 
 @layer components {
@@ -217,5 +231,197 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+}
+
+/* ========================================================================
+   CLEAN BACKGROUND SYSTEM - Soft Blue Sky Identity
+   ======================================================================== */
+
+@layer components {
+  /* Clean Page Container */
+  .page-container-clean {
+    @apply bg-gradient-to-b from-sky-50 to-slate-50;
+    @apply min-h-screen;
+    @apply p-4 sm:p-5 lg:p-6;
+  }
+  
+  /* Clean Table Styles */
+  .table-clean {
+    @apply bg-white;
+    @apply rounded-xl;
+    @apply border border-slate-200;
+    @apply overflow-hidden;
+    @apply shadow-sm;
+  }
+  
+  .table-clean thead {
+    @apply bg-gradient-to-r from-sky-50 to-blue-50;
+    @apply border-b-2 border-sky-200;
+  }
+  
+  .table-clean thead th {
+    @apply px-4 py-3;
+    @apply text-xs uppercase font-bold;
+    @apply text-slate-700;
+    @apply text-left;
+  }
+  
+  .table-clean tbody {
+    @apply text-sm text-slate-700;
+  }
+  
+  .table-clean tbody tr {
+    @apply border-b border-slate-100;
+    @apply hover:bg-sky-50;
+    @apply transition-colors duration-150;
+  }
+  
+  .table-clean tbody tr:nth-child(even) {
+    @apply bg-[#fafcfe];
+  }
+  
+  .table-clean tbody tr:nth-child(odd) {
+    @apply bg-white;
+  }
+  
+  .table-clean tbody td {
+    @apply px-4 py-3;
+  }
+  
+  /* Clean Card Styles */
+  .card-clean {
+    @apply bg-white;
+    @apply rounded-xl;
+    @apply border border-slate-200;
+    @apply shadow-sm;
+    @apply p-5 sm:p-6;
+  }
+  
+  .card-clean-hover {
+    @apply card-clean;
+    @apply hover:shadow-md;
+    @apply hover:border-sky-200;
+    @apply transition-all duration-200;
+  }
+  
+  /* Clean Header Section */
+  .header-section-clean {
+    @apply bg-gradient-to-br from-sky-50 via-white to-blue-50;
+    @apply border-b-2 border-sky-200/60;
+    @apply rounded-xl sm:rounded-2xl;
+    @apply p-5 sm:p-6 lg:p-8;
+    @apply mb-6;
+  }
+  
+  /* Clean Stats Grid */
+  .stats-grid-clean {
+    @apply grid;
+    @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-4;
+    @apply gap-4;
+    @apply mb-6;
+  }
+  
+  /* Status Row Variants */
+  .row-status-success {
+    @apply bg-emerald-50/50;
+    @apply border-l-4 border-l-emerald-500;
+  }
+  
+  .row-status-warning {
+    @apply bg-amber-50/50;
+    @apply border-l-4 border-l-amber-500;
+  }
+  
+  .row-status-danger {
+    @apply bg-rose-50/50;
+    @apply border-l-4 border-l-rose-500;
+  }
+  
+  .row-status-info {
+    @apply bg-sky-50/50;
+    @apply border-l-4 border-l-sky-500;
+  }
+  
+  /* Clean Content Section */
+  .content-section-clean {
+    @apply bg-white;
+    @apply rounded-xl;
+    @apply border border-slate-200;
+    @apply shadow-sm;
+    @apply p-5 sm:p-6;
+    @apply mb-6;
+  }
+  
+  /* Clean Form Container */
+  .form-container-clean {
+    @apply bg-white;
+    @apply rounded-xl;
+    @apply border border-slate-200;
+    @apply shadow-sm;
+    @apply p-6 sm:p-8;
+  }
+  
+  /* Clean Input Field */
+  .input-clean {
+    @apply w-full;
+    @apply px-4 py-2.5;
+    @apply bg-white;
+    @apply border border-slate-300;
+    @apply rounded-lg;
+    @apply text-slate-900;
+    @apply placeholder:text-slate-400;
+    @apply focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500;
+    @apply transition-all duration-150;
+  }
+  
+  .input-clean:hover {
+    @apply border-slate-400;
+  }
+  
+  .input-clean:focus {
+    @apply bg-sky-50/30;
+  }
+  
+  /* Clean Sidebar */
+  .sidebar-clean {
+    @apply bg-white;
+    @apply border-r border-slate-200;
+  }
+  
+  .sidebar-nav-item {
+    @apply px-4 py-2.5;
+    @apply text-sm font-medium;
+    @apply text-slate-700;
+    @apply rounded-lg;
+    @apply transition-all duration-150;
+    @apply hover:bg-sky-50;
+    @apply focus:outline-none focus:ring-2 focus:ring-sky-500;
+  }
+  
+  .sidebar-nav-item.active {
+    @apply bg-gradient-to-r from-sky-100 to-blue-50;
+    @apply text-sky-700;
+    @apply border-l-4 border-l-sky-600;
+    @apply font-bold;
+  }
+  
+  /* Mobile Responsive Adjustments */
+  @media (max-width: 768px) {
+    .page-container-clean {
+      @apply bg-slate-50;  /* Solid color on mobile for performance */
+      @apply p-3;
+    }
+    
+    .card-clean,
+    .content-section-clean {
+      @apply shadow-none;
+      @apply border-x-0;
+      @apply rounded-lg;
+    }
+    
+    .table-clean {
+      @apply rounded-lg;
+    }
   }
 }
